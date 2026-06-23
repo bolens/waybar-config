@@ -13,7 +13,7 @@ from pathlib import Path
 WAYBAR_HOME = Path(__file__).resolve().parents[1]
 GLYPH_FILE = WAYBAR_HOME / "data/workspace-glyphs.json"
 NAMES_FILE = WAYBAR_HOME / "data/workspace-desktops.json"
-KWINRC = Path.home() / ".config/kwinrc"
+KWINRC = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "kwinrc"
 DESKTOP_RE = re.compile(r'\(uss\) (\d+), "([^"]+)", "([^"]+)"')
 DEFAULT_DESKTOP_RE = re.compile(r"^desktop\s+\d+$", re.IGNORECASE)
 
@@ -108,7 +108,7 @@ def fetch_kde_desktops() -> list[tuple[int, str, str]]:
 def kde_current_desktop_id(output: str | None = None) -> str:
     if output:
         try:
-            cache_file = Path.home() / ".cache/waybar/kde-active-desktops.json"
+            cache_file = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "waybar/kde-active-desktops.json"
             if cache_file.is_file():
                 mapping = json.loads(cache_file.read_text(encoding="utf-8"))
                 if output in mapping:
@@ -280,7 +280,7 @@ def main() -> int:
     output = os.environ.get("WAYBAR_OUTPUT_NAME") or os.environ.get("WAYBAR_OUTPUT")
 
     import time
-    cache_dir = Path.home() / ".cache/waybar"
+    cache_dir = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "waybar"
     cache_file = cache_dir / f"workspaces-{output or 'default'}.json"
     
     state = None

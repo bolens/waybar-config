@@ -97,7 +97,7 @@ def clean_title(s):
 class ActiveWindowServer:
     def __init__(self):
         self.script_id = None
-        self.cache_dir = os.path.expanduser("~/.cache/waybar")
+        self.cache_dir = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "waybar")
         self.cache_file = os.path.join(self.cache_dir, "active-window.json")
         os.makedirs(self.cache_dir, exist_ok=True)
         
@@ -857,7 +857,7 @@ class ActiveWindowServer:
         subprocess.run(["pkill", "-x", "-RTMIN+2", "waybar"], stderr=subprocess.DEVNULL)
 
     def on_nightlight_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        cache_dir = os.path.expanduser("~/.cache/waybar")
+        cache_dir = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "waybar")
         cache_file = os.path.join(cache_dir, "nightlight-status.json")
         try:
             if os.path.exists(cache_file):
