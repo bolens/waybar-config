@@ -372,6 +372,12 @@ class ActiveWindowServer:
         return False
 
     def clear_workspace_cache(self):
+        """
+        Invalidates output-specific workspaces JSON caches (e.g. workspaces-DP-1.json).
+        This bypasses the 0.2-second cache TTL inside workspaces-query.py, avoiding
+        stale layout displays during desktop transitions when signals arrive before 
+        DBus states have finished writing.
+        """
         import glob
         try:
             for fpath in glob.glob(os.path.join(self.cache_dir, "workspaces-*.json")):

@@ -42,5 +42,6 @@ case "$action" in
     ;;
 esac
 
+# Invalidate cache to force instant redraw of active indicator on click/scroll
 rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/waybar"/workspaces-*.json 2>/dev/null || true
 "$script_dir/waybar-signal.sh" 16
