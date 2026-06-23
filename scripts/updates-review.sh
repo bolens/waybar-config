@@ -49,7 +49,7 @@ if [ "$choice" = "🚀 Upgrade System Now" ]; then
     . "$script_dir/compositor-session.sh"
   else
     # shellcheck source=compositor-session.sh
-    . "$HOME/.config/waybar/scripts/compositor-session.sh"
+    . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/compositor-session.sh"
   fi
   
   comp=$(detect_compositor)

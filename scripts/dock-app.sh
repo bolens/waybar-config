@@ -8,7 +8,7 @@ APP_ID="${1:-}"
 ACTION="${2:-}"
 
 script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
-manifest="${WAYBAR_HOME:-$HOME/.config/waybar}/data/dock-apps.json"
+manifest="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/data/dock-apps.json"
 # shellcheck source=compositor-session.sh
 . "$script_dir/compositor-session.sh"
 

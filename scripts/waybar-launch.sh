@@ -49,7 +49,7 @@ if [[ -z "${XCURSOR_SIZE:-}" ]]; then
 	fi
 fi
 
-export WAYBAR_HOME="${WAYBAR_HOME:-$HOME/.config/waybar}"
+export WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 export WAYBAR_SCRIPTS="$WAYBAR_HOME/scripts"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"

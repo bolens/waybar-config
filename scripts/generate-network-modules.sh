@@ -2,12 +2,12 @@
 # Regenerate per-interface network modules from data/network-interfaces.json.
 set -euo pipefail
 
-WAYBAR_HOME="${WAYBAR_HOME:-$HOME/.config/waybar}"
+WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 . "${0%/*}/waybar-settings.sh"
 manifest="$WAYBAR_HOME/data/network-interfaces.json"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
 modules_out="$WAYBAR_HOME/modules/network.generated.jsonc"
-scripts='$HOME/.config/waybar/scripts'
+scripts='$WAYBAR_HOME/scripts'
 
 [ -f "$manifest" ] || exit 0
 command -v jq >/dev/null 2>&1 || exit 0

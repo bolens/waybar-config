@@ -6,7 +6,7 @@ app_id="${1:-}"
 action="${2:-status}"
 
 script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
-manifest="${WAYBAR_HOME:-$HOME/.config/waybar}/data/dock-apps.json"
+manifest="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/data/dock-apps.json"
 
 if [ -z "$app_id" ] || [ ! -f "$manifest" ]; then
   exit 1

@@ -4,7 +4,7 @@
     "return-type": "json",
     "signal": 2,
     "interval": "once",
-    "exec": "$HOME/.config/waybar/scripts/keyboard-layout-status.sh",
+    "exec": "$WAYBAR_HOME/scripts/keyboard-layout-status.sh",
     "tooltip": true
   },
   "custom/gamemode": {
@@ -12,17 +12,17 @@
     "return-type": "json",
     "signal": 15,
     "interval": "once",
-    "exec": "$HOME/.config/waybar/scripts/gamemode-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/gamemode-click.sh toggle",
-    "on-click-right": "$HOME/.config/waybar/scripts/gamemode-click.sh restore",
+    "exec": "$WAYBAR_HOME/scripts/gamemode-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/gamemode-click.sh toggle",
+    "on-click-right": "$WAYBAR_HOME/scripts/gamemode-click.sh restore",
     "tooltip": true
   },
   "custom/keybindhint": {
     "format": "{}",
     "return-type": "json",
     "interval": "once",
-    "exec": "$HOME/.config/waybar/scripts/keybindhint-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/keybindhint-click.sh",
+    "exec": "$WAYBAR_HOME/scripts/keybindhint-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/keybindhint-click.sh",
     "tooltip": true
   }
 }

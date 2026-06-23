@@ -2,7 +2,7 @@
 # Validate generated Waybar JSONC files parse as JSON.
 set -euo pipefail
 
-WAYBAR_HOME="${WAYBAR_HOME:-$HOME/.config/waybar}"
+WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 fail=0
 
 strip_jsonc() {

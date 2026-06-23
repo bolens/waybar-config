@@ -7,7 +7,7 @@ script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
   . "$script_dir/waybar-cache-helpers.sh"
 else
-  . "$HOME/.config/waybar/scripts/waybar-cache-helpers.sh"
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 fi
 cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/waybar/dock-windows-status.json"
 debounce_stamp="${XDG_RUNTIME_DIR:-/tmp}/waybar-dock-signal.stamp"

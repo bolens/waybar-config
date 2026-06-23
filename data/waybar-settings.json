@@ -349,7 +349,7 @@
     "podman_ps": "ghostty -e podman ps -a",
     "virsh_list": "ghostty -e virsh list --all",
     "paru_update": "ghostty -e paru -Syu",
-    "updates_review": "$HOME/.config/waybar/scripts/updates-review.sh",
+    "updates_review": "$WAYBAR_HOME/scripts/updates-review.sh",
     "audio_mixer": "goxlr-launcher",
     "discord": "discord"
   }

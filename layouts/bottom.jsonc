@@ -1,5 +1,5 @@
 {
   "include": [
-    "$HOME/.config/waybar/layouts/bottom.generated.jsonc"
+    "$WAYBAR_HOME/layouts/bottom.generated.jsonc"
   ]
 }

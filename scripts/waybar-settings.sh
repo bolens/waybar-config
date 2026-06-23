@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Read ~/.config/waybar/data/waybar-settings.json with sane fallbacks.
+# Read ${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/data/waybar-settings.json with sane fallbacks.
 set -euo pipefail
 
-WAYBAR_HOME="${WAYBAR_HOME:-$HOME/.config/waybar}"
+WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 WAYBAR_SETTINGS="${WAYBAR_SETTINGS:-$WAYBAR_HOME/data/waybar-settings.json}"
 WAYBAR_SERVICES_LEGACY="${WAYBAR_HOME}/data/waybar-services.json"
 

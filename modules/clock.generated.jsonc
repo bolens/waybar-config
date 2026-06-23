@@ -3,8 +3,8 @@
     "interval": 60,
     "format": "{:%I:%M %p  %a, %b %d}",
     "tooltip-format": "<big>{:%A, %B %d, %Y}</big>\n<tt>{calendar}</tt>",
-    "on-click": "$HOME/.config/waybar/scripts/calendar-popup.sh",
-    "on-click-right": "$HOME/.config/waybar/scripts/app-open.sh kclock",
+    "on-click": "$WAYBAR_HOME/scripts/calendar-popup.sh",
+    "on-click-right": "$WAYBAR_HOME/scripts/app-open.sh kclock",
     "calendar": {
       "mode": "month",
       "on-scroll": 1,
@@ -25,8 +25,8 @@
     "interval": 60,
     "format": "{:%a, %b %d %I:%M %p}",
     "tooltip-format": "<big>{:%Y-%m-%d}</big>\n<tt>{calendar}</tt>",
-    "on-click": "$HOME/.config/waybar/scripts/calendar-popup.sh",
-    "on-click-right": "$HOME/.config/waybar/scripts/app-open.sh kclock",
+    "on-click": "$WAYBAR_HOME/scripts/calendar-popup.sh",
+    "on-click-right": "$WAYBAR_HOME/scripts/app-open.sh kclock",
     "calendar": {
       "mode": "month",
       "on-scroll": 1,

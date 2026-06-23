@@ -5,7 +5,7 @@
     "signal": 10,
     "interval": "once",
     "escape": true,
-    "exec": "$HOME/.config/waybar/scripts/notifications-status.sh",
+    "exec": "$WAYBAR_HOME/scripts/notifications-status.sh",
     "format-icons": {
       "notification": "󰂚",
       "none": "󰂜",
@@ -17,38 +17,38 @@
       "dnd-inhibited-none": "󰂛",
       "unknown": "󰂚"
     },
-    "on-click": "$HOME/.config/waybar/scripts/notifications-click.sh open",
-    "on-click-right": "$HOME/.config/waybar/scripts/notifications-click.sh dnd",
-    "on-click-middle": "$HOME/.config/waybar/scripts/notifications-click.sh settings"
+    "on-click": "$WAYBAR_HOME/scripts/notifications-click.sh open",
+    "on-click-right": "$WAYBAR_HOME/scripts/notifications-click.sh dnd",
+    "on-click-middle": "$WAYBAR_HOME/scripts/notifications-click.sh settings"
   },
   "custom/screenshot": {
     "format": "{}",
     "return-type": "json",
     "interval": "once",
-    "exec": "$HOME/.config/waybar/scripts/screenshot-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/screenshot-click.sh select",
-    "on-click-right": "$HOME/.config/waybar/scripts/screenshot-click.sh full",
-    "on-click-middle": "$HOME/.config/waybar/scripts/screenshot-click.sh window"
+    "exec": "$WAYBAR_HOME/scripts/screenshot-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/screenshot-click.sh select",
+    "on-click-right": "$WAYBAR_HOME/scripts/screenshot-click.sh full",
+    "on-click-middle": "$WAYBAR_HOME/scripts/screenshot-click.sh window"
   },
   "custom/screenrecord": {
     "format": "{}",
     "return-type": "json",
     "signal": 6,
     "interval": "once",
-    "exec": "$HOME/.config/waybar/scripts/screenrecord-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/screenrecord-click.sh select",
-    "on-click-right": "$HOME/.config/waybar/scripts/screenrecord-click.sh full",
-    "on-click-middle": "$HOME/.config/waybar/scripts/screenrecord-click.sh window"
+    "exec": "$WAYBAR_HOME/scripts/screenrecord-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/screenrecord-click.sh select",
+    "on-click-right": "$WAYBAR_HOME/scripts/screenrecord-click.sh full",
+    "on-click-middle": "$WAYBAR_HOME/scripts/screenrecord-click.sh window"
   },
   "custom/nightlight": {
     "format": "{}",
     "return-type": "json",
     "signal": 14,
     "interval": "once",
-    "exec": "$HOME/.config/waybar/scripts/nightlight-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/nightlight-toggle.sh toggle",
-    "on-click-middle": "$HOME/.config/waybar/scripts/nightlight-toggle.sh force_toggle",
-    "on-click-right": "$HOME/.config/waybar/scripts/nightlight-toggle.sh settings"
+    "exec": "$WAYBAR_HOME/scripts/nightlight-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/nightlight-toggle.sh toggle",
+    "on-click-middle": "$WAYBAR_HOME/scripts/nightlight-toggle.sh force_toggle",
+    "on-click-right": "$WAYBAR_HOME/scripts/nightlight-toggle.sh settings"
   },
   "custom/clipboard": {
     "format": "{0}{icon}",
@@ -56,112 +56,112 @@
     "signal": 9,
     "interval": 60,
     "escape": true,
-    "exec": "$HOME/.config/waybar/scripts/clipboard-status.sh",
+    "exec": "$WAYBAR_HOME/scripts/clipboard-status.sh",
     "format-icons": {
       "normal": "󰅌",
       "empty": "󰅍",
       "disabled": "󰅌",
       "unknown": "󰅌"
     },
-    "on-click": "$HOME/.config/waybar/scripts/clipboard-click.sh open",
-    "on-click-right": "$HOME/.config/waybar/scripts/clipboard-click.sh clear",
-    "on-click-middle": "$HOME/.config/waybar/scripts/clipboard-click.sh edit"
+    "on-click": "$WAYBAR_HOME/scripts/clipboard-click.sh open",
+    "on-click-right": "$WAYBAR_HOME/scripts/clipboard-click.sh clear",
+    "on-click-middle": "$WAYBAR_HOME/scripts/clipboard-click.sh edit"
   },
   "custom/brightness": {
     "format": "{}",
     "return-type": "json",
     "signal": 8,
     "interval": "once",
-    "exec": "$HOME/.config/waybar/scripts/compositor-gate.sh --hide hyprland -- $HOME/.config/waybar/scripts/brightness-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/brightness-control.sh adjust -5",
-    "on-click-right": "$HOME/.config/waybar/scripts/brightness-control.sh adjust +5",
-    "on-click-middle": "$HOME/.config/waybar/scripts/brightness-control.sh set 80",
-    "on-scroll-up": "$HOME/.config/waybar/scripts/brightness-control.sh adjust +5",
-    "on-scroll-down": "$HOME/.config/waybar/scripts/brightness-control.sh adjust -5"
+    "exec": "$WAYBAR_HOME/scripts/compositor-gate.sh --hide hyprland -- $WAYBAR_HOME/scripts/brightness-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/brightness-control.sh adjust -5",
+    "on-click-right": "$WAYBAR_HOME/scripts/brightness-control.sh adjust +5",
+    "on-click-middle": "$WAYBAR_HOME/scripts/brightness-control.sh set 80",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/brightness-control.sh adjust +5",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/brightness-control.sh adjust -5"
   },
   "custom/powerprofiles": {
     "format": "{}",
     "return-type": "json",
     "signal": 3,
     "interval": "once",
-    "exec": "$HOME/.config/waybar/scripts/powerprofiles-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/powerprofiles-click.sh menu",
-    "on-click-right": "$HOME/.config/waybar/scripts/powerprofiles-click.sh power-saver",
-    "on-click-middle": "$HOME/.config/waybar/scripts/powerprofiles-click.sh balanced",
-    "on-scroll-up": "$HOME/.config/waybar/scripts/powerprofiles-click.sh next",
-    "on-scroll-down": "$HOME/.config/waybar/scripts/powerprofiles-click.sh next"
+    "exec": "$WAYBAR_HOME/scripts/powerprofiles-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/powerprofiles-click.sh menu",
+    "on-click-right": "$WAYBAR_HOME/scripts/powerprofiles-click.sh power-saver",
+    "on-click-middle": "$WAYBAR_HOME/scripts/powerprofiles-click.sh balanced",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/powerprofiles-click.sh next",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/powerprofiles-click.sh next"
   },
   "custom/discord": {
     "format": "{}",
     "return-type": "json",
     "interval": 120,
-    "exec": "$HOME/.config/waybar/scripts/discord-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/app-open.sh discord",
-    "on-click-right": "$HOME/.config/waybar/scripts/discord-click.sh mute",
-    "on-click-middle": "$HOME/.config/waybar/scripts/discord-click.sh deafen"
+    "exec": "$WAYBAR_HOME/scripts/discord-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/app-open.sh discord",
+    "on-click-right": "$WAYBAR_HOME/scripts/discord-click.sh mute",
+    "on-click-middle": "$WAYBAR_HOME/scripts/discord-click.sh deafen"
   },
   "custom/lock": {
     "format": "",
     "tooltip-format": "Lock screen",
-    "on-click": "$HOME/.config/waybar/scripts/power-click.sh lock"
+    "on-click": "$WAYBAR_HOME/scripts/power-click.sh lock"
   },
   "custom/logout": {
     "format": "󰍃",
     "tooltip-format": "Logout session",
-    "on-click": "$HOME/.config/waybar/scripts/power-click.sh logout"
+    "on-click": "$WAYBAR_HOME/scripts/power-click.sh logout"
   },
   "custom/suspend": {
     "format": "󰤄",
     "tooltip-format": "Suspend system",
-    "on-click": "$HOME/.config/waybar/scripts/power-click.sh suspend"
+    "on-click": "$WAYBAR_HOME/scripts/power-click.sh suspend"
   },
   "custom/reboot": {
     "format": "󰜉",
     "tooltip-format": "Reboot system",
-    "on-click": "$HOME/.config/waybar/scripts/power-click.sh reboot"
+    "on-click": "$WAYBAR_HOME/scripts/power-click.sh reboot"
   },
   "custom/shutdown": {
     "format": "󰐥",
     "tooltip-format": "Shutdown system",
-    "on-click": "$HOME/.config/waybar/scripts/power-click.sh shutdown"
+    "on-click": "$WAYBAR_HOME/scripts/power-click.sh shutdown"
   },
   "custom/kdeconnect": {
     "format": "{}",
     "return-type": "json",
     "signal": 18,
     "interval": "once",
-    "exec": "$HOME/.config/waybar/scripts/kdeconnect-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/kdeconnect-status.sh --ring"
+    "exec": "$WAYBAR_HOME/scripts/kdeconnect-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/kdeconnect-status.sh --ring"
   },
   "custom/weather": {
     "format": "{}",
     "return-type": "json",
     "interval": 1800,
-    "exec": "$HOME/.config/waybar/scripts/weather-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/app-open.sh xdg-open https://wttr.in/"
+    "exec": "$WAYBAR_HOME/scripts/weather-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/app-open.sh xdg-open https://wttr.in/"
   },
   "custom/systemd": {
     "format": "{}",
     "return-type": "json",
     "interval": 60,
-    "exec": "$HOME/.config/waybar/scripts/systemd-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/app-open.sh ghostty -e bash -c \"echo \\\"Failed System Services:\\\"; systemctl --failed; echo \\\"\\\"; echo \\\"Failed User Services:\\\"; systemctl --user --failed; echo \\\"\\\"; read -p \\\"Press Enter to close... \\\"\""
+    "exec": "$WAYBAR_HOME/scripts/systemd-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/app-open.sh ghostty -e bash -c \"echo \\\"Failed System Services:\\\"; systemctl --failed; echo \\\"\\\"; echo \\\"Failed User Services:\\\"; systemctl --user --failed; echo \\\"\\\"; read -p \\\"Press Enter to close... \\\"\""
   },
   "custom/github": {
     "format": "{}",
     "return-type": "json",
     "interval": 300,
-    "exec": "$HOME/.config/waybar/scripts/github-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/app-open.sh xdg-open https://github.com/notifications"
+    "exec": "$WAYBAR_HOME/scripts/github-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/app-open.sh xdg-open https://github.com/notifications"
   },
   "custom/device-battery": {
     "format": "{}",
     "return-type": "json",
     "signal": 4,
     "interval": "once",
-    "exec": "$HOME/.config/waybar/scripts/device-battery-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/app-open.sh solaar",
-    "on-click-right": "$HOME/.config/waybar/scripts/app-open.sh systemsettings",
-    "on-click-middle": "$HOME/.config/waybar/scripts/device-battery-status.sh --refresh"
+    "exec": "$WAYBAR_HOME/scripts/device-battery-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/app-open.sh solaar",
+    "on-click-right": "$WAYBAR_HOME/scripts/app-open.sh systemsettings",
+    "on-click-middle": "$WAYBAR_HOME/scripts/device-battery-status.sh --refresh"
   }
 }

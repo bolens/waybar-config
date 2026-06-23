@@ -3,7 +3,7 @@
 # Uses per-slot active backgrounds (standard Waybar pattern) — no overlay pill module.
 set -euo pipefail
 
-WAYBAR_HOME="${WAYBAR_HOME:-$HOME/.config/waybar}"
+WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 . "${0%/*}/waybar-settings.sh"
 config="${WAYBAR_HOME}/data/workspace-bar.json"
 settings="${WAYBAR_HOME}/data/waybar-settings.json"

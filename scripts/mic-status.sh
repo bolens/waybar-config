@@ -2,7 +2,7 @@
 set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-. "$HOME/.config/waybar/scripts/waybar-cache-helpers.sh"
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 source_cache="$cache_dir/mic-source-label.txt"
 status_cache="$cache_dir/mic-status.json"
 lock_dir="$cache_dir/mic-status.lock.d"

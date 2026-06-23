@@ -12,7 +12,7 @@ docker_summary() {
     fi
   fi
 
-  json="$($HOME/.config/waybar/scripts/docker-status.sh 2>/dev/null || true)"
+  json="$(${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/docker-status.sh 2>/dev/null || true)"
 
   [ -n "$json" ] || {
     jq -cn \

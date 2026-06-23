@@ -5,7 +5,7 @@ set -eu
 trap '' PIPE
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-. "$HOME/.config/waybar/scripts/waybar-cache-helpers.sh"
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 cache_file="$cache_dir/updates-status.json"
 
 # TTL matches updates-status.sh / bottom-bar custom/updates interval (300s).
@@ -20,7 +20,7 @@ if [ -f "$cache_file" ]; then
 fi
 
 # If cache is missing or stale, trigger background refresh (non-blocking)
-(~/.config/waybar/scripts/updates-status.sh >/dev/null 2>&1 &) || true
+(${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/updates-status.sh >/dev/null 2>&1 &) || true
 
 # Show placeholder if no cache, else show stale cache
 if [ -f "$cache_file" ]; then

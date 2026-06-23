@@ -2,7 +2,7 @@
 set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-. "$HOME/.config/waybar/scripts/waybar-cache-helpers.sh"
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 cache_file="$cache_dir/updates-status.json"
 lock_dir="$cache_dir/updates-status.lock.d"
 ttl=300
@@ -36,7 +36,7 @@ if [ "${1:-}" != "--refresh" ]; then
 fi
 
 # shellcheck source=unicode-animations-lib.sh
-. "$HOME/.config/waybar/scripts/unicode-animations-lib.sh"
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/unicode-animations-lib.sh"
 
 preview_limit=40
 

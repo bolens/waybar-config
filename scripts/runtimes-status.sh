@@ -2,7 +2,7 @@
 set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-. "$HOME/.config/waybar/scripts/waybar-cache-helpers.sh"
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 cache_file="$cache_dir/runtimes-status.json"
 lock_dir="$cache_dir/runtimes-status.lock.d"
 ttl=600
@@ -57,7 +57,7 @@ docker_json=""
 if [ -f "$cache_dir/docker-status.json" ]; then
   docker_json="$(cat "$cache_dir/docker-status.json")"
 else
-  docker_json="$($HOME/.config/waybar/scripts/docker-status.sh 2>/dev/null || true)"
+  docker_json="$(${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/docker-status.sh 2>/dev/null || true)"
 fi
 
 if [ -n "$docker_json" ]; then

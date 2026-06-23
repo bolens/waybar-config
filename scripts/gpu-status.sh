@@ -2,7 +2,7 @@
 set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-script_dir="$HOME/.config/waybar/scripts"
+script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
 
 . "$script_dir/waybar-cache-helpers.sh"
 

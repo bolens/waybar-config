@@ -2,13 +2,13 @@
 # Regenerate dock launcher modules and dock drawer group from data/dock-apps.json.
 set -euo pipefail
 
-WAYBAR_HOME="${WAYBAR_HOME:-$HOME/.config/waybar}"
+WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 . "${0%/*}/waybar-settings.sh"
 manifest="$WAYBAR_HOME/data/dock-apps.json"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
 modules_out="$WAYBAR_HOME/modules/dock.generated.jsonc"
 groups_out="$WAYBAR_HOME/modules/groups-dock.generated.jsonc"
-scripts='$HOME/.config/waybar/scripts'
+scripts='$WAYBAR_HOME/scripts'
 
 [ -f "$manifest" ] || exit 1
 

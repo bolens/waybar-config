@@ -12,7 +12,7 @@ runtimes_summary() {
     fi
   fi
 
-  rt_json="$(~/.config/waybar/scripts/runtimes-status.sh 2>/dev/null || true)"
+  rt_json="$(${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/runtimes-status.sh 2>/dev/null || true)"
   [ -n "$rt_json" ] || {
     jq -cn \
       --arg line1 "$(format_lr "Engines ready" "0/4")" \

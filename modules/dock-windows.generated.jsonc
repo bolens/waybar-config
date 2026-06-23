@@ -8,9 +8,9 @@
     "align": 0.5,
     "signal": 11,
     "interval": 120,
-    "exec": "$HOME/.config/waybar/scripts/dock-windows-status.sh",
-    "on-click": "$HOME/.config/waybar/scripts/dock-windows-click.sh activate",
-    "on-click-right": "$HOME/.config/waybar/scripts/dock-windows-click.sh close-focused",
-    "on-click-middle": "$HOME/.config/waybar/scripts/dock-windows-click.sh cycle"
+    "exec": "$WAYBAR_HOME/scripts/dock-windows-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/dock-windows-click.sh activate",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock-windows-click.sh close-focused",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock-windows-click.sh cycle"
   }
 }

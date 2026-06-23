@@ -2,7 +2,7 @@
 set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-. "$HOME/.config/waybar/scripts/waybar-cache-helpers.sh"
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 force_state_file="$cache_dir/nightlight-kde-force"
 cache_file="$cache_dir/nightlight-status.json"
 lock_dir="$cache_dir/nightlight-status.lock.d"

@@ -1,6 +1,6 @@
 {
   "include": [
-    "$HOME/.config/waybar/layouts/top-left.generated.jsonc",
-    "$HOME/.config/waybar/layouts/top-shell.generated.jsonc"
+    "$WAYBAR_HOME/layouts/top-left.generated.jsonc",
+    "$WAYBAR_HOME/layouts/top-shell.generated.jsonc"
   ]
 }

@@ -2,11 +2,11 @@
 # Regenerate module JSONC files from data/waybar-settings.json.
 set -euo pipefail
 
-WAYBAR_HOME="${WAYBAR_HOME:-$HOME/.config/waybar}"
+WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 . "${0%/*}/waybar-settings.sh"
 . "${0%/*}/waybar-cache-helpers.sh"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
-scripts='$HOME/.config/waybar/scripts'
+scripts='$WAYBAR_HOME/scripts'
 
 hour_format=$(detect_clock_format)
 date_format=$(detect_date_format)

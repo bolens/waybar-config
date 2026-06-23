@@ -2,11 +2,11 @@
 # Regenerate bar defaults, layouts, groups, and system modules from data/waybar-settings.json.
 set -euo pipefail
 
-WAYBAR_HOME="${WAYBAR_HOME:-$HOME/.config/waybar}"
+WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 . "${0%/*}/waybar-settings.sh"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
 network_manifest="$WAYBAR_HOME/data/network-interfaces.json"
-scripts='$HOME/.config/waybar/scripts'
+scripts='$WAYBAR_HOME/scripts'
 
 bar_defaults_out="$WAYBAR_HOME/includes/bar-defaults.generated.jsonc"
 top_layout_out="$WAYBAR_HOME/layouts/top-shell.generated.jsonc"

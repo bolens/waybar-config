@@ -3,7 +3,7 @@ set -eu
 
 script_dir="${0%/*}"
 config="${HYPRLAND_CONFIG:-$HOME/.config/hypr/hyprland.conf}"
-rofi_theme="$HOME/.config/waybar/themes/dock-rofi.rasi"
+rofi_theme="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/themes/dock-rofi.rasi"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/keybindhint.txt"
 

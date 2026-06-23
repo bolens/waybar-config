@@ -3,7 +3,7 @@
 set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-. "$HOME/.config/waybar/scripts/waybar-cache-helpers.sh"
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 cache_file="$cache_dir/system-metrics.json"
 lock_dir="$cache_dir/system-metrics.lock.d"
 stat_prev="$cache_dir/cpu-stat.prev"
@@ -485,4 +485,4 @@ tmp_cache="$cache_file.tmp.$$"
 printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"
 find "$cache_dir" -maxdepth 1 -name 'system-metrics.json.tmp.*' -mtime +0 -delete 2>/dev/null || true
-"$HOME/.config/waybar/scripts/metrics-icons-build.sh" "$cache_file" "$cache_dir/metrics-icons.json" 2>/dev/null || true
+"${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/metrics-icons-build.sh" "$cache_file" "$cache_dir/metrics-icons.json" 2>/dev/null || true

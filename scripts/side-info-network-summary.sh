@@ -66,7 +66,7 @@ network_summary() {
     ethernet_state="$(cat "/sys/class/net/$ethernet_iface/operstate" 2>/dev/null || true)"
   fi
 
-  ts_json="$(~/.config/waybar/scripts/tailscale-status.sh 2>/dev/null || true)"
+  ts_json="$(${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/tailscale-status.sh 2>/dev/null || true)"
   ts_tooltip=''
   ts_backend=''
   ts_ip=''

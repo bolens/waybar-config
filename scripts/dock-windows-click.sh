@@ -7,7 +7,7 @@ state_file="$state_dir/index"
 mkdir -p "$state_dir"
 
 signal_dock() {
-  "$HOME/.config/waybar/scripts/dock-windows-signal.sh" >/dev/null 2>&1 || true
+  "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/dock-windows-signal.sh" >/dev/null 2>&1 || true
 }
 
 notify() {
@@ -28,7 +28,7 @@ trim_title() {
 }
 
 pick_menu() {
-  local theme_dir="$HOME/.config/waybar/themes"
+  local theme_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/themes"
   local rofi_theme="$theme_dir/dock-rofi.rasi"
   if command -v rofi >/dev/null 2>&1; then
     if [ -f "$rofi_theme" ]; then

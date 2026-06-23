@@ -2,7 +2,7 @@
 # Generate compositor-specific Hyprland native modules, desk-hypr group, and top-left layout.
 set -euo pipefail
 
-WAYBAR_HOME="${WAYBAR_HOME:-$HOME/.config/waybar}"
+WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 script_dir="$WAYBAR_HOME/scripts"
 native_out="$WAYBAR_HOME/modules/hyprland.native.generated.jsonc"
 group_out="$WAYBAR_HOME/modules/groups-desk-hypr.generated.jsonc"

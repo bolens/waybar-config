@@ -9,7 +9,7 @@ fi
 if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
   . "$script_dir/waybar-cache-helpers.sh"
 else
-  . "$HOME/.config/waybar/scripts/waybar-cache-helpers.sh"
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 fi
 
 cache_file_for() {
