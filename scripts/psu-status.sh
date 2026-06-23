@@ -16,6 +16,9 @@ if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
 else
   . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 fi
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
+psu_temp_warn=$(waybar_settings_get '.thresholds.psu.temp.warning' '55')
+psu_temp_crit=$(waybar_settings_get '.thresholds.psu.temp.critical' '65')
 
 
 if [ "${1:-}" != "--refresh" ]; then
@@ -127,9 +130,9 @@ class="normal"
 vrm_int=${temp_vrm%.*}
 case_int=${temp_case%.*}
 
-if [ -n "$vrm_int" ] && [ "$vrm_int" -ge 65 ]; then
+if [ -n "$vrm_int" ] && [ "$vrm_int" -ge "$psu_temp_crit" ] 2>/dev/null; then
   class="critical"
-elif [ -n "$vrm_int" ] && [ "$vrm_int" -ge 55 ]; then
+elif [ -n "$vrm_int" ] && [ "$vrm_int" -ge "$psu_temp_warn" ] 2>/dev/null; then
   class="warning"
 fi
 

@@ -16,6 +16,11 @@ if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
 else
   . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 fi
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
+fan_cpu_warn=$(waybar_settings_get '.thresholds.fans.cpu.warning' '1600')
+fan_cpu_crit=$(waybar_settings_get '.thresholds.fans.cpu.critical' '2000')
+fan_gpu_warn=$(waybar_settings_get '.thresholds.fans.gpu.warning' '70')
+fan_gpu_crit=$(waybar_settings_get '.thresholds.fans.gpu.critical' '85')
 
 
 if [ "${1:-}" != "--refresh" ]; then
@@ -146,9 +151,9 @@ tooltip=$(printf '%s\n\nLeft: nvtop · Right: btop · Middle: refresh' "$tooltip
 
 # Style classes based on RPM/percentage limits
 class="normal"
-if [ "$cpu_fan" -ge 2000 ] || [ "$gpu_fan" -ge 85 ]; then
+if [ "$cpu_fan" -ge "$fan_cpu_crit" ] 2>/dev/null || [ "$gpu_fan" -ge "$fan_gpu_crit" ] 2>/dev/null; then
   class="critical"
-elif [ "$cpu_fan" -ge 1600 ] || [ "$gpu_fan" -ge 70 ]; then
+elif [ "$cpu_fan" -ge "$fan_cpu_warn" ] 2>/dev/null || [ "$gpu_fan" -ge "$fan_gpu_warn" ] 2>/dev/null; then
   class="warning"
 fi
 

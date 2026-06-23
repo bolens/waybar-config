@@ -355,6 +355,13 @@
     "disk": {
       "warning": 75,
       "critical": 90
+    },
+    "fans": {
+      "cpu": { "warning": 1600, "critical": 2000 },
+      "gpu": { "warning": 70, "critical": 85 }
+    },
+    "psu": {
+      "temp": { "warning": 55, "critical": 65 }
     }
   },
   "apps": {
