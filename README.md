@@ -20,6 +20,7 @@ The scripts and widgets included in this configuration depend on the following p
 - `python-gobject` / `pygobject` (required by the Python listener script for GLib/Gio DBus interfaces)
 - `socat` (required by the Hyprland event listener script)
 - `jq` (required by almost all status scripts and configuration generators to parse JSON)
+- `wireplumber` (provides `wpctl`, required for volume status and default audio sink controls)
 
 ### Menu & Interface Utilities
 - `rofi` or `wofi` (required for calendar, bluetooth, clipboard, and window-switching menus)
@@ -28,19 +29,26 @@ The scripts and widgets included in this configuration depend on the following p
 - `wtype` (required for background hotkey simulation, e.g. Discord controls)
 - `zscroll` (required for scrolling text in status modules)
 - `libnotify` (provides `notify-send`, required for system notifications)
+- `pavucontrol` or `pwvucontrol` (optional GUI volume control mixer, opened on audio module click)
 
 ### Hardware & Network Status Controls
 - `networkmanager` (provides `nmcli`, required for network and VPN status)
 - `pipewire-pulse` / `pulseaudio` (provides `pactl`, required for audio/volume management)
+- `wireless_tools` (provides `iwgetid`, optional, required for WiFi ESSID connection details)
+- `brightnessctl` (optional, required for local laptop display backlight controls)
 - `ddcutil` (optional, required for monitor brightness controls via DDC/CI)
 - `docker` (optional, required for Docker container status tracking)
 - `github-cli` (provides `gh`, optional, required for GitHub notification status)
-- `pacman-contrib` (provides `checkupdates`, optional, required for Arch Linux update metrics)
+- `upower` (optional, required for notebook battery and general power state tracking)
+- `nut` (provides `upsc`, optional, required for local UPS battery status tracking)
 - `ripgrep` (provides `rg`, required for fast text searching in various status scripts)
 
-### Security & System Status
-- `chkrootkit` (optional, required for security check status tracking)
-- `libredefender` (optional, required for local firewall/antivirus protection status tracking)
+### Security, System Status & Updates
+- `chkrootkit` (optional, required for security scan state alerts)
+- `libredefender` (optional, required for local firewall/antivirus status checks)
+- `pacman-contrib` (provides `checkupdates`, optional, required for Arch Linux system updates status)
+- `flatpak` (optional, required for flatpak application updates tracking)
+- `paru` or `yay` (optional AUR helper, required for AUR updates checking)
 
 ## File Structure
 
