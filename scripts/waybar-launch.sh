@@ -144,11 +144,15 @@ if [ -f "$XDG_CACHE_HOME/waybar/system-metrics.json" ]; then
 fi
 
 drop_patterns="$WAYBAR_HOME/scripts/waybar-journal-drop.rg"
+log_file="$XDG_CACHE_HOME/waybar/waybar.log"
+mkdir -p "$XDG_CACHE_HOME/waybar"
+> "$log_file"
+
 if [[ -f "$drop_patterns" ]] && command -v rg >/dev/null 2>&1; then
 	exec /usr/bin/waybar "$@" \
 		2> >(
-			rg -v -f "$drop_patterns" >&2
+			rg -v -f "$drop_patterns" | tee "$log_file" >&2
 		)
 fi
 
-exec /usr/bin/waybar "$@"
+exec /usr/bin/waybar "$@" 2> >(tee "$log_file" >&2)
