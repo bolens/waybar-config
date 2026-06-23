@@ -295,16 +295,16 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
 
   def default_top_format:
     if $hour_format == "12" then
-      if $date_format == "month-first" then "{:%I:%M %p  %a %b %d}" else "{:%I:%M %p  %a %d %b}" end
+      if $date_format == "month-first" then "{:%I:%M %p  %a, %b %d}" else "{:%I:%M %p  %a, %d %b}" end
     else
-      if $date_format == "month-first" then "{:%H:%M  %a %b %d}" else "{:%H:%M  %a %d %b}" end
+      if $date_format == "month-first" then "{:%H:%M  %a, %b %d}" else "{:%H:%M  %a, %d %b}" end
     end;
 
   def default_bottom_format:
     if $hour_format == "12" then
-      if $date_format == "month-first" then "{:%a %b %d %I:%M %p}" else "{:%a %d %b %I:%M %p}" end
+      if $date_format == "month-first" then "{:%a, %b %d %I:%M %p}" else "{:%a, %d %b %I:%M %p}" end
     else
-      if $date_format == "month-first" then "{:%a %b %d %H:%M}" else "{:%a %d %b %H:%M}" end
+      if $date_format == "month-first" then "{:%a, %b %d %H:%M}" else "{:%a, %d %b %H:%M}" end
     end;
 
   def default_top_tooltip:
