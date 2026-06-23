@@ -11,6 +11,10 @@ mkdir -p "$cache_dir"
 
 script_dir="${0%/*}"
 . "$script_dir/waybar-cache-helpers.sh"
+. "$script_dir/waybar-settings.sh"
+
+disk_warn=$(waybar_settings_get '.thresholds.disk.warning' '75')
+disk_crit=$(waybar_settings_get '.thresholds.disk.critical' '90')
 
 
 if [ "${1:-}" != "--refresh" ]; then
@@ -42,9 +46,9 @@ pct="${4:-0%}"
 
 percent_num=$(printf '%s' "$pct" | tr -d '%')
 class="normal"
-if [ "$percent_num" -ge 90 ] 2>/dev/null; then
+if [ "$percent_num" -ge "$disk_crit" ] 2>/dev/null; then
   class="critical"
-elif [ "$percent_num" -ge 75 ] 2>/dev/null; then
+elif [ "$percent_num" -ge "$disk_warn" ] 2>/dev/null; then
   class="warning"
 fi
 

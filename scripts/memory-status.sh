@@ -5,6 +5,10 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
 
 . "$script_dir/waybar-cache-helpers.sh"
+. "$script_dir/waybar-settings.sh"
+
+mem_warn=$(waybar_settings_get '.thresholds.memory.warning' '70')
+mem_crit=$(waybar_settings_get '.thresholds.memory.critical' '85')
 
 cached_file="$cache_dir/memory-icon.json"
 
@@ -59,9 +63,9 @@ tooltip=$(printf 'Memory: %s/%s GiB (%s%%)\nSwap: %s/%s GiB' \
   "$mem_used_gib" "$mem_total_gib" "$mem_pct" "$swap_used_gib" "$swap_total_gib")
 
 class="normal"
-if [ "$mem_pct" -ge 85 ] 2>/dev/null; then
+if [ "$mem_pct" -ge "$mem_crit" ] 2>/dev/null; then
   class="critical"
-elif [ "$mem_pct" -ge 70 ] 2>/dev/null; then
+elif [ "$mem_pct" -ge "$mem_warn" ] 2>/dev/null; then
   class="warning"
 fi
 

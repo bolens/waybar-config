@@ -5,6 +5,12 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
 
 . "$script_dir/waybar-cache-helpers.sh"
+. "$script_dir/waybar-settings.sh"
+
+gpu_warn=$(waybar_settings_get '.thresholds.gpu.util.warning' '70')
+gpu_crit=$(waybar_settings_get '.thresholds.gpu.util.critical' '90')
+gpu_temp_warn=$(waybar_settings_get '.thresholds.gpu.temp.warning' '75')
+gpu_temp_crit=$(waybar_settings_get '.thresholds.gpu.temp.critical' '83')
 
 cached_file="$cache_dir/gpu-icon.json"
 
@@ -74,9 +80,9 @@ if [ "$temp" -gt 0 ]; then
 fi
 
 class="normal"
-if [ "${temp:-0}" -ge 83 ] || [ "${util:-0}" -ge 90 ]; then
+if [ "${temp:-0}" -ge "$gpu_temp_crit" ] 2>/dev/null || [ "${util:-0}" -ge "$gpu_crit" ] 2>/dev/null; then
   class="critical"
-elif [ "${temp:-0}" -ge 75 ] || [ "${util:-0}" -ge 70 ]; then
+elif [ "${temp:-0}" -ge "$gpu_temp_warn" ] 2>/dev/null || [ "${util:-0}" -ge "$gpu_warn" ] 2>/dev/null; then
   class="warning"
 fi
 

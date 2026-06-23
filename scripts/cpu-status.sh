@@ -5,6 +5,12 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
 
 . "$script_dir/waybar-cache-helpers.sh"
+. "$script_dir/waybar-settings.sh"
+
+cpu_warn=$(waybar_settings_get '.thresholds.cpu.usage.warning' '60')
+cpu_crit=$(waybar_settings_get '.thresholds.cpu.usage.critical' '85')
+cpu_temp_warn=$(waybar_settings_get '.thresholds.cpu.temp.warning' '75')
+cpu_temp_crit=$(waybar_settings_get '.thresholds.cpu.temp.critical' '85')
 
 cached_file="$cache_dir/cpu-icon.json"
 
@@ -74,9 +80,9 @@ tooltip=$(printf 'CPU Utilization: %s%%\nTopology: %s cores / %s threads (%sT pe
   "$usage" "$cores" "$threads" "$threads_per_core" "$load_1" "$load_5" "$load_15" "$load_pct_1" "$load_pct_5" "$load_pct_15" "$runnable" "$formatted_temp")
 
 class="normal"
-if [ "$usage" -ge 85 ] || [ "$temp" -ge 85 ]; then
+if [ "$usage" -ge "$cpu_crit" ] 2>/dev/null || [ "$temp" -ge "$cpu_temp_crit" ] 2>/dev/null; then
   class="critical"
-elif [ "$usage" -ge 60 ] || [ "$temp" -ge 75 ]; then
+elif [ "$usage" -ge "$cpu_warn" ] 2>/dev/null || [ "$temp" -ge "$cpu_temp_warn" ] 2>/dev/null; then
   class="warning"
 fi
 

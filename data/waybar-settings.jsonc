@@ -333,6 +333,24 @@
     "unit": "auto", // Temperature unit: "F" (Fahrenheit), "C" (Celsius), or "auto" (detect from locale)
     "location": "auto" // Location query for wttr.in (e.g. "Paris", "New York", "Munich") or "auto" (auto-IP geo-location)
   },
+  "thresholds": {
+    "cpu": {
+      "usage": { "warning": 60, "critical": 85 },
+      "temp": { "warning": 75, "critical": 85 }
+    },
+    "gpu": {
+      "util": { "warning": 70, "critical": 90 },
+      "temp": { "warning": 75, "critical": 83 }
+    },
+    "memory": {
+      "warning": 70,
+      "critical": 85
+    },
+    "disk": {
+      "warning": 75,
+      "critical": 90
+    }
+  },
   "apps": {
     "clock": "kclock",
     "system_monitor": "missioncenter",
