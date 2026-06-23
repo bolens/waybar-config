@@ -330,7 +330,8 @@
     "hyprlight_click": "hyprlight osd"
   },
   "weather": {
-    "unit": "auto" // Temperature unit: "F" (Fahrenheit), "C" (Celsius), or "auto" (detect from locale)
+    "unit": "auto", // Temperature unit: "F" (Fahrenheit), "C" (Celsius), or "auto" (detect from locale)
+    "location": "auto" // Location query for wttr.in (e.g. "Paris", "New York", "Munich") or "auto" (auto-IP geo-location)
   },
   "apps": {
     "clock": "kclock",

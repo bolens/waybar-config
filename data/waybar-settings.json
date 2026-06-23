@@ -330,7 +330,8 @@
     "hyprlight_click": "hyprlight osd"
   },
   "weather": {
-    "unit": "auto" 
+    "unit": "auto", 
+    "location": "auto" 
   },
   "apps": {
     "clock": "kclock",

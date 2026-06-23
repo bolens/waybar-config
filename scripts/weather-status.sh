@@ -23,6 +23,8 @@ case "$weather_unit" in
   *) weather_unit="F" ;;
 esac
 
+weather_location=$(waybar_settings_get '.weather.location' '')
+
 map_code_to_icon() {
   case "$1" in
     113) printf '󰖙' ;; # Sunny/Clear
@@ -66,7 +68,11 @@ fi
 . "$script_dir/unicode-animations-lib.sh"
 
 fetch_weather_raw() {
-  curl -s --max-time 10 "https://wttr.in/?format=j1" > "$1" || true
+  local loc=""
+  if [ -n "$weather_location" ] && [ "$weather_location" != "null" ] && [ "$weather_location" != "auto" ]; then
+    loc="$weather_location"
+  fi
+  curl -s --max-time 10 "https://wttr.in/$loc?format=j1" > "$1" || true
 }
 
 tmp_weather=$(mktemp)
