@@ -16,11 +16,13 @@ if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
 else
   . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 fi
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
+service_name=$(waybar_settings_get '.services.libredefender.service_name' 'libredefender-scan.service')
 
 
 if [ "${1:-}" != "--refresh" ]; then
   # Check if scan is running
-  active_state=$(timeout 2 systemctl show -p ActiveState libredefender-scan.service 2>/dev/null | awk -F= '{print $2}')
+  active_state=$(timeout 2 systemctl show -p ActiveState "$service_name" 2>/dev/null | awk -F= '{print $2}')
   if [ "$active_state" = "active" ] || [ "$active_state" = "activating" ]; then
     # shellcheck source=unicode-animations-lib.sh
     . "$script_dir/unicode-animations-lib.sh"
@@ -35,7 +37,7 @@ if [ "${1:-}" != "--refresh" ]; then
     frame=0
     for i in $(seq 1 75); do # 75 * 0.2s = 15s
       if [ $((i % 25)) -eq 0 ]; then
-        state=$(timeout 2 systemctl show -p ActiveState libredefender-scan.service 2>/dev/null | awk -F= '{print $2}')
+        state=$(timeout 2 systemctl show -p ActiveState "$service_name" 2>/dev/null | awk -F= '{print $2}')
         if [ "$state" != "active" ] && [ "$state" != "activating" ]; then
           # Scan finished! Break loop to let the script write final cache
           break
@@ -107,7 +109,7 @@ while IFS='=' read -r key val; do
     ExecMainStatus) exit_code="$val" ;;
   esac
 done <<EOF
-$(timeout 2 systemctl show -p ActiveState -p Result -p ExecMainStatus libredefender-scan.service 2>/dev/null)
+$(timeout 2 systemctl show -p ActiveState -p Result -p ExecMainStatus "$service_name" 2>/dev/null)
 EOF
 
 status_text="Inactive"

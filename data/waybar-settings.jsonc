@@ -262,6 +262,12 @@
   "services": {
     "ups": {
       "nut_target": "ups@127.0.0.1:3493"
+    },
+    "chkrootkit": {
+      "service_name": "chkrootkit-scan.service"
+    },
+    "libredefender": {
+      "service_name": "libredefender-scan.service"
     }
   },
   "network": {

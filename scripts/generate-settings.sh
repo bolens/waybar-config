@@ -105,12 +105,19 @@ build_system_json() {
     bond_iface="$(jq -r '.bond.interface // "bond0"' "$network_manifest")"
   fi
 
+  local libredefender_service
+  libredefender_service=$(waybar_settings_get '.services.libredefender.service_name' 'libredefender-scan.service')
+  local chkrootkit_service
+  chkrootkit_service=$(waybar_settings_get '.services.chkrootkit.service_name' 'chkrootkit-scan.service')
+
   jq -n \
     --slurpfile settings "$settings" \
     --arg app_open "$app_open" \
     --arg scripts "$scripts" \
     --arg bond_iface "$bond_iface" \
     --arg eth_popup "python3 ${scripts}/ethernet-popup.py" \
+    --arg libredefender_service "$libredefender_service" \
+    --arg chkrootkit_service "$chkrootkit_service" \
     '
     def app($key): $settings[0].apps[$key] // "";
     def interval($key): ($settings[0].module_intervals[$key] // $settings[0].poll_intervals[$key] // 1);
@@ -238,8 +245,8 @@ build_system_json() {
         "return-type": "json",
         interval: interval("libredefender"),
         exec: ($scripts + "/libredefender-status.sh"),
-        "on-click": ($app_open + " systemctl start libredefender-scan.service"),
-        "on-click-right": ($app_open + " ghostty -e journalctl -u libredefender-scan.service -f"),
+        "on-click": ($app_open + " systemctl start " + $libredefender_service),
+        "on-click-right": ($app_open + " ghostty -e journalctl -u " + $libredefender_service + " -f"),
         "on-click-middle": ($scripts + "/libredefender-status.sh --refresh")
       },
       "custom/chkrootkit": {
@@ -247,8 +254,8 @@ build_system_json() {
         "return-type": "json",
         interval: interval("chkrootkit"),
         exec: ($scripts + "/chkrootkit-status.sh"),
-        "on-click": ($app_open + " systemctl start chkrootkit-scan.service"),
-        "on-click-right": ($app_open + " ghostty -e journalctl -u chkrootkit-scan.service -f"),
+        "on-click": ($app_open + " systemctl start " + $chkrootkit_service),
+        "on-click-right": ($app_open + " ghostty -e journalctl -u " + $chkrootkit_service + " -f"),
         "on-click-middle": ($scripts + "/chkrootkit-status.sh --refresh")
       }
     }
