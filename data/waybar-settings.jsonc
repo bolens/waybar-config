@@ -364,6 +364,9 @@
       "temp": { "warning": 55, "critical": 65 }
     }
   },
+  "nightlight": {
+    "temperature": 4200 // Target color temperature in Kelvin (e.g. 3500, 4000, 4500)
+  },
   "apps": {
     "clock": "kclock",
     "system_monitor": "missioncenter",

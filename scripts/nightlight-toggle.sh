@@ -2,7 +2,6 @@
 set -eu
 
 mode="${1:-toggle}"
-temp="${HYPRSUNSET_TEMP:-4200}"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 force_state_file="$cache_dir/nightlight-kde-force"
 
@@ -10,6 +9,10 @@ mkdir -p "$cache_dir"
 
 # shellcheck source=compositor-session.sh
 . "${0%/*}/compositor-session.sh"
+. "${0%/*}/waybar-settings.sh"
+
+temp_setting=$(waybar_settings_get '.nightlight.temperature' '')
+temp="${temp_setting:-${HYPRSUNSET_TEMP:-4200}}"
 
 get_backend() {
   comp="$(detect_compositor)"

@@ -14,6 +14,9 @@ mkdir -p "$cache_dir"
 
 # shellcheck source=compositor-session.sh
 . "${0%/*}/compositor-session.sh"
+. "${0%/*}/waybar-settings.sh"
+
+temp_setting=$(waybar_settings_get '.nightlight.temperature' '')
 
 get_backend() {
   comp="$(detect_compositor)"
@@ -109,7 +112,7 @@ EOF
       if pgrep -x hyprsunset >/dev/null 2>&1; then
         cmdline=$(pgrep -af '^hyprsunset' | awk 'NR==1 {print; exit}' || true)
         temp=$(printf '%s\n' "$cmdline" | sed -n 's/.* -t \([0-9][0-9]*\).*/\1/p')
-        [ -n "$temp" ] || temp="${HYPRSUNSET_TEMP:-4200}"
+        [ -n "$temp" ] || temp="${temp_setting:-${HYPRSUNSET_TEMP:-4200}}"
         emit_active "$temp" "hyprsunset"
         return 0
       fi

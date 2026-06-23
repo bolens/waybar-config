@@ -364,6 +364,9 @@
       "temp": { "warning": 55, "critical": 65 }
     }
   },
+  "nightlight": {
+    "temperature": 4200 
+  },
   "apps": {
     "clock": "kclock",
     "system_monitor": "missioncenter",
