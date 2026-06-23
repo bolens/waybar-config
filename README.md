@@ -38,6 +38,10 @@ The scripts and widgets included in this configuration depend on the following p
 - `pacman-contrib` (provides `checkupdates`, optional, required for Arch Linux update metrics)
 - `ripgrep` (provides `rg`, required for fast text searching in various status scripts)
 
+### Security & System Status
+- `chkrootkit` (optional, required for security check status tracking)
+- `libredefender` (optional, required for local firewall/antivirus protection status tracking)
+
 ## File Structure
 
 - [`config.jsonc`](./config.jsonc): Main configuration file loading layouts and including modular defaults.
