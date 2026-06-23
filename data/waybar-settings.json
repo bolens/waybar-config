@@ -1,0 +1,356 @@
+{
+  "bars": {
+    "layer": "top",
+    "output": ["*"],
+    "mode": "dock",
+    "exclusive": true,
+    "passthrough": false,
+    "reload_style_on_change": true,
+    "height": 44,
+    "spacing": 6
+  },
+  "drawers": {
+    "click_to_reveal": true,
+    "transition_duration": 500,
+    "children_class": "drawer-child",
+    "left_to_right": {
+      "left": false,
+      "right": true
+    },
+    "icons": {
+      "desk": { "format": "󰍜", "tooltip": "Session controls · click to expand" },
+      "dock": { "format": "󰀻", "tooltip": "Applications · click to expand" },
+      "tray": { "format": "󰇝", "tooltip": "Background apps · click to expand" },
+      "media": { "format": "󰝚", "tooltip": "Now playing and volume · click to expand" },
+      "net": { "format": "󰖩", "tooltip": "Network · click to expand" },
+      "tools": { "format": "󰒓", "tooltip": "Quick tools · click to expand" },
+      "infra": { "format": "󰒍", "tooltip": "Infrastructure · click to expand" },
+      "hardware": { "format": "󰻠", "tooltip": "Hardware · click to expand" },
+      "power": { "format": "", "tooltip": "Power menu · click to expand" },
+      "privacy": { "format": "󰕥", "tooltip": "Privacy controls · click to expand" },
+      "security": { "format": "󰒃", "tooltip": "Security · click to expand" }
+    }
+  },
+  "module_intervals": {
+    "dock_apps": "once",
+    "notifications": "once",
+    "screenshot": "once",
+    "screenrecord": "once",
+    "nightlight": "once",
+    "clipboard": 60,
+    "brightness": "once",
+    "powerprofiles": "once",
+    "discord": 120,
+    "mic": "once",
+    "vpn": "once",
+    "tailscale": "once",
+    "privacy": "once",
+    "active_window": 1800,
+    "keyboard_layout": "once",
+    "gamemode": "once",
+    "dock_windows": 120,
+    "hypr_tools": 60,
+    "hyprwhspr": 30,
+    "cpu": 8,
+    "gpu": 12,
+    "memory": 12,
+    "docker": 30,
+    "ups": 30,
+    "system_tab": 15,
+    "network_tab": 15,
+    "runtimes": 600,
+    "updates": 1800,
+    "disk": 300,
+    "uptime": 60,
+    "kdeconnect": "once",
+    "weather": 1800,
+    "systemd": 60,
+    "github": 300,
+    "network_iface": 60,
+    "network_bandwidth": 2,
+    "clock": 60,
+    "psu": 10,
+    "device_battery": "once",
+    "fans": 10,
+    "libredefender": 300,
+    "chkrootkit": 300
+  },
+  "signals": {
+    "notifications": 10,
+    "screenrecord": 6,
+    "nightlight": 14,
+    "clipboard": 9,
+    "brightness": 8,
+    "mic": 7,
+    "active_window": 13,
+    "gamemode": 15,
+    "dock_windows": 11,
+    "privacy": 17,
+    "workspaces": 16,
+    "keyboard_layout": 2,
+    "powerprofiles": 3,
+    "device_battery": 4,
+    "vpn": 5,
+    "tailscale": 12,
+    "kdeconnect": 18
+  },
+  "poll_intervals": {
+    "dock_apps": "once",
+    "cpu": 8,
+    "gpu": 12,
+    "memory": 12,
+    "vpn": "once",
+    "network_tab": 15,
+    "system_tab": 15,
+    "tailscale": "once",
+    "network_iface": 60,
+    "network_bandwidth": 2,
+    "docker": 30,
+    "ups": 30,
+    "hyprwhspr": 30,
+    "hypr_tools": 60,
+    "dock_windows": 120,
+    "powerprofiles": "once",
+    "brightness": "once",
+    "mic": "once",
+    "nightlight": "once",
+    "discord": 120,
+    "screenrecord": "once",
+    "privacy": "once",
+    "clipboard": 600,
+    "runtimes": 600,
+    "updates": 1800,
+    "updates_tab": 1800,
+    "notifications": "once",
+    "screenshot": "once",
+    "active_window": 1800,
+    "keyboard_layout": "once",
+    "gamemode": "once",
+    "clock": 60,
+    "psu": 10,
+    "device_battery": "once",
+    "fans": 10,
+    "libredefender": 300,
+    "chkrootkit": 300
+  },
+  "layouts": {
+    "top": {
+      "position": "top",
+      "modules_center": ["group/desk-hypr", "custom/keybindhint", "custom/gamemode"],
+      "modules_right": ["group/top-status", "group/power"]
+    },
+    "bottom": {
+      "name": "bottom",
+      "position": "bottom",
+      "modules_left": ["group/dock-apps"],
+      "modules_center": ["custom/active-window"],
+      "modules_right": ["group/tools", "group/infra", "group/security", "group/hardware", "clock#bottom"]
+    }
+  },
+  "groups": {
+    "power": {
+      "drawer": "left",
+      "modules": [
+        "custom/power-drawer",
+        "custom/lock",
+        "custom/logout",
+        "custom/suspend",
+        "custom/reboot",
+        "custom/shutdown"
+      ]
+    },
+    "desk-controls": {
+      "drawer": "right",
+      "modules": [
+        "custom/desk-drawer",
+        "custom/notifications",
+        "custom/powerprofiles",
+        "custom/brightness",
+        "bluetooth",
+        "idle_inhibitor",
+        "custom/keyboard-layout",
+        "custom/kdeconnect",
+        "custom/device-battery"
+      ]
+    },
+    "media": {
+      "drawer": "right",
+      "modules": ["custom/media-drawer", "custom/media-prev", "custom/mpris", "custom/media-next", "pulseaudio", "custom/mic"]
+    },
+    "net": {
+      "drawer": "right",
+      "modules": [
+        "custom/net-drawer",
+        "network#bandwidthUpBytes",
+        "network#bandwidthDownBytes",
+        "custom/vpnstatus",
+        "custom/tailscale",
+        "network#bond",
+        "@network.interfaces"
+      ]
+    },
+    "tools": {
+      "drawer": "left",
+      "modules": [
+        "custom/tools-drawer",
+        "custom/screenshot",
+        "custom/screenrecord",
+        "custom/nightlight",
+        "custom/clipboard",
+        "custom/discord",
+        "custom/weather"
+      ]
+    },
+    "top-status": {
+      "modules": ["group/privacy", "group/tray-apps"]
+    },
+    "privacy": {
+      "drawer": "left",
+      "modules": [
+        "custom/privacy-drawer",
+        "custom/privacy-screenshare",
+        "custom/privacy-webcam",
+        "custom/privacy-audio-in",
+        "custom/privacy-audio-out",
+        "custom/privacy-location"
+      ]
+    },
+    "tray-apps": {
+      "drawer": "left",
+      "modules": ["custom/tray-drawer", "tray"]
+    },
+    "infra": {
+      "drawer": "left",
+      "modules": [
+        "custom/infra-drawer",
+        "custom/docker",
+        "custom/system",
+        "custom/network",
+        "custom/runtimes",
+        "custom/updates",
+        "custom/ups",
+        "custom/systemd",
+        "custom/github",
+        "custom/uptime"
+      ]
+    },
+    "hardware": {
+      "drawer": "left",
+      "modules": ["custom/hardware-drawer", "custom/cpu", "custom/gpu", "custom/memory", "custom/disk", "custom/psu", "custom/fans"]
+    },
+    "security": {
+      "drawer": "left",
+      "modules": [
+        "custom/security-drawer",
+        "custom/libredefender",
+        "custom/chkrootkit"
+      ]
+    },
+    "status": {
+      "modules": ["clock#bottom"]
+    }
+  },
+  "dock": {
+    "section_order": ["web", "dev", "misc"]
+  },
+  "dock_windows": {
+    "min_length": 64,
+    "max_length": 160,
+    "expand": true,
+    "align": 0.5
+  },
+  "services": {
+    "ups": {
+      "nut_target": "ups@127.0.0.1:3493"
+    }
+  },
+  "network": {
+    "tailscale_admin_url": "http://100.100.100.100/",
+    "tailscale_status_cmd": "ghostty -e tailscale status"
+  },
+  "brightness": {
+    "step_down": 5,
+    "step_up": 5,
+    "middle_set": 80,
+    "hide_on_compositor": "hyprland"
+  },
+  "audio": {
+    "mpris_max_length": 32,
+    "pulseaudio_mute_cmd": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+  },
+  "tray": {
+    "icon_size": 16,
+    "spacing": 10
+  },
+  "clocks": {
+    "top": {
+      "format": "auto",
+      "tooltip_format": "auto"
+    },
+    "bottom": {
+      "format": "auto",
+      "tooltip_format": "auto"
+    },
+    "calendar": {
+      "mode": "month",
+      "on_scroll": 1,
+      "colors": {
+        "months": "#ff2a7f",
+        "weekdays": "#ffe600",
+        "days": "#c8f6ff",
+        "today": "#00e5ff"
+      },
+      "format": {
+        "months": "<span color='#ff2a7f'><b>{}</b></span>",
+        "weekdays": "<span color='#ffe600'><b>{}</b></span>",
+        "days": "<span color='#c8f6ff'>{}</span>",
+        "today": "<span color='#00e5ff'><b><u>{}</u></b></span>"
+      }
+    }
+  },
+  "theme": {
+    "font_family": "JetBrainsMono Nerd Font",
+    "font_size": 13,
+    "tooltip_font_size": 12,
+    "border_radius": 8,
+    "colors": {
+      "foreground": "#c8f6ff",
+      "background": "rgba(6, 7, 14, 0.92)",
+      "border": "rgba(0, 229, 255, 0.25)",
+      "accent": "rgba(255, 42, 127, 0.32)",
+      "workspace_active": "rgba(255, 42, 127, 0.32)",
+      "workspace_inactive": "rgba(200, 246, 255, 0.45)",
+      "workspace_visible": "#00e5ff"
+    }
+  },
+  "hypr_tools": {
+    "hyprwhspr_record": "/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh record",
+    "hyprwhspr_restart": "/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh restart",
+    "hyprnotify_click": "hyprnotify show",
+    "hyprlight_click": "hyprlight osd"
+  },
+  "weather": {
+    "unit": "auto" 
+  },
+  "apps": {
+    "clock": "kclock",
+    "system_monitor": "missioncenter",
+    "terminal": "ghostty",
+    "plasma_system_monitor": "plasma-systemmonitor",
+    "btop": "ghostty -e btop",
+    "nvtop": "ghostty -e nvtop",
+    "nvidia_smi": "ghostty -e nvidia-smi -l 1",
+    "lazydocker": "lazydocker",
+    "portainer_url": "https://portainer.bolens.dev",
+    "docker_ps": "ghostty -e docker ps -a",
+    "network_editor": "nm-connection-editor",
+    "ip_addr": "ghostty -e ip -br a",
+    "virt_manager": "virt-manager",
+    "podman_ps": "ghostty -e podman ps -a",
+    "virsh_list": "ghostty -e virsh list --all",
+    "paru_update": "ghostty -e paru -Syu",
+    "updates_review": "$HOME/.config/waybar/scripts/updates-review.sh",
+    "audio_mixer": "goxlr-launcher",
+    "discord": "discord"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "position": "top",
+  "modules-center": [
+    "group/desk-hypr",
+    "custom/keybindhint",
+    "custom/gamemode"
+  ],
+  "modules-right": [
+    "group/top-status",
+    "group/power"
+  ]
+}

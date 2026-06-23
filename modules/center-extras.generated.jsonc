@@ -1,0 +1,28 @@
+{
+  "custom/keyboard-layout": {
+    "format": "{}",
+    "return-type": "json",
+    "signal": 2,
+    "interval": "once",
+    "exec": "$HOME/.config/waybar/scripts/keyboard-layout-status.sh",
+    "tooltip": true
+  },
+  "custom/gamemode": {
+    "format": "{}",
+    "return-type": "json",
+    "signal": 15,
+    "interval": "once",
+    "exec": "$HOME/.config/waybar/scripts/gamemode-status.sh",
+    "on-click": "$HOME/.config/waybar/scripts/gamemode-click.sh toggle",
+    "on-click-right": "$HOME/.config/waybar/scripts/gamemode-click.sh restore",
+    "tooltip": true
+  },
+  "custom/keybindhint": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "exec": "$HOME/.config/waybar/scripts/keybindhint-status.sh",
+    "on-click": "$HOME/.config/waybar/scripts/keybindhint-click.sh",
+    "tooltip": true
+  }
+}

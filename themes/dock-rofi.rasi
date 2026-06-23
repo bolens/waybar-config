@@ -1,0 +1,105 @@
+/* Dock selector theme inspired by cyberpunk rofi conventions */
+* {
+    font: "JetBrainsMono Nerd Font 12";
+
+    bg0: #06070e;
+    bg1: #0d1220;
+    bg2: #151b2c;
+    border: #00e5ff;
+    text: #c8f6ff;
+    muted: #7fa8b2;
+    accent: #ff2a7f;
+    accent2: #00e5ff;
+
+    background-color: transparent;
+    text-color: @text;
+}
+
+window {
+    location: center;
+    anchor: center;
+    width: 42%;
+    border: 2px;
+    border-radius: 8px;
+    border-color: @border;
+    background-color: rgba (6, 7, 14, 94%);
+    padding: 10px;
+}
+
+mainbox {
+    spacing: 8px;
+    background-color: transparent;
+}
+
+inputbar {
+    spacing: 8px;
+    padding: 8px 10px;
+    border: 1px;
+    border-radius: 6px;
+    border-color: rgba (0, 229, 255, 35%);
+    background-color: rgba (0, 229, 255, 8%);
+    children: [ prompt, entry ];
+}
+
+prompt {
+    text-color: @accent;
+    background-color: transparent;
+    padding: 0px 4px;
+}
+
+entry {
+    text-color: @text;
+    placeholder: "Select window";
+    placeholder-color: @muted;
+    background-color: transparent;
+    cursor: text;
+    cursor-color: @accent2;
+}
+
+listview {
+    lines: 10;
+    columns: 1;
+    spacing: 5px;
+    scrollbar: true;
+    dynamic: true;
+    border: 0px;
+    background-color: transparent;
+}
+
+scrollbar {
+    handle-width: 6px;
+    handle-color: rgba (0, 229, 255, 40%);
+    border: 0px;
+    background-color: rgba (0, 229, 255, 8%);
+    border-radius: 8px;
+}
+
+element {
+    padding: 8px 10px;
+    border: 1px;
+    border-radius: 6px;
+    border-color: rgba (0, 229, 255, 20%);
+    background-color: rgba (0, 229, 255, 4%);
+}
+
+element-text {
+    text-color: @text;
+    vertical-align: 0.5;
+}
+
+element selected {
+    border-color: @accent;
+    background-color: rgba (255, 42, 127, 18%);
+}
+
+element selected normal {
+    text-color: @text;
+}
+
+element normal active {
+    text-color: @accent2;
+}
+
+element normal urgent {
+    text-color: #ffe600;
+}

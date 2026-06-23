@@ -1,0 +1,88 @@
+#!/usr/bin/env sh
+set -eu
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
+script_dir="$HOME/.config/waybar/scripts"
+
+. "$script_dir/waybar-cache-helpers.sh"
+
+cached_file="$cache_dir/cpu-icon.json"
+
+# 1. Try to return the cached file immediately if it is fresh (<= 8 seconds)
+if [ -f "$cached_file" ] && [ "$(cache_file_age "$cached_file")" -le 8 ] 2>/dev/null; then
+  cat "$cached_file"
+  exit 0
+fi
+
+# 2. If the file exists but is stale, output it immediately to avoid lag,
+#    and trigger a background refresh of the metrics collector.
+if [ -f "$cached_file" ]; then
+  cat "$cached_file"
+  # Avoid spawning multiple concurrent refreshes by checking lock_dir
+  if [ ! -d "$cache_dir/system-metrics.lock.d" ]; then
+    "$script_dir/system-metrics-collector.sh" --refresh >/dev/null 2>&1 &
+  fi
+  exit 0
+fi
+
+# 3. Hard fallback for the first launch if cache does not exist yet
+metrics="$("$script_dir/system-metrics-collector.sh" 2>/dev/null || true)"
+if [ -z "$metrics" ]; then
+  jq -cn --arg text "󰍛" --arg tooltip "CPU telemetry unavailable" --arg class "disabled" '{text:$text, tooltip:$tooltip, class:$class}'
+  exit 0
+fi
+
+cpu_fields="$(printf '%s\n' "$metrics" | jq -r '[
+  (.cpu.usage // 0),
+  (.cpu.topology.cores // 0),
+  (.cpu.topology.threads // 0),
+  (.cpu.topology.threads_per_core // 1),
+  (.cpu.load.one // "0.00"),
+  (.cpu.load.five // "0.00"),
+  (.cpu.load.fifteen // "0.00"),
+  (.cpu.load.runnable // "0/0"),
+  (.cpu.load.pct.one // 0),
+  (.cpu.load.pct.five // 0),
+  (.cpu.load.pct.fifteen // 0),
+  (.cpu.temp // 0)
+] | @tsv')"
+tab=$(printf '\t')
+old_ifs=$IFS
+IFS=$tab
+set -- $cpu_fields
+IFS=$old_ifs
+
+usage="${1:-0}"
+cores="${2:-0}"
+threads="${3:-0}"
+threads_per_core="${4:-1}"
+load_1="${5:-0.00}"
+load_5="${6:-0.00}"
+load_15="${7:-0.00}"
+runnable="${8:-0/0}"
+load_pct_1="${9:-0}"
+load_pct_5="${10:-0}"
+load_pct_15="${11:-0}"
+temp="${12:-0}"
+
+formatted_temp="N/A"
+if [ "$temp" -gt 0 ]; then
+  formatted_temp=$(format_locale_temp "$temp")
+fi
+
+tooltip=$(printf 'CPU Utilization: %s%%\nTopology: %s cores / %s threads (%sT per core)\nLoad 1m/5m/15m: %s / %s / %s\nLoad vs thread capacity: %s%% / %s%% / %s%%\nRunnable tasks: %s\nTemperature: %s' \
+  "$usage" "$cores" "$threads" "$threads_per_core" "$load_1" "$load_5" "$load_15" "$load_pct_1" "$load_pct_5" "$load_pct_15" "$runnable" "$formatted_temp")
+
+class="normal"
+if [ "$usage" -ge 85 ] || [ "$temp" -ge 85 ]; then
+  class="critical"
+elif [ "$usage" -ge 60 ] || [ "$temp" -ge 75 ]; then
+  class="warning"
+fi
+
+jq -cn \
+  --arg text "$(printf '󰍛 %3d%%' "$usage")" \
+  --arg tooltip "$tooltip" \
+  --arg class "$class" \
+  '{text:$text, tooltip:$tooltip, class:$class}'
+

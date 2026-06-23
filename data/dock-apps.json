@@ -1,0 +1,164 @@
+{
+  "browser": {
+    "section": "web",
+    "icon": "󰈹",
+    "tooltip": "Zen Browser — click: focus/launch, middle: new window, right: close",
+    "launch": "zen-browser",
+    "launch_new": "zen-browser --new-window",
+    "wm_classes": ["zen", "Zen Browser", "zen-browser"],
+    "process_names": ["zen-browser"]
+  },
+  "helium": {
+    "section": "web",
+    "icon": "󰊯",
+    "tooltip": "Helium Browser — click: focus/launch, middle: new window, right: close",
+    "launch_shell": "command -v helium-browser >/dev/null 2>&1 && exec helium-browser; command -v helium >/dev/null 2>&1 && exec helium; notify-send \"Dock\" \"helium-browser not found\"",
+    "launch_new_shell": "command -v helium-browser >/dev/null 2>&1 && exec helium-browser --new-window; command -v helium >/dev/null 2>&1 && exec helium --new-window; notify-send \"Dock\" \"helium-browser not found\"",
+    "wm_classes": ["helium", "Helium", "helium-browser"],
+    "process_names": ["helium-browser", "helium"]
+  },
+  "pear": {
+    "section": "web",
+    "icon": "󰀄",
+    "tooltip": "Pear Desktop — click: focus/launch, middle: new window, right: close",
+    "launch": "pear-desktop",
+    "launch_new": "pear-desktop --new-window",
+    "wm_classes": ["pear-desktop", "Pear Desktop", "pear"],
+    "process_names": ["pear-desktop"]
+  },
+  "floorp": {
+    "section": "web",
+    "icon": "󰈹",
+    "tooltip": "Floorp — click: focus/launch, middle: new window, right: close",
+    "launch": "floorp",
+    "launch_new": "floorp --new-window",
+    "wm_classes": ["floorp", "Floorp", "floorp-bin"],
+    "process_names": ["floorp"]
+  },
+  "cursor": {
+    "section": "dev",
+    "icon": "󰘦",
+    "tooltip": "Cursor — click: focus/launch, middle: new window, right: close",
+    "launch": "cursor",
+    "launch_new": "cursor --new-window",
+    "wm_classes": ["cursor", "Cursor"],
+    "process_names": ["cursor"]
+  },
+  "vscode": {
+    "section": "dev",
+    "icon": "󰨞",
+    "tooltip": "VS Code Insiders — click: focus/launch, middle: new window, right: close",
+    "launch": "code-insiders",
+    "launch_new": "code-insiders --new-window",
+    "wm_classes": ["code-insiders", "Code - Insiders", "code"],
+    "process_names": ["code-insiders"]
+  },
+  "zed": {
+    "section": "dev",
+    "icon": "󰅴",
+    "tooltip": "Zed — click: focus/launch, middle: new workspace, right: close",
+    "launch": "zeditor",
+    "launch_new": "zeditor --new",
+    "wm_classes": ["zed", "Zed", "zeditor"],
+    "process_names": ["zeditor"]
+  },
+  "kitty": {
+    "section": "dev",
+    "icon": "󰄛",
+    "tooltip": "Kitty — click: focus/launch, middle: new window, right: close",
+    "launch": "kitty",
+    "launch_new": "kitty",
+    "wm_classes": ["kitty"],
+    "process_names": ["kitty"]
+  },
+  "terminal": {
+    "section": "dev",
+    "icon": "󰆍",
+    "tooltip": "Terminal — click: focus/launch, middle: new window, right: close",
+    "launch_shell": "command -v ghostty >/dev/null 2>&1 && exec ghostty; command -v kitty >/dev/null 2>&1 && exec kitty; command -v foot >/dev/null 2>&1 && exec foot; exec konsole",
+    "launch_new_shell": "command -v ghostty >/dev/null 2>&1 && exec ghostty; command -v kitty >/dev/null 2>&1 && exec kitty; command -v foot >/dev/null 2>&1 && exec foot; command -v konsole >/dev/null 2>&1 && exec konsole; exec konsole",
+    "wm_classes": ["ghostty", "kitty", "foot", "konsole", "org.kde.konsole"],
+    "process_names": ["ghostty", "kitty", "foot", "konsole"]
+  },
+  "files": {
+    "section": "dev",
+    "icon": "󰉋",
+    "tooltip": "File manager — click: focus/launch, middle: new window, right: close",
+    "launch_shell": "command -v dolphin >/dev/null 2>&1 && exec dolphin; command -v thunar >/dev/null 2>&1 && exec thunar; exec nautilus",
+    "launch_new_shell": "command -v dolphin >/dev/null 2>&1 && exec dolphin --new-window; command -v thunar >/dev/null 2>&1 && exec thunar; command -v nautilus >/dev/null 2>&1 && exec nautilus --new-window; exec nautilus",
+    "wm_classes": ["dolphin", "org.kde.dolphin", "thunar", "Thunar", "nautilus", "org.gnome.Nautilus"],
+    "process_names": ["dolphin", "thunar", "nautilus"]
+  },
+  "obsidian": {
+    "section": "misc",
+    "icon": "󱞁",
+    "tooltip": "Obsidian — click: focus/launch, middle: new window, right: close",
+    "launch": "obsidian",
+    "launch_new": "obsidian",
+    "wm_classes": ["obsidian", "Obsidian"],
+    "process_names": ["obsidian"]
+  },
+  "krita": {
+    "section": "misc",
+    "icon": "󰝼",
+    "tooltip": "Krita — click: focus/launch, middle: new window, right: close",
+    "launch": "krita",
+    "launch_new": "krita",
+    "wm_classes": ["krita", "Krita", "org.kde.krita"],
+    "process_names": ["krita"]
+  },
+  "orcaslicer": {
+    "section": "misc",
+    "icon": "󰆧",
+    "tooltip": "OrcaSlicer — click: focus/launch, middle: new window, right: close",
+    "launch": "orca-slicer",
+    "launch_new": "orca-slicer",
+    "wm_classes": ["orca-slicer", "OrcaSlicer"],
+    "process_names": ["orca-slicer"]
+  },
+  "discord": {
+    "section": "misc",
+    "icon": "󰙯",
+    "tooltip": "Discord — click: focus/launch, middle: new window, right: close",
+    "launch": "discord",
+    "launch_new": "discord",
+    "wm_classes": ["discord", "Discord"],
+    "process_names": ["discord"]
+  },
+  "steam": {
+    "section": "misc",
+    "icon": "󰓓",
+    "tooltip": "Steam — click: focus/launch, middle: new window, right: close",
+    "launch": "steam",
+    "launch_new": "steam",
+    "wm_classes": ["steam", "Steam"],
+    "process_names": ["steam"]
+  },
+  "heroic": {
+    "section": "misc",
+    "icon": "󰊖",
+    "tooltip": "Heroic Games Launcher — click: focus/launch, middle: new window, right: close",
+    "launch": "heroic",
+    "launch_new": "heroic",
+    "wm_classes": ["heroic", "Heroic", "heroicgameslauncher"],
+    "process_names": ["heroic"]
+  },
+  "lutris": {
+    "section": "misc",
+    "icon": "󰙆",
+    "tooltip": "Lutris — click: focus/launch, middle: new window, right: close",
+    "launch": "lutris",
+    "launch_new": "lutris",
+    "wm_classes": ["lutris", "Lutris", "net.lutris.Lutris"],
+    "process_names": ["lutris"]
+  },
+  "anyrun": {
+    "section": "misc",
+    "icon": "󰍉",
+    "tooltip": "Anyrun — click: focus/launch, middle: new window, right: close",
+    "launch": "anyrun",
+    "launch_new": "anyrun",
+    "wm_classes": ["anyrun", "Anyrun"],
+    "process_names": ["anyrun"]
+  }
+}

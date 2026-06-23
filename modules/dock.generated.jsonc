@@ -1,0 +1,200 @@
+{
+  "custom/dock-browser": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh browser status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh browser click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh browser click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh browser click on-click-middle"
+  }
+,
+  "custom/dock-floorp": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh floorp status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh floorp click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh floorp click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh floorp click on-click-middle"
+  }
+,
+  "custom/dock-helium": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh helium status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh helium click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh helium click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh helium click on-click-middle"
+  }
+,
+  "custom/dock-pear": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh pear status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh pear click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh pear click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh pear click on-click-middle"
+  }
+,
+  "custom/dock-cursor": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh cursor status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh cursor click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh cursor click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh cursor click on-click-middle"
+  }
+,
+  "custom/dock-files": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh files status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh files click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh files click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh files click on-click-middle"
+  }
+,
+  "custom/dock-kitty": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh kitty status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh kitty click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh kitty click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh kitty click on-click-middle"
+  }
+,
+  "custom/dock-terminal": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh terminal status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh terminal click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh terminal click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh terminal click on-click-middle"
+  }
+,
+  "custom/dock-vscode": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh vscode status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh vscode click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh vscode click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh vscode click on-click-middle"
+  }
+,
+  "custom/dock-zed": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh zed status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh zed click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh zed click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh zed click on-click-middle"
+  }
+,
+  "custom/dock-anyrun": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh anyrun status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh anyrun click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh anyrun click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh anyrun click on-click-middle"
+  }
+,
+  "custom/dock-discord": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh discord status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh discord click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh discord click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh discord click on-click-middle"
+  }
+,
+  "custom/dock-heroic": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh heroic status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh heroic click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh heroic click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh heroic click on-click-middle"
+  }
+,
+  "custom/dock-krita": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh krita status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh krita click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh krita click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh krita click on-click-middle"
+  }
+,
+  "custom/dock-lutris": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh lutris status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh lutris click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh lutris click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh lutris click on-click-middle"
+  }
+,
+  "custom/dock-obsidian": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh obsidian status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh obsidian click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh obsidian click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh obsidian click on-click-middle"
+  }
+,
+  "custom/dock-orcaslicer": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh orcaslicer status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh orcaslicer click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh orcaslicer click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh orcaslicer click on-click-middle"
+  }
+,
+  "custom/dock-steam": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "$HOME/.config/waybar/scripts/dock-launcher.sh steam status",
+    "on-click": "$HOME/.config/waybar/scripts/dock-launcher.sh steam click on-click",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-launcher.sh steam click on-click-right",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-launcher.sh steam click on-click-middle"
+  }
+
+}

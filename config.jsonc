@@ -1,0 +1,14 @@
+[
+  {
+    "include": [
+      "$HOME/.config/waybar/includes/stack.jsonc",
+      "$HOME/.config/waybar/layouts/top.jsonc"
+    ]
+  },
+  {
+    "include": [
+      "$HOME/.config/waybar/includes/stack.jsonc",
+      "$HOME/.config/waybar/layouts/bottom.jsonc"
+    ]
+  }
+]

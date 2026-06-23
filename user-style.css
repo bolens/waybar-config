@@ -1,0 +1,477 @@
+/* Personal overrides — edit here without touching theme.css or style.css */
+
+/*
+ * Optional accent overrides (GTK-safe literals):
+ *
+ * window#waybar { background: rgba(6, 7, 14, 0.92); }
+ * #clock, #clock.top, #clock.bottom { color: #ffe600; }
+ */
+
+/* Dock launcher icons — compact spacing inside drawer */
+#group-dock-apps {
+    padding: 0 3px;
+}
+
+#group-dock-apps > * {
+    padding: 0 5px;
+    margin: 4px 1px;
+    min-width: 18px;
+}
+
+#group-dock-apps > *:not(:last-child) {
+    margin-right: 1px;
+    border-right: 1px solid rgba(0, 229, 255, 0.12);
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+#group-dock-apps > *:not(:first-child) {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+#group-dock-apps > .running {
+    color: #00e5ff;
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.8), 0 0 10px rgba(0, 229, 255, 0.4);
+}
+
+/* Active Window styling on the bottom middle bar */
+#custom-active-window {
+    color: #c8f6ff;
+    padding: 0 12px;
+    margin: 4px 0;
+    background: rgba(0, 229, 255, 0.04);
+    border: 1px solid rgba(0, 229, 255, 0.15);
+    border-radius: 6px;
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+#custom-active-window:hover {
+    background: rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.35);
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.45);
+}
+
+#custom-active-window.desktop {
+    color: rgba(200, 246, 255, 0.45);
+    background: transparent;
+    border: 1px solid transparent;
+    text-shadow: none;
+}
+
+#custom-active-window.desktop:hover {
+    background: rgba(200, 246, 255, 0.08);
+    border-color: rgba(200, 246, 255, 0.15);
+}
+
+/* Base styles for the new custom modules to match pre-existing modules */
+#custom-disk,
+#custom-kdeconnect,
+#custom-weather,
+#custom-systemd,
+#custom-github,
+#custom-uptime,
+#custom-psu,
+#custom-device-battery,
+#custom-fans,
+#custom-libredefender,
+#custom-chkrootkit {
+    padding: 0 10px;
+    margin: 4px 0;
+    border-radius: 6px;
+    background: rgba(0, 229, 255, 0.06);
+    border: 1px solid rgba(0, 229, 255, 0.12);
+    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+}
+
+/* Hover styles for the new custom modules */
+#custom-disk:hover,
+#custom-kdeconnect:hover,
+#custom-weather:hover,
+#custom-systemd:hover,
+#custom-github:hover,
+#custom-uptime:hover,
+#custom-psu:hover,
+#custom-device-battery:hover,
+#custom-fans:hover,
+#custom-libredefender:hover,
+#custom-chkrootkit:hover {
+    background: rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.22);
+}
+
+/* Hidden state for custom-systemd */
+#custom-systemd.hidden {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* Specific colors and shadows for each module */
+
+/* Disk Space (Matches Memory's purple color) */
+#custom-disk {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.28);
+}
+#custom-disk.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-disk.critical {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+/* KDE Connect (Matches Bluetooth's purple color) */
+#custom-kdeconnect {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+}
+#custom-kdeconnect.connected {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+}
+#custom-kdeconnect.disconnected {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+#custom-kdeconnect.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-kdeconnect.critical {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+/* Weather (Matches Clock's yellow color) */
+#custom-weather {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-weather.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+/* Systemd Status (Red critical indicator for failed services) */
+#custom-systemd.critical {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+/* GitHub Notifications (Warning yellow when notifications exist, muted otherwise) */
+#custom-github {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+#custom-github.normal {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+#custom-github.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-github.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+/* Privacy drawer styling */
+#custom-privacy-drawer,
+#custom-security-drawer {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+    font-weight: 700;
+    min-width: 24px;
+    padding: 0 12px;
+    margin: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#custom-privacy-drawer:hover,
+#custom-security-drawer:hover {
+    color: #c8f6ff;
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.45);
+    background: rgba(0, 229, 255, 0.10);
+    border: none;
+    box-shadow: none;
+}
+
+#privacy > .drawer-child.hidden {
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    opacity: 0;
+}
+
+/* Uptime Status (Green cyberpunk theme) */
+#custom-uptime {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.35);
+}
+
+/* Corsair PSU Telemetry (Cyberpunk Amber/Orange theme) */
+#custom-psu {
+    color: #ff9f1c;
+    text-shadow: 0 0 6px rgba(255, 159, 28, 0.35);
+}
+#custom-psu.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-psu.critical {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+/* Device Peripheral Battery (Matches Bluetooth/KDE Connect purple/cyan theme) */
+#custom-device-battery {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+}
+#custom-device-battery.charging {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.35);
+}
+#custom-device-battery.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-device-battery.critical {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+#custom-device-battery.none {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* Cooling Fan Speeds (Cyberpunk Neon Cyan theme) */
+#custom-fans {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}
+#custom-fans.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-fans.critical {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+/* LibreDefender & chkrootkit Security Badges */
+#custom-libredefender.normal,
+#custom-chkrootkit.normal {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.35);
+}
+
+#custom-libredefender.scanning,
+#custom-chkrootkit.scanning {
+    color: #c8f6ff;
+    text-shadow: 0 0 6px rgba(200, 246, 255, 0.35);
+    background: rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.22);
+}
+
+#custom-libredefender.warning,
+#custom-chkrootkit.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+    background: rgba(255, 230, 0, 0.08);
+    border-color: rgba(255, 230, 0, 0.25);
+}
+
+#custom-libredefender.critical,
+#custom-chkrootkit.critical {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+    background: rgba(255, 42, 127, 0.12);
+    border-color: rgba(255, 42, 127, 0.4);
+    animation: security-blink 1s steps(12, start) infinite alternate;
+}
+
+@keyframes security-blink {
+    to {
+        background-color: rgba(255, 42, 127, 0.25);
+        box-shadow: 0 0 12px rgba(255, 42, 127, 0.4);
+    }
+}
+
+/* Media Controller Buttons (Previous/Next) - Matches MPRIS purple theme */
+#custom-media-prev,
+#custom-media-next {
+    padding: 0 10px;
+    margin: 4px 0;
+    border-radius: 6px;
+    color: #e0aaff;
+    background: rgba(224, 170, 255, 0.12);
+    border: 1px solid rgba(224, 170, 255, 0.28);
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+    font-size: 13px;
+    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+}
+
+#custom-media-prev:hover,
+#custom-media-next:hover {
+    color: #f5d0fe;
+    background: rgba(224, 170, 255, 0.22);
+    border-color: rgba(224, 170, 255, 0.55);
+    box-shadow: 0 0 10px rgba(224, 170, 255, 0.35);
+    text-shadow: 0 0 8px rgba(224, 170, 255, 0.55);
+}
+
+#custom-media-prev.paused,
+#custom-media-next.paused {
+    color: rgba(224, 170, 255, 0.5);
+}
+
+#custom-media-prev.paused:hover,
+#custom-media-next.paused:hover {
+    color: #e0aaff;
+}
+
+#custom-media-prev.stopped,
+#custom-media-next.stopped {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+    background: rgba(0, 229, 255, 0.04);
+    border-color: rgba(0, 229, 255, 0.08);
+}
+
+#custom-media-prev.stopped:hover,
+#custom-media-next.stopped:hover {
+    color: rgba(200, 246, 255, 0.7);
+    background: rgba(0, 229, 255, 0.08);
+    border-color: rgba(0, 229, 255, 0.15);
+    box-shadow: none;
+    text-shadow: none;
+}
+
+/* Custom MPRIS now playing styling - Matches native MPRIS purple theme */
+#custom-mpris,
+#mpris {
+    padding: 0 10px;
+    margin: 4px 0;
+    border-radius: 6px;
+    color: #e0aaff;
+    background: rgba(224, 170, 255, 0.12);
+    border: 1px solid rgba(224, 170, 255, 0.28);
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+    font-size: 13px;
+    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+}
+
+#custom-mpris:hover,
+#mpris:hover {
+    color: #f5d0fe;
+    background: rgba(224, 170, 255, 0.22);
+    border-color: rgba(224, 170, 255, 0.55);
+    box-shadow: 0 0 10px rgba(224, 170, 255, 0.35);
+    text-shadow: 0 0 8px rgba(224, 170, 255, 0.55);
+}
+
+#custom-mpris.paused,
+#mpris.paused {
+    color: rgba(224, 170, 255, 0.5);
+    font-style: italic;
+}
+
+#custom-mpris.paused:hover,
+#mpris.paused:hover {
+    color: #e0aaff;
+}
+
+#custom-mpris.stopped,
+#mpris.stopped {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+    background: rgba(0, 229, 255, 0.04);
+    border-color: rgba(0, 229, 255, 0.08);
+}
+
+#custom-mpris.stopped:hover,
+#mpris.stopped:hover {
+    color: rgba(200, 246, 255, 0.7);
+    background: rgba(0, 229, 255, 0.08);
+    border-color: rgba(0, 229, 255, 0.15);
+    box-shadow: none;
+    text-shadow: none;
+}
+
+/* UPS Telemetry - Matches battery styling standards (healthy green when online, warning yellow when discharging) */
+#custom-ups.good {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.35);
+}
+
+#custom-ups.good:hover {
+    color: #5fffd0;
+    background: rgba(44, 255, 176, 0.14);
+    border-color: rgba(44, 255, 176, 0.45);
+    box-shadow: 0 0 10px rgba(44, 255, 176, 0.28);
+    text-shadow: 0 0 8px rgba(44, 255, 176, 0.55);
+}
+
+/* System Updates - Muted gray when there are no pending updates */
+#custom-updates.normal {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+#custom-updates.normal:hover {
+    color: rgba(200, 246, 255, 0.7);
+    background: rgba(0, 229, 255, 0.08);
+    border-color: rgba(0, 229, 255, 0.15);
+    box-shadow: none;
+    text-shadow: none;
+}
+
+/* Memory Status & Disk Space - Unified Resource Storage Purple Theme */
+#custom-memory,
+#custom-memory.normal {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.28);
+}
+
+#custom-memory:hover,
+#custom-memory.normal:hover,
+#custom-disk:hover,
+#custom-disk.normal:hover {
+    color: #f5d0fe;
+    text-shadow: 0 0 8px rgba(224, 170, 255, 0.55);
+}
+
+/* Idle Inhibitor & GameMode Active - Consistent warning/performance yellow styling instead of alarming red */
+#idle-inhibitor.activated {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+
+#custom-gamemode.active {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+
+
+
+

@@ -1,0 +1,165 @@
+#!/usr/bin/env sh
+set -eu
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
+cache_file="$cache_dir/fans-status.json"
+lock_dir="$cache_dir/fans-status.lock.d"
+ttl=10
+stale_lock_ttl=15
+
+mkdir -p "$cache_dir"
+
+script_dir="${0%/*}"
+# Handle sourcing when run directly or by Waybar
+if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
+  . "$script_dir/waybar-cache-helpers.sh"
+else
+  . "$HOME/.config/waybar/scripts/waybar-cache-helpers.sh"
+fi
+
+
+if [ "${1:-}" != "--refresh" ]; then
+  if [ -f "$cache_file" ] && [ "$(cache_file_age "$cache_file")" -le "$ttl" ] 2>/dev/null; then
+    cat "$cache_file"
+    exit 0
+  fi
+  
+  cleanup_stale_lock_dir "$lock_dir" "$stale_lock_ttl"
+  [ -d "$lock_dir" ] || refresh_in_background
+  
+  if [ -f "$cache_file" ]; then
+    cat "$cache_file"
+    exit 0
+  fi
+  
+  jq -cn --arg text "󰈐 --" --arg tooltip "Initializing cooling stats..." --arg class "normal" \
+    '{text:$text, tooltip:$tooltip, class:$class}'
+  exit 0
+fi
+
+# --refresh mode
+
+# 1. Discover asusec (Motherboard fan controller via ASUS Embedded Controller driver):
+# Traverses Linux Hardware Monitoring (hwmon) sysfs interfaces.
+# We cache the discovered directory path to avoid repeating loop lookups.
+asusec_path_file="$cache_dir/asusec-path.txt"
+asusec_dir=""
+if [ -f "$asusec_path_file" ]; then
+  asusec_dir=$(cat "$asusec_path_file" 2>/dev/null || true)
+  if [ -n "$asusec_dir" ] && [ -d "$asusec_dir" ]; then
+    if [ ! -f "$asusec_dir/name" ] || [ "$(cat "$asusec_dir/name" 2>/dev/null)" != "asusec" ]; then
+      asusec_dir=""
+    fi
+  else
+    asusec_dir=""
+  fi
+fi
+if [ -z "$asusec_dir" ]; then
+  for d in /sys/class/hwmon/hwmon*; do
+    if [ -f "$d/name" ] && [ "$(cat "$d/name" 2>/dev/null)" = "asusec" ]; then
+      asusec_dir="$d"
+      tmp_asusec="$asusec_path_file.tmp.$$"
+      printf '%s\n' "$asusec_dir" >"$tmp_asusec" 2>/dev/null && mv -f "$tmp_asusec" "$asusec_path_file" 2>/dev/null || true
+      break
+    fi
+  done
+fi
+
+# 2. Discover corsairpsu (Corsair Power Supply sensors driver):
+# Reads Corsair digital PSU hardware stats (like fan speed and voltages) via hwmon.
+psu_path_file="$cache_dir/corsairpsu-path.txt"
+psu_dir=""
+if [ -f "$psu_path_file" ]; then
+  psu_dir=$(cat "$psu_path_file" 2>/dev/null || true)
+  if [ -n "$psu_dir" ] && [ -d "$psu_dir" ]; then
+    if [ ! -f "$psu_dir/name" ] || [ "$(cat "$psu_dir/name" 2>/dev/null)" != "corsairpsu" ]; then
+      psu_dir=""
+    fi
+  else
+    psu_dir=""
+  fi
+fi
+if [ -z "$psu_dir" ]; then
+  for d in /sys/class/hwmon/hwmon*; do
+    if [ -f "$d/name" ] && [ "$(cat "$d/name" 2>/dev/null)" = "corsairpsu" ]; then
+      psu_dir="$d"
+      tmp_psu="$psu_path_file.tmp.$$"
+      printf '%s\n' "$psu_dir" >"$tmp_psu" 2>/dev/null && mv -f "$tmp_psu" "$psu_path_file" 2>/dev/null || true
+      break
+    fi
+  done
+fi
+
+# Helper to read sysfs attributes (return 0 if missing)
+read_val() {
+  file="$1"
+  if [ -f "$file" ]; then
+    cat "$file" 2>/dev/null || printf '0'
+  else
+    printf '0'
+  fi
+}
+
+cpu_fan=0
+cpu_fan_label="CPU Cooler"
+if [ -n "$asusec_dir" ]; then
+  cpu_fan=$(read_val "$asusec_dir/fan1_input")
+  cpu_fan_label=$(read_val "$asusec_dir/fan1_label")
+fi
+
+psu_fan=-1
+if [ -n "$psu_dir" ]; then
+  psu_fan=$(read_val "$psu_dir/fan1_input")
+fi
+
+# 3. Read GPU fan speed from system-metrics cache
+gpu_fan=-1
+metrics_file="$cache_dir/system-metrics.json"
+if [ -f "$metrics_file" ]; then
+  # Extract gpu.fan
+  gpu_fan=$(jq -r '.gpu.fan // -1' "$metrics_file" 2>/dev/null || printf '-1')
+fi
+
+# Format values
+text="󰈐 ${cpu_fan} RPM"
+
+tooltip="System Cooling Status"
+if [ "$cpu_fan" -gt 0 ]; then
+  tooltip=$(printf '%s\n  ├─ %s: %s RPM' "$tooltip" "${cpu_fan_label:-CPU Cooler}" "$cpu_fan")
+else
+  tooltip=$(printf '%s\n  ├─ CPU Cooler: 0 RPM' "$tooltip")
+fi
+
+if [ "$gpu_fan" -ge 0 ]; then
+  tooltip=$(printf '%s\n  ├─ GPU Fan Speed: %d%%' "$tooltip" "$gpu_fan")
+else
+  tooltip=$(printf '%s\n  ├─ GPU Fan: N/A' "$tooltip")
+fi
+
+if [ "$psu_fan" -ge 0 ]; then
+  tooltip=$(printf '%s\n  └─ PSU Fan Speed: %d RPM' "$tooltip" "$psu_fan")
+else
+  tooltip=$(printf '%s\n  └─ PSU Fan: N/A' "$tooltip")
+fi
+
+tooltip=$(printf '%s\n\nLeft: nvtop · Right: btop · Middle: refresh' "$tooltip")
+
+# Style classes based on RPM/percentage limits
+class="normal"
+if [ "$cpu_fan" -ge 2000 ] || [ "$gpu_fan" -ge 85 ]; then
+  class="critical"
+elif [ "$cpu_fan" -ge 1600 ] || [ "$gpu_fan" -ge 70 ]; then
+  class="warning"
+fi
+
+json=$(jq -cn \
+  --arg text "$text" \
+  --arg tooltip "$tooltip" \
+  --arg class "$class" \
+  '{text:$text, tooltip:$tooltip, class:$class}')
+
+printf '%s\n' "$json"
+
+tmp_cache="$cache_file.tmp.$$"
+printf '%s\n' "$json" > "$tmp_cache"
+mv -f "$tmp_cache" "$cache_file"

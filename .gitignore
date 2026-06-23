@@ -1,0 +1,17 @@
+# Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary & Lock files
+*.tmp
+*.tmp.*
+*.lock.d/
+
+# Waybar specific cached states & logs
+vpn-status-debug.log
+*.log
+
+# Exclude the dry-run folder with large tarballs
+dry-run/

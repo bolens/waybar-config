@@ -1,0 +1,16 @@
+{
+  "bond": {
+    "interface": "bond0",
+    "format-ethernet": "󰓟",
+    "format-disconnected": "󰓟",
+    "tooltip-format": "Bond: {ipaddr}/{cidr} (Slaves: {ifname})",
+    "tooltip-format-ethernet": "Bonded: {ipaddr}/{cidr}\nSlaves: {ifname}",
+    "tooltip-format-disconnected": "Disconnected\nbond0"
+  },
+  "interfaces": [
+    { "id": "eno1", "type": "ethernet", "interface": "eno1" },
+    { "id": "enp5s0", "type": "ethernet", "interface": "enp5s0" },
+    { "id": "wlan0", "type": "wifi", "interface": "wlan0" }
+  ],
+  "bandwidth_interface": "bond0"
+}

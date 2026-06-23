@@ -1,0 +1,28 @@
+{
+  "custom/hyprnotify": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": 60,
+    "exec": "$HOME/.config/waybar/scripts/hypr-bar-module-status.sh notify",
+    "tooltip": false,
+    "on-click": "hyprnotify show"
+  },
+  "custom/hyprlight": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": 60,
+    "exec": "$HOME/.config/waybar/scripts/hypr-bar-module-status.sh light",
+    "tooltip": false,
+    "on-click": "hyprlight osd"
+  },
+  "custom/hyprwhspr": {
+    "format": "{}",
+    "exec": "sh $HOME/.config/waybar/scripts/hyprwhspr-status-wrapper.sh",
+    "interval": 30,
+    "return-type": "json",
+    "exec-on-event": false,
+    "on-click": "/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh record",
+    "on-click-right": "/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh restart",
+    "tooltip": true
+  }
+}

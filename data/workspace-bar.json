@@ -1,0 +1,12 @@
+{
+  "slot_width": 30,
+  "slot_gap": 10,
+  "glyph_width": 30,
+  "glyph_gap": 6,
+  "pill_width": 30,
+  "padding_h": 10,
+  "padding_v": 4,
+  "font_size": 16,
+  "border_radius": 8,
+  "glyph_offset": 0
+}

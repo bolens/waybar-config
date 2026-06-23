@@ -1,0 +1,57 @@
+{
+  "custom/privacy-screenshare": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 17,
+    "exec": "$HOME/.config/waybar/scripts/privacy-status.sh screenshare",
+    "on-click": "$HOME/.config/waybar/scripts/privacy-click.sh screenshare click",
+    "on-click-middle": "$HOME/.config/waybar/scripts/privacy-click.sh screenshare middle",
+    "on-click-right": "$HOME/.config/waybar/scripts/privacy-click.sh screenshare right",
+    "tooltip": true
+  },
+  "custom/privacy-webcam": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 17,
+    "exec": "$HOME/.config/waybar/scripts/privacy-status.sh webcam",
+    "on-click": "$HOME/.config/waybar/scripts/privacy-click.sh webcam click",
+    "on-click-middle": "$HOME/.config/waybar/scripts/privacy-click.sh webcam middle",
+    "on-click-right": "$HOME/.config/waybar/scripts/privacy-click.sh webcam right",
+    "tooltip": true
+  },
+  "custom/privacy-audio-in": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 17,
+    "exec": "$HOME/.config/waybar/scripts/privacy-status.sh audio-in",
+    "on-click": "$HOME/.config/waybar/scripts/privacy-click.sh audio-in click",
+    "on-click-middle": "$HOME/.config/waybar/scripts/privacy-click.sh audio-in middle",
+    "on-click-right": "$HOME/.config/waybar/scripts/privacy-click.sh audio-in right",
+    "tooltip": true
+  },
+  "custom/privacy-audio-out": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 17,
+    "exec": "$HOME/.config/waybar/scripts/privacy-status.sh audio-out",
+    "on-click": "$HOME/.config/waybar/scripts/privacy-click.sh audio-out click",
+    "on-click-middle": "$HOME/.config/waybar/scripts/privacy-click.sh audio-out middle",
+    "on-click-right": "$HOME/.config/waybar/scripts/privacy-click.sh audio-out right",
+    "tooltip": true
+  },
+  "custom/privacy-location": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 17,
+    "exec": "$HOME/.config/waybar/scripts/privacy-status.sh location",
+    "on-click": "$HOME/.config/waybar/scripts/privacy-click.sh location click",
+    "on-click-middle": "$HOME/.config/waybar/scripts/privacy-click.sh location middle",
+    "on-click-right": "$HOME/.config/waybar/scripts/privacy-click.sh location right",
+    "tooltip": true
+  }
+}

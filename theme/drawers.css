@@ -1,0 +1,151 @@
+/* Drawer handles and collapsed children (HyDE-style click-to-reveal) */
+
+/* Drawer groups — no container pill; modules keep their own styling */
+
+#desk-controls,
+#media,
+#net,
+#tools,
+#top-status,
+#privacy,
+#tray-apps,
+#dock-apps,
+#infra,
+#hardware,
+#power {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 4px 2px;
+}
+
+#desk-controls > *,
+#media > *,
+#net > *,
+#tools > *,
+#top-status > *,
+#privacy > *,
+#tray-apps > *,
+#dock-apps > *,
+#infra > *,
+#hardware > *,
+#power > * {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#custom-desk-drawer,
+#custom-dock-drawer,
+#custom-tray-drawer,
+#custom-media-drawer,
+#custom-net-drawer,
+#custom-tools-drawer,
+#custom-infra-drawer,
+#custom-hardware-drawer {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+    font-weight: 700;
+    min-width: 24px;
+    padding: 0 12px;
+    margin: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#custom-power-drawer {
+    color: #ff2a7f;
+    text-shadow: 0 0 6px rgba(255, 42, 127, 0.35);
+    font-weight: 700;
+    min-width: 24px;
+    padding: 0 12px;
+    margin: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#custom-desk-drawer:hover,
+#custom-dock-drawer:hover,
+#custom-tray-drawer:hover,
+#custom-media-drawer:hover,
+#custom-net-drawer:hover,
+#custom-tools-drawer:hover,
+#custom-infra-drawer:hover,
+#custom-hardware-drawer:hover {
+    color: #c8f6ff;
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.45);
+    background: rgba(0, 229, 255, 0.10);
+    border: none;
+    box-shadow: none;
+}
+
+#custom-power-drawer:hover {
+    color: #ff5a9a;
+    text-shadow: 0 0 8px rgba(255, 42, 127, 0.5);
+    background: rgba(255, 42, 127, 0.14);
+    border: none;
+    box-shadow: none;
+}
+
+.drawer-child.hidden,
+#media > .drawer-child.hidden,
+#net > .drawer-child.hidden,
+#tools > .drawer-child.hidden,
+#desk-controls > .drawer-child.hidden,
+#dock-apps > .drawer-child.hidden,
+#tray-apps > .drawer-child.hidden,
+#infra > .drawer-child.hidden,
+#hardware > .drawer-child.hidden,
+#power > .drawer-child.hidden {
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    opacity: 0;
+}
+
+/* Power drawer hover overrides - Premium Cyberpunk aesthetics */
+#custom-lock:hover {
+    color: #ffe600;
+    background: rgba(255, 230, 0, 0.14);
+    border-color: rgba(255, 230, 0, 0.45);
+    box-shadow: 0 0 10px rgba(255, 230, 0, 0.35);
+    text-shadow: 0 0 8px rgba(255, 230, 0, 0.5);
+}
+
+#custom-logout:hover {
+    color: #e0aaff;
+    background: rgba(224, 170, 255, 0.14);
+    border-color: rgba(224, 170, 255, 0.45);
+    box-shadow: 0 0 10px rgba(224, 170, 255, 0.35);
+    text-shadow: 0 0 8px rgba(224, 170, 255, 0.5);
+}
+
+#custom-suspend:hover {
+    color: #2cffb0;
+    background: rgba(44, 255, 176, 0.14);
+    border-color: rgba(44, 255, 176, 0.45);
+    box-shadow: 0 0 10px rgba(44, 255, 176, 0.35);
+    text-shadow: 0 0 8px rgba(44, 255, 176, 0.5);
+}
+
+#custom-reboot:hover {
+    color: #00e5ff;
+    background: rgba(0, 229, 255, 0.14);
+    border-color: rgba(0, 229, 255, 0.45);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.35);
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+
+#custom-shutdown:hover {
+    color: #ff2a7f;
+    background: rgba(255, 42, 127, 0.14);
+    border-color: rgba(255, 42, 127, 0.45);
+    box-shadow: 0 0 10px rgba(255, 42, 127, 0.35);
+    text-shadow: 0 0 8px rgba(255, 42, 127, 0.5);
+}

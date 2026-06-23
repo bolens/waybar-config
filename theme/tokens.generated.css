@@ -1,0 +1,34 @@
+/* Generated from data/waybar-settings.json theme — do not edit by hand */
+
+* {
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: rgba(6, 7, 14, 0.92);
+    border-bottom: 1px solid rgba(0, 229, 255, 0.25);
+    color: #c8f6ff;
+}
+
+window#waybar.bottom {
+    border-bottom: none;
+    border-top: 1px solid rgba(0, 229, 255, 0.25);
+}
+
+tooltip {
+    background: rgba(6, 7, 14, 0.92);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 8px;
+    box-shadow: 0 0 14px rgba(0, 229, 255, 0.18);
+}
+
+tooltip label {
+    color: #c8f6ff;
+    background: transparent;
+    padding: 8px 10px;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 12px;
+}
+

@@ -1,0 +1,10 @@
+{
+  "custom/active-window": {
+    "format": "{}",
+    "return-type": "json",
+    "escape": true,
+    "exec": "$HOME/.config/waybar/scripts/active-window-scroll.sh",
+    "tooltip": true,
+    "on-click": "$HOME/.config/waybar/scripts/window-switcher.sh"
+  }
+}

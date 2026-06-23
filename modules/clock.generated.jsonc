@@ -1,0 +1,46 @@
+{
+  "clock#top": {
+    "interval": 60,
+    "format": "{:%I:%M %p  %a %b %d}",
+    "tooltip-format": "<big>{:%A, %B %d, %Y}</big>\n<tt>{calendar}</tt>",
+    "on-click": "$HOME/.config/waybar/scripts/calendar-popup.sh",
+    "on-click-right": "$HOME/.config/waybar/scripts/app-open.sh kclock",
+    "calendar": {
+      "mode": "month",
+      "on-scroll": 1,
+      "first_day": 0,
+      "format": {
+        "months": "<span color='#ff2a7f'><b>{}</b></span>",
+        "weekdays": "<span color='#ffe600'><b>{}</b></span>",
+        "days": "<span color='#c8f6ff'>{}</span>",
+        "today": "<span color='#00e5ff'><b><u>{}</u></b></span>"
+      }
+    },
+    "actions": {
+      "on-scroll-up": "shift_down",
+      "on-scroll-down": "shift_up"
+    }
+  },
+  "clock#bottom": {
+    "interval": 60,
+    "format": "{:%a %b %d %I:%M %p}",
+    "tooltip-format": "<big>{:%Y-%m-%d}</big>\n<tt>{calendar}</tt>",
+    "on-click": "$HOME/.config/waybar/scripts/calendar-popup.sh",
+    "on-click-right": "$HOME/.config/waybar/scripts/app-open.sh kclock",
+    "calendar": {
+      "mode": "month",
+      "on-scroll": 1,
+      "first_day": 0,
+      "format": {
+        "months": "<span color='#ff2a7f'><b>{}</b></span>",
+        "weekdays": "<span color='#ffe600'><b>{}</b></span>",
+        "days": "<span color='#c8f6ff'>{}</span>",
+        "today": "<span color='#00e5ff'><b><u>{}</u></b></span>"
+      }
+    },
+    "actions": {
+      "on-scroll-up": "shift_down",
+      "on-scroll-down": "shift_up"
+    }
+  }
+}

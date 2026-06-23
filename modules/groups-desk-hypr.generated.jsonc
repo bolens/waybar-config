@@ -1,0 +1,12 @@
+{
+  "group/desk-hypr": {
+    "orientation": "inherit",
+    "modules": [
+      "custom/ws-0",
+      "custom/ws-1",
+      "custom/ws-2",
+      "custom/ws-3",
+      "custom/ws-4"
+    ]
+  }
+}

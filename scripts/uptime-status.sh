@@ -1,0 +1,72 @@
+#!/usr/bin/env sh
+set -eu
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
+cache_file="$cache_dir/uptime-status.json"
+lock_dir="$cache_dir/uptime-status.lock.d"
+ttl=60
+stale_lock_ttl=15
+
+mkdir -p "$cache_dir"
+
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
+
+
+if [ "${1:-}" != "--refresh" ]; then
+  if [ -f "$cache_file" ] && [ "$(cache_file_age "$cache_file")" -le "$ttl" ] 2>/dev/null; then
+    cat "$cache_file"
+    exit 0
+  fi
+  
+  cleanup_stale_lock_dir "$lock_dir" "$stale_lock_ttl"
+  [ -d "$lock_dir" ] || refresh_in_background
+  
+  if [ -f "$cache_file" ]; then
+    cat "$cache_file"
+    exit 0
+  fi
+  
+  jq -cn --arg text "󰔚 --" --arg tooltip "Initializing uptime..." --arg class "normal" \
+    '{text:$text, tooltip:$tooltip, class:$class}'
+  exit 0
+fi
+
+# --refresh mode
+read -r uptime_sec _ </proc/uptime
+uptime_sec=${uptime_sec%.*}
+days=$((uptime_sec / 86400))
+hours=$(((uptime_sec % 86400) / 3600))
+mins=$(((uptime_sec % 3600) / 60))
+
+raw_uptime_short=""
+[ "$days" -gt 0 ] && raw_uptime_short="${days}d "
+[ "$hours" -gt 0 ] && raw_uptime_short="${raw_uptime_short}${hours}h "
+raw_uptime_short="${raw_uptime_short}${mins}m"
+
+raw_uptime_long=""
+if [ "$days" -gt 0 ]; then
+  raw_uptime_long="${days} day$([ "$days" -gt 1 ] && echo "s" || echo ""), "
+fi
+if [ "$hours" -gt 0 ] || [ "$days" -gt 0 ]; then
+  raw_uptime_long="${raw_uptime_long}${hours} hour$([ "$hours" -ne 1 ] && echo "s" || echo ""), "
+fi
+raw_uptime_long="${raw_uptime_long}${mins} minute$([ "$mins" -ne 1 ] && echo "s" || echo "")"
+load_avg=$(cat /proc/loadavg | awk '{print $1, $2, $3}')
+btime=$(awk '/^btime/ {print $2}' /proc/stat)
+boot_time=$(format_locale_datetime "$btime")
+
+text=$(printf '󰔚 %s' "$raw_uptime_short")
+tooltip=$(printf 'System Uptime\nUptime: %s\nLoad Average: %s\nBoot Time: %s\n\nLeft: btop · Right: system monitor · Middle: refresh' "$raw_uptime_long" "$load_avg" "$boot_time")
+
+json=$(jq -cn \
+  --arg text "$text" \
+  --arg tooltip "$tooltip" \
+  --arg class "normal" \
+  '{text:$text, tooltip:$tooltip, class:$class}')
+
+printf '%s\n' "$json"
+
+tmp_cache="$cache_file.tmp.$$"
+printf '%s\n' "$json" > "$tmp_cache"
+mv -f "$tmp_cache" "$cache_file"

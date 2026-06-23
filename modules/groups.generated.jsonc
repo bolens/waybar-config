@@ -1,0 +1,190 @@
+{
+  "group/power": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": false
+    },
+    "modules": [
+      "custom/power-drawer",
+      "custom/lock",
+      "custom/logout",
+      "custom/suspend",
+      "custom/reboot",
+      "custom/shutdown"
+    ]
+  },
+  "group/desk-controls": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": true
+    },
+    "modules": [
+      "custom/desk-drawer",
+      "custom/notifications",
+      "custom/powerprofiles",
+      "custom/brightness",
+      "bluetooth",
+      "idle_inhibitor",
+      "custom/keyboard-layout",
+      "custom/kdeconnect",
+      "custom/device-battery"
+    ]
+  },
+  "group/media": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": true
+    },
+    "modules": [
+      "custom/media-drawer",
+      "custom/media-prev",
+      "custom/mpris",
+      "custom/media-next",
+      "pulseaudio",
+      "custom/mic"
+    ]
+  },
+  "group/net": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": true
+    },
+    "modules": [
+      "custom/net-drawer",
+      "network#bandwidthUpBytes",
+      "network#bandwidthDownBytes",
+      "custom/vpnstatus",
+      "custom/tailscale",
+      "network#bond",
+      "custom/eno1",
+      "custom/enp5s0",
+      "custom/wlan0"
+    ]
+  },
+  "group/tools": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": false
+    },
+    "modules": [
+      "custom/tools-drawer",
+      "custom/screenshot",
+      "custom/screenrecord",
+      "custom/nightlight",
+      "custom/clipboard",
+      "custom/discord",
+      "custom/weather"
+    ]
+  },
+  "group/top-status": {
+    "orientation": "inherit",
+    "modules": [
+      "group/privacy",
+      "group/tray-apps"
+    ]
+  },
+  "group/privacy": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": false
+    },
+    "modules": [
+      "custom/privacy-drawer",
+      "custom/privacy-screenshare",
+      "custom/privacy-webcam",
+      "custom/privacy-audio-in",
+      "custom/privacy-audio-out",
+      "custom/privacy-location"
+    ]
+  },
+  "group/tray-apps": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": false
+    },
+    "modules": [
+      "custom/tray-drawer",
+      "tray"
+    ]
+  },
+  "group/infra": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": false
+    },
+    "modules": [
+      "custom/infra-drawer",
+      "custom/docker",
+      "custom/system",
+      "custom/network",
+      "custom/runtimes",
+      "custom/updates",
+      "custom/ups",
+      "custom/systemd",
+      "custom/github",
+      "custom/uptime"
+    ]
+  },
+  "group/hardware": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": false
+    },
+    "modules": [
+      "custom/hardware-drawer",
+      "custom/cpu",
+      "custom/gpu",
+      "custom/memory",
+      "custom/disk",
+      "custom/psu",
+      "custom/fans"
+    ]
+  },
+  "group/security": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": false
+    },
+    "modules": [
+      "custom/security-drawer",
+      "custom/libredefender",
+      "custom/chkrootkit"
+    ]
+  },
+  "group/status": {
+    "orientation": "inherit",
+    "modules": [
+      "clock#bottom"
+    ]
+  }
+}

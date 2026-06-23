@@ -1,0 +1,23 @@
+{
+  "include": [
+    "$HOME/.config/waybar/modules/hyprland.native.generated.jsonc",
+    "$HOME/.config/waybar/modules/workspaces.jsonc",
+    "$HOME/.config/waybar/modules/groups-desk-hypr.generated.jsonc",
+    "$HOME/.config/waybar/modules/compositor.generated.jsonc",
+    "$HOME/.config/waybar/modules/center-extras.generated.jsonc",
+    "$HOME/.config/waybar/modules/privacy.generated.jsonc",
+    "$HOME/.config/waybar/modules/hypr-tools.generated.jsonc",
+    "$HOME/.config/waybar/modules/clock.generated.jsonc",
+    "$HOME/.config/waybar/modules/audio.generated.jsonc",
+    "$HOME/.config/waybar/modules/network-custom.generated.jsonc",
+    "$HOME/.config/waybar/modules/network.generated.jsonc",
+    "$HOME/.config/waybar/modules/utilities.generated.jsonc",
+    "$HOME/.config/waybar/modules/drawers.generated.jsonc",
+    "$HOME/.config/waybar/modules/system.generated.jsonc",
+    "$HOME/.config/waybar/modules/dock-windows.generated.jsonc",
+    "$HOME/.config/waybar/modules/dock.generated.jsonc",
+    "$HOME/.config/waybar/modules/groups-dock.generated.jsonc",
+    "$HOME/.config/waybar/modules/tray.generated.jsonc",
+    "$HOME/.config/waybar/modules/groups.generated.jsonc"
+  ]
+}

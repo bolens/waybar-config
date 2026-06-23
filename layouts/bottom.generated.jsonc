@@ -1,0 +1,17 @@
+{
+  "name": "bottom",
+  "position": "bottom",
+  "modules-center": [
+    "custom/active-window"
+  ],
+  "modules-right": [
+    "group/tools",
+    "group/infra",
+    "group/security",
+    "group/hardware",
+    "clock#bottom"
+  ],
+  "modules-left": [
+    "group/dock-apps"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "group/dock-apps": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": true
+    },
+    "modules": [
+      "custom/dock-drawer",
+      "custom/dock-browser",
+      "custom/dock-floorp",
+      "custom/dock-helium",
+      "custom/dock-pear",
+      "custom/dock-cursor",
+      "custom/dock-files",
+      "custom/dock-kitty",
+      "custom/dock-terminal",
+      "custom/dock-vscode",
+      "custom/dock-zed",
+      "custom/dock-anyrun",
+      "custom/dock-discord",
+      "custom/dock-heroic",
+      "custom/dock-krita",
+      "custom/dock-lutris",
+      "custom/dock-obsidian",
+      "custom/dock-orcaslicer",
+      "custom/dock-steam"
+    ]
+  }
+}

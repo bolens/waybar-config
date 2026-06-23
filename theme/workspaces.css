@@ -1,0 +1,127 @@
+/* Workspace strip: one module per desktop, active slot gets the pill (standard Waybar pattern) */
+
+#desk-hypr {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin: 4px 2px;
+}
+
+#custom-ws-0.ws-hit,
+#custom-ws-1.ws-hit,
+#custom-ws-2.ws-hit,
+#custom-ws-3.ws-hit,
+#custom-ws-4.ws-hit,
+#custom-ws-5.ws-hit,
+#custom-ws-6.ws-hit,
+#custom-ws-7.ws-hit,
+#custom-ws-8.ws-hit,
+#custom-ws-9.ws-hit {
+    background: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-right: 0;
+    transition:
+        color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 280ms cubic-bezier(0.4, 0, 0.2, 1),
+        background-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#custom-ws-0.ws-hit label,
+#custom-ws-1.ws-hit label,
+#custom-ws-2.ws-hit label,
+#custom-ws-3.ws-hit label,
+#custom-ws-4.ws-hit label,
+#custom-ws-5.ws-hit label,
+#custom-ws-6.ws-hit label,
+#custom-ws-7.ws-hit label,
+#custom-ws-8.ws-hit label,
+#custom-ws-9.ws-hit label {
+    transition: color 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#custom-ws-0.ws-inactive,
+#custom-ws-1.ws-inactive,
+#custom-ws-2.ws-inactive,
+#custom-ws-3.ws-inactive,
+#custom-ws-4.ws-inactive,
+#custom-ws-5.ws-inactive,
+#custom-ws-6.ws-inactive,
+#custom-ws-7.ws-inactive,
+#custom-ws-8.ws-inactive,
+#custom-ws-9.ws-inactive {
+    color: rgba(0, 229, 255, 0.42);
+    opacity: 0.65;
+}
+
+#custom-ws-0.ws-active,
+#custom-ws-1.ws-active,
+#custom-ws-2.ws-active,
+#custom-ws-3.ws-active,
+#custom-ws-4.ws-active,
+#custom-ws-5.ws-active,
+#custom-ws-6.ws-active,
+#custom-ws-7.ws-active,
+#custom-ws-8.ws-active,
+#custom-ws-9.ws-active {
+    color: #ff2a7f;
+    opacity: 1;
+}
+
+#custom-ws-0.ws-active label,
+#custom-ws-1.ws-active label,
+#custom-ws-2.ws-active label,
+#custom-ws-3.ws-active label,
+#custom-ws-4.ws-active label,
+#custom-ws-5.ws-active label,
+#custom-ws-6.ws-active label,
+#custom-ws-7.ws-active label,
+#custom-ws-8.ws-active label,
+#custom-ws-9.ws-active label {
+    text-shadow: 0 0 8px rgba(255, 42, 127, 0.75);
+}
+
+#custom-ws-0.ws-inactive:hover,
+#custom-ws-1.ws-inactive:hover,
+#custom-ws-2.ws-inactive:hover,
+#custom-ws-3.ws-inactive:hover,
+#custom-ws-4.ws-inactive:hover,
+#custom-ws-5.ws-inactive:hover,
+#custom-ws-6.ws-inactive:hover,
+#custom-ws-7.ws-inactive:hover,
+#custom-ws-8.ws-inactive:hover,
+#custom-ws-9.ws-inactive:hover {
+    color: #00e5ff;
+    opacity: 1;
+}
+
+#custom-ws-0.ws-active:hover,
+#custom-ws-1.ws-active:hover,
+#custom-ws-2.ws-active:hover,
+#custom-ws-3.ws-active:hover,
+#custom-ws-4.ws-active:hover,
+#custom-ws-5.ws-active:hover,
+#custom-ws-6.ws-active:hover,
+#custom-ws-7.ws-active:hover,
+#custom-ws-8.ws-active:hover,
+#custom-ws-9.ws-active:hover {
+    color: #ff5a9a;
+}
+
+#custom-ws-0.hidden,
+#custom-ws-1.hidden,
+#custom-ws-2.hidden,
+#custom-ws-3.hidden,
+#custom-ws-4.hidden,
+#custom-ws-5.hidden,
+#custom-ws-6.hidden,
+#custom-ws-7.hidden,
+#custom-ws-8.hidden,
+#custom-ws-9.hidden {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+}

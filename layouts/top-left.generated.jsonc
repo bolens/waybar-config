@@ -1,0 +1,7 @@
+{
+  "modules-left": [
+    "group/desk-controls",
+    "group/media",
+    "group/net"
+  ]
+}

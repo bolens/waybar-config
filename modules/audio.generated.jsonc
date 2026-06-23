@@ -1,0 +1,85 @@
+{
+  "mpris": {
+    "format": "{player_icon} {title}",
+    "format-paused": "{status_icon} <i>{title}</i>",
+    "player-icons": {
+      "default": "󰐊",
+      "mpv": "󰐊",
+      "chromium": "󰊯",
+      "firefox": "󰈹",
+      "vesktop": "󰙯"
+    },
+    "status-icons": {
+      "paused": "󰏤"
+    },
+    "max-length": 32
+  },
+  "custom/mpris": {
+    "format": "{}",
+    "exec": "$HOME/.config/waybar/scripts/mpris-scroll.sh",
+    "on-click": "playerctl play-pause",
+    "on-click-right": "playerctl next",
+    "on-click-middle": "playerctl previous"
+  },
+  "custom/media-prev": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": 2,
+    "exec": "$HOME/.config/waybar/scripts/media-prev.sh",
+    "on-click": "playerctl previous",
+    "on-click-right": "playerctl position 30-"
+  },
+  "custom/media-next": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": 2,
+    "exec": "$HOME/.config/waybar/scripts/media-next.sh",
+    "on-click": "playerctl next",
+    "on-click-right": "playerctl position 10+"
+  },
+  "pulseaudio": {
+    "format": "{icon} {volume:3}%",
+    "format-muted": "󰝟 {volume:3}%",
+    "tooltip-format": "{desc}\nVolume: {volume}%\nLeft: open GoXLR · Right: audio menu · Middle: mute",
+    "format-icons": {
+      "headphone": "󰋋",
+      "hands-free": "󰋎",
+      "headset": "󰋎",
+      "phone": "󰄜",
+      "portable": "󰄝",
+      "car": "󰄋",
+      "default": [
+        "󰕿",
+        "󰖀",
+        "󰕾"
+      ]
+    },
+    "on-click": "$HOME/.config/waybar/scripts/app-open.sh goxlr-launcher",
+    "on-click-right": "$HOME/.config/waybar/scripts/audio-click.sh select",
+    "on-click-middle": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-scroll-up": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+",
+    "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+  },
+  "custom/mic": {
+    "format": "{}",
+    "return-type": "json",
+    "signal": 7,
+    "interval": "once",
+    "exec": "$HOME/.config/waybar/scripts/mic-status.sh",
+    "on-click": "$HOME/.config/waybar/scripts/app-open.sh goxlr-launcher",
+    "on-click-right": "$HOME/.config/waybar/scripts/audio-click.sh manage",
+    "on-click-middle": "$HOME/.config/waybar/scripts/mic-toggle.sh"
+  },
+  "bluetooth": {
+    "format": "󰂯",
+    "format-disabled": "󰂲",
+    "format-connected": "󰂱",
+    "format-connected-battery": "󰂱",
+    "tooltip-format": "{status}\n{controller_alias}: {controller_address}",
+    "tooltip-format-connected": "{device_alias}\n{controller_alias}: {num_connections} connected",
+    "tooltip-format-connected-battery": "{device_alias} {device_battery_percentage}%\n{controller_alias}: {num_connections} connected",
+    "on-click": "$HOME/.config/waybar/scripts/bluetooth-click.sh list",
+    "on-click-right": "$HOME/.config/waybar/scripts/bluetooth-click.sh manage",
+    "on-click-middle": "$HOME/.config/waybar/scripts/bluetooth-click.sh toggle"
+  }
+}

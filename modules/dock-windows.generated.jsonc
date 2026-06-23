@@ -1,0 +1,16 @@
+{
+  "custom/dock-windows": {
+    "format": "{}",
+    "return-type": "json",
+    "min-length": 64,
+    "max-length": 160,
+    "expand": true,
+    "align": 0.5,
+    "signal": 11,
+    "interval": 120,
+    "exec": "$HOME/.config/waybar/scripts/dock-windows-status.sh",
+    "on-click": "$HOME/.config/waybar/scripts/dock-windows-click.sh activate",
+    "on-click-right": "$HOME/.config/waybar/scripts/dock-windows-click.sh close-focused",
+    "on-click-middle": "$HOME/.config/waybar/scripts/dock-windows-click.sh cycle"
+  }
+}
