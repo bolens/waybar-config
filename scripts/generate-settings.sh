@@ -14,7 +14,7 @@ bottom_layout_out="$WAYBAR_HOME/layouts/bottom.generated.jsonc"
 groups_out="$WAYBAR_HOME/modules/groups.generated.jsonc"
 system_out="$WAYBAR_HOME/modules/system.generated.jsonc"
 
-[ -f "$settings" ] || exit 1
+[ -f "$settings" ] || exit 0
 command -v jq >/dev/null 2>&1 || exit 1
 
 expand_group_modules() {

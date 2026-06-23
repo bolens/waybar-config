@@ -12,7 +12,7 @@ hour_format=$(detect_clock_format)
 date_format=$(detect_date_format)
 first_day=$(detect_first_weekday)
 
-[ -f "$settings" ] || exit 1
+[ -f "$settings" ] || exit 0
 command -v jq >/dev/null 2>&1 || exit 1
 
 mod_dir="$WAYBAR_HOME/modules"

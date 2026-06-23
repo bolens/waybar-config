@@ -10,7 +10,7 @@ modules_out="$WAYBAR_HOME/modules/dock.generated.jsonc"
 groups_out="$WAYBAR_HOME/modules/groups-dock.generated.jsonc"
 scripts='$WAYBAR_HOME/scripts'
 
-[ -f "$manifest" ] || exit 1
+[ -f "$manifest" ] || exit 0
 
 section_order_json='["web","dev","misc"]'
 drawer_click='true'

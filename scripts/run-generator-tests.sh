@@ -104,6 +104,70 @@ else
   fi
 fi
 
+# 5. Behavior and settings override tests
+echo "Running behavioral tests for settings overrides..."
+
+# Override settings file with a custom mock
+cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
+{
+  "poll_intervals": {
+    "clock": 42
+  },
+  "clocks": {
+    "top": {
+      "format": "TEST_TOP_CLOCK_FORMAT"
+    }
+  }
+}
+JSON
+
+# Run generators to build settings and rebuild modules
+if ! "$TEST_DIR/scripts/generate-settings.sh" >/dev/null 2>&1; then
+  echo "FAIL: generate-settings.sh failed with custom configuration" >&2
+  exit 1
+fi
+if ! "$TEST_DIR/scripts/generate-module-configs.sh" >/dev/null 2>&1; then
+  echo "FAIL: generate-module-configs.sh failed with custom configuration" >&2
+  exit 1
+fi
+
+# Verify settings were compiled to JSON
+if [ ! -f "$TEST_DIR/data/waybar-settings.json" ]; then
+  echo "FAIL: waybar-settings.json was not compiled from waybar-settings.jsonc" >&2
+  fail=1
+fi
+
+# Check that the clock config has our custom format and custom interval
+clock_conf="$TEST_DIR/modules/clock.generated.jsonc"
+if [ -f "$clock_conf" ]; then
+  # Clean comments and parse
+  clean_clock=$(python3 -c "import re; t=open('$clock_conf').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
+  if ! echo "$clean_clock" | jq -e '."clock#top".format == "TEST_TOP_CLOCK_FORMAT"' >/dev/null 2>&1; then
+    echo "FAIL: Custom clock format not compiled correctly into clock.generated.jsonc" >&2
+    echo "Generated output: $clean_clock" >&2
+    fail=1
+  fi
+  if ! echo "$clean_clock" | jq -e '."clock#top".interval == 42' >/dev/null 2>&1; then
+    echo "FAIL: Custom clock interval not compiled correctly into clock.generated.jsonc" >&2
+    fail=1
+  fi
+else
+  echo "FAIL: clock.generated.jsonc was not generated!" >&2
+  fail=1
+fi
+
+# Verify behavior when waybar-settings.jsonc is missing
+echo "Verifying resilience against missing settings file..."
+rm -f "$TEST_DIR/data/waybar-settings.jsonc" "$TEST_DIR/data/waybar-settings.json"
+if ! "$TEST_DIR/scripts/generate-settings.sh" >/dev/null 2>&1; then
+  echo "FAIL: generate-settings.sh crashed when waybar-settings.jsonc was missing" >&2
+  exit 1
+fi
+if ! "$TEST_DIR/scripts/generate-module-configs.sh" >/dev/null 2>&1; then
+  echo "FAIL: generate-module-configs.sh crashed when waybar-settings.jsonc was missing" >&2
+  exit 1
+fi
+
 if [ "$fail" -eq 0 ]; then
   echo "PASS: All generated configuration files are syntactically valid and free of hardcoded user paths."
 else
