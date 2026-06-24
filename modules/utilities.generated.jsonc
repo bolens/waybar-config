@@ -143,7 +143,9 @@
     "return-type": "json",
     "interval": 1800,
     "exec": "$WAYBAR_HOME/scripts/weather-status.sh",
-    "on-click": "$WAYBAR_HOME/scripts/app-open.sh xdg-open https://wttr.in/"
+    "on-click": "$WAYBAR_HOME/scripts/app-open.sh xdg-open https://wttr.in/",
+    "on-click-right": "$WAYBAR_HOME/scripts/app-open.sh xdg-open https://weather.com/",
+    "on-click-middle": "$WAYBAR_HOME/scripts/weather-status.sh --refresh"
   },
   "custom/systemd": {
     "format": "{}",

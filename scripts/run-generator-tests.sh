@@ -16,7 +16,8 @@ mkdir -p "$TEST_DIR/data" "$TEST_DIR/layouts" "$TEST_DIR/includes" "$TEST_DIR/mo
 cp -r data/* "$TEST_DIR/data/"
 cp layouts/*.jsonc "$TEST_DIR/layouts/"
 cp includes/*.jsonc "$TEST_DIR/includes/"
-cp modules/workspaces.jsonc "$TEST_DIR/modules/"
+cp modules/*.jsonc "$TEST_DIR/modules/"
+echo "{}" > "$TEST_DIR/modules/hyprland.jsonc"
 cp -r scripts "$TEST_DIR/scripts"
 
 # Make sure the copied scripts are executable
@@ -25,6 +26,7 @@ chmod +x "$TEST_DIR"/scripts/*.sh "$TEST_DIR"/scripts/*.py
 # 3. Export the custom WAYBAR_HOME environment variable to test behavior path independence
 export WAYBAR_HOME="$TEST_DIR"
 export WAYBAR_SCRIPTS="$TEST_DIR/scripts"
+export HYPRLAND_INSTANCE_SIGNATURE="mock_signature"
 
 echo "Running configuration generator scripts under WAYBAR_HOME=$WAYBAR_HOME..."
 
@@ -112,43 +114,6 @@ except Exception as e:
 PY
 }
 
-echo "Validating generated JSONC files..."
-
-# Ensure we have generated files
-generated_files=()
-while IFS=  read -r -d $'\0'; do
-    generated_files+=("$REPLY")
-done < <(find "$TEST_DIR" -name "*.generated.jsonc" -print0)
-
-if [ ${#generated_files[@]} -eq 0 ]; then
-  echo "FAIL: No generated JSONC files were found!" >&2
-  fail=1
-fi
-
-for file in "${generated_files[@]}"; do
-  # Check if it parses as valid JSON
-  if ! strip_jsonc "$file" 2>/dev/null; then
-    echo "FAIL: JSON syntax error in $file" >&2
-    fail=1
-    continue
-  fi
-
-  # Run custom module configurations validation
-  if ! validate_custom_module_configs "$file"; then
-    fail=1
-    continue
-  fi
-
-  # Check that it DOES NOT contain any hardcoded references to /home/ or ~/.config/waybar
-  if grep -E "/home/|~/\.config/waybar" "$file" >/dev/null 2>&1; then
-    echo "FAIL: Hardcoded path detected in $file" >&2
-    grep -n -E "/home/|~/\.config/waybar" "$file" >&2
-    fail=1
-  fi
-done
-
-# 4b. Verify that all essential generated files exist and are not empty
-echo "Checking essential generated files existence and size..."
 essential_files=(
   "includes/bar-defaults.generated.jsonc"
   "layouts/top-shell.generated.jsonc"
@@ -169,28 +134,73 @@ essential_files=(
   "theme/tokens.generated.css"
 )
 
-for file_rel in "${essential_files[@]}"; do
-  file_path="$TEST_DIR/$file_rel"
-  if [ ! -f "$file_path" ]; then
-    echo "FAIL: Expected generated file $file_rel was not found!" >&2
-    fail=1
-  elif [ ! -s "$file_path" ]; then
-    echo "FAIL: Generated file $file_rel is empty!" >&2
-    fail=1
-  fi
-done
+validate_all_generated_files() {
+  local stage="$1"
+  local check_fail=0
 
-# Check the generated CSS file too
-css_file="$TEST_DIR/theme/workspaces.generated.css"
-if [ ! -f "$css_file" ]; then
-  echo "FAIL: workspaces.generated.css was not created!" >&2
-  fail=1
-else
-  if grep -E "/home/|~/\.config/waybar" "$css_file" >/dev/null 2>&1; then
-    echo "FAIL: Hardcoded path detected in $css_file" >&2
-    fail=1
+  for file_rel in "${essential_files[@]}"; do
+    local file_path="$TEST_DIR/$file_rel"
+    if [ ! -f "$file_path" ]; then
+      echo "FAIL [$stage]: Expected generated file $file_rel was not found!" >&2
+      check_fail=1
+    elif [ ! -s "$file_path" ]; then
+      echo "FAIL [$stage]: Generated file $file_rel is empty!" >&2
+      check_fail=1
+    elif [[ "$file_rel" == *.jsonc ]]; then
+      if ! strip_jsonc "$file_path" 2>/dev/null; then
+        echo "FAIL [$stage]: JSON syntax error in $file_rel" >&2
+        check_fail=1
+      fi
+    fi
+  done
+
+  local css_file="$TEST_DIR/theme/workspaces.generated.css"
+  if [ ! -f "$css_file" ]; then
+    echo "FAIL [$stage]: workspaces.generated.css was not created!" >&2
+    check_fail=1
+  elif [ ! -s "$css_file" ]; then
+    echo "FAIL [$stage]: workspaces.generated.css is empty!" >&2
+    check_fail=1
+  elif grep -E "/home/|~/\.config/waybar" "$css_file" >/dev/null 2>&1; then
+    echo "FAIL [$stage]: Hardcoded path detected in $css_file" >&2
+    check_fail=1
   fi
-fi
+
+  local gen_files=()
+  while IFS=  read -r -d $'\0'; do
+      gen_files+=("$REPLY")
+  done < <(find "$TEST_DIR" -name "*.generated.jsonc" -print0)
+
+  if [ ${#gen_files[@]} -eq 0 ]; then
+    echo "FAIL [$stage]: No generated JSONC files were found!" >&2
+    check_fail=1
+  fi
+
+  for file in "${gen_files[@]}"; do
+    if ! strip_jsonc "$file" 2>/dev/null; then
+      echo "FAIL [$stage]: JSON syntax error in $file" >&2
+      check_fail=1
+      continue
+    fi
+
+    if ! validate_custom_module_configs "$file" >/dev/null 2>&1; then
+      echo "FAIL [$stage]: Custom module configuration validation failed for $file" >&2
+      check_fail=1
+      continue
+    fi
+
+    if grep -E "/home/|~/\.config/waybar" "$file" >/dev/null 2>&1; then
+      echo "FAIL [$stage]: Hardcoded path detected in $file" >&2
+      grep -n -E "/home/|~/\.config/waybar" "$file" >&2
+      check_fail=1
+    fi
+  done
+
+  return $check_fail
+}
+
+echo "Validating generated JSONC and CSS files for default settings..."
+validate_all_generated_files "default settings" || fail=1
 
 # 5. Behavior and settings override tests
 echo "Running behavioral tests for settings overrides..."
@@ -217,7 +227,10 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
     }
   },
   "weather": {
-    "unit": "F"
+    "unit": "F",
+    "on_click": "TEST_WEATHER_ON_CLICK",
+    "on_click_right": "TEST_WEATHER_ON_CLICK_RIGHT",
+    "on_click_middle": "TEST_WEATHER_ON_CLICK_MIDDLE"
   },
   "active_window": {
     "zscroll": false,
@@ -225,11 +238,42 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
   },
   "audio": {
     "mpris_zscroll": false,
-    "mpris_max_length": 20
+    "mpris_max_length": 20,
+    "volume_step": 2,
+    "max_volume": 1.2,
+    "on_click": "TEST_AUDIO_ON_CLICK",
+    "on_click_right": "TEST_AUDIO_ON_CLICK_RIGHT"
+  },
+  "bluetooth": {
+    "on_click": "TEST_BLUETOOTH_ON_CLICK",
+    "on_click_right": "TEST_BLUETOOTH_ON_CLICK_RIGHT",
+    "on_click_middle": "TEST_BLUETOOTH_ON_CLICK_MIDDLE"
+  },
+  "keyboard": {
+    "on_click": "TEST_KEYBOARD_ON_CLICK"
+  },
+  "gamemode": {
+    "on_click": "TEST_GAMEMODE_ON_CLICK"
+  },
+  "workspaces": {
+    "slot_count": 8
+  },
+  "layouts": {
+    "top": {
+      "position": "top",
+      "modules_left": ["group/desk-controls", "group/media"],
+      "modules_center": ["group/desk-hypr", "custom/keybindhint", "custom/gamemode"],
+      "modules_right": ["group/top-status", "group/power"]
+    }
   },
   "services": {
     "chkrootkit": {
-      "service_name": "MOCK_CHKROOTKIT_SERVICE"
+      "service_name": "MOCK_CHKROOTKIT_SERVICE",
+      "on_click": "TEST_CHKROOTKIT_ON_CLICK"
+    },
+    "libredefender": {
+      "service_name": "MOCK_LIBREDEFENDER_SERVICE",
+      "on_click": "TEST_LIBREDEFENDER_ON_CLICK"
     }
   },
   "theme": {
@@ -255,12 +299,16 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
 JSON
 
 # Run generators to build settings and rebuild modules
-if ! "$TEST_DIR/scripts/generate-settings.sh" >/dev/null 2>&1; then
+if ! "$TEST_DIR/scripts/generate-settings.sh"; then
   echo "FAIL: generate-settings.sh failed with custom configuration" >&2
   exit 1
 fi
-if ! "$TEST_DIR/scripts/generate-module-configs.sh" >/dev/null 2>&1; then
+if ! "$TEST_DIR/scripts/generate-module-configs.sh"; then
   echo "FAIL: generate-module-configs.sh failed with custom configuration" >&2
+  exit 1
+fi
+if ! "$TEST_DIR/scripts/generate-compositor-modules.sh"; then
+  echo "FAIL: generate-compositor-modules.sh failed with custom configuration" >&2
   exit 1
 fi
 
@@ -269,6 +317,9 @@ if [ ! -f "$TEST_DIR/data/waybar-settings.json" ]; then
   echo "FAIL: waybar-settings.json was not compiled from waybar-settings.jsonc" >&2
   fail=1
 fi
+
+echo "Validating generated JSONC and CSS files for custom settings overrides..."
+validate_all_generated_files "custom settings overrides" || fail=1
 
 # Check that the clock config has our custom format and custom interval
 clock_conf="$TEST_DIR/modules/clock.generated.jsonc"
@@ -302,6 +353,34 @@ if [ -f "$clock_conf" ]; then
   fi
 else
   echo "FAIL: clock.generated.jsonc was not generated!" >&2
+  fail=1
+fi
+
+# Assert pulseaudio custom volume settings overrides compiled correctly
+audio_conf="$TEST_DIR/modules/audio.generated.jsonc"
+echo "=== DEBUG AUDIO CONF PATH: $audio_conf ==="
+cat "$audio_conf"
+if [ -f "$audio_conf" ]; then
+  clean_audio=$(python3 -c "import re; t=open('$audio_conf').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)" 2>&1)
+  if ! echo "$clean_audio" | jq -e '.pulseaudio."on-scroll-up" == "wpctl set-volume -l 1.2 @DEFAULT_AUDIO_SINK@ 2%+"' >/dev/null 2>&1; then
+    echo "FAIL: Custom pulseaudio on-scroll-up not compiled correctly into audio.generated.jsonc" >&2
+    echo "Generated output: $clean_audio" >&2
+    fail=1
+  fi
+  if ! echo "$clean_audio" | jq -e '.pulseaudio."on-scroll-down" == "wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"' >/dev/null 2>&1; then
+    echo "FAIL: Custom pulseaudio on-scroll-down not compiled correctly into audio.generated.jsonc" >&2
+    fail=1
+  fi
+  if ! echo "$clean_audio" | jq -e '.pulseaudio."on-click" == "TEST_AUDIO_ON_CLICK"' >/dev/null 2>&1; then
+    echo "FAIL: Custom pulseaudio on-click override not compiled correctly into audio.generated.jsonc" >&2
+    fail=1
+  fi
+  if ! echo "$clean_audio" | jq -e '.bluetooth."on-click" == "TEST_BLUETOOTH_ON_CLICK"' >/dev/null 2>&1; then
+    echo "FAIL: Custom bluetooth on-click override not compiled correctly into audio.generated.jsonc" >&2
+    fail=1
+  fi
+else
+  echo "FAIL: audio.generated.jsonc was not generated!" >&2
   fail=1
 fi
 
@@ -395,8 +474,53 @@ fi
 
 # Assert system services configuration overrides compiled correctly
 clean_sys=$(python3 -c "import re; t=open('$TEST_DIR/modules/system.generated.jsonc').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
-if ! echo "$clean_sys" | jq -e '."custom/chkrootkit"."on-click" | contains("MOCK_CHKROOTKIT_SERVICE")' >/dev/null 2>&1; then
-  echo "FAIL: Overridden chkrootkit service name was not compiled correctly into system.generated.jsonc" >&2
+if ! echo "$clean_sys" | jq -e '."custom/chkrootkit"."on-click" == "TEST_CHKROOTKIT_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom chkrootkit on-click override not compiled correctly into system.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_sys" | jq -e '."custom/libredefender"."on-click" == "TEST_LIBREDEFENDER_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom libredefender on-click override not compiled correctly into system.generated.jsonc" >&2
+  fail=1
+fi
+
+# Assert weather configurations click action overrides compiled correctly
+clean_utils=$(python3 -c "import re; t=open('$TEST_DIR/modules/utilities.generated.jsonc').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
+if ! echo "$clean_utils" | jq -e '."custom/weather"."on-click" == "TEST_WEATHER_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom weather on-click override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/weather"."on-click-right" == "TEST_WEATHER_ON_CLICK_RIGHT"' >/dev/null 2>&1; then
+  echo "FAIL: Custom weather on-click-right override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/weather"."on-click-middle" == "TEST_WEATHER_ON_CLICK_MIDDLE"' >/dev/null 2>&1; then
+  echo "FAIL: Custom weather on-click-middle override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+
+# Assert keyboard layout and gamemode configuration overrides compiled correctly
+clean_center=$(python3 -c "import re; t=open('$TEST_DIR/modules/center-extras.generated.jsonc').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
+if ! echo "$clean_center" | jq -e '."custom/keyboard-layout"."on-click" == "TEST_KEYBOARD_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom keyboard on-click override not compiled correctly into center-extras.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_center" | jq -e '."custom/gamemode"."on-click" == "TEST_GAMEMODE_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom gamemode on-click override not compiled correctly into center-extras.generated.jsonc" >&2
+  fail=1
+fi
+
+# Assert layouts.top.modules_left override compiled correctly into top-left.generated.jsonc
+clean_top_left=$(python3 -c "import re; t=open('$TEST_DIR/layouts/top-left.generated.jsonc').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
+if ! echo "$clean_top_left" | jq -e '."modules-left" == ["group/desk-controls", "group/media"]' >/dev/null 2>&1; then
+  echo "FAIL: Custom modules-left override not compiled correctly into top-left.generated.jsonc" >&2
+  fail=1
+fi
+
+# Assert workspaces.slot_count override compiled correctly into groups-desk-hypr.generated.jsonc
+clean_desk_hypr=$(python3 -c "import re; t=open('$TEST_DIR/modules/groups-desk-hypr.generated.jsonc').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
+if ! echo "$clean_desk_hypr" | jq -e '."group/desk-hypr".modules | length == 11' >/dev/null 2>&1; then
+  # 8 slots + 3 tail modules ("hyprland/submap", "custom/hyprlight", "custom/hyprwhspr") = 11 modules total
+  echo "FAIL: Custom workspaces slot count override not compiled correctly into groups-desk-hypr.generated.jsonc" >&2
   fail=1
 fi
 
@@ -446,6 +570,10 @@ if ! "$TEST_DIR/scripts/generate-settings.sh" >/dev/null 2>&1; then
 fi
 if ! "$TEST_DIR/scripts/generate-module-configs.sh" >/dev/null 2>&1; then
   echo "FAIL: generate-module-configs.sh crashed when waybar-settings.jsonc was missing" >&2
+  exit 1
+fi
+if ! "$TEST_DIR/scripts/generate-compositor-modules.sh" >/dev/null 2>&1; then
+  echo "FAIL: generate-compositor-modules.sh crashed when waybar-settings.jsonc was missing" >&2
   exit 1
 fi
 

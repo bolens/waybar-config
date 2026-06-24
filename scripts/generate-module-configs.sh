@@ -20,7 +20,7 @@ theme_dir="$WAYBAR_HOME/theme"
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
-  def sig($k): ($s[0].signals[$k] // empty);
+  def sig($k): ($s[0].signals[$k] // null);
   def app($k): ($s[0].apps[$k] // "");
   def app_open: ($scripts + "/app-open.sh");
 
@@ -173,7 +173,9 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "return-type": "json",
       interval: iv("weather"),
       exec: ($scripts + "/weather-status.sh"),
-      "on-click": (app_open + " xdg-open https://wttr.in/")
+      "on-click": ($s[0].weather.on_click // (app_open + " xdg-open https://wttr.in/")),
+      "on-click-right": ($s[0].weather.on_click_right // (app_open + " xdg-open https://weather.com/")),
+      "on-click-middle": ($s[0].weather.on_click_middle // ($scripts + "/weather-status.sh --refresh"))
     },
     "custom/systemd": {
       format: "{}",
@@ -199,12 +201,12 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "on-click-right": (app_open + " systemsettings"),
       "on-click-middle": ($scripts + "/device-battery-status.sh --refresh")
     }
-  }
+  } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/utilities.generated.jsonc"
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
-  def sig($k): ($s[0].signals[$k] // empty);
+  def sig($k): ($s[0].signals[$k] // null);
   def app($k): ($s[0].apps[$k] // "");
   def app_open: ($scripts + "/app-open.sh");
 
@@ -260,11 +262,11 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
         car: "󰄋",
         default: ["󰕿", "󰖀", "󰕾"]
       },
-      "on-click": (app_open + " " + app("audio_mixer")),
-      "on-click-right": ($scripts + "/audio-click.sh select"),
+      "on-click": ($s[0].audio.on_click // (app_open + " " + app("audio_mixer"))),
+      "on-click-right": ($s[0].audio.on_click_right // ($scripts + "/audio-click.sh select")),
       "on-click-middle": ($s[0].audio.pulseaudio_mute_cmd // "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),
-      "on-scroll-up": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+",
-      "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+      "on-scroll-up": ("wpctl set-volume -l " + (($s[0].audio.max_volume // 1.5) | tostring) + " @DEFAULT_AUDIO_SINK@ " + (($s[0].audio.volume_step // 5) | tostring) + "%+"),
+      "on-scroll-down": ("wpctl set-volume @DEFAULT_AUDIO_SINK@ " + (($s[0].audio.volume_step // 5) | tostring) + "%-")
     },
     "custom/mic": {
       format: "{}",
@@ -284,11 +286,11 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "tooltip-format": "{status}\n{controller_alias}: {controller_address}",
       "tooltip-format-connected": "{device_alias}\n{controller_alias}: {num_connections} connected",
       "tooltip-format-connected-battery": "{device_alias} {device_battery_percentage}%\n{controller_alias}: {num_connections} connected",
-      "on-click": ($scripts + "/bluetooth-click.sh list"),
-      "on-click-right": ($scripts + "/bluetooth-click.sh manage"),
-      "on-click-middle": ($scripts + "/bluetooth-click.sh toggle")
+      "on-click": ($s[0].bluetooth.on_click // ($scripts + "/bluetooth-click.sh list")),
+      "on-click-right": ($s[0].bluetooth.on_click_right // ($scripts + "/bluetooth-click.sh manage")),
+      "on-click-middle": ($s[0].bluetooth.on_click_middle // ($scripts + "/bluetooth-click.sh toggle"))
     }
-  }
+  } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/audio.generated.jsonc"
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
@@ -405,7 +407,7 @@ jq -n --slurpfile s "$settings" '
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
-  def sig($k): ($s[0].signals[$k] // empty);
+  def sig($k): ($s[0].signals[$k] // null);
   def app_open: ($scripts + "/app-open.sh");
 
   {
@@ -426,12 +428,12 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "on-click": (app_open + " " + ($s[0].network.tailscale_status_cmd // "ghostty -e tailscale status")),
       "on-click-right": (app_open + " xdg-open " + ($s[0].network.tailscale_admin_url // "http://100.100.100.100/"))
     }
-  }
+  } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq -c '.' >"$mod_dir/network-custom.generated.jsonc"
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
-  def sig($k): ($s[0].signals[$k] // empty);
+  def sig($k): ($s[0].signals[$k] // null);
 
   def privacy($kind):
     {
@@ -452,11 +454,12 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   ["screenshare", "webcam", "audio-in", "audio-out", "location"]
   | map(privacy(.))
   | from_entries
+  | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/privacy.generated.jsonc"
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
-  def sig($k): ($s[0].signals[$k] // empty);
+  def sig($k): ($s[0].signals[$k] // null);
 
   {
     "custom/active-window": {
@@ -467,12 +470,12 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       tooltip: true,
       "on-click": ($scripts + "/window-switcher.sh")
     }
-  }
+  } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/compositor.generated.jsonc"
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
-  def sig($k): ($s[0].signals[$k] // empty);
+  def sig($k): ($s[0].signals[$k] // null);
 
   {
     "custom/keyboard-layout": {
@@ -481,6 +484,11 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       signal: sig("keyboard_layout"),
       interval: iv("keyboard_layout"),
       exec: ($scripts + "/keyboard-layout-status.sh"),
+      "on-click": $s[0].keyboard.on_click,
+      "on-click-right": $s[0].keyboard.on_click_right,
+      "on-click-middle": $s[0].keyboard.on_click_middle,
+      "on-scroll-up": $s[0].keyboard.on_scroll_up,
+      "on-scroll-down": $s[0].keyboard.on_scroll_down,
       tooltip: true
     },
     "custom/gamemode": {
@@ -489,8 +497,9 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       signal: sig("gamemode"),
       interval: iv("gamemode"),
       exec: ($scripts + "/gamemode-status.sh"),
-      "on-click": ($scripts + "/gamemode-click.sh toggle"),
-      "on-click-right": ($scripts + "/gamemode-click.sh restore"),
+      "on-click": ($s[0].gamemode.on_click // ($scripts + "/gamemode-click.sh toggle")),
+      "on-click-right": ($s[0].gamemode.on_click_right // ($scripts + "/gamemode-click.sh restore")),
+      "on-click-middle": $s[0].gamemode.on_click_middle,
       tooltip: true
     },
     "custom/keybindhint": {
@@ -501,12 +510,12 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "on-click": ($scripts + "/keybindhint-click.sh"),
       tooltip: true
     }
-  }
+  } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/center-extras.generated.jsonc"
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
-  def sig($k): ($s[0].signals[$k] // empty);
+  def sig($k): ($s[0].signals[$k] // null);
 
   {
     "custom/dock-windows": {
@@ -523,7 +532,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "on-click-right": ($scripts + "/dock-windows-click.sh close-focused"),
       "on-click-middle": ($scripts + "/dock-windows-click.sh cycle")
     }
-  }
+  } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/dock-windows.generated.jsonc"
 
 jq -n --slurpfile s "$settings" '

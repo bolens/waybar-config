@@ -245,18 +245,18 @@ build_system_json() {
         "return-type": "json",
         interval: interval("libredefender"),
         exec: ($scripts + "/libredefender-status.sh"),
-        "on-click": ($app_open + " systemctl start " + $libredefender_service),
-        "on-click-right": ($app_open + " ghostty -e journalctl -u " + $libredefender_service + " -f"),
-        "on-click-middle": ($scripts + "/libredefender-status.sh --refresh")
+        "on-click": ($settings[0].services.libredefender.on_click // ($app_open + " systemctl start " + $libredefender_service)),
+        "on-click-right": ($settings[0].services.libredefender.on_click_right // ($app_open + " ghostty -e journalctl -u " + $libredefender_service + " -f")),
+        "on-click-middle": ($settings[0].services.libredefender.on_click_middle // ($scripts + "/libredefender-status.sh --refresh"))
       },
       "custom/chkrootkit": {
         format: "{}",
         "return-type": "json",
         interval: interval("chkrootkit"),
         exec: ($scripts + "/chkrootkit-status.sh"),
-        "on-click": ($app_open + " systemctl start " + $chkrootkit_service),
-        "on-click-right": ($app_open + " ghostty -e journalctl -u " + $chkrootkit_service + " -f"),
-        "on-click-middle": ($scripts + "/chkrootkit-status.sh --refresh")
+        "on-click": ($settings[0].services.chkrootkit.on_click // ($app_open + " systemctl start " + $chkrootkit_service)),
+        "on-click-right": ($settings[0].services.chkrootkit.on_click_right // ($app_open + " ghostty -e journalctl -u " + $chkrootkit_service + " -f")),
+        "on-click-middle": ($settings[0].services.chkrootkit.on_click_middle // ($scripts + "/chkrootkit-status.sh --refresh"))
       }
     }
     '

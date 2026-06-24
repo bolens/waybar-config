@@ -8,5 +8,10 @@
   "modules-right": [
     "group/top-status",
     "group/power"
+  ],
+  "modules-left": [
+    "group/desk-controls",
+    "group/media",
+    "group/net"
   ]
 }

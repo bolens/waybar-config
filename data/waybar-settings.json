@@ -131,11 +131,15 @@
     "device_battery": "once",
     "fans": 10,
     "libredefender": 300,
-    "chkrootkit": 300
+    "chkrootkit": 300,
+    "weather": 900,
+    "disk": 300,
+    "uptime": 60
   },
   "layouts": {
     "top": {
       "position": "top",
+      "modules_left": ["group/desk-controls", "group/media", "group/net"], 
       "modules_center": ["group/desk-hypr", "custom/keybindhint", "custom/gamemode"],
       "modules_right": ["group/top-status", "group/power"]
     },
@@ -253,6 +257,9 @@
   "dock": {
     "section_order": ["web", "dev", "misc"]
   },
+  "workspaces": {
+    "slot_count": 5 
+  },
   "dock_windows": {
     "min_length": 64,
     "max_length": 160,
@@ -269,10 +276,14 @@
       "nut_target": "ups@127.0.0.1:3493"
     },
     "chkrootkit": {
-      "service_name": "chkrootkit-scan.service"
+      "service_name": "chkrootkit-scan.service",
+      "on_click": null, 
+      "on_click_right": null 
     },
     "libredefender": {
-      "service_name": "libredefender-scan.service"
+      "service_name": "libredefender-scan.service",
+      "on_click": null, 
+      "on_click_right": null 
     }
   },
   "network": {
@@ -289,7 +300,11 @@
     "mpris_zscroll": true, 
     "mpris_max_length": 32, 
     "mpris_scroll_delay": 0.3, 
-    "pulseaudio_mute_cmd": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+    "volume_step": 5, 
+    "max_volume": 1.5, 
+    "pulseaudio_mute_cmd": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on_click": null, 
+    "on_click_right": null 
   },
   "tray": {
     "icon_size": 16,
@@ -348,7 +363,27 @@
   },
   "weather": {
     "unit": "auto", 
-    "location": "auto" 
+    "location": "auto", 
+    "on_click": null, 
+    "on_click_right": null, 
+    "on_click_middle": null 
+  },
+  "bluetooth": {
+    "on_click": null, 
+    "on_click_right": null, 
+    "on_click_middle": null 
+  },
+  "keyboard": {
+    "on_click": null, 
+    "on_click_right": null, 
+    "on_click_middle": null, 
+    "on_scroll_up": null, 
+    "on_scroll_down": null 
+  },
+  "gamemode": {
+    "on_click": null, 
+    "on_click_right": null, 
+    "on_click_middle": null 
   },
   "thresholds": {
     "cpu": {

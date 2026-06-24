@@ -131,11 +131,15 @@
     "device_battery": "once",
     "fans": 10,
     "libredefender": 300,
-    "chkrootkit": 300
+    "chkrootkit": 300,
+    "weather": 900,
+    "disk": 300,
+    "uptime": 60
   },
   "layouts": {
     "top": {
       "position": "top",
+      "modules_left": ["group/desk-controls", "group/media", "group/net"], // Left modules list on the top bar
       "modules_center": ["group/desk-hypr", "custom/keybindhint", "custom/gamemode"],
       "modules_right": ["group/top-status", "group/power"]
     },
@@ -253,6 +257,9 @@
   "dock": {
     "section_order": ["web", "dev", "misc"]
   },
+  "workspaces": {
+    "slot_count": 5 // Number of workspace indicator slots (integer between 1 and 10)
+  },
   "dock_windows": {
     "min_length": 64,
     "max_length": 160,
@@ -269,10 +276,14 @@
       "nut_target": "ups@127.0.0.1:3493"
     },
     "chkrootkit": {
-      "service_name": "chkrootkit-scan.service"
+      "service_name": "chkrootkit-scan.service",
+      "on_click": null, // Override systemctl start command
+      "on_click_right": null // Override journalctl view command
     },
     "libredefender": {
-      "service_name": "libredefender-scan.service"
+      "service_name": "libredefender-scan.service",
+      "on_click": null, // Override systemctl start command
+      "on_click_right": null // Override journalctl view command
     }
   },
   "network": {
@@ -289,7 +300,11 @@
     "mpris_zscroll": true, // Enable continuous scrolling for custom music module (requires zscroll installed)
     "mpris_max_length": 32, // Maximum length of mpris track text
     "mpris_scroll_delay": 0.3, // Scroll delay in seconds
-    "pulseaudio_mute_cmd": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+    "volume_step": 5, // Volume adjust step percentage on scroll
+    "max_volume": 1.5, // Maximum volume level multiplier limit (e.g. 1.5 is 150%)
+    "pulseaudio_mute_cmd": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on_click": null, // Override default audio mixer launcher
+    "on_click_right": null // Override default audio playback output menu
   },
   "tray": {
     "icon_size": 16,
@@ -348,7 +363,27 @@
   },
   "weather": {
     "unit": "auto", // Temperature unit: "F" (Fahrenheit), "C" (Celsius), or "auto" (detect from locale)
-    "location": "auto" // Location query for wttr.in (e.g. "Paris", "New York", "Munich") or "auto" (auto-IP geo-location)
+    "location": "auto", // Location query for wttr.in (e.g. "Paris", "New York", "Munich") or "auto" (auto-IP geo-location)
+    "on_click": null, // Override click action (default: wttr.in URL)
+    "on_click_right": null, // Override right-click action (default: weather.com URL)
+    "on_click_middle": null // Override middle-click action (default: trigger status script --refresh)
+  },
+  "bluetooth": {
+    "on_click": null, // Override click action (default: bluetooth-click.sh list)
+    "on_click_right": null, // Override right-click action (default: bluetooth-click.sh manage)
+    "on_click_middle": null // Override middle-click action (default: bluetooth-click.sh toggle)
+  },
+  "keyboard": {
+    "on_click": null, // Custom click action command
+    "on_click_right": null, // Custom right-click action command
+    "on_click_middle": null, // Custom middle-click action command
+    "on_scroll_up": null, // Custom scroll up action command
+    "on_scroll_down": null // Custom scroll down action command
+  },
+  "gamemode": {
+    "on_click": null, // Override click action (default: gamemode-click.sh toggle)
+    "on_click_right": null, // Override right-click action (default: gamemode-click.sh restore)
+    "on_click_middle": null // Custom middle-click action command
   },
   "thresholds": {
     "cpu": {

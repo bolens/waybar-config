@@ -9,6 +9,7 @@ group_out="$WAYBAR_HOME/modules/groups-desk-hypr.generated.jsonc"
 top_left_out="$WAYBAR_HOME/layouts/top-left.generated.jsonc"
 source_modules="$WAYBAR_HOME/modules/hyprland.jsonc"
 desktops_file="$WAYBAR_HOME/data/workspace-desktops.json"
+settings="$WAYBAR_HOME/data/waybar-settings.json"
 
 # shellcheck source=compositor-session.sh
 . "$script_dir/compositor-session.sh"
@@ -17,8 +18,13 @@ comp="$(detect_compositor)"
 
 workspace_slot_count() {
   local count="0"
-  if [ -f "$desktops_file" ]; then
-    count="$(jq 'length' "$desktops_file" 2>/dev/null || echo 0)"
+  if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
+    count="$(jq -r '.workspaces.slot_count // 0' "$settings" 2>/dev/null)"
+  fi
+  if [ "$count" -lt 1 ] 2>/dev/null; then
+    if [ -f "$desktops_file" ]; then
+      count="$(jq 'length' "$desktops_file" 2>/dev/null || echo 0)"
+    fi
   fi
   if [ "$count" -lt 1 ] 2>/dev/null; then
     count="$("$script_dir/workspaces-query.py" 2>/dev/null | jq '.desktops | length' || echo 0)"
@@ -75,6 +81,13 @@ top_left_modules='[
     "group/media",
     "group/net"
   ]'
+
+if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
+  user_left="$(jq -c '.layouts.top.modules_left' "$settings" 2>/dev/null)"
+  if [ -n "$user_left" ] && [ "$user_left" != "null" ]; then
+    top_left_modules="$user_left"
+  fi
+fi
 
 cat >"$group_out" <<EOF
 {
