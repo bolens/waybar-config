@@ -223,6 +223,10 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
     "zscroll": false,
     "max_length": 15
   },
+  "audio": {
+    "mpris_zscroll": false,
+    "mpris_max_length": 20
+  },
   "services": {
     "chkrootkit": {
       "service_name": "MOCK_CHKROOTKIT_SERVICE"
@@ -351,6 +355,30 @@ kill "$sub_pid" 2>/dev/null || true
 if ! grep -q '"text":"󰖲  Very Long Wi..."' "$out_file"; then
   echo "FAIL: active-window-scroll.sh failed to truncate correctly when zscroll is disabled!" >&2
   cat "$out_file" >&2
+  fail=1
+fi
+
+# Verify mpris-scroll.sh works correctly without zscroll (using mpris_zscroll=false, mpris_max_length=20 override)
+cat <<'SH' > "$TEST_DIR/bin/playerctl"
+#!/bin/sh
+if [ "$1" = "status" ]; then
+  echo "Playing"
+elif [ "$1" = "metadata" ]; then
+  echo "󰝚 Heavy Metal Song Title That Exceeds Twenty Characters"
+fi
+SH
+chmod +x "$TEST_DIR/bin/playerctl"
+
+out_mpris="$TEST_DIR/mpris-test.log"
+PATH="$TEST_DIR/bin:$PATH" WAYBAR_HOME="$TEST_DIR" bash "$TEST_DIR/scripts/mpris-scroll.sh" > "$out_mpris" 2>&1 &
+mpris_pid=$!
+
+sleep 0.8
+kill "$mpris_pid" 2>/dev/null || true
+
+if ! grep -q '󰝚 Heavy Metal Son...' "$out_mpris"; then
+  echo "FAIL: mpris-scroll.sh failed to truncate correctly when zscroll is disabled!" >&2
+  cat "$out_mpris" >&2
   fail=1
 fi
 

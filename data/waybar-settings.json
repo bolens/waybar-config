@@ -286,7 +286,9 @@
     "hide_on_compositor": "hyprland"
   },
   "audio": {
-    "mpris_max_length": 32,
+    "mpris_zscroll": true, 
+    "mpris_max_length": 32, 
+    "mpris_scroll_delay": 0.3, 
     "pulseaudio_mute_cmd": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
   },
   "tray": {
