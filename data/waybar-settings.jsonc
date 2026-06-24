@@ -259,6 +259,11 @@
     "expand": true,
     "align": 0.5
   },
+  "active_window": {
+    "zscroll": true, // Enable continuous scrolling text using zscroll (requires zscroll installed)
+    "max_length": 40, // Maximum length of the window title in the bar
+    "scroll_delay": 0.3 // Delay in seconds between scroll steps
+  },
   "services": {
     "ups": {
       "nut_target": "ups@127.0.0.1:3493"
@@ -289,6 +294,7 @@
     "spacing": 10
   },
   "clocks": {
+    "locale": "auto", // Locale override for clock formatting (e.g. "fr_FR.UTF-8") or "auto" (use system LANG)
     "hour_format": "auto", // Clock hour format: "12", "24", or "auto" (detect from locale)
     "date_format": "auto", // Clock date format: "day-first", "month-first", or "auto" (detect from locale)
     "top": {

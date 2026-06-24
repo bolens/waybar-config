@@ -323,40 +323,46 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
     "<big>{:%Y-%m-%d}</big>\n<tt>{calendar}</tt>";
 
   {
-    "clock#top": {
-      interval: iv("clock"),
-      format: (($s[0].clocks.top.format | select(. != null and . != "" and . != "auto" and . != "null")) // default_top_format),
-      "tooltip-format": (($s[0].clocks.top.tooltip_format | select(. != null and . != "" and . != "auto" and . != "null")) // default_top_tooltip),
-      "on-click": ($scripts + "/calendar-popup.sh"),
-      "on-click-right": ($scripts + "/app-open.sh " + ($s[0].apps.clock // "kclock")),
-      calendar: {
-        mode: ($s[0].clocks.calendar.mode // "month"),
-        "on-scroll": ($s[0].clocks.calendar.on_scroll // 1),
-        "first_day": (($s[0].clocks.calendar.first_day | select(. != null and . != "" and . != "auto" and . != "null")) // $first_day),
-        format: calfmt
-      },
-      actions: {
-        "on-scroll-up": "shift_down",
-        "on-scroll-down": "shift_up"
+    "clock#top": (
+      {
+        interval: iv("clock"),
+        format: (($s[0].clocks.top.format | select(. != null and . != "" and . != "auto" and . != "null")) // default_top_format),
+        "tooltip-format": (($s[0].clocks.top.tooltip_format | select(. != null and . != "" and . != "auto" and . != "null")) // default_top_tooltip),
+        "on-click": ($scripts + "/calendar-popup.sh"),
+        "on-click-right": ($scripts + "/app-open.sh " + ($s[0].apps.clock // "kclock")),
+        calendar: {
+          mode: ($s[0].clocks.calendar.mode // "month"),
+          "on-scroll": ($s[0].clocks.calendar.on_scroll // 1),
+          "first_day": (($s[0].clocks.calendar.first_day | select(. != null and . != "" and . != "auto" and . != "null")) // $first_day),
+          format: calfmt
+        },
+        actions: {
+          "on-scroll-up": "shift_down",
+          "on-scroll-down": "shift_up"
+        }
       }
-    },
-    "clock#bottom": {
-      interval: iv("clock"),
-      format: (($s[0].clocks.bottom.format | select(. != null and . != "" and . != "auto" and . != "null")) // default_bottom_format),
-      "tooltip-format": (($s[0].clocks.bottom.tooltip_format | select(. != null and . != "" and . != "auto" and . != "null")) // default_bottom_tooltip),
-      "on-click": ($scripts + "/calendar-popup.sh"),
-      "on-click-right": ($scripts + "/app-open.sh " + ($s[0].apps.clock // "kclock")),
-      calendar: {
-        mode: ($s[0].clocks.calendar.mode // "month"),
-        "on-scroll": ($s[0].clocks.calendar.on_scroll // 1),
-        "first_day": (($s[0].clocks.calendar.first_day | select(. != null and . != "" and . != "auto" and . != "null")) // $first_day),
-        format: calfmt
-      },
-      actions: {
-        "on-scroll-up": "shift_down",
-        "on-scroll-down": "shift_up"
+      + (if ($s[0].clocks.locale != null and $s[0].clocks.locale != "" and $s[0].clocks.locale != "auto" and $s[0].clocks.locale != "null") then { locale: $s[0].clocks.locale } else {} end)
+    ),
+    "clock#bottom": (
+      {
+        interval: iv("clock"),
+        format: (($s[0].clocks.bottom.format | select(. != null and . != "" and . != "auto" and . != "null")) // default_bottom_format),
+        "tooltip-format": (($s[0].clocks.bottom.tooltip_format | select(. != null and . != "" and . != "auto" and . != "null")) // default_bottom_tooltip),
+        "on-click": ($scripts + "/calendar-popup.sh"),
+        "on-click-right": ($scripts + "/app-open.sh " + ($s[0].apps.clock // "kclock")),
+        calendar: {
+          mode: ($s[0].clocks.calendar.mode // "month"),
+          "on-scroll": ($s[0].clocks.calendar.on_scroll // 1),
+          "first_day": (($s[0].clocks.calendar.first_day | select(. != null and . != "" and . != "auto" and . != "null")) // $first_day),
+          format: calfmt
+        },
+        actions: {
+          "on-scroll-up": "shift_down",
+          "on-scroll-down": "shift_up"
+        }
       }
-    }
+      + (if ($s[0].clocks.locale != null and $s[0].clocks.locale != "" and $s[0].clocks.locale != "auto" and $s[0].clocks.locale != "null") then { locale: $s[0].clocks.locale } else {} end)
+    )
   }
 ' | jq '.' >"$mod_dir/clock.generated.jsonc"
 
@@ -508,7 +514,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "return-type": "json",
       "min-length": ($s[0].dock_windows.min_length // 64),
       "max-length": ($s[0].dock_windows.max_length // 160),
-      expand: ($s[0].dock_windows.expand // true),
+      expand: (if $s[0].dock_windows.expand != null then $s[0].dock_windows.expand else true end),
       align: ($s[0].dock_windows.align // 0.5),
       signal: sig("dock_windows"),
       interval: iv("dock_windows"),

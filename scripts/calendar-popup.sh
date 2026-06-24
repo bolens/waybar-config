@@ -15,6 +15,14 @@ else
   . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
 fi
 
+if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
+  . "$script_dir/waybar-cache-helpers.sh"
+else
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
+fi
+
+first_day=$(detect_first_weekday)
+
 if ! command -v rofi >/dev/null 2>&1; then
   if command -v notify-send >/dev/null 2>&1; then
     notify-send "Calendar" "rofi is not installed (needed for calendar popup)."
@@ -63,10 +71,17 @@ calendar_grid() {
   today_month="$(date +%m)"
   today_day="$(date +%d)"
 
+  cal_opts=""
+  if [ "${first_day:-0}" = "1" ]; then
+    cal_opts="-m"
+  elif [ "${first_day:-0}" = "0" ]; then
+    cal_opts="-s"
+  fi
+
   if command -v cal >/dev/null 2>&1; then
-    cal "$target_month_num" "$target_year"
+    cal $cal_opts "$target_month_num" "$target_year"
   else
-    ncal -b "$target_month_num" "$target_year"
+    ncal -b $cal_opts "$target_month_num" "$target_year"
   fi | sed '1d;/^[[:space:]]*$/d' | while IFS= read -r line; do
     if [ "$target_year" = "$today_year" ] && [ "$target_month_num" = "$today_month" ]; then
       line="$(printf '%s' "$line" | sed -E "s/(^| )${today_day}([^0-9]|$)/\\1[${today_day}]\\2/")"

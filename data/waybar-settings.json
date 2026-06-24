@@ -259,6 +259,11 @@
     "expand": true,
     "align": 0.5
   },
+  "active_window": {
+    "zscroll": true, 
+    "max_length": 40, 
+    "scroll_delay": 0.3 
+  },
   "services": {
     "ups": {
       "nut_target": "ups@127.0.0.1:3493"
@@ -289,6 +294,7 @@
     "spacing": 10
   },
   "clocks": {
+    "locale": "auto", 
     "hour_format": "auto", 
     "date_format": "auto", 
     "top": {

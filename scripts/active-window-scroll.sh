@@ -5,6 +5,8 @@ set -euo pipefail
 script_dir="$(CDPATH="" cd -- "$(dirname "$0")" && pwd)"
 # shellcheck disable=SC1091
 . "$script_dir/compositor-session.sh"
+# shellcheck disable=SC1091
+. "$script_dir/waybar-settings.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/active-window-title.raw"
@@ -39,23 +41,15 @@ else
   echo "" > "$cache_file"
 fi
 
-# Run zscroll in unbuffered mode to watch the cache file
-# We check the file every 0.5s for changes, but scroll every 0.3s
-zscroll -l 40 \
-        --delay 0.3 \
-        --update-check true \
-        --update-interval 0.5 \
-        --eval-in-shell true \
-        "cat '$cache_file' 2>/dev/null" | while IFS= read -r scrolled; do
-  
-  # Read the original full title
-  if [ -f "$cache_file" ]; then
-    original=$(cat "$cache_file" 2>/dev/null || echo "")
-  else
-    original=""
-  fi
+# Load settings configuration
+enable_scroll=$(waybar_settings_get '.active_window.zscroll' 'true')
+scroll_len=$(waybar_settings_get '.active_window.max_length' '40')
+scroll_delay=$(waybar_settings_get '.active_window.scroll_delay' '0.3')
 
-  # Determine JSON fields
+output_title() {
+  scrolled="$1"
+  original="$2"
+
   if [ -z "$scrolled" ] || [ "$scrolled" = "Desktop" ] || [ "$scrolled" = "󰇄  Desktop" ]; then
     text="󰇄  Desktop"
     tooltip="No active window"
@@ -73,4 +67,44 @@ zscroll -l 40 \
   escaped_tooltip="${escaped_tooltip//\"/\\\"}"
 
   printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' "$escaped_text" "$escaped_tooltip" "$class"
-done
+}
+
+# If zscroll is enabled and available, run it
+if [ "$enable_scroll" = "true" ] && command -v zscroll >/dev/null 2>&1; then
+  zscroll -l "$scroll_len" \
+          --delay "$scroll_delay" \
+          --update-check true \
+          --update-interval 0.5 \
+          --eval-in-shell true \
+          "cat '$cache_file' 2>/dev/null" | while IFS= read -r scrolled; do
+    if [ -f "$cache_file" ]; then
+      original=$(cat "$cache_file" 2>/dev/null || echo "")
+    else
+      original=""
+    fi
+    output_title "$scrolled" "$original"
+  done
+else
+  # No scrolling. Monitor the raw file and truncate if longer than max_length.
+  last_title=""
+  while true; do
+    if [ -f "$cache_file" ]; then
+      original=$(cat "$cache_file" 2>/dev/null || echo "")
+    else
+      original=""
+    fi
+    
+    if [ "$original" != "$last_title" ]; then
+      if [ ${#original} -gt "$scroll_len" ]; then
+        trunc_len=$((scroll_len - 3))
+        [ $trunc_len -lt 1 ] && trunc_len=1
+        truncated="${original:0:$trunc_len}..."
+      else
+        truncated="$original"
+      fi
+      output_title "$truncated" "$original"
+      last_title="$original"
+    fi
+    sleep 0.5
+  done
+fi

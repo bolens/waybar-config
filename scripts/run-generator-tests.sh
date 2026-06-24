@@ -206,6 +206,7 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
     "clock": 42
   },
   "clocks": {
+    "locale": "fr_FR.UTF-8",
     "hour_format": "12",
     "date_format": "month-first",
     "top": {
@@ -217,6 +218,10 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
   },
   "weather": {
     "unit": "F"
+  },
+  "active_window": {
+    "zscroll": false,
+    "max_length": 15
   },
   "services": {
     "chkrootkit": {
@@ -283,6 +288,14 @@ if [ -f "$clock_conf" ]; then
     echo "FAIL: Calendar first day override was not compiled correctly into clock.generated.jsonc!" >&2
     fail=1
   fi
+  if ! echo "$clean_clock" | jq -e '."clock#top".locale == "fr_FR.UTF-8"' >/dev/null 2>&1; then
+    echo "FAIL: Clocks locale override fr_FR.UTF-8 not compiled correctly into clock.generated.jsonc!" >&2
+    fail=1
+  fi
+  if ! echo "$clean_clock" | jq -e '."clock#bottom".locale == "fr_FR.UTF-8"' >/dev/null 2>&1; then
+    echo "FAIL: Clocks locale override fr_FR.UTF-8 not compiled correctly into clock.generated.jsonc!" >&2
+    fail=1
+  fi
 else
   echo "FAIL: clock.generated.jsonc was not generated!" >&2
   fail=1
@@ -310,6 +323,34 @@ fi
 test_weather_unit=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/waybar-settings.sh; . $TEST_DIR/scripts/waybar-cache-helpers.sh; detect_weather_unit")
 if [ "$test_weather_unit" != "F" ]; then
   echo "FAIL: detect_weather_unit failed to respect weather.unit override! Resolved: $test_weather_unit" >&2
+  fail=1
+fi
+
+# Verify active-window-scroll.sh works correctly without zscroll (using zscroll=false, max_length=15 override)
+mkdir -p "$TEST_DIR/bin"
+cat <<'SH' > "$TEST_DIR/bin/hyprctl"
+#!/bin/sh
+if [ "$1" = "activewindow" ]; then
+  echo '{"title":"Very Long Window Title That Exceeds Fifteen Characters"}'
+fi
+SH
+chmod +x "$TEST_DIR/bin/hyprctl"
+
+out_file="$TEST_DIR/active-window-test.log"
+XDG_CACHE_HOME="$TEST_DIR/cache" PATH="$TEST_DIR/bin:$PATH" WAYBAR_HOME="$TEST_DIR" bash "$TEST_DIR/scripts/active-window-scroll.sh" > "$out_file" 2>&1 &
+sub_pid=$!
+
+# Wait for directory creation and startup, then write test title to cache
+sleep 0.3
+mkdir -p "$TEST_DIR/cache/waybar"
+echo "Very Long Window Title That Exceeds Fifteen Characters" > "$TEST_DIR/cache/waybar/active-window-title.raw"
+
+sleep 0.6
+kill "$sub_pid" 2>/dev/null || true
+
+if ! grep -q '"text":"󰖲  Very Long Wi..."' "$out_file"; then
+  echo "FAIL: active-window-scroll.sh failed to truncate correctly when zscroll is disabled!" >&2
+  cat "$out_file" >&2
   fail=1
 fi
 

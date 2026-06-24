@@ -51,14 +51,14 @@ build_groups_json() {
 
     def drawer_for($side):
       {
-        "click-to-reveal": (drawer_defaults.click_to_reveal // true),
+        "click-to-reveal": (if drawer_defaults.click_to_reveal != null then drawer_defaults.click_to_reveal else true end),
         "transition-duration": (drawer_defaults.transition_duration // 500),
         "children-class": (drawer_defaults.children_class // "drawer-child"),
         "transition-left-to-right": (
           if $side == "right" then
-            drawer_defaults.left_to_right.right // true
+            (if drawer_defaults.left_to_right.right != null then drawer_defaults.left_to_right.right else true end)
           elif $side == "left" then
-            drawer_defaults.left_to_right.left // false
+            (if drawer_defaults.left_to_right.left != null then drawer_defaults.left_to_right.left else false end)
           else
             false
           end

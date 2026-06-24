@@ -57,7 +57,7 @@ waybar_settings_get() {
     clean_json=$(cat "$file" 2>/dev/null || echo "{}")
   fi
 
-  printf '%s' "$clean_json" | jq -r --arg default "$default" "$path // \$default" 2>/dev/null || printf '%s' "$default"
+  printf '%s' "$clean_json" | jq -r --arg default "$default" "if ($path != null) then $path else \$default end" 2>/dev/null || printf '%s' "$default"
 }
 
 waybar_services_nut_target() {
