@@ -147,6 +147,39 @@ for file in "${generated_files[@]}"; do
   fi
 done
 
+# 4b. Verify that all essential generated files exist and are not empty
+echo "Checking essential generated files existence and size..."
+essential_files=(
+  "includes/bar-defaults.generated.jsonc"
+  "layouts/top-shell.generated.jsonc"
+  "layouts/bottom.generated.jsonc"
+  "layouts/bottom-dock-left.generated.jsonc"
+  "modules/groups.generated.jsonc"
+  "modules/system.generated.jsonc"
+  "modules/network.generated.jsonc"
+  "modules/dock.generated.jsonc"
+  "modules/groups-dock.generated.jsonc"
+  "modules/center-extras.generated.jsonc"
+  "modules/clock.generated.jsonc"
+  "modules/audio.generated.jsonc"
+  "modules/network-custom.generated.jsonc"
+  "modules/drawers.generated.jsonc"
+  "modules/dock-windows.generated.jsonc"
+  "modules/hypr-tools.generated.jsonc"
+  "theme/tokens.generated.css"
+)
+
+for file_rel in "${essential_files[@]}"; do
+  file_path="$TEST_DIR/$file_rel"
+  if [ ! -f "$file_path" ]; then
+    echo "FAIL: Expected generated file $file_rel was not found!" >&2
+    fail=1
+  elif [ ! -s "$file_path" ]; then
+    echo "FAIL: Generated file $file_rel is empty!" >&2
+    fail=1
+  fi
+done
+
 # Check the generated CSS file too
 css_file="$TEST_DIR/theme/workspaces.generated.css"
 if [ ! -f "$css_file" ]; then
@@ -162,15 +195,32 @@ fi
 # 5. Behavior and settings override tests
 echo "Running behavioral tests for settings overrides..."
 
-# Override settings file with a custom mock
+# Override settings file with a custom mock containing bars, services, clocks, and theme configurations
 cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
 {
+  "bars": {
+    "height": 99,
+    "spacing": 99
+  },
   "poll_intervals": {
     "clock": 42
   },
   "clocks": {
     "top": {
       "format": "TEST_TOP_CLOCK_FORMAT"
+    }
+  },
+  "services": {
+    "chkrootkit": {
+      "service_name": "MOCK_CHKROOTKIT_SERVICE"
+    }
+  },
+  "theme": {
+    "font_family": "MOCK_FONT_FAMILY",
+    "tooltip_font_size": 44,
+    "border_radius": 12,
+    "colors": {
+      "background": "rgba(9, 9, 9, 0.99)"
     }
   }
 }
@@ -208,6 +258,49 @@ if [ -f "$clock_conf" ]; then
   fi
 else
   echo "FAIL: clock.generated.jsonc was not generated!" >&2
+  fail=1
+fi
+
+# Assert bar configurations overrides compiled correctly
+clean_bar=$(python3 -c "import re; t=open('$TEST_DIR/includes/bar-defaults.generated.jsonc').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
+if ! echo "$clean_bar" | jq -e '.height == 99' >/dev/null 2>&1; then
+  echo "FAIL: Overridden bar height was not compiled correctly into bar-defaults" >&2
+  fail=1
+fi
+if ! echo "$clean_bar" | jq -e '.spacing == 99' >/dev/null 2>&1; then
+  echo "FAIL: Overridden bar spacing was not compiled correctly into bar-defaults" >&2
+  fail=1
+fi
+
+# Assert system services configuration overrides compiled correctly
+clean_sys=$(python3 -c "import re; t=open('$TEST_DIR/modules/system.generated.jsonc').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
+if ! echo "$clean_sys" | jq -e '."custom/chkrootkit"."on-click" | contains("MOCK_CHKROOTKIT_SERVICE")' >/dev/null 2>&1; then
+  echo "FAIL: Overridden chkrootkit service name was not compiled correctly into system.generated.jsonc" >&2
+  fail=1
+fi
+
+# Assert theme configurations CSS tokens generated correctly
+css_tokens="$TEST_DIR/theme/tokens.generated.css"
+if [ -f "$css_tokens" ]; then
+  if ! grep -q "font-family: \"MOCK_FONT_FAMILY\"" "$css_tokens"; then
+    echo "FAIL: Overridden font family not found in generated tokens CSS" >&2
+    fail=1
+  fi
+  if ! grep -q "font-size: 44px" "$css_tokens"; then
+    # Note: tooltip_font_size 44 styles 'tooltip label'
+    echo "FAIL: Overridden tooltip font size not found in generated tokens CSS" >&2
+    fail=1
+  fi
+  if ! grep -q "border-radius: 12px" "$css_tokens"; then
+    echo "FAIL: Overridden border radius not found in generated tokens CSS" >&2
+    fail=1
+  fi
+  if ! grep -q "background: rgba(9, 9, 9, 0.99)" "$css_tokens"; then
+    echo "FAIL: Overridden background color not found in generated tokens CSS" >&2
+    fail=1
+  fi
+else
+  echo "FAIL: tokens.generated.css was not created!" >&2
   fail=1
 fi
 
