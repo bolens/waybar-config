@@ -367,6 +367,30 @@
   "nightlight": {
     "temperature": 4200 
   },
+  "rofi": {
+    "theme": "$WAYBAR_HOME/themes/dock-rofi.rasi",
+    "clipboard": {
+      "width": 780,
+      "lines": 18
+    },
+    "audio": {
+      "width": 600
+    },
+    "bluetooth": {
+      "width": 560,
+      "lines": 16,
+      "x_offset": -250,
+      "y_offset": 0
+    },
+    "calendar": {
+      "width": 420,
+      "x_offset": -30,
+      "y_offset": 0
+    },
+    "notifications": {
+      "width": 650
+    }
+  },
   "apps": {
     "clock": "kclock",
     "system_monitor": "missioncenter",

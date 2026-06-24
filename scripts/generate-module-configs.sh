@@ -132,27 +132,27 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
     },
     "custom/lock": {
       format: "",
-      "tooltip-format": "Lock screen",
+      "tooltip": "Lock screen",
       "on-click": ($scripts + "/power-click.sh lock")
     },
     "custom/logout": {
       format: "󰍃",
-      "tooltip-format": "Logout session",
+      "tooltip": "Logout session",
       "on-click": ($scripts + "/power-click.sh logout")
     },
     "custom/suspend": {
       format: "󰤄",
-      "tooltip-format": "Suspend system",
+      "tooltip": "Suspend system",
       "on-click": ($scripts + "/power-click.sh suspend")
     },
     "custom/reboot": {
       format: "󰜉",
-      "tooltip-format": "Reboot system",
+      "tooltip": "Reboot system",
       "on-click": ($scripts + "/power-click.sh reboot")
     },
     "custom/shutdown": {
       format: "󰐥",
-      "tooltip-format": "Shutdown system",
+      "tooltip": "Shutdown system",
       "on-click": ($scripts + "/power-click.sh shutdown")
     },
     "custom/kdeconnect": {
@@ -361,7 +361,7 @@ jq -n --slurpfile s "$settings" '
       key: ("custom/" + $module),
       value: {
         format: ($s[0].drawers.icons[$key].format // ""),
-        "tooltip-format": ($s[0].drawers.icons[$key].tooltip // "")
+        "tooltip": ($s[0].drawers.icons[$key].tooltip // "")
       }
     };
 

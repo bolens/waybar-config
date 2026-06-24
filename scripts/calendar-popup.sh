@@ -8,6 +8,13 @@ case "$offset" in
     ;;
 esac
 
+script_dir="${0%/*}"
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
+else
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
+fi
+
 if ! command -v rofi >/dev/null 2>&1; then
   if command -v notify-send >/dev/null 2>&1; then
     notify-send "Calendar" "rofi is not installed (needed for calendar popup)."
@@ -83,18 +90,25 @@ selected_row() {
   fi
 }
 
-theme='
+cal_width=$(waybar_settings_get '.rofi.calendar.width' '420')
+cal_xoff=$(waybar_settings_get '.rofi.calendar.x_offset' '-30')
+cal_yoff=$(waybar_settings_get '.rofi.calendar.y_offset' '0')
+
+theme_window="
   window {
-    width: 420px;
+    width: ${cal_width}px;
     location: northeast;
     anchor: northeast;
-    x-offset: -30px;
-    y-offset: 0px;
+    x-offset: ${cal_xoff}px;
+    y-offset: ${cal_yoff}px;
     border: 2px;
     border-color: #00e5ff;
     border-radius: 8px;
     background-color: #090b12f2;
   }
+"
+
+theme="${theme_window}"'
   mainbox {
     padding: 2px;
     background-color: transparent;

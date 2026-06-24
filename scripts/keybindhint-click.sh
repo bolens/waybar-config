@@ -2,8 +2,17 @@
 set -eu
 
 script_dir="${0%/*}"
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
+else
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
+fi
+
 config="${HYPRLAND_CONFIG:-$HOME/.config/hypr/hyprland.conf}"
-rofi_theme="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/themes/dock-rofi.rasi"
+rofi_theme_configured=$(waybar_settings_get '.rofi.theme' '')
+rofi_theme_configured="${rofi_theme_configured/\$WAYBAR_HOME/$WAYBAR_HOME}"
+rofi_theme_configured="${rofi_theme_configured/\$\{WAYBAR_HOME\}/$WAYBAR_HOME}"
+rofi_theme="${rofi_theme_configured:-${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/themes/dock-rofi.rasi}"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/keybindhint.txt"
 

@@ -11,13 +11,17 @@ if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
   . "$script_dir/waybar-cache-helpers.sh"
 else
   . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
+else
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
 fi
 
+notif_width=$(waybar_settings_get '.rofi.notifications.width' '650')
 
-
-theme='
+theme_window="
   window {
-    width: 650px;
+    width: ${notif_width}px;
     location: center;
     anchor: center;
     border: 2px;
@@ -26,6 +30,9 @@ theme='
     background-color: rgba(6, 7, 14, 0.94);
     padding: 15px;
   }
+"
+
+theme="${theme_window}"'
   mainbox {
     spacing: 12px;
     children: [ inputbar, message, listview ];

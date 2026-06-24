@@ -1,5 +1,11 @@
 #!/usr/bin/env sh
 # Shared helpers for compositor-aware clipboard modules.
+script_dir="${script_dir:-$(dirname "$0")}"
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
+else
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
+fi
 
 signal_waybar() {
   pkill -x -RTMIN+9 waybar >/dev/null 2>&1 || true
@@ -60,9 +66,21 @@ cliphist_pick() {
   [ -n "$entries" ] || return 0
 
   if command -v rofi >/dev/null 2>&1; then
-    selection=$(printf '%s\n' "$entries" \
-      | rofi -dmenu -i -p 'Clipboard' \
-        -theme-str 'window { width: 780px; } listview { lines: 18; }' 2>/dev/null || true)
+    clip_theme=$(waybar_settings_get '.rofi.theme' '')
+    clip_theme="${clip_theme/\$WAYBAR_HOME/$WAYBAR_HOME}"
+    clip_theme="${clip_theme/\$\{WAYBAR_HOME\}/$WAYBAR_HOME}"
+    clip_width=$(waybar_settings_get '.rofi.clipboard.width' '780')
+    clip_lines=$(waybar_settings_get '.rofi.clipboard.lines' '18')
+
+    if [ -n "$clip_theme" ] && [ -f "$clip_theme" ]; then
+      selection=$(printf '%s\n' "$entries" \
+        | rofi -dmenu -i -p 'Clipboard' -theme "$clip_theme" \
+          -theme-str "window { width: ${clip_width}px; } listview { lines: ${clip_lines}; }" 2>/dev/null || true)
+    else
+      selection=$(printf '%s\n' "$entries" \
+        | rofi -dmenu -i -p 'Clipboard' \
+          -theme-str "window { width: ${clip_width}px; } listview { lines: ${clip_lines}; }" 2>/dev/null || true)
+    fi
   elif command -v wofi >/dev/null 2>&1; then
     selection=$(printf '%s\n' "$entries" | wofi --dmenu -i -p 'Clipboard' 2>/dev/null || true)
   else

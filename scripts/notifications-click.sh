@@ -8,6 +8,12 @@ script_dir="${0%/*}"
 # shellcheck source=notifications-lib.sh
 . "$script_dir/notifications-lib.sh"
 
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
+else
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
+fi
+
 action="${1:-open}"
 compositor="$(detect_compositor)"
 
@@ -30,8 +36,18 @@ hyprland_open() {
         notify-send "Notifications" "No notification history (install SwayNC for a full center)" 2>/dev/null || true
         return 0
       fi
-      sel="$(printf '%s' "$history" | jq -r '.[] | "\(.id)\t\(.summary // "Notification")"' \
-        | rofi -dmenu -i -p "Notifications" -no-fixed-num-lines 2>/dev/null || true)"
+      notif_theme=$(waybar_settings_get '.rofi.theme' '')
+      notif_theme="${notif_theme/\$WAYBAR_HOME/$WAYBAR_HOME}"
+      notif_theme="${notif_theme/\$\{WAYBAR_HOME\}/$WAYBAR_HOME}"
+      notif_width=$(waybar_settings_get '.rofi.notifications.width' '650')
+
+      if [ -n "$notif_theme" ] && [ -f "$notif_theme" ]; then
+        sel="$(printf '%s' "$history" | jq -r '.[] | "\(.id)\t\(.summary // "Notification")"' \
+          | rofi -dmenu -i -p "Notifications" -no-fixed-num-lines -theme "$notif_theme" -theme-str "window { width: ${notif_width}px; }" 2>/dev/null || true)"
+      else
+        sel="$(printf '%s' "$history" | jq -r '.[] | "\(.id)\t\(.summary // "Notification")"' \
+          | rofi -dmenu -i -p "Notifications" -no-fixed-num-lines -theme-str "window { width: ${notif_width}px; }" 2>/dev/null || true)"
+      fi
       if [ -n "$sel" ]; then
         id="${sel%%	*}"
         makoctl invoke -n "$id" 2>/dev/null || true
