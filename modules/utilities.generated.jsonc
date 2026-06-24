@@ -102,27 +102,32 @@
   },
   "custom/lock": {
     "format": "",
-    "tooltip": "Lock screen",
+    "tooltip": true,
+    "tooltip-format": "Lock screen",
     "on-click": "$WAYBAR_HOME/scripts/power-click.sh lock"
   },
   "custom/logout": {
     "format": "󰍃",
-    "tooltip": "Logout session",
+    "tooltip": true,
+    "tooltip-format": "Logout session",
     "on-click": "$WAYBAR_HOME/scripts/power-click.sh logout"
   },
   "custom/suspend": {
     "format": "󰤄",
-    "tooltip": "Suspend system",
+    "tooltip": true,
+    "tooltip-format": "Suspend system",
     "on-click": "$WAYBAR_HOME/scripts/power-click.sh suspend"
   },
   "custom/reboot": {
     "format": "󰜉",
-    "tooltip": "Reboot system",
+    "tooltip": true,
+    "tooltip-format": "Reboot system",
     "on-click": "$WAYBAR_HOME/scripts/power-click.sh reboot"
   },
   "custom/shutdown": {
     "format": "󰐥",
-    "tooltip": "Shutdown system",
+    "tooltip": true,
+    "tooltip-format": "Shutdown system",
     "on-click": "$WAYBAR_HOME/scripts/power-click.sh shutdown"
   },
   "custom/kdeconnect": {
