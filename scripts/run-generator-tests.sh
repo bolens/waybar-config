@@ -63,6 +63,55 @@ except Exception as e:
 PY
 }
 
+validate_custom_module_configs() {
+  python3 - "$1" <<'PY'
+import json, re, sys, os
+try:
+    text = open(sys.argv[1], encoding="utf-8").read()
+    text = re.sub(r'/\*.*?\*/', '', text, flags=re.S)
+    text = re.sub(r'^\s*//.*$', '', text, flags=re.M)
+    data = json.loads(text)
+    waybar_home = os.environ.get("WAYBAR_HOME", "")
+
+    def check_module_dict(data_dict):
+        for key, val in data_dict.items():
+            if key.startswith("custom/") and isinstance(val, dict):
+                # Check 1: Tooltip format validation for custom modules
+                if "tooltip" in val and isinstance(val["tooltip"], str):
+                    sys.stderr.write(f"FAIL: {sys.argv[1]} -> '{key}' has 'tooltip' set as a string (must be boolean)\n")
+                    sys.exit(1)
+                if "exec" not in val and "tooltip-format" in val:
+                    if val.get("tooltip") is not True:
+                        sys.stderr.write(f"FAIL: {sys.argv[1]} -> static '{key}' has 'tooltip-format' but 'tooltip' is not set to true\n")
+                        sys.exit(1)
+                
+                # Check 2: Verify referenced script files exist
+                for action in ["exec", "on-click", "on-click-right", "on-click-middle", "on-scroll-up", "on-scroll-down"]:
+                    if action in val and isinstance(val[action], str):
+                        cmd = val[action]
+                        if "$WAYBAR_HOME/scripts/" in cmd:
+                            parts = cmd.split("$WAYBAR_HOME/scripts/")
+                            if len(parts) > 1:
+                                # Split on common command arguments dividers/delimiters
+                                script_name = parts[1].split()[0].split(";")[0].split("&")[0].split("|")[0]
+                                script_name = script_name.replace('"', '').replace("'", "")
+                                script_path = os.path.join(waybar_home, "scripts", script_name)
+                                if not os.path.isfile(script_path):
+                                    sys.stderr.write(f"FAIL: {sys.argv[1]} -> '{key}' references non-existent script '{script_path}' in '{action}'\n")
+                                    sys.exit(1)
+
+    if isinstance(data, dict):
+        check_module_dict(data)
+    elif isinstance(data, list):
+        for item in data:
+            if isinstance(item, dict):
+                check_module_dict(item)
+except Exception as e:
+    sys.stderr.write(f"Validation failure in {sys.argv[1]}: {e}\n")
+    sys.exit(1)
+PY
+}
+
 echo "Validating generated JSONC files..."
 
 # Ensure we have generated files
@@ -80,6 +129,12 @@ for file in "${generated_files[@]}"; do
   # Check if it parses as valid JSON
   if ! strip_jsonc "$file" 2>/dev/null; then
     echo "FAIL: JSON syntax error in $file" >&2
+    fail=1
+    continue
+  fi
+
+  # Run custom module configurations validation
+  if ! validate_custom_module_configs "$file"; then
     fail=1
     continue
   fi
