@@ -267,6 +267,14 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
   "colorpicker": {
     "on_click": "TEST_COLORPICKER_ON_CLICK"
   },
+  "vaults": {
+    "on_click": "TEST_VAULTS_ON_CLICK",
+    "on_click_right": "TEST_VAULTS_ON_CLICK_RIGHT"
+  },
+  "touchpad": {
+    "on_click": "TEST_TOUCHPAD_ON_CLICK",
+    "on_click_right": "TEST_TOUCHPAD_ON_CLICK_RIGHT"
+  },
   "workspaces": {
     "slot_count": 8
   },
@@ -534,6 +542,24 @@ fi
 
 if ! echo "$clean_utils" | jq -e '."custom/colorpicker"."on-click" == "TEST_COLORPICKER_ON_CLICK"' >/dev/null 2>&1; then
   echo "FAIL: Custom colorpicker on-click override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+
+if ! echo "$clean_utils" | jq -e '."custom/vaults"."on-click" == "TEST_VAULTS_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom vaults on-click override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/vaults"."on-click-right" == "TEST_VAULTS_ON_CLICK_RIGHT"' >/dev/null 2>&1; then
+  echo "FAIL: Custom vaults on-click-right override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+
+if ! echo "$clean_utils" | jq -e '."custom/touchpad"."on-click" == "TEST_TOUCHPAD_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom touchpad on-click override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/touchpad"."on-click-right" == "TEST_TOUCHPAD_ON_CLICK_RIGHT"' >/dev/null 2>&1; then
+  echo "FAIL: Custom touchpad on-click-right override not compiled correctly into utilities.generated.jsonc" >&2
   fail=1
 fi
 

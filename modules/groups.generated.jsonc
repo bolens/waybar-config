@@ -34,6 +34,8 @@
       "custom/keyboard-layout",
       "custom/kdeconnect",
       "custom/device-notifier",
+      "custom/vaults",
+      "custom/touchpad",
       "custom/device-battery"
     ]
   },

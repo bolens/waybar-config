@@ -155,6 +155,24 @@
     "tooltip-format": "Color Picker · Click to grab color",
     "on-click": "$WAYBAR_HOME/scripts/color-picker.sh"
   },
+  "custom/vaults": {
+    "format": "{}",
+    "return-type": "json",
+    "signal": 21,
+    "interval": "once",
+    "exec": "$WAYBAR_HOME/scripts/vaults.py --status",
+    "on-click": "$WAYBAR_HOME/scripts/vaults.py --menu",
+    "on-click-right": "$WAYBAR_HOME/scripts/waybar-signal.sh 21"
+  },
+  "custom/touchpad": {
+    "format": "{}",
+    "return-type": "json",
+    "signal": 20,
+    "interval": "once",
+    "exec": "$WAYBAR_HOME/scripts/touchpad.py --status",
+    "on-click": "$WAYBAR_HOME/scripts/touchpad.py --toggle",
+    "on-click-right": "$WAYBAR_HOME/scripts/waybar-signal.sh 20"
+  },
   "custom/weather": {
     "format": "{}",
     "return-type": "json",

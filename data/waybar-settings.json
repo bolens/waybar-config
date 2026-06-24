@@ -64,6 +64,8 @@
     "uptime": 60,
     "kdeconnect": "once",
     "device_notifier": "once",
+    "touchpad": "once",
+    "vaults": "once",
     "weather": 1800,
     "systemd": 60,
     "github": 300,
@@ -94,7 +96,9 @@
     "vpn": 5,
     "tailscale": 12,
     "kdeconnect": 18,
-    "device_notifier": 19
+    "device_notifier": 19,
+    "touchpad": 20,
+    "vaults": 21
   },
   "poll_intervals": {
     "dock_apps": "once",
@@ -177,6 +181,8 @@
         "custom/keyboard-layout",
         "custom/kdeconnect",
         "custom/device-notifier",
+        "custom/vaults",
+        "custom/touchpad",
         "custom/device-battery"
       ]
     },
@@ -400,6 +406,15 @@
   },
   "colorpicker": {
     "on_click": null
+  },
+  "vaults": {
+    "base_dir": null,
+    "on_click": null,
+    "on_click_right": null
+  },
+  "touchpad": {
+    "on_click": null,
+    "on_click_right": null
   },
   "thresholds": {
     "cpu": {

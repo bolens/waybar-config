@@ -185,6 +185,24 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "tooltip-format": "Color Picker · Click to grab color",
       "on-click": ($s[0].colorpicker.on_click // ($scripts + "/color-picker.sh"))
     },
+    "custom/vaults": {
+      format: "{}",
+      "return-type": "json",
+      signal: sig("vaults"),
+      interval: iv("vaults"),
+      exec: ($scripts + "/vaults.py --status"),
+      "on-click": ($s[0].vaults.on_click // ($scripts + "/vaults.py --menu")),
+      "on-click-right": ($s[0].vaults.on_click_right // ($scripts + "/waybar-signal.sh " + ((sig("vaults") // 21) | tostring)))
+    },
+    "custom/touchpad": {
+      format: "{}",
+      "return-type": "json",
+      signal: sig("touchpad"),
+      interval: iv("touchpad"),
+      exec: ($scripts + "/touchpad.py --status"),
+      "on-click": ($s[0].touchpad.on_click // ($scripts + "/touchpad.py --toggle")),
+      "on-click-right": ($s[0].touchpad.on_click_right // ($scripts + "/waybar-signal.sh " + ((sig("touchpad") // 20) | tostring)))
+    },
     "custom/weather": {
       format: "{}",
       "return-type": "json",
