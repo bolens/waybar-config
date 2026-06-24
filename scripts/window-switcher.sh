@@ -13,12 +13,24 @@ else
   . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 fi
 
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
+else
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
+fi
+
 session="$(detect_compositor)"
 tab=$'\t'
 
-theme='
+switcher_theme=$(waybar_settings_get '.rofi.switcher.width' '') # Theme file is retrieved in the execution block if needed, but we check width here
+switcher_theme_file=$(waybar_settings_get '.rofi.theme' '')
+switcher_theme_file="${switcher_theme_file/\$WAYBAR_HOME/$WAYBAR_HOME}"
+switcher_theme_file="${switcher_theme_file/\$\{WAYBAR_HOME\}/$WAYBAR_HOME}"
+switcher_width=$(waybar_settings_get '.rofi.switcher.width' '650')
+
+theme_window="
   window {
-    width: 650px;
+    width: ${switcher_width}px;
     location: center;
     anchor: center;
     border: 2px;
@@ -27,6 +39,9 @@ theme='
     background-color: rgba(6, 7, 14, 0.94);
     padding: 15px;
   }
+"
+
+theme="${theme_window}"'
   mainbox {
     spacing: 12px;
     children: [ inputbar, listview ];
@@ -333,9 +348,13 @@ if [ "$session" = "hyprland" ]; then
     icons+=( "$icon_name" )
   done
 
+  rofi_args=(-dmenu -i -p "Switch to:" -show-icons)
+  [ -n "$switcher_theme_file" ] && [ -f "$switcher_theme_file" ] && rofi_args+=(-theme "$switcher_theme_file")
+  rofi_args+=(-theme-str "$theme")
+
   selected=$(for i in "${!displays[@]}"; do
     printf "%s\0icon\x1f%s\n" "${displays[i]}" "${icons[i]}"
-  done | rofi -dmenu -i -p "Switch to:" -show-icons -theme-str "$theme")
+  done | rofi "${rofi_args[@]}")
   
   if [ -n "$selected" ]; then
     for i in "${!displays[@]}"; do
@@ -399,9 +418,13 @@ elif [ "$session" = "kde" ]; then
     exit 0
   fi
 
+  rofi_args=(-dmenu -i -p "Switch to:" -show-icons)
+  [ -n "$switcher_theme_file" ] && [ -f "$switcher_theme_file" ] && rofi_args+=(-theme "$switcher_theme_file")
+  rofi_args+=(-theme-str "$theme")
+
   selected=$(for i in "${!displays[@]}"; do
     printf "%s\0icon\x1f%s\n" "${displays[i]}" "${icons[i]}"
-  done | rofi -dmenu -i -p "Switch to:" -show-icons -theme-str "$theme")
+  done | rofi "${rofi_args[@]}")
   
   if [ -n "$selected" ]; then
     for i in "${!displays[@]}"; do

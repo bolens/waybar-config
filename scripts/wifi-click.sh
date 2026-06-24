@@ -11,8 +11,12 @@ fi
 # shellcheck source=compositor-session.sh
 if [ -f "$script_dir/compositor-session.sh" ]; then
   . "$script_dir/compositor-session.sh"
+fi
+
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
 else
-  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/compositor-session.sh"
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
 fi
 
 mode="${1:-list}"
@@ -28,10 +32,15 @@ show_wifi_popup() {
   header_full_clear="$4"
   items="$5"
   # Keep popup visually attached to the Wi-Fi module by default.
-  xoff="${WAYBAR_WIFI_DROPDOWN_X:--270}"
-  yoff="${WAYBAR_WIFI_DROPDOWN_Y:-0}"
-  popup_width="${WAYBAR_WIFI_DROPDOWN_WIDTH:-560}"
-  popup_lines="${WAYBAR_WIFI_DROPDOWN_LINES:-20}"
+  xoff_default="${WAYBAR_WIFI_DROPDOWN_X:--270}"
+  yoff_default="${WAYBAR_WIFI_DROPDOWN_Y:-0}"
+  popup_width_default="${WAYBAR_WIFI_DROPDOWN_WIDTH:-560}"
+  popup_lines_default="${WAYBAR_WIFI_DROPDOWN_LINES:-20}"
+
+  xoff=$(waybar_settings_get '.rofi.wifi.x_offset' "$xoff_default")
+  yoff=$(waybar_settings_get '.rofi.wifi.y_offset' "$yoff_default")
+  popup_width=$(waybar_settings_get '.rofi.wifi.width' "$popup_width_default")
+  popup_lines=$(waybar_settings_get '.rofi.wifi.lines' "$popup_lines_default")
 
   if [ "${WAYBAR_WIFI_CLICK_NO_UI:-0}" = "1" ]; then
     printf 'Wi-Fi Networks\n%s\n\nNearby networks:\n%s\n' "$header_full_masked" "$items"

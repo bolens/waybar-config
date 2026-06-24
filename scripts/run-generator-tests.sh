@@ -222,6 +222,17 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
     "colors": {
       "background": "rgba(9, 9, 9, 0.99)"
     }
+  },
+  "rofi": {
+    "wifi": {
+      "width": 888,
+      "lines": 33,
+      "x_offset": -111,
+      "y_offset": 11
+    },
+    "switcher": {
+      "width": 999
+    }
   }
 }
 JSON
@@ -301,6 +312,18 @@ if [ -f "$css_tokens" ]; then
   fi
 else
   echo "FAIL: tokens.generated.css was not created!" >&2
+  fail=1
+fi
+# Assert Rofi wifi and switcher settings resolve to overridden values
+test_width=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/waybar-settings.sh; waybar_settings_get '.rofi.wifi.width' 'default'")
+if [ "$test_width" != "888" ]; then
+  echo "FAIL: Rofi wifi width override failed to resolve! Resolved: $test_width" >&2
+  fail=1
+fi
+
+test_switcher_width=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/waybar-settings.sh; waybar_settings_get '.rofi.switcher.width' 'default'")
+if [ "$test_switcher_width" != "999" ]; then
+  echo "FAIL: Rofi switcher width override failed to resolve! Resolved: $test_switcher_width" >&2
   fail=1
 fi
 

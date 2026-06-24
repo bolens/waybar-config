@@ -300,6 +300,7 @@
     "calendar": {
       "mode": "month",
       "on_scroll": 1,
+      "first_day": 0,
       "colors": {
         "months": "#ff2a7f",
         "weekdays": "#ffe600",
@@ -388,6 +389,15 @@
       "y_offset": 0
     },
     "notifications": {
+      "width": 650
+    },
+    "wifi": {
+      "width": 560,
+      "lines": 20,
+      "x_offset": -270,
+      "y_offset": 0
+    },
+    "switcher": {
       "width": 650
     }
   },
