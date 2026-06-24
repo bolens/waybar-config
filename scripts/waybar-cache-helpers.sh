@@ -94,7 +94,34 @@ refresh_in_background() {
   printf '%s\n' "$!" > "$local_lock_dir/pid"
 }
 
+_get_config_override() {
+  _path="$1"
+  _default="$2"
+  _val=""
+  if command -v waybar_settings_get >/dev/null 2>&1; then
+    _val=$(waybar_settings_get "$_path" "$_default")
+  else
+    _home="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
+    _file="$_home/data/waybar-settings.json"
+    if [ -f "$_file" ] && command -v jq >/dev/null 2>&1; then
+      _val=$(jq -r --arg default "$_default" "$_path // \$default" "$_file" 2>/dev/null || printf '%s' "$_default")
+    else
+      _val="$_default"
+    fi
+  fi
+  if [ "$_val" = "auto" ] || [ -z "$_val" ] || [ "$_val" = "null" ]; then
+    printf '%s' "$_default"
+  else
+    printf '%s' "$_val"
+  fi
+}
+
 detect_clock_format() {
+  config_val=$(_get_config_override '.clocks.hour_format' 'auto')
+  if [ "$config_val" != "auto" ]; then
+    printf '%s\n' "$config_val"
+    return
+  fi
   if command -v locale >/dev/null 2>&1; then
     t_fmt=$(locale t_fmt 2>/dev/null || true)
     case "$t_fmt" in
@@ -108,6 +135,11 @@ detect_clock_format() {
 }
 
 detect_date_format() {
+  config_val=$(_get_config_override '.clocks.date_format' 'auto')
+  if [ "$config_val" != "auto" ]; then
+    printf '%s\n' "$config_val"
+    return
+  fi
   if command -v locale >/dev/null 2>&1; then
     d_fmt=$(locale d_fmt 2>/dev/null || true)
     case "$d_fmt" in
@@ -125,6 +157,11 @@ detect_date_format() {
 }
 
 detect_weather_unit() {
+  config_val=$(_get_config_override '.weather.unit' 'auto')
+  if [ "$config_val" != "auto" ]; then
+    printf '%s\n' "$config_val"
+    return
+  fi
   if command -v locale >/dev/null 2>&1; then
     meas=$(locale measurement 2>/dev/null || true)
     if [ "$meas" = "1" ]; then
@@ -208,6 +245,11 @@ format_locale_temp() {
 }
 
 detect_first_weekday() {
+  config_val=$(_get_config_override '.clocks.calendar.first_day' 'auto')
+  if [ "$config_val" != "auto" ]; then
+    printf '%s\n' "$config_val"
+    return
+  fi
   if command -v locale >/dev/null 2>&1; then
     w1st=$(locale week-1stday 2>/dev/null || true)
     fwd=$(locale first_weekday 2>/dev/null || true)

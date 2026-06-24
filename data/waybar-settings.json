@@ -289,6 +289,8 @@
     "spacing": 10
   },
   "clocks": {
+    "hour_format": "auto", 
+    "date_format": "auto", 
     "top": {
       "format": "auto",
       "tooltip_format": "auto"
@@ -300,7 +302,7 @@
     "calendar": {
       "mode": "month",
       "on_scroll": 1,
-      "first_day": 0,
+      "first_day": "auto", 
       "colors": {
         "months": "#ff2a7f",
         "weekdays": "#ffe600",

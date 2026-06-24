@@ -206,9 +206,17 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
     "clock": 42
   },
   "clocks": {
+    "hour_format": "12",
+    "date_format": "month-first",
     "top": {
       "format": "TEST_TOP_CLOCK_FORMAT"
+    },
+    "calendar": {
+      "first_day": 0
     }
+  },
+  "weather": {
+    "unit": "F"
   },
   "services": {
     "chkrootkit": {
@@ -267,8 +275,41 @@ if [ -f "$clock_conf" ]; then
     echo "FAIL: Custom clock interval not compiled correctly into clock.generated.jsonc" >&2
     fail=1
   fi
+  if ! echo "$clean_clock" | jq -e '."clock#bottom".format == "{:%a, %b %d %I:%M %p}"' >/dev/null 2>&1; then
+    echo "FAIL: Bottom clock format did not compile default overridden by clocks.hour_format and date_format!" >&2
+    fail=1
+  fi
+  if ! echo "$clean_clock" | jq -e '."clock#top".calendar.first_day == 0' >/dev/null 2>&1; then
+    echo "FAIL: Calendar first day override was not compiled correctly into clock.generated.jsonc!" >&2
+    fail=1
+  fi
 else
   echo "FAIL: clock.generated.jsonc was not generated!" >&2
+  fail=1
+fi
+
+# Verify locale helpers respect overrides
+test_hour_fmt=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/waybar-settings.sh; . $TEST_DIR/scripts/waybar-cache-helpers.sh; detect_clock_format")
+if [ "$test_hour_fmt" != "12" ]; then
+  echo "FAIL: detect_clock_format failed to respect clocks.hour_format override! Resolved: $test_hour_fmt" >&2
+  fail=1
+fi
+
+test_date_fmt=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/waybar-settings.sh; . $TEST_DIR/scripts/waybar-cache-helpers.sh; detect_date_format")
+if [ "$test_date_fmt" != "month-first" ]; then
+  echo "FAIL: detect_date_format failed to respect clocks.date_format override! Resolved: $test_date_fmt" >&2
+  fail=1
+fi
+
+test_first_day=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/waybar-settings.sh; . $TEST_DIR/scripts/waybar-cache-helpers.sh; detect_first_weekday")
+if [ "$test_first_day" != "0" ]; then
+  echo "FAIL: detect_first_weekday failed to respect clocks.calendar.first_day override! Resolved: $test_first_day" >&2
+  fail=1
+fi
+
+test_weather_unit=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/waybar-settings.sh; . $TEST_DIR/scripts/waybar-cache-helpers.sh; detect_weather_unit")
+if [ "$test_weather_unit" != "F" ]; then
+  echo "FAIL: detect_weather_unit failed to respect weather.unit override! Resolved: $test_weather_unit" >&2
   fail=1
 fi
 

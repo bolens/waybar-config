@@ -289,6 +289,8 @@
     "spacing": 10
   },
   "clocks": {
+    "hour_format": "auto", // Clock hour format: "12", "24", or "auto" (detect from locale)
+    "date_format": "auto", // Clock date format: "day-first", "month-first", or "auto" (detect from locale)
     "top": {
       "format": "auto",
       "tooltip_format": "auto"
@@ -300,7 +302,7 @@
     "calendar": {
       "mode": "month",
       "on_scroll": 1,
-      "first_day": 0,
+      "first_day": "auto", // Calendar week-start day: 0 (Sunday), 1 (Monday), or "auto" (detect from locale)
       "colors": {
         "months": "#ff2a7f",
         "weekdays": "#ffe600",

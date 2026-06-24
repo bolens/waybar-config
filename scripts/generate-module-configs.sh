@@ -332,7 +332,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
       calendar: {
         mode: ($s[0].clocks.calendar.mode // "month"),
         "on-scroll": ($s[0].clocks.calendar.on_scroll // 1),
-        "first_day": ($s[0].clocks.calendar.first_day // $first_day),
+        "first_day": (($s[0].clocks.calendar.first_day | select(. != null and . != "" and . != "auto" and . != "null")) // $first_day),
         format: calfmt
       },
       actions: {
@@ -349,7 +349,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
       calendar: {
         mode: ($s[0].clocks.calendar.mode // "month"),
         "on-scroll": ($s[0].clocks.calendar.on_scroll // 1),
-        "first_day": ($s[0].clocks.calendar.first_day // $first_day),
+        "first_day": (($s[0].clocks.calendar.first_day | select(. != null and . != "" and . != "auto" and . != "null")) // $first_day),
         format: calfmt
       },
       actions: {
