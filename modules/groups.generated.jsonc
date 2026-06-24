@@ -33,6 +33,7 @@
       "idle_inhibitor",
       "custom/keyboard-layout",
       "custom/kdeconnect",
+      "custom/device-notifier",
       "custom/device-battery"
     ]
   },
@@ -87,6 +88,7 @@
       "custom/screenrecord",
       "custom/nightlight",
       "custom/clipboard",
+      "custom/colorpicker",
       "custom/discord",
       "custom/weather"
     ]

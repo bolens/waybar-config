@@ -137,6 +137,10 @@ launch_detached "$WAYBAR_SCRIPTS/brightness-status.sh" --refresh
 	if [ -x "$WAYBAR_SCRIPTS/workspaces-hyprland-listener.sh" ]; then
 		start_waybar_listener "$WAYBAR_SCRIPTS/workspaces-hyprland-listener.sh" hypr-workspaces
 	fi
+
+	if [ -x "$WAYBAR_SCRIPTS/device-notifier-listener.sh" ]; then
+		start_waybar_listener "$WAYBAR_SCRIPTS/device-notifier-listener.sh" device-notifier
+	fi
 ) &
 
 if [ -f "$XDG_CACHE_HOME/waybar/system-metrics.json" ]; then

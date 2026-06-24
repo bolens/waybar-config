@@ -166,7 +166,24 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       signal: sig("kdeconnect"),
       interval: iv("kdeconnect"),
       exec: ($scripts + "/kdeconnect-status.sh"),
-      "on-click": ($scripts + "/kdeconnect-status.sh --ring")
+      "on-click": ($s[0].kdeconnect.on_click // ($scripts + "/kdeconnect-status.sh --ring")),
+      "on-click-right": ($s[0].kdeconnect.on_click_right // ($scripts + "/kdeconnect-menu.sh")),
+      "on-click-middle": ($s[0].kdeconnect.on_click_middle // ($scripts + "/kdeconnect-status.sh --refresh && " + $scripts + "/waybar-signal.sh " + ((sig("kdeconnect") // 18) | tostring)))
+    },
+    "custom/device-notifier": {
+      format: "{}",
+      "return-type": "json",
+      signal: sig("device_notifier"),
+      interval: iv("device_notifier"),
+      exec: ($scripts + "/device-notifier.py --status"),
+      "on-click": ($s[0].device_notifier.on_click // ($scripts + "/device-notifier.py --menu")),
+      "on-click-right": ($s[0].device_notifier.on_click_right // ($scripts + "/waybar-signal.sh " + ((sig("device_notifier") // 19) | tostring)))
+    },
+    "custom/colorpicker": {
+      format: "󰏘",
+      tooltip: true,
+      "tooltip-format": "Color Picker · Click to grab color",
+      "on-click": ($s[0].colorpicker.on_click // ($scripts + "/color-picker.sh"))
     },
     "custom/weather": {
       format: "{}",

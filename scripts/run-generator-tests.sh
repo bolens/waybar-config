@@ -255,6 +255,18 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
   "gamemode": {
     "on_click": "TEST_GAMEMODE_ON_CLICK"
   },
+  "kdeconnect": {
+    "on_click": "TEST_KDECONNECT_ON_CLICK",
+    "on_click_right": "TEST_KDECONNECT_ON_CLICK_RIGHT",
+    "on_click_middle": "TEST_KDECONNECT_ON_CLICK_MIDDLE"
+  },
+  "device_notifier": {
+    "on_click": "TEST_DEVICE_NOTIFIER_ON_CLICK",
+    "on_click_right": "TEST_DEVICE_NOTIFIER_ON_CLICK_RIGHT"
+  },
+  "colorpicker": {
+    "on_click": "TEST_COLORPICKER_ON_CLICK"
+  },
   "workspaces": {
     "slot_count": 8
   },
@@ -495,6 +507,33 @@ if ! echo "$clean_utils" | jq -e '."custom/weather"."on-click-right" == "TEST_WE
 fi
 if ! echo "$clean_utils" | jq -e '."custom/weather"."on-click-middle" == "TEST_WEATHER_ON_CLICK_MIDDLE"' >/dev/null 2>&1; then
   echo "FAIL: Custom weather on-click-middle override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+
+if ! echo "$clean_utils" | jq -e '."custom/kdeconnect"."on-click" == "TEST_KDECONNECT_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom kdeconnect on-click override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/kdeconnect"."on-click-right" == "TEST_KDECONNECT_ON_CLICK_RIGHT"' >/dev/null 2>&1; then
+  echo "FAIL: Custom kdeconnect on-click-right override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/kdeconnect"."on-click-middle" == "TEST_KDECONNECT_ON_CLICK_MIDDLE"' >/dev/null 2>&1; then
+  echo "FAIL: Custom kdeconnect on-click-middle override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+
+if ! echo "$clean_utils" | jq -e '."custom/device-notifier"."on-click" == "TEST_DEVICE_NOTIFIER_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom device-notifier on-click override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/device-notifier"."on-click-right" == "TEST_DEVICE_NOTIFIER_ON_CLICK_RIGHT"' >/dev/null 2>&1; then
+  echo "FAIL: Custom device-notifier on-click-right override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+
+if ! echo "$clean_utils" | jq -e '."custom/colorpicker"."on-click" == "TEST_COLORPICKER_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom colorpicker on-click override not compiled correctly into utilities.generated.jsonc" >&2
   fail=1
 fi
 

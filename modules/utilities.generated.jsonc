@@ -136,7 +136,24 @@
     "signal": 18,
     "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/kdeconnect-status.sh",
-    "on-click": "$WAYBAR_HOME/scripts/kdeconnect-status.sh --ring"
+    "on-click": "$WAYBAR_HOME/scripts/kdeconnect-status.sh --ring",
+    "on-click-right": "$WAYBAR_HOME/scripts/kdeconnect-menu.sh",
+    "on-click-middle": "$WAYBAR_HOME/scripts/kdeconnect-status.sh --refresh && $WAYBAR_HOME/scripts/waybar-signal.sh 18"
+  },
+  "custom/device-notifier": {
+    "format": "{}",
+    "return-type": "json",
+    "signal": 19,
+    "interval": "once",
+    "exec": "$WAYBAR_HOME/scripts/device-notifier.py --status",
+    "on-click": "$WAYBAR_HOME/scripts/device-notifier.py --menu",
+    "on-click-right": "$WAYBAR_HOME/scripts/waybar-signal.sh 19"
+  },
+  "custom/colorpicker": {
+    "format": "󰏘",
+    "tooltip": true,
+    "tooltip-format": "Color Picker · Click to grab color",
+    "on-click": "$WAYBAR_HOME/scripts/color-picker.sh"
   },
   "custom/weather": {
     "format": "{}",
