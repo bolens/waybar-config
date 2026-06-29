@@ -46,6 +46,10 @@ enable_scroll=$(waybar_settings_get '.active_window.zscroll' 'true')
 scroll_len=$(waybar_settings_get '.active_window.max_length' '40')
 scroll_delay=$(waybar_settings_get '.active_window.scroll_delay' '0.3')
 
+escape_markup() {
+  printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+}
+
 output_title() {
   scrolled="$1"
   original="$2"
@@ -60,10 +64,14 @@ output_title() {
     class="active"
   fi
 
+  # Escape XML/Pango markup entities
+  escaped_markup_text=$(escape_markup "$text")
+  escaped_markup_tooltip=$(escape_markup "$tooltip")
+
   # Escape special characters for JSON
-  escaped_text="${text//\\/\\\\}"
+  escaped_text="${escaped_markup_text//\\/\\\\}"
   escaped_text="${escaped_text//\"/\\\"}"
-  escaped_tooltip="${tooltip//\\/\\\\}"
+  escaped_tooltip="${escaped_markup_tooltip//\\/\\\\}"
   escaped_tooltip="${escaped_tooltip//\"/\\\"}"
 
   printf '{"text":"%s","tooltip":"%s","class":"%s"}\n' "$escaped_text" "$escaped_tooltip" "$class"

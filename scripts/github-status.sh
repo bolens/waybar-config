@@ -81,7 +81,7 @@ perform_github_checks_and_output() {
             class: "normal"
           }
         else
-          [ .[] | "- [\(.repository.full_name)] \(.subject.title) (\(.reason))" ] as $items |
+          [ .[] | "- [\(.repository.full_name)] \(.subject.title | gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;")) (\(.reason))" ] as $items |
           ($items[0:5] | join("\n")) as $preview |
           (if $len > 5 then "\n... and \($len - 5) more" else "" end) as $more |
           {

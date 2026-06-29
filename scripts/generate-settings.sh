@@ -121,6 +121,7 @@ build_system_json() {
     '
     def app($key): $settings[0].apps[$key] // "";
     def interval($key): ($settings[0].module_intervals[$key] // $settings[0].poll_intervals[$key] // 1);
+    def signal($key): $settings[0].signals[$key] // null;
     def click_app($key): ($app_open + " " + app($key));
     {
       "custom/cpu": {
@@ -189,7 +190,9 @@ build_system_json() {
       "custom/updates": {
         format: "{}",
         "return-type": "json",
+        signal: signal("updates"),
         interval: interval("updates"),
+        escape: true,
         exec: ($scripts + "/updates-status.sh"),
         "on-click": click_app("paru_update"),
         "on-click-right": click_app("updates_review"),

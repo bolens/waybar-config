@@ -9,6 +9,10 @@ script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 max_len=70
 session="$(detect_compositor)"
 
+escape_markup() {
+  printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+}
+
 desktop_json() {
   jq -cn '{text:"󰇄  Desktop",tooltip:"No active window",class:"desktop"}'
 }
@@ -16,7 +20,11 @@ desktop_json() {
 emit_json() {
   local title="$1"
   local tooltip="$2"
-  jq -cn --arg text "󰖲  $title" --arg tooltip "$tooltip" '{text:$text,tooltip:$tooltip,class:"active"}'
+  local esc_title
+  esc_title=$(escape_markup "$title")
+  local esc_tooltip
+  esc_tooltip=$(escape_markup "$tooltip")
+  jq -cn --arg text "󰖲  $esc_title" --arg tooltip "$esc_tooltip" '{text:$text,tooltip:$tooltip,class:"active"}'
 }
 
 trim_title() {

@@ -339,9 +339,10 @@ class ActiveWindowServer:
                 "class": "desktop"
             }
         else:
+            import html
             data = {
-                "text": f"󰖲  {trimmed}",
-                "tooltip": title,
+                "text": f"󰖲  {html.escape(trimmed)}",
+                "tooltip": html.escape(title),
                 "class": "active"
             }
         

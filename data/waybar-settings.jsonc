@@ -98,7 +98,8 @@
     "kdeconnect": 18,
     "device_notifier": 19,
     "touchpad": 20,
-    "vaults": 21
+    "vaults": 21,
+    "updates": 1
   },
   "poll_intervals": {
     "dock_apps": "once",

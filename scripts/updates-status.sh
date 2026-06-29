@@ -2,7 +2,11 @@
 set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
+script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
+. "$script_dir/waybar-cache-helpers.sh"
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
+fi
 cache_file="$cache_dir/updates-status.json"
 lock_dir="$cache_dir/updates-status.lock.d"
 ttl=300
@@ -108,9 +112,11 @@ perform_checks_and_output() {
     tooltip=$(printf '%s\n\nFlatpak preview:\n%s' "$tooltip" "$flatpak_preview")
   fi
 
+  escaped_tooltip=$(escape_markup "$tooltip")
+
   json=$(jq -cn \
     --arg text "󰚰 ${total_text}" \
-    --arg tooltip "$tooltip" \
+    --arg tooltip "$escaped_tooltip" \
     --arg class "$class" \
     '{text:$text, tooltip:$tooltip, class:$class}')
 
@@ -118,6 +124,14 @@ perform_checks_and_output() {
   tmp="$cache_file.tmp.$$"
   printf '%s\n' "$json" > "$tmp"
   mv -f "$tmp" "$cache_file"
+
+  # Signal waybar if running in background
+  if [ "${WAYBAR_BACKGROUND:-0}" = "1" ]; then
+    sig_num=$(_get_config_override '.signals.updates' '1')
+    if [ -n "$sig_num" ] && [ "$sig_num" != "null" ]; then
+      "$script_dir/waybar-signal.sh" "$sig_num"
+    fi
+  fi
 
   # Print final JSON to stdout so animate_command displays it at the end
   printf '%s\n' "$json"
