@@ -44,11 +44,7 @@ if [ "${1:-}" != "--refresh" ]; then
         fi
       fi
       spinner=$(get_anim_frame "dots" "$frame")
-      jq -cn \
-        --arg text "$spinner Libre" \
-        --arg tooltip "LibreDefender Antivirus\nStatus: Scanning...\nLast Scan: $last_scan_date\n\nScan is running in background..." \
-        --arg class "scanning" \
-        '{text:$text, tooltip:$tooltip, class:$class}'
+      emit_waybar_json "$spinner Libre" "LibreDefender Antivirus\nStatus: Scanning...\nLast Scan: $last_scan_date\n\nScan is running in background..." "scanning"
       frame=$((frame + 1))
       sleep 0.2
     done
@@ -71,8 +67,7 @@ if [ "${1:-}" != "--refresh" ]; then
     exit 0
   fi
   
-  jq -cn --arg text "󰒃 Libre" --arg tooltip "Checking libredefender..." --arg class "normal" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰒃 Libre" "Checking libredefender..." "normal"
   exit 0
 fi
 
@@ -143,11 +138,7 @@ Result: %s
 Left: start weekly scan · Right: view service logs · Middle: refresh' \
   "$status_text" "$last_scan_date" "$ago" "$result_state")
 
-json=$(jq -cn \
-  --arg text "$text" \
-  --arg tooltip "$tooltip" \
-  --arg class "$class" \
-  '{text:$text, tooltip:$tooltip, class:$class}')
+json=$(emit_waybar_json "$text" "$tooltip" "$class")
 
 printf '%s\n' "$json"
 

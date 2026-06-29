@@ -4,10 +4,11 @@ set -eu
 
 module="${1:-}"
 script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 . "$script_dir/compositor-session.sh"
 
 hidden_json() {
-  jq -cn '{text:"", tooltip:"", class:"hidden"}'
+  emit_waybar_json "" "" "hidden"
 }
 
 compositor="$(detect_compositor)"
@@ -19,10 +20,10 @@ fi
 
 case "$module" in
   notify)
-    jq -cn '{text:"󰂚", tooltip:"Show notifications", class:"ready"}'
+    emit_waybar_json "󰂚" "Show notifications" "ready"
     ;;
   light)
-    jq -cn '{text:"󰃠", tooltip:"Adjust brightness", class:"ready"}'
+    emit_waybar_json "󰃠" "Adjust brightness" "ready"
     ;;
   *)
     hidden_json

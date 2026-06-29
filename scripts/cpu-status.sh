@@ -34,7 +34,7 @@ fi
 # 3. Hard fallback for the first launch if cache does not exist yet
 metrics="$("$script_dir/system-metrics-collector.sh" 2>/dev/null || true)"
 if [ -z "$metrics" ]; then
-  jq -cn --arg text "󰍛" --arg tooltip "CPU telemetry unavailable" --arg class "disabled" '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰍛" "CPU telemetry unavailable" "disabled"
   exit 0
 fi
 
@@ -86,9 +86,5 @@ elif [ "$usage" -ge "$cpu_warn" ] 2>/dev/null || [ "$temp" -ge "$cpu_temp_warn" 
   class="warning"
 fi
 
-jq -cn \
-  --arg text "$(printf '󰍛 %3d%%' "$usage")" \
-  --arg tooltip "$tooltip" \
-  --arg class "$class" \
-  '{text:$text, tooltip:$tooltip, class:$class}'
+emit_waybar_json "$(printf '󰍛 %3d%%' "$usage")" "$tooltip" "$class"
 

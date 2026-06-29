@@ -27,11 +27,7 @@ if [ "${1:-}" != "--refresh" ]; then
   fi
 
   [ -d "$lock_dir" ] || refresh_in_background
-  jq -cn \
-    --arg text "󱂬 --" \
-    --arg tooltip "Collecting runtime status in background" \
-    --arg class "disabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󱂬 --" "Collecting runtime status in background" "disabled"
   exit 0
 fi
 
@@ -188,6 +184,7 @@ tooltip=$(printf 'Docker: %s (running %s / total %s / unhealthy %s)\nPodman: %s 
   "$podman_state" "$podman_running" "$podman_total" "$( [ "$podman_state" = "ready" ] && printf ' - engine reachable, no containers tracked' || printf '' )" \
   "$vm_state" "$vm_running" "$vm_total" \
   "$waydroid_state" "$waydroid_health" "$waydroid_session" "$waydroid_container")
+tooltip=$(printf '%b' "$tooltip" | escape_markup)
 
 json=$(jq -cn \
   --arg text "󱂬 ${engines_text}" \

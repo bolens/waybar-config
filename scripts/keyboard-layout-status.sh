@@ -2,6 +2,7 @@
 set -eu
 
 script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 # shellcheck source=compositor-session.sh
 . "$script_dir/compositor-session.sh"
 
@@ -36,5 +37,4 @@ label="$(printf '%s' "$layout" | tr '[:lower:]' '[:upper:]')"
 tooltip="Keyboard layout: ${layout}"
 [ -n "$variant" ] && [ "$variant" != "None" ] && tooltip="${tooltip} (${variant})"
 
-jq -cn --arg text "$label" --arg tooltip "$tooltip" --arg class "$layout" \
-  '{text:$text, tooltip:$tooltip, class:$class}'
+emit_waybar_json "$label" "$tooltip" "$layout"

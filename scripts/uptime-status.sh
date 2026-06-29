@@ -27,8 +27,7 @@ if [ "${1:-}" != "--refresh" ]; then
     exit 0
   fi
   
-  jq -cn --arg text "󰔚 --" --arg tooltip "Initializing uptime..." --arg class "normal" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰔚 --" "Initializing uptime..." "normal"
   exit 0
 fi
 
@@ -59,11 +58,7 @@ boot_time=$(format_locale_datetime "$btime")
 text=$(printf '󰔚 %s' "$raw_uptime_short")
 tooltip=$(printf 'System Uptime\nUptime: %s\nLoad Average: %s\nBoot Time: %s\n\nLeft: btop · Right: system monitor · Middle: refresh' "$raw_uptime_long" "$load_avg" "$boot_time")
 
-json=$(jq -cn \
-  --arg text "$text" \
-  --arg tooltip "$tooltip" \
-  --arg class "normal" \
-  '{text:$text, tooltip:$tooltip, class:$class}')
+json=$(emit_waybar_json "$text" "$tooltip" "normal")
 
 printf '%s\n' "$json"
 

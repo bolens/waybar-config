@@ -138,8 +138,7 @@ json_from_nut_info() {
   fi
   tip=$(printf '%s\n\nLeft: power settings · Right: system monitor · Middle: refresh' "$tip")
 
-  jq -cn --arg text "$text" --arg tooltip "$tip" --arg class "$cls" \
-    '{text:$text, tooltip:$tooltip, class:$cls}'
+  emit_waybar_json "$text" "$tip" "$cls"
 }
 
 # find_upower_ups_device:
@@ -178,21 +177,13 @@ EOF
   fi
 
   if [ -n "$nut_listed" ]; then
-    jq -cn \
-      --arg text "󰂄 …" \
-      --arg tooltip "NUT UPS '${nut_listed}' is registered but the driver is not connected yet. Check nut-driver / upsdrvctl." \
-      --arg class "warning" \
-      '{text:$text, tooltip:$tooltip, class:$class}'
+    emit_waybar_json "󰂄 …" "NUT UPS '${nut_listed}' is registered but the driver is not connected yet. Check nut-driver / upsdrvctl." "warning"
     return 0
   fi
 
   dev=$(find_upower_ups_device || true)
   if [ -z "$dev" ]; then
-    jq -cn \
-      --arg text "󰂑 N/A" \
-      --arg tooltip "No UPS detected (NUT/UPower)" \
-      --arg class "disconnected" \
-      '{text:$text, tooltip:$tooltip, class:$class}'
+    emit_waybar_json "󰂑 N/A" "No UPS detected (NUT/UPower)" "disconnected"
     return 0
   fi
 
@@ -219,8 +210,7 @@ EOF
   fi
 
   tip=$(printf 'Device: %s\nCharge: %s\nState: %s\n\nLeft: power settings · Right: system monitor · Middle: refresh' "$dev" "${pct:-?}" "${st:-unknown}")
-  jq -cn --arg text "$text" --arg tooltip "$tip" --arg class "$cls" \
-    '{text:$text, tooltip:$tooltip, class:$cls}'
+  emit_waybar_json "$text" "$tip" "$cls"
 }
 
 if [ "${1:-}" != "--refresh" ]; then
@@ -246,12 +236,7 @@ if [ "${1:-}" != "--refresh" ]; then
     exit 0
   fi
 
-  [ -d "$lock_dir" ] || refresh_in_background
-  jq -cn \
-    --arg text "󰦌" \
-    --arg tooltip "Refreshing UPS status in background" \
-    --arg class "disabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰦌" "Refreshing UPS status in background" "disabled"
   exit 0
 fi
 

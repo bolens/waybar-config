@@ -2,11 +2,12 @@
 set -eu
 
 script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 # shellcheck source=compositor-session.sh
 . "$script_dir/compositor-session.sh"
 
 hidden_json() {
-  jq -cn '{text:"", tooltip:"", class:"hidden"}'
+  emit_waybar_json "" "" "hidden"
 }
 
 [ "$(detect_compositor)" = "hyprland" ] || {
@@ -32,15 +33,7 @@ case "$blur_raw" in
 esac
 
 if [ "$enabled" = "0" ] || [ "$blur" = "0" ]; then
-  jq -cn '{
-    text: "󰊗",
-    class: "active",
-    tooltip: "Gamemode active\nAnimations/blur reduced\nClick: toggle · Right: restore defaults"
-  }'
+  emit_waybar_json "󰊗" "Gamemode active\nAnimations/blur reduced\nClick: toggle · Right: restore defaults" "active"
 else
-  jq -cn '{
-    text: "󰊗",
-    class: "inactive",
-    tooltip: "Gamemode inactive\nClick to enable performance mode"
-  }'
+  emit_waybar_json "󰊗" "Gamemode inactive\nClick to enable performance mode" "inactive"
 fi

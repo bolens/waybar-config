@@ -27,11 +27,7 @@ if [ "${1:-}" != "--refresh" ]; then
   fi
 
   [ -d "$lock_dir" ] || refresh_in_background
-  jq -cn \
-    --arg text "󰡨 ..." \
-    --arg tooltip "Refreshing Docker status in background" \
-    --arg class "disabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰡨 ..." "Refreshing Docker status in background" "disabled"
   exit 0
 fi
 
@@ -72,11 +68,7 @@ container_rows=$(timeout 3 docker ps -a --format '{{.Status}}|{{.Image}}' 2>/dev
 if [ -z "$container_rows" ] && [ "$engine_version" = "unknown" ]; then
   # Verify if daemon is actually down
   if ! timeout 2 docker ps -a >/dev/null 2>&1; then
-    jq -cn \
-      --arg text "󰡨 --" \
-      --arg tooltip "Docker daemon unavailable" \
-      --arg class "critical" \
-      '{text:$text, tooltip:$tooltip, class:$class}'
+    emit_waybar_json "󰡨 --" "Docker daemon unavailable" "critical"
     exit 0
   fi
 fi
@@ -151,6 +143,7 @@ tooltip=$(printf 'Docker Engine: online\nRunning: %s\nTotal: %s\nUnhealthy: %s\n
 if [ "$unhealthy" -gt 0 ]; then
   tooltip=$(printf '%s\nUnhealthy containers present (open lazydocker for details)' "$tooltip")
 fi
+tooltip=$(printf '%b' "$tooltip" | escape_markup)
 
 text=$(printf '󰡨 %s/%s' "$running" "$containers")
 

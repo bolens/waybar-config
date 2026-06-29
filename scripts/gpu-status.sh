@@ -34,11 +34,7 @@ fi
 # 3. Hard fallback for the first launch if cache does not exist yet
 metrics="$("$script_dir/system-metrics-collector.sh" 2>/dev/null || true)"
 if [ -z "$metrics" ]; then
-  jq -cn \
-    --arg text "󰢮 --" \
-    --arg tooltip "NVIDIA GPU telemetry unavailable" \
-    --arg class "disabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰢮 --" "NVIDIA GPU telemetry unavailable" "disabled"
   exit 0
 fi
 
@@ -59,11 +55,7 @@ IFS=$old_ifs
 
 gpu_available="${1:-false}"
 if [ "$gpu_available" != "true" ]; then
-  jq -cn \
-    --arg text "󰢮 --" \
-    --arg tooltip "NVIDIA GPU telemetry unavailable" \
-    --arg class "disabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰢮 --" "NVIDIA GPU telemetry unavailable" "disabled"
   exit 0
 fi
 
@@ -89,9 +81,5 @@ fi
 tooltip=$(printf '%s\nUtil: %s%%\nTemp: %s\nVRAM: %s/%s MiB (%s%%)' \
   "$name" "$util" "$formatted_temp" "$mem_used" "$mem_total" "$vram_pct")
 
-jq -cn \
-  --arg text "$(printf '󰢮 %3d%%' "$util")" \
-  --arg tooltip "$tooltip" \
-  --arg class "$class" \
-  '{text:$text, tooltip:$tooltip, class:$class}'
+emit_waybar_json "$(printf '󰢮 %3d%%' "$util")" "$tooltip" "$class"
 

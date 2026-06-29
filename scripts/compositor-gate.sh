@@ -3,6 +3,7 @@
 set -eu
 
 script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 # shellcheck source=compositor-session.sh
 . "$script_dir/compositor-session.sh"
 
@@ -14,7 +15,7 @@ usage() {
 }
 
 hidden_json() {
-  jq -cn '{text:"",tooltip:"",class:"hidden"}'
+  emit_waybar_json "" "" "hidden"
 }
 
 while [ $# -gt 0 ]; do

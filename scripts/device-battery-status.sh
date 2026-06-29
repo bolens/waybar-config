@@ -33,8 +33,7 @@ if [ "${1:-}" != "--refresh" ]; then
   fi
   
   # Hide by default until first check completes
-  jq -cn --arg text "" --arg tooltip "Initializing device battery..." --arg class "none" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "" "Initializing device battery..." "none"
   exit 0
 fi
 
@@ -54,8 +53,7 @@ done
 
 if [ -z "$dev_dir" ]; then
   # No device battery found, output empty to hide the widget in Waybar
-  json=$(jq -cn --arg text "" --arg tooltip "No wireless devices connected" --arg class "none" \
-    '{text:$text, tooltip:$tooltip, class:$class}')
+  json=$(emit_waybar_json "" "No wireless devices connected" "none")
   printf '%s\n' "$json"
   tmp_cache="$cache_file.tmp.$$"
   printf '%s\n' "$json" > "$tmp_cache"
@@ -94,11 +92,7 @@ fi
 text=$(printf '%s %d%%' "$icon" "$capacity")
 tooltip=$(printf 'Device Battery: %s\nLevel: %d%%\nStatus: %s\n\nLeft: Solaar · Right: input settings · Middle: refresh' "$model_name" "$capacity" "$status")
 
-json=$(jq -cn \
-  --arg text "$text" \
-  --arg tooltip "$tooltip" \
-  --arg class "$class" \
-  '{text:$text, tooltip:$tooltip, class:$class}')
+json=$(emit_waybar_json "$text" "$tooltip" "$class")
 
 printf '%s\n' "$json"
 

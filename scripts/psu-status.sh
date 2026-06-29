@@ -35,8 +35,7 @@ if [ "${1:-}" != "--refresh" ]; then
     exit 0
   fi
   
-  jq -cn --arg text "󱉔 --" --arg tooltip "Initializing PSU..." --arg class "normal" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󱉔 --" "Initializing PSU..." "normal"
   exit 0
 fi
 
@@ -69,8 +68,7 @@ fi
 
 if [ -z "$psu_dir" ]; then
   # Quietly hide/disable if not found (or return N/A)
-  json=$(jq -cn --arg text "" --arg tooltip "Corsair PSU telemetry not found" --arg class "disconnected" \
-    '{text:$text, tooltip:$tooltip, class:$class}')
+  json=$(emit_waybar_json "" "Corsair PSU telemetry not found" "disconnected")
   printf '%s\n' "$json"
   tmp_cache="$cache_file.tmp.$$"
   printf '%s\n' "$json" > "$tmp_cache"
@@ -163,11 +161,7 @@ Left: mission center · Right: btop · Middle: refresh' \
   "$power_total" "$power_12v" "$v_out_12v" "$power_5v" "$v_out_5v" "$power_33v" "$v_out_33v" \
   "$v_in" "$fan_rpm" "$vrm_formatted" "$case_formatted")
 
-json=$(jq -cn \
-  --arg text "$text" \
-  --arg tooltip "$tooltip" \
-  --arg class "$class" \
-  '{text:$text, tooltip:$tooltip, class:$class}')
+json=$(emit_waybar_json "$text" "$tooltip" "$class")
 
 printf '%s\n' "$json"
 

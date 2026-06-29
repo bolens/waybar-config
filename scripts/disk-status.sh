@@ -31,8 +31,7 @@ if [ "${1:-}" != "--refresh" ]; then
     exit 0
   fi
   
-  jq -cn --arg text "󰋊 --%" --arg tooltip "Initializing disk stats..." --arg class "normal" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰋊 --%" "Initializing disk stats..." "normal"
   exit 0
 fi
 
@@ -55,11 +54,7 @@ fi
 text=$(printf '󰋊 %3d%%' "$percent_num")
 tooltip=$(printf 'Disk Space (/)\nTotal: %s\nUsed: %s\nAvailable: %s\nUsage: %s\n\nLeft: file manager · Right: btop · Middle: refresh' "$size" "$used" "$avail" "$pct")
 
-json=$(jq -cn \
-  --arg text "$text" \
-  --arg tooltip "$tooltip" \
-  --arg class "$class" \
-  '{text:$text, tooltip:$tooltip, class:$class}')
+json=$(emit_waybar_json "$text" "$tooltip" "$class")
 
 printf '%s\n' "$json"
 

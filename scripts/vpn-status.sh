@@ -27,11 +27,7 @@ if [ "${1:-}" != "--refresh" ]; then
   fi
 
   [ -d "$lock_dir" ] || refresh_in_background
-  jq -cn \
-    --arg text "󰦝" \
-    --arg tooltip "Refreshing VPN status in background" \
-    --arg class "disabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰦝" "Refreshing VPN status in background" "disabled"
   exit 0
 fi
 
@@ -113,11 +109,7 @@ text="$icon"
 tooltip=$(printf 'VPN Summary\n\nNetworkManager VPN: %s (%s)\nTailscale: %s\nTailscale host: %s\nTailscale IPv4: %s\nNetbird: %s\nZeroTier: %s\n\nActive tunnels: %s\n\nLeft: open VPN status popup · Right: settings · Middle: refresh' \
   "$nm_state" "$nm_name" "$ts_state" "$ts_host" "$ts_ip" "$nb_state" "$zt_state" "$active_count")
 
-json=$(jq -cn \
-  --arg text "$text" \
-  --arg tooltip "$tooltip" \
-  --arg class "$class" \
-  '{text:$text, tooltip:$tooltip, class:$class}')
+json=$(emit_waybar_json "$text" "$tooltip" "$class")
 
 printf '%s\n' "$json"
 

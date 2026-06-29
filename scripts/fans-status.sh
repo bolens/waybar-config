@@ -37,8 +37,7 @@ if [ "${1:-}" != "--refresh" ]; then
     exit 0
   fi
   
-  jq -cn --arg text "󰈐 --" --arg tooltip "Initializing cooling stats..." --arg class "normal" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰈐 --" "Initializing cooling stats..." "normal"
   exit 0
 fi
 
@@ -157,11 +156,7 @@ elif [ "$cpu_fan" -ge "$fan_cpu_warn" ] 2>/dev/null || [ "$gpu_fan" -ge "$fan_gp
   class="warning"
 fi
 
-json=$(jq -cn \
-  --arg text "$text" \
-  --arg tooltip "$tooltip" \
-  --arg class "$class" \
-  '{text:$text, tooltip:$tooltip, class:$class}')
+json=$(emit_waybar_json "$text" "$tooltip" "$class")
 
 printf '%s\n' "$json"
 
