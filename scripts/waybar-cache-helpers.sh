@@ -77,6 +77,29 @@ json_escape() {
   }'
 }
 
+emit_waybar_json() {
+  local text="$1"
+  local tooltip="$2"
+  local class="${3:-normal}"
+
+  # Expand backslash-n (\n) to real newlines
+  local tooltip_expanded
+  tooltip_expanded=$(printf '%b' "$tooltip")
+
+  # Escape Pango/XML markup
+  local esc_text
+  esc_text=$(escape_markup "$text")
+  local esc_tooltip
+  esc_tooltip=$(escape_markup "$tooltip_expanded")
+
+  # Output as JSON using jq
+  jq -cn \
+    --arg text "$esc_text" \
+    --arg tooltip "$esc_tooltip" \
+    --arg class "$class" \
+    '{text:$text, tooltip:$tooltip, class:$class}'
+}
+
 refresh_in_background() {
   local_lock_dir="${1:-$lock_dir}"
   local_script_path="${2:-$0}"

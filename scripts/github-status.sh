@@ -28,8 +28,7 @@ if [ "${1:-}" != "--refresh" ]; then
     exit 0
   fi
   
-  jq -cn --arg text "󰊤" --arg tooltip "Connecting to GitHub..." --arg class "normal" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰊤" "Connecting to GitHub..." "normal"
   exit 0
 fi
 
@@ -39,8 +38,7 @@ fi
 
 perform_github_checks_and_output() {
   if ! command -v gh >/dev/null 2>&1; then
-    json=$(jq -cn --arg text "󰊤" --arg tooltip "GitHub CLI not installed" --arg class "disabled" \
-      '{text:$text, tooltip:$tooltip, class:$class}')
+    json=$(emit_waybar_json "󰊤" "GitHub CLI not installed" "disabled")
     printf '%s\n' "$json"
     
     tmp_cache="$cache_file.tmp.$$"
@@ -62,8 +60,7 @@ perform_github_checks_and_output() {
       class="normal"
     fi
     
-    json=$(jq -cn --arg text "󰊤" --arg tooltip "$tooltip" --arg class "$class" \
-      '{text:$text, tooltip:$tooltip, class:$class}')
+    json=$(emit_waybar_json "󰊤" "$tooltip" "$class")
   else
     json=$(printf '%s' "$raw_notifs" | jq -c '
       if type != "array" then
@@ -95,8 +92,7 @@ perform_github_checks_and_output() {
   fi
 
   if [ -z "$json" ]; then
-    json=$(jq -cn --arg text "󰊤" --arg tooltip "Error parsing GitHub notifications" --arg class "disabled" \
-      '{text:$text, tooltip:$tooltip, class:$class}')
+    json=$(emit_waybar_json "󰊤" "Error parsing GitHub notifications" "disabled")
   fi
 
   printf '%s\n' "$json"

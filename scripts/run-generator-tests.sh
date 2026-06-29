@@ -619,6 +619,31 @@ if [ "$test_switcher_width" != "999" ]; then
   fail=1
 fi
 
+# Assert emit_waybar_json correctly formats and escapes outputs
+echo "Testing emit_waybar_json format and escape utility..."
+test_json_out=$(WAYBAR_HOME="$TEST_DIR" bash -c "
+  . $TEST_DIR/scripts/waybar-cache-helpers.sh
+  emit_waybar_json 'text <&>' 'tooltip\nwith\nnewlines & <tags>' 'myclass'
+")
+
+if ! echo "$test_json_out" | jq -e '.text == "text &lt;&amp;&gt;"' >/dev/null 2>&1; then
+  echo "FAIL: emit_waybar_json failed to escape text content!" >&2
+  echo "Output: $test_json_out" >&2
+  fail=1
+fi
+
+if ! echo "$test_json_out" | jq -e '.tooltip == "tooltip\nwith\nnewlines &amp; &lt;tags&gt;"' >/dev/null 2>&1; then
+  echo "FAIL: emit_waybar_json failed to escape tooltip markup or resolve newlines!" >&2
+  echo "Output: $test_json_out" >&2
+  fail=1
+fi
+
+if ! echo "$test_json_out" | jq -e '.class == "myclass"' >/dev/null 2>&1; then
+  echo "FAIL: emit_waybar_json failed to set JSON class!" >&2
+  echo "Output: $test_json_out" >&2
+  fail=1
+fi
+
 # Verify behavior when waybar-settings.jsonc is missing
 echo "Verifying resilience against missing settings file..."
 rm -f "$TEST_DIR/data/waybar-settings.jsonc" "$TEST_DIR/data/waybar-settings.json"

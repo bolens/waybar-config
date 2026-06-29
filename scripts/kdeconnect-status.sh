@@ -40,8 +40,7 @@ if [ "${1:-}" != "--refresh" ]; then
     exit 0
   fi
   
-  jq -cn --arg text "󰏲" --arg tooltip "Connecting to KDE Connect..." --arg class "disconnected" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰏲" "Connecting to KDE Connect..." "disconnected"
   exit 0
 fi
 
@@ -129,11 +128,7 @@ else
   tooltip=$(printf '%s\n\nLeft: ring phone (N/A) · Right: KDE Connect settings · Middle: refresh' "$tooltip")
 fi
 
-json=$(jq -cn \
-  --arg text "$primary_text" \
-  --arg tooltip "$tooltip" \
-  --arg class "$primary_class" \
-  '{text:$text, tooltip:$tooltip, class:$class}')
+json=$(emit_waybar_json "$primary_text" "$tooltip" "$primary_class")
 
 printf '%s\n' "$json"
 

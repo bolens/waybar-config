@@ -58,8 +58,7 @@ if [ "${1:-}" != "--refresh" ]; then
     fi
   fi
   
-  jq -cn --arg text "󰖐 --°$weather_unit" --arg tooltip "Loading weather forecast..." --arg class "normal" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰖐 --°$weather_unit" "Loading weather forecast..." "normal"
   exit 0
 fi
 
@@ -85,8 +84,7 @@ if [ -z "$raw_weather" ]; then
   if [ -f "$cache_file" ]; then
     exit 0
   fi
-  jq -cn --arg text "󰖐 ??" --arg tooltip "Weather service temporarily unavailable" --arg class "disabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰖐 ??" "Weather service temporarily unavailable" "disabled"
   exit 0
 fi
 
@@ -152,8 +150,7 @@ if [ -z "$json" ]; then
   if [ -f "$cache_file" ]; then
     exit 0
   fi
-  jq -cn --arg text "󰖐 ??" --arg tooltip "Weather data parsing failed" --arg class "disabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰖐 ??" "Weather data parsing failed" "disabled"
   exit 0
 fi
 

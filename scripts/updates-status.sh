@@ -31,11 +31,7 @@ if [ "${1:-}" != "--refresh" ]; then
   fi
 
   [ -d "$lock_dir" ] || refresh_in_background
-  jq -cn \
-    --arg text "󰚰 ..." \
-    --arg tooltip "Checking for updates in background" \
-    --arg class "disabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰚰 ..." "Checking for updates in background" "disabled"
   exit 0
 fi
 
@@ -112,13 +108,7 @@ perform_checks_and_output() {
     tooltip=$(printf '%s\n\nFlatpak preview:\n%s' "$tooltip" "$flatpak_preview")
   fi
 
-  escaped_tooltip=$(escape_markup "$tooltip")
-
-  json=$(jq -cn \
-    --arg text "󰚰 ${total_text}" \
-    --arg tooltip "$escaped_tooltip" \
-    --arg class "$class" \
-    '{text:$text, tooltip:$tooltip, class:$class}')
+  json=$(emit_waybar_json "󰚰 ${total_text}" "$tooltip" "$class")
 
   # Save cache
   tmp="$cache_file.tmp.$$"
