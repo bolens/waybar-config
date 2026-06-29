@@ -472,6 +472,62 @@
     text-shadow: 0 0 6px #ffe600;
 }
 
+/* Device Notifier (Green when clean/mounted, Yellow warning when unmounted partitions exist) */
+#custom-device-notifier {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.3);
+}
+#custom-device-notifier.empty {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+#custom-device-notifier.unmounted {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-device-notifier.mounted {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.3);
+}
+
+/* KDE Vaults (Yellow warning when unlocked, Cyan/secure when locked) */
+#custom-vaults {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
+}
+#custom-vaults.empty {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+#custom-vaults.unlocked {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-vaults.locked {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
+}
+
+/* Touchpad Status (Cyan when active, Dimmed when disabled) */
+#custom-touchpad {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
+}
+#custom-touchpad.enabled {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
+}
+#custom-touchpad.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+/* Color Picker (Cyan active tool style) */
+#custom-colorpicker {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
+}
+
 
 
 
