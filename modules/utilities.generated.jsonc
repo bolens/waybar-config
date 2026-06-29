@@ -145,9 +145,9 @@
     "return-type": "json",
     "signal": 19,
     "interval": "once",
-    "exec": "$WAYBAR_HOME/scripts/device-notifier.py --status",
+    "exec": "$WAYBAR_HOME/scripts/device-notifier-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/device-notifier.py --menu",
-    "on-click-right": "$WAYBAR_HOME/scripts/waybar-signal.sh 19"
+    "on-click-right": "$WAYBAR_HOME/scripts/device-notifier-status.sh --refresh && $WAYBAR_HOME/scripts/waybar-signal.sh 19"
   },
   "custom/colorpicker": {
     "format": "󰏘",
@@ -160,18 +160,18 @@
     "return-type": "json",
     "signal": 21,
     "interval": "once",
-    "exec": "$WAYBAR_HOME/scripts/vaults.py --status",
+    "exec": "$WAYBAR_HOME/scripts/vaults-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/vaults.py --menu",
-    "on-click-right": "$WAYBAR_HOME/scripts/waybar-signal.sh 21"
+    "on-click-right": "$WAYBAR_HOME/scripts/vaults-status.sh --refresh && $WAYBAR_HOME/scripts/waybar-signal.sh 21"
   },
   "custom/touchpad": {
     "format": "{}",
     "return-type": "json",
     "signal": 20,
     "interval": "once",
-    "exec": "$WAYBAR_HOME/scripts/touchpad.py --status",
+    "exec": "$WAYBAR_HOME/scripts/touchpad-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/touchpad.py --toggle",
-    "on-click-right": "$WAYBAR_HOME/scripts/waybar-signal.sh 20"
+    "on-click-right": "$WAYBAR_HOME/scripts/touchpad-status.sh --refresh && $WAYBAR_HOME/scripts/waybar-signal.sh 20"
   },
   "custom/weather": {
     "format": "{}",

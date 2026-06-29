@@ -174,6 +174,7 @@ def main():
         # Helper path for waybar-signal
         script_dir = os.path.dirname(os.path.realpath(__file__))
         signal_script = os.path.join(script_dir, "waybar-signal.sh")
+        cache_file = os.path.expanduser("~/.cache/waybar/device-notifier-status.json")
 
         if action == "mount":
             dev = selected_item["device"]
@@ -185,7 +186,7 @@ def main():
                 err_msg = mount_res.stderr.strip() or "Unknown error"
                 subprocess.run(["notify-send", "Device Notifier", f"Failed to mount {desc}: {err_msg}"])
             # Refresh waybar
-            subprocess.run([signal_script, "19"])
+            subprocess.run([signal_script, "19", cache_file])
 
         elif action == "unmount":
             dev = selected_item["device"]
@@ -198,7 +199,7 @@ def main():
                 err_msg = unmount_res.stderr.strip() or "Unknown error"
                 subprocess.run(["notify-send", "Device Notifier", f"Failed to unmount {desc}: {err_msg}"])
             # Refresh waybar
-            subprocess.run([signal_script, "19"])
+            subprocess.run([signal_script, "19", cache_file])
 
         elif action == "open":
             mps = selected_item["mountpoints"]
@@ -206,7 +207,7 @@ def main():
                 subprocess.run(["xdg-open", mps[0]])
 
         elif action == "rescan":
-            subprocess.run([signal_script, "19"])
+            subprocess.run([signal_script, "19", cache_file])
 
     else:
         # Status mode (Waybar output)

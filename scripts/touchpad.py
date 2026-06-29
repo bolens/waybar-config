@@ -35,6 +35,7 @@ def main():
     # Helper paths for signaling
     script_dir = os.path.dirname(os.path.realpath(__file__))
     signal_script = os.path.join(script_dir, "waybar-signal.sh")
+    cache_file = os.path.join(cache_dir, "waybar/touchpad-status.json")
 
     if mode == "--toggle":
         device_name = get_touchpad_device()
@@ -63,7 +64,7 @@ def main():
             subprocess.run(["notify-send", "Touchpad Status", "Touchpad disabled."])
 
         # Refresh waybar status (signal 20)
-        subprocess.run([signal_script, "20"])
+        subprocess.run([signal_script, "20", cache_file])
 
     else:
         # Status mode

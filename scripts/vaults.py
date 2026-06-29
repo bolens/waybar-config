@@ -67,6 +67,7 @@ def main():
     # Helper paths for signaling
     script_dir = os.path.dirname(os.path.realpath(__file__))
     signal_script = os.path.join(script_dir, "waybar-signal.sh")
+    cache_file = os.path.expanduser("~/.cache/waybar/vaults-status.json")
 
     if mode == "--menu":
         if not vaults:
@@ -130,7 +131,7 @@ def main():
                 err_msg = stderr.strip() or "Incorrect password or mount failed."
                 subprocess.run(["notify-send", "KDE Vaults", f"Failed to unlock '{selected_vault_name}': {err_msg}"])
 
-            subprocess.run([signal_script, "21"])
+            subprocess.run([signal_script, "21", cache_file])
 
         elif action == "lock":
             # Lock vault by unmounting
@@ -141,7 +142,7 @@ def main():
                 err_msg = lock_res.stderr.strip() or "Mount is busy."
                 subprocess.run(["notify-send", "KDE Vaults", f"Failed to lock '{selected_vault_name}': {err_msg}"])
 
-            subprocess.run([signal_script, "21"])
+            subprocess.run([signal_script, "21", cache_file])
 
     else:
         # Status mode

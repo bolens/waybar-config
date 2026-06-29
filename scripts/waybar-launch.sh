@@ -110,7 +110,10 @@ for script in \
 	"$WAYBAR_SCRIPTS/device-battery-status.sh" \
 	"$WAYBAR_SCRIPTS/fans-status.sh" \
 	"$WAYBAR_SCRIPTS/libredefender-status.sh" \
-	"$WAYBAR_SCRIPTS/chkrootkit-status.sh"
+	"$WAYBAR_SCRIPTS/chkrootkit-status.sh" \
+	"$WAYBAR_SCRIPTS/device-notifier-status.sh" \
+	"$WAYBAR_SCRIPTS/touchpad-status.sh" \
+	"$WAYBAR_SCRIPTS/vaults-status.sh"
 do
 	if [ -x "$script" ]; then
 		launch_detached "$script"

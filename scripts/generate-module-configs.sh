@@ -175,9 +175,9 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "return-type": "json",
       signal: sig("device_notifier"),
       interval: iv("device_notifier"),
-      exec: ($scripts + "/device-notifier.py --status"),
+      exec: ($scripts + "/device-notifier-status.sh"),
       "on-click": ($s[0].device_notifier.on_click // ($scripts + "/device-notifier.py --menu")),
-      "on-click-right": ($s[0].device_notifier.on_click_right // ($scripts + "/waybar-signal.sh " + ((sig("device_notifier") // 19) | tostring)))
+      "on-click-right": ($s[0].device_notifier.on_click_right // ($scripts + "/device-notifier-status.sh --refresh && " + $scripts + "/waybar-signal.sh " + ((sig("device_notifier") // 19) | tostring)))
     },
     "custom/colorpicker": {
       format: "󰏘",
@@ -190,18 +190,18 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "return-type": "json",
       signal: sig("vaults"),
       interval: iv("vaults"),
-      exec: ($scripts + "/vaults.py --status"),
+      exec: ($scripts + "/vaults-status.sh"),
       "on-click": ($s[0].vaults.on_click // ($scripts + "/vaults.py --menu")),
-      "on-click-right": ($s[0].vaults.on_click_right // ($scripts + "/waybar-signal.sh " + ((sig("vaults") // 21) | tostring)))
+      "on-click-right": ($s[0].vaults.on_click_right // ($scripts + "/vaults-status.sh --refresh && " + $scripts + "/waybar-signal.sh " + ((sig("vaults") // 21) | tostring)))
     },
     "custom/touchpad": {
       format: "{}",
       "return-type": "json",
       signal: sig("touchpad"),
       interval: iv("touchpad"),
-      exec: ($scripts + "/touchpad.py --status"),
+      exec: ($scripts + "/touchpad-status.sh"),
       "on-click": ($s[0].touchpad.on_click // ($scripts + "/touchpad.py --toggle")),
-      "on-click-right": ($s[0].touchpad.on_click_right // ($scripts + "/waybar-signal.sh " + ((sig("touchpad") // 20) | tostring)))
+      "on-click-right": ($s[0].touchpad.on_click_right // ($scripts + "/touchpad-status.sh --refresh && " + $scripts + "/waybar-signal.sh " + ((sig("touchpad") // 20) | tostring)))
     },
     "custom/weather": {
       format: "{}",
