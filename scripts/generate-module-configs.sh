@@ -335,13 +335,6 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
   def iv($k): ($s[0].poll_intervals[$k] // 1);
   def calfmt: ($s[0].clocks.calendar.format // {});
 
-  def default_top_format:
-    if $hour_format == "12" then
-      if $date_format == "month-first" then "{:%I:%M %p  %a, %b %d}" else "{:%I:%M %p  %a, %d %b}" end
-    else
-      if $date_format == "month-first" then "{:%H:%M  %a, %b %d}" else "{:%H:%M  %a, %d %b}" end
-    end;
-
   def default_bottom_format:
     if $hour_format == "12" then
       if $date_format == "month-first" then "{:%a, %b %d %I:%M %p}" else "{:%a, %d %b %I:%M %p}" end
@@ -349,37 +342,10 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
       if $date_format == "month-first" then "{:%a, %b %d %H:%M}" else "{:%a, %d %b %H:%M}" end
     end;
 
-  def default_top_tooltip:
-    if $date_format == "month-first" then
-      "<big>{:%A, %B %d, %Y}</big>\n<tt>{calendar}</tt>"
-    else
-      "<big>{:%A, %d %B %Y}</big>\n<tt>{calendar}</tt>"
-    end;
-
   def default_bottom_tooltip:
     "<big>{:%Y-%m-%d}</big>\n<tt>{calendar}</tt>";
 
   {
-    "clock#top": (
-      {
-        interval: iv("clock"),
-        format: (($s[0].clocks.top.format | select(. != null and . != "" and . != "auto" and . != "null")) // default_top_format),
-        "tooltip-format": (($s[0].clocks.top.tooltip_format | select(. != null and . != "" and . != "auto" and . != "null")) // default_top_tooltip),
-        "on-click": ($scripts + "/calendar-popup.sh"),
-        "on-click-right": ($scripts + "/app-open.sh " + ($s[0].apps.clock // "kclock")),
-        calendar: {
-          mode: ($s[0].clocks.calendar.mode // "month"),
-          "on-scroll": ($s[0].clocks.calendar.on_scroll // 1),
-          "first_day": (($s[0].clocks.calendar.first_day | select(. != null and . != "" and . != "auto" and . != "null")) // $first_day),
-          format: calfmt
-        },
-        actions: {
-          "on-scroll-up": "shift_down",
-          "on-scroll-down": "shift_up"
-        }
-      }
-      + (if ($s[0].clocks.locale != null and $s[0].clocks.locale != "" and $s[0].clocks.locale != "auto" and $s[0].clocks.locale != "null") then { locale: $s[0].clocks.locale } else {} end)
-    ),
     "clock#bottom": (
       {
         interval: iv("clock"),

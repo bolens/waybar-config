@@ -220,8 +220,8 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
     "locale": "fr_FR.UTF-8",
     "hour_format": "12",
     "date_format": "month-first",
-    "top": {
-      "format": "TEST_TOP_CLOCK_FORMAT"
+    "bottom": {
+      "format": "TEST_BOTTOM_CLOCK_FORMAT"
     },
     "calendar": {
       "first_day": 0
@@ -347,25 +347,17 @@ clock_conf="$TEST_DIR/modules/clock.generated.jsonc"
 if [ -f "$clock_conf" ]; then
   # Clean comments and parse
   clean_clock=$(python3 -c "import re; t=open('$clock_conf').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
-  if ! echo "$clean_clock" | jq -e '."clock#top".format == "TEST_TOP_CLOCK_FORMAT"' >/dev/null 2>&1; then
+  if ! echo "$clean_clock" | jq -e '."clock#bottom".format == "TEST_BOTTOM_CLOCK_FORMAT"' >/dev/null 2>&1; then
     echo "FAIL: Custom clock format not compiled correctly into clock.generated.jsonc" >&2
     echo "Generated output: $clean_clock" >&2
     fail=1
   fi
-  if ! echo "$clean_clock" | jq -e '."clock#top".interval == 42' >/dev/null 2>&1; then
+  if ! echo "$clean_clock" | jq -e '."clock#bottom".interval == 42' >/dev/null 2>&1; then
     echo "FAIL: Custom clock interval not compiled correctly into clock.generated.jsonc" >&2
     fail=1
   fi
-  if ! echo "$clean_clock" | jq -e '."clock#bottom".format == "{:%a, %b %d %I:%M %p}"' >/dev/null 2>&1; then
-    echo "FAIL: Bottom clock format did not compile default overridden by clocks.hour_format and date_format!" >&2
-    fail=1
-  fi
-  if ! echo "$clean_clock" | jq -e '."clock#top".calendar.first_day == 0' >/dev/null 2>&1; then
+  if ! echo "$clean_clock" | jq -e '."clock#bottom".calendar.first_day == 0' >/dev/null 2>&1; then
     echo "FAIL: Calendar first day override was not compiled correctly into clock.generated.jsonc!" >&2
-    fail=1
-  fi
-  if ! echo "$clean_clock" | jq -e '."clock#top".locale == "fr_FR.UTF-8"' >/dev/null 2>&1; then
-    echo "FAIL: Clocks locale override fr_FR.UTF-8 not compiled correctly into clock.generated.jsonc!" >&2
     fail=1
   fi
   if ! echo "$clean_clock" | jq -e '."clock#bottom".locale == "fr_FR.UTF-8"' >/dev/null 2>&1; then

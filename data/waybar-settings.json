@@ -324,10 +324,6 @@
     "locale": "auto", 
     "hour_format": "auto", 
     "date_format": "auto", 
-    "top": {
-      "format": "auto",
-      "tooltip_format": "auto"
-    },
     "bottom": {
       "format": "auto",
       "tooltip_format": "auto"
