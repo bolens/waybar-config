@@ -660,6 +660,51 @@ if ! "$TEST_DIR/scripts/generate-compositor-modules.sh" >/dev/null 2>&1; then
   exit 1
 fi
 
+# Verify behavior when waybar-settings.jsonc contains invalid JSON syntax
+echo "Verifying behavior with invalid JSON settings syntax..."
+cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
+{
+  "bars": {
+    "height": 99,
+    "spacing": 99
+  },
+  "clocks": {
+    "locale": "invalid_commas_here",,
+  }
+}
+JSON
+
+if "$TEST_DIR/scripts/generate-settings.sh" >/dev/null 2>&1; then
+  echo "FAIL: generate-settings.sh succeeded even with malformed waybar-settings.jsonc JSON!" >&2
+  fail=1
+else
+  echo "PASS: generate-settings.sh correctly failed on malformed JSON settings."
+fi
+
+# Verify path independence and resilience to spaces in directory name
+echo "Verifying resilience to spaces in directory name..."
+SPACE_DIR_PARENT=$(mktemp -d)
+SPACE_DIR="$SPACE_DIR_PARENT/waybar test space"
+mkdir -p "$SPACE_DIR/data" "$SPACE_DIR/layouts" "$SPACE_DIR/includes" "$SPACE_DIR/modules" "$SPACE_DIR/theme"
+cp -r data/* "$SPACE_DIR/data/"
+cp layouts/*.jsonc "$SPACE_DIR/layouts/"
+cp includes/*.jsonc "$SPACE_DIR/includes/"
+cp modules/*.jsonc "$SPACE_DIR/modules/"
+echo "{}" > "$SPACE_DIR/modules/hyprland.jsonc"
+cp -r scripts "$SPACE_DIR/scripts"
+chmod +x "$SPACE_DIR"/scripts/*.sh "$SPACE_DIR"/scripts/*.py
+
+# Run generator under WAYBAR_HOME with spaces
+if ! WAYBAR_HOME="$SPACE_DIR" WAYBAR_SCRIPTS="$SPACE_DIR/scripts" "$SPACE_DIR/scripts/generate-settings.sh" >/dev/null 2>&1; then
+  echo "FAIL: generate-settings.sh failed when run inside a directory with spaces!" >&2
+  fail=1
+else
+  echo "PASS: generate-settings.sh succeeded with spaces in directory name."
+fi
+
+# Clean up space test directory
+rm -rf "$SPACE_DIR_PARENT"
+
 if [ "$fail" -eq 0 ]; then
   echo "PASS: All generated configuration files are syntactically valid and free of hardcoded user paths."
 else
