@@ -132,32 +132,27 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
     },
     "custom/lock": {
       format: "",
-      tooltip: true,
-      "tooltip-format": "Lock screen",
+      tooltip: "Lock screen",
       "on-click": ($scripts + "/power-click.sh lock")
     },
     "custom/logout": {
       format: "󰍃",
-      tooltip: true,
-      "tooltip-format": "Logout session",
+      tooltip: "Logout session",
       "on-click": ($scripts + "/power-click.sh logout")
     },
     "custom/suspend": {
       format: "󰤄",
-      tooltip: true,
-      "tooltip-format": "Suspend system",
+      tooltip: "Suspend system",
       "on-click": ($scripts + "/power-click.sh suspend")
     },
     "custom/reboot": {
       format: "󰜉",
-      tooltip: true,
-      "tooltip-format": "Reboot system",
+      tooltip: "Reboot system",
       "on-click": ($scripts + "/power-click.sh reboot")
     },
     "custom/shutdown": {
       format: "󰐥",
-      tooltip: true,
-      "tooltip-format": "Shutdown system",
+      tooltip: "Shutdown system",
       "on-click": ($scripts + "/power-click.sh shutdown")
     },
     "custom/kdeconnect": {
@@ -181,8 +176,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
     },
     "custom/colorpicker": {
       format: "󰏘",
-      tooltip: true,
-      "tooltip-format": "Color Picker · Click to grab color",
+      tooltip: "Color Picker · Click to grab color",
       "on-click": ($s[0].colorpicker.on_click // ($scripts + "/color-picker.sh"))
     },
     "custom/vaults": {
@@ -386,8 +380,7 @@ jq -n --slurpfile s "$settings" '
       key: ("custom/" + $module),
       value: {
         format: ($s[0].drawers.icons[$key].format // ""),
-        tooltip: true,
-        "tooltip-format": ($s[0].drawers.icons[$key].tooltip // "")
+        tooltip: ($s[0].drawers.icons[$key].tooltip // "")
       }
     };
 

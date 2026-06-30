@@ -79,12 +79,13 @@ try:
         for key, val in data_dict.items():
             if key.startswith("custom/") and isinstance(val, dict):
                 # Check 1: Tooltip format validation for custom modules
-                if "tooltip" in val and isinstance(val["tooltip"], str):
-                    sys.stderr.write(f"FAIL: {sys.argv[1]} -> '{key}' has 'tooltip' set as a string (must be boolean)\n")
-                    sys.exit(1)
-                if "exec" not in val and "tooltip-format" in val:
-                    if val.get("tooltip") is not True:
-                        sys.stderr.write(f"FAIL: {sys.argv[1]} -> static '{key}' has 'tooltip-format' but 'tooltip' is not set to true\n")
+                if "exec" in val:
+                    if "tooltip" in val and isinstance(val["tooltip"], str):
+                        sys.stderr.write(f"FAIL: {sys.argv[1]} -> '{key}' has 'tooltip' set as a string (must be boolean for dynamic modules)\n")
+                        sys.exit(1)
+                else:
+                    if "tooltip" in val and not isinstance(val["tooltip"], (str, bool)):
+                        sys.stderr.write(f"FAIL: {sys.argv[1]} -> '{key}' has 'tooltip' set to an invalid type (must be string or boolean for static modules)\n")
                         sys.exit(1)
                 
                 # Check 2: Verify referenced script files exist

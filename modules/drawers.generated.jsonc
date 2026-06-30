@@ -1,58 +1,47 @@
 {
   "custom/desk-drawer": {
     "format": "󰍜",
-    "tooltip": true,
-    "tooltip-format": "Session controls · click to expand"
+    "tooltip": "Session controls · click to expand"
   },
   "custom/dock-drawer": {
     "format": "󰀻",
-    "tooltip": true,
-    "tooltip-format": "Applications · click to expand"
+    "tooltip": "Applications · click to expand"
   },
   "custom/tray-drawer": {
     "format": "󰇝",
-    "tooltip": true,
-    "tooltip-format": "Background apps · click to expand"
+    "tooltip": "Background apps · click to expand"
   },
   "custom/media-drawer": {
     "format": "󰝚",
-    "tooltip": true,
-    "tooltip-format": "Now playing and volume · click to expand"
+    "tooltip": "Now playing and volume · click to expand"
   },
   "custom/net-drawer": {
     "format": "󰖩",
-    "tooltip": true,
-    "tooltip-format": "Network · click to expand"
+    "tooltip": "Network · click to expand"
   },
   "custom/tools-drawer": {
     "format": "󰒓",
-    "tooltip": true,
-    "tooltip-format": "Quick tools · click to expand"
+    "tooltip": "Quick tools · click to expand"
   },
   "custom/infra-drawer": {
     "format": "󰒍",
-    "tooltip": true,
-    "tooltip-format": "Infrastructure · click to expand"
+    "tooltip": "Infrastructure · click to expand"
   },
   "custom/hardware-drawer": {
     "format": "󰻠",
-    "tooltip": true,
-    "tooltip-format": "Hardware · click to expand"
+    "tooltip": "Hardware · click to expand"
   },
   "custom/power-drawer": {
     "format": "",
-    "tooltip": true,
-    "tooltip-format": "Power menu · click to expand"
+    "tooltip": "Power menu · click to expand"
   },
   "custom/privacy-drawer": {
     "format": "󰕥",
-    "tooltip": true,
-    "tooltip-format": "Privacy controls · click to expand"
+    "tooltip": "Privacy controls · click to expand"
   },
   "custom/security-drawer": {
     "format": "󰒃",
-    "tooltip": true,
-    "tooltip-format": "Security · click to expand"
+    "tooltip": "Security · click to expand"
   },
   "idle_inhibitor": {
     "format": "{icon}",
