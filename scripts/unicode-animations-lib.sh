@@ -78,12 +78,16 @@ animate_command() {
   frame=0
   while kill -0 "$cmd_pid" 2>/dev/null; do
     spinner=$(get_anim_frame "$anim_name" "$frame")
-    clean_label=$(printf '%s' "$label" | sed 's/"/\\"/g')
-    jq -cn \
-      --arg text "$spinner $clean_label" \
-      --arg tooltip "$tooltip" \
-      --arg class "loading" \
-      '{text:$text, tooltip:$tooltip, class:$class}'
+    if command -v emit_waybar_json >/dev/null 2>&1; then
+      emit_waybar_json "$spinner $label" "$tooltip" "loading"
+    else
+      clean_label=$(printf '%s' "$label" | sed 's/"/\\"/g')
+      jq -cn \
+        --arg text "$spinner $clean_label" \
+        --arg tooltip "$tooltip" \
+        --arg class "loading" \
+        '{text:$text, tooltip:$tooltip, class:$class}'
+    fi
     frame=$((frame + 1))
     sleep 0.1
   done

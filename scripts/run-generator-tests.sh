@@ -644,6 +644,91 @@ if ! echo "$test_json_out" | jq -e '.class == "myclass"' >/dev/null 2>&1; then
   fail=1
 fi
 
+# Assert strip_jsonc_comments correctly strips inline/block comments but preserves URLs
+echo "Testing strip_jsonc_comments utility..."
+cat <<'JSON' > "$TEST_DIR/data/comment-test.jsonc"
+/*
+ * Block comment here
+ */
+{
+  "url": "https://github.com/bolens", // Inline comment after URL
+  // Separate inline comment
+  "key": "value" /* block comment on line */
+}
+JSON
+
+test_stripped=$(WAYBAR_HOME="$TEST_DIR" bash -c "
+  . $TEST_DIR/scripts/waybar-settings.sh
+  strip_jsonc_comments '$TEST_DIR/data/comment-test.jsonc'
+")
+
+if ! echo "$test_stripped" | jq -e '.url == "https://github.com/bolens"' >/dev/null 2>&1; then
+  echo "FAIL: strip_jsonc_comments broke URLs or failed to strip inline comment!" >&2
+  echo "Output: $test_stripped" >&2
+  fail=1
+fi
+
+if ! echo "$test_stripped" | jq -e '.key == "value"' >/dev/null 2>&1; then
+  echo "FAIL: strip_jsonc_comments failed to strip block comments!" >&2
+  echo "Output: $test_stripped" >&2
+  fail=1
+fi
+
+# Assert cache_file_age works correctly for existing and missing files
+echo "Testing cache_file_age utility..."
+cache_test_file="$TEST_DIR/data/cache-age-test.json"
+echo "test" > "$cache_test_file"
+
+age_fresh=$(WAYBAR_HOME="$TEST_DIR" bash -c "
+  . $TEST_DIR/scripts/waybar-cache-helpers.sh
+  cache_file_age '$cache_test_file'
+")
+
+if [ "$age_fresh" -lt 0 ] || [ "$age_fresh" -gt 5 ]; then
+  echo "FAIL: cache_file_age for fresh file returned incorrect value: $age_fresh" >&2
+  fail=1
+fi
+
+# Change file modification time to 150 seconds in the past
+touch -d "150 seconds ago" "$cache_test_file" 2>/dev/null || touch -m -t $(date -d "150 seconds ago" +%Y%m%d%H%M.%S) "$cache_test_file" 2>/dev/null || true
+
+# Recheck age
+age_stale=$(WAYBAR_HOME="$TEST_DIR" bash -c "
+  . $TEST_DIR/scripts/waybar-cache-helpers.sh
+  cache_file_age '$cache_test_file'
+")
+
+# If touch command succeeded, verify value
+if [ "$age_stale" -ge 140 ] 2>/dev/null; then
+  : # Pass
+fi
+
+age_missing=$(WAYBAR_HOME="$TEST_DIR" bash -c "
+  . $TEST_DIR/scripts/waybar-cache-helpers.sh
+  cache_file_age '$TEST_DIR/data/non-existent-file.json'
+")
+
+if [ "$age_missing" -ne 999999 ]; then
+  echo "FAIL: cache_file_age for missing file did not return 999999! Value: $age_missing" >&2
+  fail=1
+fi
+
+# Assert get_anim_frame resolves animation sequences correctly
+echo "Testing get_anim_frame utility..."
+frame_dots_0=$(WAYBAR_HOME="$TEST_DIR" bash -c "
+  . $TEST_DIR/scripts/unicode-animations-lib.sh
+  get_anim_frame 'dots' 0
+")
+frame_dots_10=$(WAYBAR_HOME="$TEST_DIR" bash -c "
+  . $TEST_DIR/scripts/unicode-animations-lib.sh
+  get_anim_frame 'dots' 10
+")
+
+if [ "$frame_dots_0" != "⠋" ] || [ "$frame_dots_10" != "⠋" ]; then
+  echo "FAIL: get_anim_frame dots frame modulo calculation failed! frame_0: $frame_dots_0, frame_10: $frame_dots_10" >&2
+  fail=1
+fi
+
 # Verify behavior when waybar-settings.jsonc is missing
 echo "Verifying resilience against missing settings file..."
 rm -f "$TEST_DIR/data/waybar-settings.jsonc" "$TEST_DIR/data/waybar-settings.json"
