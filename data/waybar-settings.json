@@ -1,12 +1,13 @@
 {
   "bars": {
-    "layer": "top",
+    "layer": "overlay",
     "output": ["*"],
     "exclusive": true,
     "passthrough": false,
     "reload_style_on_change": true,
     "height": 44,
-    "spacing": 6
+    "spacing": 6,
+    "tooltip": true
   },
   "drawers": {
     "click_to_reveal": true,

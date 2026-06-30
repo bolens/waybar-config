@@ -1,5 +1,5 @@
 {
-  "layer": "top",
+  "layer": "overlay",
   "output": [
     "*"
   ],
@@ -7,5 +7,6 @@
   "passthrough": false,
   "reload_style_on_change": true,
   "height": 44,
-  "spacing": 6
+  "spacing": 6,
+  "tooltip": true
 }
