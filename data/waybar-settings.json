@@ -1,6 +1,6 @@
 {
   "bars": {
-    "layer": "overlay",
+    "layer": "top",
     "output": ["*"],
     "exclusive": true,
     "passthrough": false,
