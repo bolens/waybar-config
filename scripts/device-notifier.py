@@ -251,6 +251,7 @@ def main():
                 "class": cls
             }
             
+        # Escape special XML/HTML characters to prevent Pango markup crashes in Waybar tooltips
         import html
         if "text" in out:
             out["text"] = html.escape(out["text"])
