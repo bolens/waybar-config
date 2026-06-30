@@ -17,14 +17,13 @@ window#waybar.bottom {
     border-top: 1px solid rgba(0, 229, 255, 0.25);
 }
 
-tooltip {
-    background: rgba(6, 7, 14, 0.92);
-    border: 1px solid rgba(0, 229, 255, 0.25);
+tooltip, #tooltip {
+    background: #06070e;
+    border: 1px solid #005c66;
     border-radius: 8px;
-    box-shadow: 0 0 14px rgba(0, 229, 255, 0.18);
 }
 
-tooltip label {
+tooltip label, #tooltip label {
     color: #c8f6ff;
     background: transparent;
     padding: 8px 10px;
