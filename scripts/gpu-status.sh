@@ -14,22 +14,10 @@ gpu_temp_crit=$(waybar_settings_get '.thresholds.gpu.temp.critical' '83')
 
 cached_file="$cache_dir/gpu-icon.json"
 
-# 1. Try to return the cached file immediately if it is fresh (<= 12 seconds)
-if [ -f "$cached_file" ] && [ "$(cache_file_age "$cached_file")" -le 12 ] 2>/dev/null; then
-  cat "$cached_file"
+if serve_metrics_cache_or_refresh "$cached_file" 12 "$cache_dir" "$script_dir"; then
   exit 0
 fi
 
-# 2. If the file exists but is stale, output it immediately to avoid lag,
-#    and trigger a background refresh of the metrics collector.
-if [ -f "$cached_file" ]; then
-  cat "$cached_file"
-  # Avoid spawning multiple concurrent refreshes by checking lock_dir
-  if [ ! -d "$cache_dir/system-metrics.lock.d" ]; then
-    "$script_dir/system-metrics-collector.sh" --refresh >/dev/null 2>&1 &
-  fi
-  exit 0
-fi
 
 # 3. Hard fallback for the first launch if cache does not exist yet
 metrics="$("$script_dir/system-metrics-collector.sh" 2>/dev/null || true)"

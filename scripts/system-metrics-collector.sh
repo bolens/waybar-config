@@ -99,21 +99,9 @@ compute_cpu_usage_percent() {
 
 
 if [ "${1:-}" != "--refresh" ]; then
-  age=$(cache_file_age "$cache_file")
-  if [ "$age" -le "$ttl" ] 2>/dev/null; then
-    cat "$cache_file"
+  if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
   fi
-
-  cleanup_stale_lock_dir "$lock_dir" "$stale_lock_ttl"
-
-  if [ -f "$cache_file" ]; then
-    [ -d "$lock_dir" ] || refresh_in_background
-    cat "$cache_file"
-    exit 0
-  fi
-
-  [ -d "$lock_dir" ] || refresh_in_background
   jq -cn \
     '{
       cpu: {

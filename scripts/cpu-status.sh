@@ -14,20 +14,7 @@ cpu_temp_crit=$(waybar_settings_get '.thresholds.cpu.temp.critical' '85')
 
 cached_file="$cache_dir/cpu-icon.json"
 
-# 1. Try to return the cached file immediately if it is fresh (<= 8 seconds)
-if [ -f "$cached_file" ] && [ "$(cache_file_age "$cached_file")" -le 8 ] 2>/dev/null; then
-  cat "$cached_file"
-  exit 0
-fi
-
-# 2. If the file exists but is stale, output it immediately to avoid lag,
-#    and trigger a background refresh of the metrics collector.
-if [ -f "$cached_file" ]; then
-  cat "$cached_file"
-  # Avoid spawning multiple concurrent refreshes by checking lock_dir
-  if [ ! -d "$cache_dir/system-metrics.lock.d" ]; then
-    "$script_dir/system-metrics-collector.sh" --refresh >/dev/null 2>&1 &
-  fi
+if serve_metrics_cache_or_refresh "$cached_file" 8 "$cache_dir" "$script_dir"; then
   exit 0
 fi
 

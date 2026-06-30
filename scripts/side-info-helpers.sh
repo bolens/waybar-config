@@ -94,30 +94,19 @@ preview_update_lines() {
 # side-info-helpers.sh: Helper functions for side-info-status.sh
 
 fit_text() {
-  text="$1"
-  clean="$text"
-  while :; do
-    case "$clean" in
-      ' '*) clean="${clean# }" ;;
-      *) break ;;
-    esac
-  done
-  while :; do
-    case "$clean" in
-      *' ') clean="${clean% }" ;;
-      *) break ;;
-    esac
-  done
-  printf '%s' "$clean"
+  # Trim leading and trailing whitespace using POSIX shell expansion patterns
+  local val="${1#${1%%[![:space:]]*}}"
+  val="${val%${val##*[![:space:]]}}"
+  printf '%s' "$val"
 }
 
 format_lr() {
-  label="$1"
-  value="$2"
-  label_len="${#label}"
-  value_len="${#value}"
-  line_width=24
-  max_label=$((line_width - value_len - 1))
+  local label="$1"
+  local value="$2"
+  local label_len="${#label}"
+  local value_len="${#value}"
+  local line_width=24
+  local max_label=$((line_width - value_len - 1))
   if [ "$max_label" -lt 1 ]; then
     max_label=1
   fi
@@ -125,18 +114,13 @@ format_lr() {
     label="$(printf '%s' "$label" | cut -c1-"$max_label")"
     label_len="${#label}"
   fi
-  spaces=$((line_width - label_len - value_len))
+  local spaces=$((line_width - label_len - value_len))
   if [ "$spaces" -lt 1 ]; then
     spaces=1
   fi
-  pad=""
-  i=0
-  while [ "$i" -lt "$spaces" ]; do
-    pad="$pad "
-    i=$((i + 1))
-  done
-  printf '%s%s%s' "$label" "$pad" "$value"
+  printf "%s%${spaces}s%s" "$label" "" "$value"
 }
+
 
 short_value() {
   value="$1"

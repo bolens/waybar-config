@@ -24,19 +24,9 @@ fan_gpu_crit=$(waybar_settings_get '.thresholds.fans.gpu.critical' '85')
 
 
 if [ "${1:-}" != "--refresh" ]; then
-  if [ -f "$cache_file" ] && [ "$(cache_file_age "$cache_file")" -le "$ttl" ] 2>/dev/null; then
-    cat "$cache_file"
+  if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
   fi
-  
-  cleanup_stale_lock_dir "$lock_dir" "$stale_lock_ttl"
-  [ -d "$lock_dir" ] || refresh_in_background
-  
-  if [ -f "$cache_file" ]; then
-    cat "$cache_file"
-    exit 0
-  fi
-  
   emit_waybar_json "󰈐 --" "Initializing cooling stats..." "normal"
   exit 0
 fi

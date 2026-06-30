@@ -14,21 +14,10 @@ script_dir="${0%/*}"
 
 
 if [ "${1:-}" != "--refresh" ]; then
-  if [ -f "$cache_file" ] && [ "$(cache_file_age "$cache_file")" -le "$ttl" ] 2>/dev/null; then
-    cat "$cache_file"
+  if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
   fi
-  
-  cleanup_stale_lock_dir "$lock_dir" "$stale_lock_ttl"
-  [ -d "$lock_dir" ] || refresh_in_background
-  
-  if [ -f "$cache_file" ]; then
-    cat "$cache_file"
-    exit 0
-  fi
-  
-  jq -cn --arg text "" --arg tooltip "Checking systemd health..." --arg class "hidden" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "" "Checking systemd health..." "hidden"
   exit 0
 fi
 
@@ -100,11 +89,7 @@ else
   tooltip=$(printf '%s\n\nLeft: inspect failed · Right: settings · Middle: refresh' "$tooltip")
 fi
 
-json=$(jq -cn \
-  --arg text "$text" \
-  --arg tooltip "$tooltip" \
-  --arg class "$class" \
-  '{text:$text, tooltip:$tooltip, class:$class}')
+json=$(emit_waybar_json "$text" "$tooltip" "$class")
 
 printf '%s\n' "$json"
 

@@ -99,26 +99,11 @@ collect_json() {
 }
 
 if [ "${1:-}" != "--refresh" ]; then
-  age=$(cache_file_age "$status_cache")
-  if [ "$age" -le "$ttl" ] 2>/dev/null; then
-    cat "$status_cache"
+  if serve_cache_or_refresh "$status_cache" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
   fi
 
-  cleanup_stale_lock_dir "$lock_dir" "$stale_lock_ttl"
-
-  if [ -f "$status_cache" ]; then
-    [ -d "$lock_dir" ] || refresh_in_background
-    cat "$status_cache"
-    exit 0
-  fi
-
-  [ -d "$lock_dir" ] || refresh_in_background
-  jq -cn \
-    --arg text "󰍬" \
-    --arg tooltip "Refreshing Microphone status in background" \
-    --arg class "disabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰍬" "Refreshing Microphone status in background" "disabled"
   exit 0
 fi
 
