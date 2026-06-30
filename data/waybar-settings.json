@@ -76,7 +76,11 @@
     "device_battery": "once",
     "fans": 10,
     "libredefender": 300,
-    "chkrootkit": 300
+    "chkrootkit": 300,
+    "syncthing": 30,
+    "sunshine": 10,
+    "streamdeck": 30,
+    "i2pd": 30
   },
   "signals": {
     "notifications": 10,
@@ -99,7 +103,11 @@
     "device_notifier": 19,
     "touchpad": 20,
     "vaults": 21,
-    "updates": 1
+    "updates": 1,
+    "syncthing": 22,
+    "sunshine": 23,
+    "streamdeck": 24,
+    "i2pd": 25
   },
   "poll_intervals": {
     "dock_apps": "once",
@@ -141,7 +149,11 @@
     "chkrootkit": 300,
     "weather": 900,
     "disk": 300,
-    "uptime": 60
+    "uptime": 60,
+    "syncthing": 30,
+    "sunshine": 10,
+    "streamdeck": 30,
+    "i2pd": 30
   },
   "layouts": {
     "top": {
@@ -182,6 +194,7 @@
         "custom/keyboard-layout",
         "custom/kdeconnect",
         "custom/device-notifier",
+        "custom/streamdeck",
         "custom/vaults",
         "custom/touchpad",
         "custom/device-battery"
@@ -199,6 +212,7 @@
         "network#bandwidthDownBytes",
         "custom/vpnstatus",
         "custom/tailscale",
+        "custom/i2pd",
         "network#bond",
         "@network.interfaces"
       ]
@@ -239,6 +253,8 @@
       "modules": [
         "custom/infra-drawer",
         "custom/docker",
+        "custom/syncthing",
+        "custom/sunshine",
         "custom/system",
         "custom/network",
         "custom/runtimes",
@@ -494,5 +510,10 @@
     "updates_review": "$WAYBAR_HOME/scripts/updates-review.sh",
     "audio_mixer": "goxlr-launcher",
     "discord": "discord"
+  },
+  "streamdeck": {
+    "on_click": null,
+    "on_click_right": null,
+    "on_click_middle": null
   }
 }

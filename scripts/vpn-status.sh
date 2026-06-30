@@ -82,11 +82,23 @@ if command -v zerotier-cli >/dev/null 2>&1; then
   fi
 fi
 
+# Mullvad connection check:
+mv_state="unavailable"
+if command -v mullvad >/dev/null 2>&1; then
+  mv_out=$(timeout 2 mullvad status 2>/dev/null || true)
+  if printf '%s\n' "$mv_out" | grep -qi "connected"; then
+    mv_state="active"
+  else
+    mv_state="inactive"
+  fi
+fi
+
 active_count=0
 [ "$nm_state" = "active" ] && active_count=$((active_count + 1))
 [ "$ts_state" = "Running" ] && active_count=$((active_count + 1))
 [ "$nb_state" = "active" ] && active_count=$((active_count + 1))
 [ "$zt_state" = "active" ] && active_count=$((active_count + 1))
+[ "$mv_state" = "active" ] && active_count=$((active_count + 1))
 
 if [ "$active_count" -eq 0 ]; then
   class="offline"
@@ -94,8 +106,8 @@ fi
 
 text="$icon"
 
-tooltip=$(printf 'VPN Summary\n\nNetworkManager VPN: %s (%s)\nTailscale: %s\nTailscale host: %s\nTailscale IPv4: %s\nNetbird: %s\nZeroTier: %s\n\nActive tunnels: %s\n\nLeft: open VPN status popup · Right: settings · Middle: refresh' \
-  "$nm_state" "$nm_name" "$ts_state" "$ts_host" "$ts_ip" "$nb_state" "$zt_state" "$active_count")
+tooltip=$(printf 'VPN Summary\n\nNetworkManager VPN: %s (%s)\nTailscale: %s\nTailscale host: %s\nTailscale IPv4: %s\nMullvad: %s\nNetbird: %s\nZeroTier: %s\n\nActive tunnels: %s\n\nLeft: open VPN status popup · Right: settings · Middle: refresh' \
+  "$nm_state" "$nm_name" "$ts_state" "$ts_host" "$ts_ip" "$mv_state" "$nb_state" "$zt_state" "$active_count")
 
 json=$(emit_waybar_json "$text" "$tooltip" "$class")
 
@@ -104,3 +116,4 @@ printf '%s\n' "$json"
 tmp_cache="$cache_file.tmp.$$"
 printf '%s\n' "$json" > "$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"
+

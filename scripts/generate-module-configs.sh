@@ -235,6 +235,16 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "on-click": (app_open + " solaar"),
       "on-click-right": (app_open + " systemsettings"),
       "on-click-middle": ($scripts + "/device-battery-status.sh --refresh")
+    },
+    "custom/streamdeck": {
+      format: "{}",
+      "return-type": "json",
+      signal: sig("streamdeck"),
+      interval: iv("streamdeck"),
+      exec: ($scripts + "/streamdeck-status.sh"),
+      "on-click": ($s[0].streamdeck.on_click // (app_open + " streamdeck")),
+      "on-click-right": ($s[0].streamdeck.on_click_right // (app_open + " systemctl --user restart app-streamdeck-ui@autostart.service")),
+      "on-click-middle": ($s[0].streamdeck.on_click_middle // ($scripts + "/streamdeck-status.sh --refresh"))
     }
   } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/utilities.generated.jsonc"
@@ -428,6 +438,16 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       exec: ($scripts + "/tailscale-status.sh"),
       "on-click": (app_open + " " + ($s[0].network.tailscale_status_cmd // "ghostty -e tailscale status")),
       "on-click-right": (app_open + " xdg-open " + ($s[0].network.tailscale_admin_url // "http://100.100.100.100/"))
+    },
+    "custom/i2pd": {
+      format: "{}",
+      "return-type": "json",
+      interval: iv("i2pd"),
+      signal: sig("i2pd"),
+      exec: ($scripts + "/i2pd-status.sh"),
+      "on-click": (app_open + " xdg-open http://127.0.0.1:7070"),
+      "on-click-right": (app_open + " systemctl restart i2pd.service"),
+      "on-click-middle": ($scripts + "/i2pd-status.sh --refresh")
     }
   } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq -c '.' >"$mod_dir/network-custom.generated.jsonc"

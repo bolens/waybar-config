@@ -34,6 +34,7 @@
       "custom/keyboard-layout",
       "custom/kdeconnect",
       "custom/device-notifier",
+      "custom/streamdeck",
       "custom/vaults",
       "custom/touchpad",
       "custom/device-battery"
@@ -70,6 +71,7 @@
       "network#bandwidthDownBytes",
       "custom/vpnstatus",
       "custom/tailscale",
+      "custom/i2pd",
       "network#bond",
       "custom/eno1",
       "custom/enp5s0",
@@ -143,6 +145,8 @@
     "modules": [
       "custom/infra-drawer",
       "custom/docker",
+      "custom/syncthing",
+      "custom/sunshine",
       "custom/system",
       "custom/network",
       "custom/runtimes",

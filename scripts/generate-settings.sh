@@ -260,6 +260,26 @@ build_system_json() {
         "on-click": ($settings[0].services.chkrootkit.on_click // ($app_open + " systemctl start " + $chkrootkit_service)),
         "on-click-right": ($settings[0].services.chkrootkit.on_click_right // ($app_open + " ghostty -e journalctl -u " + $chkrootkit_service + " -f")),
         "on-click-middle": ($settings[0].services.chkrootkit.on_click_middle // ($scripts + "/chkrootkit-status.sh --refresh"))
+      },
+      "custom/syncthing": {
+        format: "{}",
+        "return-type": "json",
+        interval: interval("syncthing"),
+        signal: signal("syncthing"),
+        exec: ($scripts + "/syncthing-status.sh"),
+        "on-click": ($app_open + " xdg-open https://localhost:8384"),
+        "on-click-right": ($app_open + " systemctl --user restart syncthing"),
+        "on-click-middle": ($scripts + "/syncthing-status.sh --refresh")
+      },
+      "custom/sunshine": {
+        format: "{}",
+        "return-type": "json",
+        interval: interval("sunshine"),
+        signal: signal("sunshine"),
+        exec: ($scripts + "/sunshine-status.sh"),
+        "on-click": ($app_open + " xdg-open https://localhost:47990"),
+        "on-click-right": ($app_open + " systemctl --user restart app-dev.lizardbyte.app.Sunshine.service"),
+        "on-click-middle": ($scripts + "/sunshine-status.sh --refresh")
       }
     }
     '

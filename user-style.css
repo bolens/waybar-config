@@ -75,7 +75,11 @@
 #custom-device-battery,
 #custom-fans,
 #custom-libredefender,
-#custom-chkrootkit {
+#custom-chkrootkit,
+#custom-syncthing,
+#custom-sunshine,
+#custom-streamdeck,
+#custom-i2pd {
     padding: 0 10px;
     margin: 4px 0;
     border-radius: 6px;
@@ -95,7 +99,11 @@
 #custom-device-battery:hover,
 #custom-fans:hover,
 #custom-libredefender:hover,
-#custom-chkrootkit:hover {
+#custom-chkrootkit:hover,
+#custom-syncthing:hover,
+#custom-sunshine:hover,
+#custom-streamdeck:hover,
+#custom-i2pd:hover {
     background: rgba(0, 229, 255, 0.12);
     border-color: rgba(0, 229, 255, 0.4);
     box-shadow: 0 0 10px rgba(0, 229, 255, 0.22);
@@ -528,6 +536,62 @@
     text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
 }
 
+/* Syncthing Data Synchronization (Unified Resource Purple Theme) */
+#custom-syncthing {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.28);
+}
+#custom-syncthing.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-syncthing.offline,
+#custom-syncthing.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
 
+/* Sunshine Game Stream Host (Green Performance theme) */
+#custom-sunshine {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.35);
+}
+#custom-sunshine.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-sunshine.offline,
+#custom-sunshine.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
 
+/* Stream Deck UI Controller (Purple Peripheral Theme) */
+#custom-streamdeck {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+}
+#custom-streamdeck.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-streamdeck.offline,
+#custom-streamdeck.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
 
+/* i2pd Router Console (Unified Resource Purple Network Theme) */
+#custom-i2pd {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+}
+#custom-i2pd.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-i2pd.offline,
+#custom-i2pd.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}

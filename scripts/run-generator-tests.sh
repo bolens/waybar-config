@@ -214,7 +214,17 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
     "spacing": 99
   },
   "poll_intervals": {
-    "clock": 42
+    "clock": 42,
+    "syncthing": 77,
+    "sunshine": 76,
+    "streamdeck": 75,
+    "i2pd": 74
+  },
+  "signals": {
+    "syncthing": 99,
+    "sunshine": 98,
+    "streamdeck": 97,
+    "i2pd": 96
   },
   "clocks": {
     "locale": "fr_FR.UTF-8",
@@ -275,6 +285,11 @@ cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
   "touchpad": {
     "on_click": "TEST_TOUCHPAD_ON_CLICK",
     "on_click_right": "TEST_TOUCHPAD_ON_CLICK_RIGHT"
+  },
+  "streamdeck": {
+    "on_click": "TEST_STREAMDECK_ON_CLICK",
+    "on_click_right": "TEST_STREAMDECK_ON_CLICK_RIGHT",
+    "on_click_middle": "TEST_STREAMDECK_ON_CLICK_MIDDLE"
   },
   "workspaces": {
     "slot_count": 8
@@ -495,6 +510,22 @@ if ! echo "$clean_sys" | jq -e '."custom/libredefender"."on-click" == "TEST_LIBR
   echo "FAIL: Custom libredefender on-click override not compiled correctly into system.generated.jsonc" >&2
   fail=1
 fi
+if ! echo "$clean_sys" | jq -e '."custom/syncthing".interval == 77' >/dev/null 2>&1; then
+  echo "FAIL: Custom syncthing interval override not compiled correctly into system.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_sys" | jq -e '."custom/syncthing".signal == 99' >/dev/null 2>&1; then
+  echo "FAIL: Custom syncthing signal override not compiled correctly into system.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_sys" | jq -e '."custom/sunshine".interval == 76' >/dev/null 2>&1; then
+  echo "FAIL: Custom sunshine interval override not compiled correctly into system.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_sys" | jq -e '."custom/sunshine".signal == 98' >/dev/null 2>&1; then
+  echo "FAIL: Custom sunshine signal override not compiled correctly into system.generated.jsonc" >&2
+  fail=1
+fi
 
 # Assert weather configurations click action overrides compiled correctly
 clean_utils=$(python3 -c "import re; t=open('$TEST_DIR/modules/utilities.generated.jsonc').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
@@ -555,6 +586,39 @@ if ! echo "$clean_utils" | jq -e '."custom/touchpad"."on-click-right" == "TEST_T
   echo "FAIL: Custom touchpad on-click-right override not compiled correctly into utilities.generated.jsonc" >&2
   fail=1
 fi
+
+if ! echo "$clean_utils" | jq -e '."custom/streamdeck"."on-click" == "TEST_STREAMDECK_ON_CLICK"' >/dev/null 2>&1; then
+  echo "FAIL: Custom streamdeck on-click override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/streamdeck"."on-click-right" == "TEST_STREAMDECK_ON_CLICK_RIGHT"' >/dev/null 2>&1; then
+  echo "FAIL: Custom streamdeck on-click-right override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/streamdeck"."on-click-middle" == "TEST_STREAMDECK_ON_CLICK_MIDDLE"' >/dev/null 2>&1; then
+  echo "FAIL: Custom streamdeck on-click-middle override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/streamdeck".interval == 75' >/dev/null 2>&1; then
+  echo "FAIL: Custom streamdeck interval override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_utils" | jq -e '."custom/streamdeck".signal == 97' >/dev/null 2>&1; then
+  echo "FAIL: Custom streamdeck signal override not compiled correctly into utilities.generated.jsonc" >&2
+  fail=1
+fi
+
+# Assert network custom configurations overrides compiled correctly (for i2pd)
+clean_net_custom=$(python3 -c "import re; t=open('$TEST_DIR/modules/network-custom.generated.jsonc').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
+if ! echo "$clean_net_custom" | jq -e '."custom/i2pd".interval == 74' >/dev/null 2>&1; then
+  echo "FAIL: Custom i2pd interval override not compiled correctly into network-custom.generated.jsonc" >&2
+  fail=1
+fi
+if ! echo "$clean_net_custom" | jq -e '."custom/i2pd".signal == 96' >/dev/null 2>&1; then
+  echo "FAIL: Custom i2pd signal override not compiled correctly into network-custom.generated.jsonc" >&2
+  fail=1
+fi
+
 
 # Assert keyboard layout and gamemode configuration overrides compiled correctly
 clean_center=$(python3 -c "import re; t=open('$TEST_DIR/modules/center-extras.generated.jsonc').read(); t=re.sub(r'/\*.*?\*/', '', t, flags=re.S); t=re.sub(r'^\s*//.*$', '', t, flags=re.M); print(t)")
@@ -765,6 +829,20 @@ if [ "$frame_dots_0" != "⠋" ] || [ "$frame_dots_10" != "⠋" ]; then
   echo "FAIL: get_anim_frame dots frame modulo calculation failed! frame_0: $frame_dots_0, frame_10: $frame_dots_10" >&2
   fail=1
 fi
+
+# Assert new status scripts output valid JSON and handle missing daemons gracefully
+echo "Testing new status scripts execution..."
+for script in syncthing-status.sh sunshine-status.sh streamdeck-status.sh i2pd-status.sh; do
+  script_path="$TEST_DIR/scripts/$script"
+  out=$(XDG_CACHE_HOME="$TEST_DIR/data" WAYBAR_HOME="$TEST_DIR" "$script_path" --refresh 2>/dev/null || true)
+  if [ -z "$out" ]; then
+    echo "FAIL: $script failed to execute or returned empty output" >&2
+    fail=1
+  elif ! echo "$out" | jq -e '.text != null and .tooltip != null and .class != null' >/dev/null 2>&1; then
+    echo "FAIL: $script did not output valid JSON with text, tooltip, and class fields. Output: $out" >&2
+    fail=1
+  fi
+done
 
 # Verify behavior when waybar-settings.jsonc is missing
 echo "Verifying resilience against missing settings file..."
