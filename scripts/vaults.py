@@ -179,6 +179,11 @@ def main():
                 "class": cls
             }
 
+        import html
+        if "text" in out:
+            out["text"] = html.escape(out["text"])
+        if "tooltip" in out:
+            out["tooltip"] = html.escape(out["tooltip"])
         print(json.dumps(out))
 
 if __name__ == "__main__":

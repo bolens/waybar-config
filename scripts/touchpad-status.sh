@@ -31,8 +31,7 @@ if [ "${1:-}" != "--refresh" ]; then
     exit 0
   fi
   
-  jq -cn --arg text "󰟳" --arg tooltip "Checking touchpad..." --arg class "enabled" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "󰟳" "Checking touchpad..." "enabled"
   exit 0
 fi
 

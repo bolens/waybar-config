@@ -31,8 +31,7 @@ if [ "${1:-}" != "--refresh" ]; then
     exit 0
   fi
   
-  jq -cn --arg text "" --arg tooltip "Checking vaults..." --arg class "empty" \
-    '{text:$text, tooltip:$tooltip, class:$class}'
+  emit_waybar_json "" "Checking vaults..." "empty"
   exit 0
 fi
 
