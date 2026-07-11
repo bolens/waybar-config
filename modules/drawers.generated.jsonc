@@ -2,7 +2,7 @@
   "custom/desk-drawer": {
     "format": "󰍜",
     "tooltip": true,
-    "tooltip-format": "Session controls\nContains: Notifications · Power profile · Brightness · Bluetooth · Idle inhibitor · Keyboard layout · KDE Connect · Removable devices · Stream Deck · Vaults · Touchpad · Device battery\nClick to toggle"
+    "tooltip-format": "Session controls\nContains: Notifications · Power profile · ASUS profile · Brightness · Bluetooth · Idle inhibitor · Keyboard layout · KDE Connect · Removable devices · Stream Deck · Vaults · Touchpad · Device battery\nClick to toggle"
   },
   "custom/dock-drawer": {
     "format": "󰀻",
@@ -27,7 +27,7 @@
   "custom/tools-drawer": {
     "format": "󰒓",
     "tooltip": true,
-    "tooltip-format": "Quick tools\nContains: Screenshot · Screen record · Night light · Clipboard · Color picker · Discord · Weather\nClick to toggle"
+    "tooltip-format": "Quick tools\nContains: Screenshot · Screen record · Night light · Clipboard · Color picker · RGB · Discord · Weather\nClick to toggle"
   },
   "custom/infra-drawer": {
     "format": "󰒍",
@@ -37,7 +37,7 @@
   "custom/hardware-drawer": {
     "format": "󰻠",
     "tooltip": true,
-    "tooltip-format": "Hardware\nContains: CPU · GPU · Memory · Disk · PSU · Fans · Liquidctl\nClick to toggle"
+    "tooltip-format": "Hardware\nContains: CPU · GPU · Memory · Disk · NVMe · PSU · Fans · Liquidctl · CoolerControl · OpenLinkHub\nClick to toggle"
   },
   "custom/power-drawer": {
     "format": "",

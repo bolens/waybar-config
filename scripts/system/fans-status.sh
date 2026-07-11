@@ -35,6 +35,8 @@ fan_cpu_crit=$(waybar_settings_get '.thresholds.fans.cpu.critical' '2000')
 fan_gpu_warn=$(waybar_settings_get '.thresholds.fans.gpu.warning' '70')
 fan_gpu_crit=$(waybar_settings_get '.thresholds.fans.gpu.critical' '85')
 
+# Test hook: point at a fake hwmon tree (see run-generator-tests.sh).
+hwmon_root="${WAYBAR_HWMON_ROOT:-/sys/class/hwmon}"
 
 # 1. Discover asusec (Motherboard fan controller via ASUS Embedded Controller driver):
 # Traverses Linux Hardware Monitoring (hwmon) sysfs interfaces.
@@ -52,7 +54,7 @@ if [ -f "$asusec_path_file" ]; then
   fi
 fi
 if [ -z "$asusec_dir" ]; then
-  for d in /sys/class/hwmon/hwmon*; do
+  for d in "$hwmon_root"/hwmon*; do
     if [ -f "$d/name" ] && [ "$(cat "$d/name" 2>/dev/null)" = "asusec" ]; then
       asusec_dir="$d"
       tmp_asusec="$asusec_path_file.tmp.$$"
@@ -62,10 +64,11 @@ if [ -z "$asusec_dir" ]; then
   done
 fi
 
-# 2. Discover corsairpsu (Corsair Power Supply sensors driver):
-# Reads Corsair digital PSU hardware stats (like fan speed and voltages) via hwmon.
+# 2. Discover corsairpsu — only if PSU module is unavailable (avoid duplicate fan RPM).
+# When corsairpsu hwmon exists, custom/psu owns PSU fan/rails; fans notes a pointer instead.
 psu_path_file="$cache_dir/corsairpsu-path.txt"
 psu_dir=""
+psu_covered_by_module=0
 if [ -f "$psu_path_file" ]; then
   psu_dir=$(cat "$psu_path_file" 2>/dev/null || true)
   if [ -n "$psu_dir" ] && [ -d "$psu_dir" ]; then
@@ -77,11 +80,39 @@ if [ -f "$psu_path_file" ]; then
   fi
 fi
 if [ -z "$psu_dir" ]; then
-  for d in /sys/class/hwmon/hwmon*; do
+  for d in "$hwmon_root"/hwmon*; do
     if [ -f "$d/name" ] && [ "$(cat "$d/name" 2>/dev/null)" = "corsairpsu" ]; then
       psu_dir="$d"
       tmp_psu="$psu_path_file.tmp.$$"
       printf '%s\n' "$psu_dir" >"$tmp_psu" 2>/dev/null && mv -f "$tmp_psu" "$psu_path_file" 2>/dev/null || true
+      break
+    fi
+  done
+fi
+# Prefer dedicated PSU module when corsairpsu is present (richer rails/temps).
+if [ -n "$psu_dir" ]; then
+  psu_covered_by_module=1
+fi
+
+# 2b. Optional nct6799 (or similar Super-IO) chassis fan enrichment via sysfs.
+chassis_path_file="$cache_dir/nct6799-path.txt"
+chassis_dir=""
+if [ -f "$chassis_path_file" ]; then
+  chassis_dir=$(cat "$chassis_path_file" 2>/dev/null || true)
+  if [ -n "$chassis_dir" ] && [ -d "$chassis_dir" ]; then
+    if [ ! -f "$chassis_dir/name" ] || [ "$(cat "$chassis_dir/name" 2>/dev/null)" != "nct6799" ]; then
+      chassis_dir=""
+    fi
+  else
+    chassis_dir=""
+  fi
+fi
+if [ -z "$chassis_dir" ]; then
+  for d in "$hwmon_root"/hwmon*; do
+    if [ -f "$d/name" ] && [ "$(cat "$d/name" 2>/dev/null)" = "nct6799" ]; then
+      chassis_dir="$d"
+      tmp_ch="$chassis_path_file.tmp.$$"
+      printf '%s\n' "$chassis_dir" >"$tmp_ch" 2>/dev/null && mv -f "$tmp_ch" "$chassis_path_file" 2>/dev/null || true
       break
     fi
   done
@@ -104,9 +135,26 @@ if [ -n "$asusec_dir" ]; then
   cpu_fan_label=$(read_val "$asusec_dir/fan1_label")
 fi
 
+# PSU fan only when no dedicated PSU module (corsairpsu absent).
 psu_fan=-1
-if [ -n "$psu_dir" ]; then
+if [ "$psu_covered_by_module" -eq 0 ] && [ -n "$psu_dir" ]; then
   psu_fan=$(read_val "$psu_dir/fan1_input")
+fi
+
+# Chassis: max spinning fan from nct6799 (no labels on many boards).
+chassis_fan=-1
+if [ -n "$chassis_dir" ]; then
+  chassis_max=0
+  for fi in "$chassis_dir"/fan*_input; do
+    [ -f "$fi" ] || continue
+    v=$(read_val "$fi")
+    if [ "${v:-0}" -gt "$chassis_max" ] 2>/dev/null; then
+      chassis_max=$v
+    fi
+  done
+  if [ "$chassis_max" -gt 0 ] 2>/dev/null; then
+    chassis_fan=$chassis_max
+  fi
 fi
 
 # 3. Read GPU fan speed from system-metrics cache
@@ -133,10 +181,36 @@ else
   tooltip=$(printf '%s\n  ├─ GPU Fan: N/A' "$tooltip")
 fi
 
-if [ "$psu_fan" -ge 0 ]; then
+if [ "$chassis_fan" -ge 0 ]; then
+  tooltip=$(printf '%s\n  ├─ Chassis (nct6799 max): %d RPM' "$tooltip" "$chassis_fan")
+fi
+
+if [ "$psu_covered_by_module" -eq 1 ]; then
+  tooltip=$(printf '%s\n  └─ PSU Fan: see PSU module (corsairpsu)' "$tooltip")
+elif [ "$psu_fan" -ge 0 ]; then
   tooltip=$(printf '%s\n  └─ PSU Fan Speed: %d RPM' "$tooltip" "$psu_fan")
 else
   tooltip=$(printf '%s\n  └─ PSU Fan: N/A' "$tooltip")
+fi
+
+# fanctl: note when a userspace fan controller is installed / configured (does not replace hwmon).
+fanctl_note=""
+if command -v fanctl >/dev/null 2>&1 || [ -n "${WAYBAR_FANCTL_BIN:-}" ]; then
+  fanctl_cfg=""
+  for c in \
+    "${WAYBAR_FANCTL_CONFIG:-}" \
+    "$HOME/.config/fanctl/fanctl.yml" \
+    "$HOME/.config/fanctl.yml" \
+    /etc/fanctl.yml \
+    /etc/fanctl/fanctl.yml; do
+    [ -n "$c" ] && [ -f "$c" ] && fanctl_cfg="$c" && break
+  done
+  if [ -n "$fanctl_cfg" ]; then
+    fanctl_note=$(printf 'fanctl config: %s' "$fanctl_cfg")
+  else
+    fanctl_note="fanctl installed (no config found)"
+  fi
+  tooltip=$(printf '%s\n\n%s' "$tooltip" "$fanctl_note")
 fi
 
 tooltip=$(printf '%s\n\nLeft: nvtop · Right: btop · Middle: refresh' "$tooltip")

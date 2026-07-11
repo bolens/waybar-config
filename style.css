@@ -368,6 +368,8 @@
 
 #custom-powerprofiles,
 #custom-powerprofiles.balanced,
+#custom-asusctl,
+#custom-asusctl.balanced,
 #custom-brightness,
 #custom-tailscale,
 #custom-screenshot,
@@ -398,6 +400,8 @@
 
 #custom-powerprofiles.performance,
 #custom-powerprofiles.warning,
+#custom-asusctl.performance,
+#custom-asusctl.warning,
 #custom-brightness.warning,
 #custom-tailscale.warning,
 #custom-screenrecord.recording,
@@ -423,6 +427,11 @@
 }
 
 #custom-powerprofiles.power-saver {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.32);
+}
+
+#custom-asusctl.quiet {
     color: #2cffb0;
     text-shadow: 0 0 6px rgba(44, 255, 176, 0.32);
 }
@@ -476,7 +485,11 @@
 #custom-i2pd.offline,
 #custom-i2pd.disabled,
 #custom-ups.disconnected,
-#custom-liquidctl.disconnected {
+#custom-coolercontrol.disconnected,
+#custom-asusctl.disconnected,
+#custom-nvme.disconnected,
+#custom-openlinkhub.disconnected,
+#custom-rgb.disconnected {
     color: rgba(200, 246, 255, 0.45);
     text-shadow: none;
 }

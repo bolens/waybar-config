@@ -126,6 +126,14 @@ if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
     printf 'FAIL %s contains services.i2pd.console_pass — move to data/waybar-secrets.jsonc\n' "$settings" >&2
     fail=1
   fi
+  if jq -e '.services.coolercontrol.ui_pass != null and (.services.coolercontrol.ui_pass|type) == "string" and (.services.coolercontrol.ui_pass|length) > 0' "$settings" >/dev/null 2>&1; then
+    printf 'FAIL %s contains services.coolercontrol.ui_pass — move to data/waybar-secrets.jsonc\n' "$settings" >&2
+    fail=1
+  fi
+  if jq -e '.services.coolercontrol.token != null and (.services.coolercontrol.token|type) == "string" and (.services.coolercontrol.token|length) > 0' "$settings" >/dev/null 2>&1; then
+    printf 'FAIL %s contains services.coolercontrol.token — move to data/waybar-secrets.jsonc\n' "$settings" >&2
+    fail=1
+  fi
   if [ ! -f "$WAYBAR_HOME/modules/workspaces.generated.jsonc" ]; then
     printf 'FAIL missing modules/workspaces.generated.jsonc\n' >&2
     fail=1

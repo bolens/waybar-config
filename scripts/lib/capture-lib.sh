@@ -13,19 +13,35 @@ if ! type waybar_settings_get >/dev/null 2>&1; then
   fi
 fi
 
+# Resolve screenshot/recording base dirs.
+# Precedence: WAYBAR_SCREENSHOT_DIR / WAYBAR_SCREENRECORD_DIR (env)
+#          → capture.*_dir in settings (when non-null)
+#          → XDG Pictures/Videos defaults (portable; not /mnt/media)
+# waybar_settings_get treats JSON null as "use default", so SoT can leave
+# screenshot_dir/screenrecord_dir null for portable installs.
 capture_screenshot_base_dir() {
+  if [ -n "${WAYBAR_SCREENSHOT_DIR:-}" ]; then
+    printf '%s' "$WAYBAR_SCREENSHOT_DIR"
+    return
+  fi
+  default="${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
   if type waybar_settings_get >/dev/null 2>&1; then
-    waybar_settings_get '.capture.screenshot_dir' '/mnt/media/screenshots'
+    waybar_settings_get '.capture.screenshot_dir' "$default"
   else
-    printf '%s' '/mnt/media/screenshots'
+    printf '%s' "$default"
   fi
 }
 
 capture_screenrecord_base_dir() {
+  if [ -n "${WAYBAR_SCREENRECORD_DIR:-}" ]; then
+    printf '%s' "$WAYBAR_SCREENRECORD_DIR"
+    return
+  fi
+  default="${XDG_VIDEOS_DIR:-$HOME/Videos}/Screenrecordings"
   if type waybar_settings_get >/dev/null 2>&1; then
-    waybar_settings_get '.capture.screenrecord_dir' '/mnt/media/screenrecordings'
+    waybar_settings_get '.capture.screenrecord_dir' "$default"
   else
-    printf '%s' '/mnt/media/screenrecordings'
+    printf '%s' "$default"
   fi
 }
 

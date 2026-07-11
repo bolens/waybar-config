@@ -59,15 +59,22 @@ json="$(jq -cn --slurpfile m "$metrics_file" '
     },
     gpu: (
       if ($metrics.gpu.available // false) then
-        ($metrics.gpu.name // "NVIDIA GPU") as $name |
+        ($metrics.gpu.name // "GPU") as $name |
         ($metrics.gpu.util // 0) as $util |
         ($metrics.gpu.temp // 0) as $temp |
         ($metrics.gpu.mem_used // 0) as $gmu |
         ($metrics.gpu.mem_total // 0) as $gmt |
         ($metrics.gpu.vram_pct // 0) as $vp |
         ($metrics.gpu.suspended // false) as $suspended |
+        ($metrics.gpu.vendor // "") as $vendor |
         {
-          text: "󰢮 \(pad3($util))%",
+          text: (
+            if $vendor == "amd" and $util < 5 and $temp > 0 then
+              "󰢮 \($temp)C"
+            else
+              "󰢮 \(pad3($util))%"
+            end
+          ),
           tooltip: "\($name)\nUtil: \($util)%\nTemp: \($temp)C\nVRAM: \($gmu)/\($gmt) MiB (\($vp)%)",
           class: (
             if $suspended then "suspended"
@@ -80,7 +87,7 @@ json="$(jq -cn --slurpfile m "$metrics_file" '
       else
         {
           text: "󰢮 --",
-          tooltip: "NVIDIA GPU telemetry unavailable",
+          tooltip: "GPU telemetry unavailable",
           class: "disabled"
         }
       end

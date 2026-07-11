@@ -28,6 +28,8 @@ License: [MIT](LICENSE).
 
 ### Installation
 
+See [Dependencies](#dependencies) for core packages and optional telemetry (Arch/CachyOS, Debian/Ubuntu, Fedora). Modules hide when their tools are absent.
+
 1. Clone this repository directly to your Waybar home directory:
    ```bash
    git clone https://github.com/bolens/waybar-config.git ~/.config/waybar
@@ -98,7 +100,7 @@ Interval / cache TTLs live in a single map: `module_intervals` (there is no sepa
 
 **Personalization:** click targets, app IDs, and URLs under `apps` / service blocks (e.g. Portainer, Syncthing GUI) are machine-specific. Forks should edit those in `data/waybar-settings.jsonc` (or overlay locally) rather than expecting upstream defaults to match your hosts.
 
-### Secrets (i2pd console)
+### Secrets (i2pd console / CoolerControl)
 
 Credentials that must not be committed live in **`data/waybar-secrets.jsonc`** (gitignored). It is merged over `waybar-settings.jsonc` at read time by `waybar_settings_get`.
 
@@ -106,7 +108,8 @@ Credentials that must not be committed live in **`data/waybar-secrets.jsonc`** (
 |------|------|
 | `data/waybar-secrets.jsonc` | Local secrets (mode `0600`, never commit) |
 | `data/waybar-secrets.example.jsonc` | Safe template to copy |
-| `scripts/services/i2pd/i2pd-set-console-pass.sh` | Sync helper (run with `sudo`) |
+| `scripts/services/i2pd/i2pd-set-console-pass.sh` | i2pd sync helper (run with `sudo`) |
+| `scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh` | CoolerControl bootstrap helper (run with `sudo`) |
 
 **`scripts/services/i2pd/i2pd-set-console-pass.sh`** (idempotent):
 
@@ -118,6 +121,35 @@ Credentials that must not be committed live in **`data/waybar-secrets.jsonc`** (
 ```bash
 sudo ~/.config/waybar/scripts/services/i2pd/i2pd-set-console-pass.sh
 ```
+
+**`scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh`** (idempotent):
+
+CoolerControl stores a password *hash* (not plaintext), so this helper cannot import/push like i2pd. Instead it:
+
+1. `systemctl enable --now coolercontrold` so the daemon stays running across reboots.
+2. If secrets already have `services.coolercontrol.ui_pass` and/or `token` → verify API auth (Bearer `/status` first; `ui_pass` via `POST /login` only if the token is missing or rejected).
+3. If secrets are missing → interactive prompt (or `CC_UI_PASS_ENV` / `CC_TOKEN_ENV`) → write `waybar-secrets.jsonc` → verify.
+4. Prefer a **read-only Access Token** (`cc_…` from CoolerControl → Access Protection) over the admin UI password for Waybar. Status/click scripts always try `token` first and fall back to `ui_pass` if Bearer auth fails.
+
+```bash
+sudo ~/.config/waybar/scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh
+```
+
+After credentials are in secrets, dump live `/devices` + `/status` shapes (for debugging the module):
+
+```bash
+~/.config/waybar/scripts/services/coolercontrol/coolercontrol-api-dump.sh --write
+~/.config/waybar/scripts/services/coolercontrol/coolercontrol-check-auth.sh
+```
+
+**Write vs read-only tokens:** the status module probes `PATCH /settings {}` (200 = write, 403 = read-only) and sets CSS class `writable` / `readonly`. With a **write** token and CoolerControl Modes configured:
+
+- Scroll up/down → cycle modes (`coolercontrol-click.sh next|prev`)
+- Right-click → rofi mode picker (`menu`); falls back to notify if read-only or no modes
+
+Read-only tokens keep monitoring only (left-click opens UI, middle refreshes). Prefer read-only for day-to-day monitoring.
+
+OpenAPI reference: https://coolercontrol.org/openapi/ (`POST /login`, `GET /status` → `StatusResponse.devices[].status_history[]`).
 
 To regenerate configurations after modifying settings:
 ```bash
@@ -173,8 +205,151 @@ Or individually:
 ShellCheck runs in CI at **warning** severity (see `.shellcheckrc`).
 
 ## Dependencies
-A list of optional integration packages:
-* **Core**: `qt6-tools` (KDE DBus), `socat` (Hyprland events), `jq` (JSON parsing), `wireplumber` (audio).
-* **Menus**: `rofi` or `wofi` (interactive menus), `cliphist` (clipboard history).
-* **Telemetry**: `networkmanager`, `brightnessctl`, `ddcutil`, `docker`, `upower`, `nut` (UPS status), `liquidctl` (AIO / USB cooler & digital PSU status; may need udev rules for non-root HID access).
-* **Hyprland extras** (optional): `hyprwhspr` (voice/dictation module + CSS import in `style.css`).
+
+Modules that wrap optional tools **hide** (Waybar `disconnected`) when the binary/daemon is missing or inactive. Install only what you use.
+
+Package names below target the distros Waybar is commonly packaged for: **Arch / CachyOS / Manjaro**, **Debian / Ubuntu**, and **Fedora**. Prefer your distro’s packages when names differ slightly.
+
+### Core (recommended)
+
+| Need | Arch / CachyOS | Debian / Ubuntu | Fedora |
+|------|----------------|-----------------|--------|
+| JSON helpers | `jq` | `jq` | `jq` |
+| Hyprland IPC | `socat` | `socat` | `socat` |
+| KDE DBus helpers | `qt6-tools` | `qt6-tools` | `qt6-qttools` |
+| Audio (PipeWire session) | `wireplumber` | `wireplumber` | `wireplumber` |
+| Menus | `rofi` and/or `wofi` | `rofi` / `wofi` | `rofi` / `wofi` |
+| Clipboard history | `cliphist` | `cliphist` | `cliphist` |
+
+```bash
+# Arch / CachyOS
+sudo pacman -S jq socat qt6-tools wireplumber rofi cliphist
+
+# Debian / Ubuntu
+sudo apt install jq socat qt6-tools wireplumber rofi cliphist
+
+# Fedora
+sudo dnf install jq socat qt6-qttools wireplumber rofi cliphist
+```
+
+### Optional telemetry & integrations
+
+| Module / feature | Arch / CachyOS | Debian / Ubuntu | Fedora | Notes |
+|------------------|----------------|-----------------|--------|-------|
+| NetworkManager status | `networkmanager` | `network-manager` | `NetworkManager` | |
+| Brightness | `brightnessctl` | `brightnessctl` | `brightnessctl` | |
+| External monitor DDC | `ddcutil` | `ddcutil` | `ddcutil` | |
+| Docker / containers | `docker` | `docker.io` | `docker` | |
+| Device / battery (UPower) | `upower` | `upower` | `upower` | |
+| Logitech battery fallback | `solaar` | `solaar` | `solaar` | Used only if sysfs Device batteries are missing |
+| UPS (`custom` NUT path) | `nut` | `nut-client` / `nut` | `nut` | |
+| AIO / USB coolers (`custom/liquidctl`) | `liquidctl` | `liquidctl` | `liquidctl` | **AIO/hubs only** when Corsair PSU is covered by hwmon; Aura RGB skipped in favor of OpenRGB/ckb-next |
+| Digital Corsair PSU (`custom/psu`) | kernel `corsair-psu` / `corsairpsu` hwmon | same (in-tree hwmon) | same | No userspace package — load module if needed: `sudo modprobe corsair-psu` |
+| CoolerControl (`custom/coolercontrol`) | AUR `coolercontrol-bin` or `coolercontrol` | Cloudsmith → `coolercontrol` ([docs](https://docs.coolercontrol.org/installation/debian.html)) | Copr `codifryed/CoolerControl` → `coolercontrol` ([docs](https://docs.coolercontrol.org/installation/fedora.html)) | Enable `coolercontrold`; sync secrets with `coolercontrol-set-ui-pass.sh`. Write-access probe is cached (~10m). |
+| OpenLinkHub (`custom/openlinkhub`) | AUR `openlinkhub-bin` / `openlinkhub` | `.deb` from [releases](https://github.com/jurkovic-nikola/OpenLinkHub/releases) or [PPA](https://github.com/jurkovic-nikola/OpenLinkHub#installation-ppa) | `.rpm` from releases | Presence/UI for linked Corsair devices; **PSU sensors prefer `custom/psu`**. Enable `openlinkhub.service`. HID ownership can conflict with liquidctl — prefer one owner per device. |
+| ASUS / ROG profiles (`custom/asusctl`) | `asusctl` (g14 repo or AUR) | build from [asus-linux](https://asus-linux.org/guides/asusctl-install/) (not officially packaged) | [asus-linux Fedora packages](https://asus-linux.org/) | Hides when `asusd` is unavailable |
+| RGB daemon presence (`custom/rgb`) | `openrgb` and/or `ckb-next` | `openrgb` / `ckb-next` | `openrgb` / `ckb-next` | Module shows only while a daemon is running |
+| NVIDIA GPU metrics | `nvidia-utils` (provides `nvidia-smi`) | NVIDIA driver packages | NVIDIA driver packages | Falls back to `amdgpu` hwmon if NVIDIA is suspended/missing |
+| Fan curves note (`custom/fans` tooltip) | `fanctl` (community/AUR) | install from upstream if packaged | same | Optional note only — does not replace hwmon fans |
+| Hyprland voice (`hyprwhspr`) | project install | project install | project install | Optional CSS import in `style.css` |
+| Sensors / lm-sensors | `lm_sensors` | `lm-sensors` | `lm_sensors` | Helps hwmon labels; not required for every module |
+| System updates (`custom/updates`) | `pacman-contrib` (`checkupdates`); optional `paru` for AUR | `apt` (base) | `dnf` (base) | Auto-detects backend; Flatpak optional additive |
+
+**Kernel / sysfs (no package)** — used when present:
+
+| hwmon / path | Module |
+|--------------|--------|
+| `corsairpsu` (`corsair-psu`) | `custom/psu` (rails, watts, fan, temps) |
+| NVMe `hwmon` | `custom/nvme` |
+| `asusec` | `custom/fans` (CPU cooler RPM) |
+| `nct6799` | `custom/fans` (chassis max RPM supplement) |
+| `amdgpu` | GPU fallback when `nvidia-smi` unavailable |
+
+### Telemetry source priority (avoid duplicate probes)
+
+Richer / cheaper sources win; modules skip or hide when covered:
+
+1. **Corsair digital PSU** → `corsairpsu` hwmon (`custom/psu`) over liquidctl HID and over OpenLinkHub PSU temps  
+2. **liquidctl** → exclusive AIO/hub telemetry only; hides when only PSU/Aura remain  
+3. **OpenLinkHub** → device presence + UI; points at PSU module when the only device is a Corsair PSU already in hwmon  
+4. **Aura / RGB** → OpenRGB or ckb-next (`custom/rgb`), not liquidctl  
+5. **Fans** → asusec + GPU metrics + nct6799; PSU fan deferred to `custom/psu` when corsairpsu exists  
+6. **CoolerControl** → mode control / daemon UI — does not replace nvme/fans/gpu modules  
+
+### Example: Arch / CachyOS (this repo author’s stack)
+
+```bash
+# Core + common telemetry
+sudo pacman -S jq socat qt6-tools wireplumber rofi cliphist \
+  networkmanager brightnessctl ddcutil upower solaar nut liquidctl \
+  openrgb ckb-next lm_sensors
+
+# Optional AUR / community (yay/paru) — pick what you own
+yay -S coolercontrol-bin openlinkhub-bin   # or coolercontrol / openlinkhub
+# asusctl: prefer asus-linux g14 repo, or AUR asusctl
+sudo systemctl enable --now coolercontrold
+sudo systemctl enable --now openlinkhub
+
+# Corsair PSU sysfs (if not already loaded)
+sudo modprobe corsair-psu
+# Optional: persist via /etc/modules-load.d/corsair-psu.conf → corsair-psu
+
+# CoolerControl Waybar secrets (after daemon is up)
+sudo ~/.config/waybar/scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh
+```
+
+### Example: Debian / Ubuntu
+
+```bash
+sudo apt install jq socat qt6-tools wireplumber rofi cliphist \
+  network-manager brightnessctl ddcutil upower solaar nut-client liquidctl \
+  openrgb lm-sensors
+
+# CoolerControl — https://docs.coolercontrol.org/installation/debian.html
+curl -1sLf 'https://dl.cloudsmith.io/public/coolercontrol/coolercontrol/setup.deb.sh' | sudo -E bash
+sudo apt update && sudo apt install coolercontrol
+sudo systemctl enable --now coolercontrold
+
+# OpenLinkHub — .deb from GitHub releases or PPA (see upstream README)
+sudo systemctl enable --now openlinkhub
+```
+
+### Example: Fedora
+
+```bash
+sudo dnf install jq socat qt6-qttools wireplumber rofi cliphist \
+  NetworkManager brightnessctl ddcutil upower solaar nut liquidctl \
+  openrgb lm_sensors
+
+# CoolerControl — https://docs.coolercontrol.org/installation/fedora.html
+sudo dnf install dnf-plugins-core
+sudo dnf copr enable codifryed/CoolerControl
+sudo dnf install coolercontrol
+sudo systemctl enable --now coolercontrold
+
+# OpenLinkHub — .rpm from GitHub releases
+sudo systemctl enable --now openlinkhub
+```
+
+### Portability & environment overrides
+
+Scripts resolve config via `WAYBAR_HOME` → `$XDG_CONFIG_HOME/waybar` → `~/.config/waybar`. Sysfs and capture paths are overridable for tests and non-standard layouts:
+
+| Variable | Purpose |
+|----------|---------|
+| `WAYBAR_HOME` / `WAYBAR_SCRIPTS` | Config and scripts roots |
+| `WAYBAR_COMPOSITOR` | Force `hyprland` / `kde` / `unknown` |
+| `WAYBAR_HWMON_ROOT` | Fake or alternate `/sys/class/hwmon` (psu, fans, liquidctl, metrics, OLH) |
+| `WAYBAR_THERMAL_ROOT` | Alternate `/sys/class/thermal` (metrics collector) |
+| `WAYBAR_POWER_SUPPLY_ROOT` | Alternate `/sys/class/power_supply` (device battery) |
+| `WAYBAR_NVME_HWMON_ROOT` | NVMe hwmon scan root |
+| `WAYBAR_OLH_API_URL` | OpenLinkHub API base URL |
+| `WAYBAR_SCREENSHOT_DIR` / `WAYBAR_SCREENRECORD_DIR` | Override capture dirs (wins over settings) |
+| `WAYBAR_UPDATES_BACKEND` | Force `arch` / `apt` / `dnf` / `none` |
+| `WAYBAR_UPDATES_ENABLE_AUR` | `1`/`0` overrides `updates.enable_aur` (Arch only) |
+
+**Updates backends** (`custom/updates`): prefer `checkupdates` (Arch) → `apt` → `dnf`; Flatpak is additive. AUR/`paru` only on the Arch path when `enable_aur` is set — never hard-required. Review click uses `apps.paru_update` / `apt_update` / `dnf_update` when set, else a terminal with the matching upgrade command.
+
+**Capture dirs**: defaults are `${XDG_PICTURES_DIR:-~/Pictures}/Screenshots` and `${XDG_VIDEOS_DIR:-~/Videos}/Screenrecordings` (settings `capture.*_dir` null, or set explicitly e.g. `/mnt/media/…` on a media host). Env overrides above win over settings.
+
+**Desktop apps**: window switcher and KDE notification icons walk `$XDG_DATA_HOME/applications`, each `$XDG_DATA_DIRS/…/applications`, then Flatpak export dirs.

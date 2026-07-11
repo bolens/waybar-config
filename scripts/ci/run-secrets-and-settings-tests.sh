@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Unit tests for secrets overlay, i2pd sync helper, capture/disk settings, and
-# validate-generated-config console_pass guard.
+# Unit tests for secrets overlay, i2pd/coolercontrol sync helpers, capture/disk
+# settings, and validate-generated-config credential guards.
 set -euo pipefail
 
 echo "=== Running secrets / settings exposure tests ==="
@@ -8,12 +8,20 @@ echo "=== Running secrets / settings exposure tests ==="
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 fail=0
 
-TEST_DIR=$(mktemp -d)
-trap 'rm -rf "$TEST_DIR"' EXIT
+# Clear parent-shell fixture/override bleed (including when nested under generator tests).
+# shellcheck source=waybar-test-sanitize-env.sh
+. "$ROOT/scripts/ci/waybar-test-sanitize-env.sh"
+waybar_test_sanitize_env
 
-mkdir -p "$TEST_DIR/data" "$TEST_DIR/scripts"/{lib,services/{i2pd,sync,apps,security,devices},ci,tools,workspaces,system,notifications} "$TEST_DIR/i2pd" "$TEST_DIR/varlib"
+TEST_DIR=$(mktemp -d)
+SUITE_RUNTIME=$(mktemp -d)
+export XDG_RUNTIME_DIR="$SUITE_RUNTIME"
+trap 'rm -rf "$TEST_DIR" "$SUITE_RUNTIME"' EXIT
+
+mkdir -p "$TEST_DIR/data" "$TEST_DIR/scripts"/{lib,services/{i2pd,coolercontrol,sync,apps,security,devices},ci,tools,workspaces,system,notifications} "$TEST_DIR/i2pd" "$TEST_DIR/varlib"
 cp "$ROOT/scripts/lib/waybar-settings.sh" "$ROOT/scripts/lib/capture-lib.sh" "$TEST_DIR/scripts/lib/"
 cp "$ROOT/scripts/services/i2pd/i2pd-set-console-pass.sh" "$TEST_DIR/scripts/services/i2pd/"
+cp "$ROOT/scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh" "$TEST_DIR/scripts/services/coolercontrol/"
 cp "$ROOT/scripts/ci/validate-generated-config.sh" "$TEST_DIR/scripts/ci/"
 cp "$ROOT/data/waybar-secrets.example.jsonc" "$TEST_DIR/data/"
 find "$TEST_DIR/scripts" -name '*.sh' -exec chmod +x {} +
@@ -214,6 +222,49 @@ echo "Testing capture-lib settings helpers..."
 )
 echo "PASS: capture-lib helpers"
 
+# Portable XDG defaults when capture dirs are null + env overrides
+echo "Testing capture-lib XDG / env portability..."
+cp "$TEST_DIR/data/waybar-settings.jsonc" "$TEST_DIR/data/waybar-settings.jsonc.bak"
+(
+  cat >"$TEST_DIR/data/waybar-settings.jsonc" <<'JSON'
+{
+  "capture": {
+    "screenshot_dir": null,
+    "screenrecord_dir": null,
+    "screenrecord_fps": 30
+  }
+}
+JSON
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/waybar-settings.sh"
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/capture-lib.sh"
+  export HOME="$TEST_DIR/fakehome"
+  export XDG_PICTURES_DIR="$TEST_DIR/Pictures"
+  export XDG_VIDEOS_DIR="$TEST_DIR/Videos"
+  unset WAYBAR_SCREENSHOT_DIR WAYBAR_SCREENRECORD_DIR
+  shot=$(capture_screenshot_base_dir)
+  rec=$(capture_screenrecord_base_dir)
+  if [ "$shot" != "$TEST_DIR/Pictures/Screenshots" ] || [ "$rec" != "$TEST_DIR/Videos/Screenrecordings" ]; then
+    echo "FAIL: XDG capture defaults: shot=$shot rec=$rec" >&2
+    exit 1
+  fi
+  export WAYBAR_SCREENSHOT_DIR="/env/shots"
+  export WAYBAR_SCREENRECORD_DIR="/env/recs"
+  shot2=$(capture_screenshot_base_dir)
+  rec2=$(capture_screenrecord_base_dir)
+  if [ "$shot2" != "/env/shots" ] || [ "$rec2" != "/env/recs" ]; then
+    echo "FAIL: capture env overrides: shot=$shot2 rec=$rec2" >&2
+    exit 1
+  fi
+) || fail=1
+mv -f "$TEST_DIR/data/waybar-settings.jsonc.bak" "$TEST_DIR/data/waybar-settings.jsonc"
+(
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/waybar-settings.sh"
+)
+echo "PASS: capture-lib XDG / env portability"
+
 # --- validate rejects console_pass in compiled settings ---
 echo "Testing validate-generated-config console_pass guard..."
 mkdir -p "$TEST_DIR/modules" "$TEST_DIR/includes" "$TEST_DIR/layouts"
@@ -368,6 +419,502 @@ if [[ ! -f "$TEST_DIR/varlib/i2pd.conf.bak" ]]; then
 fi
 echo "PASS: symlink repair"
 
+# --- coolercontrol-set-ui-pass: comprehensive sync coverage ---
+echo "Testing coolercontrol-set-ui-pass sync helper..."
+CC_SYNC="$TEST_DIR/scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh"
+if ! bash -n "$CC_SYNC"; then
+  echo "FAIL: coolercontrol-set-ui-pass.sh failed bash -n" >&2
+  fail=1
+fi
+if ! grep -q 'coolercontrol' "$TEST_DIR/data/waybar-secrets.example.jsonc"; then
+  echo "FAIL: waybar-secrets.example.jsonc missing coolercontrol block" >&2
+  fail=1
+fi
+
+# Fail closed when secrets empty and no env bootstrap (non-TTY / test mode)
+rm -f "$TEST_DIR/data/waybar-secrets.jsonc"
+set +e
+out_cc_fail=$(
+  CC_TEST_MODE=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  "$CC_SYNC" 2>&1
+)
+rc_cc_fail=$?
+set -e
+if [[ "$rc_cc_fail" -eq 0 ]]; then
+  echo "FAIL: coolercontrol sync should fail without credentials. Output: $out_cc_fail" >&2
+  fail=1
+fi
+
+# CHANGE_ME in secrets counts as missing
+cat >"$TEST_DIR/data/waybar-secrets.jsonc" <<'JSON'
+{
+  "services": {
+    "coolercontrol": {
+      "ui_pass": "CHANGE_ME",
+      "token": "CHANGE_ME"
+    }
+  }
+}
+JSON
+set +e
+out_cc_chg=$(
+  CC_TEST_MODE=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  "$CC_SYNC" 2>&1
+)
+rc_cc_chg=$?
+set -e
+if [[ "$rc_cc_chg" -eq 0 ]]; then
+  echo "FAIL: CHANGE_ME credentials should be treated as missing. Output: $out_cc_chg" >&2
+  fail=1
+fi
+
+# Bootstrap pass+token from env; preserve sibling i2pd secret; mode 0600; no leak in output
+cat >"$TEST_DIR/data/waybar-secrets.jsonc" <<'JSON'
+{
+  "services": {
+    "i2pd": {
+      "console_pass": "overlay-secret-pass-AAAA"
+    }
+  }
+}
+JSON
+# Stale /root scripts path must not win once WAYBAR_HOME is resolved
+export WAYBAR_SCRIPTS=/root/.config/waybar/scripts
+out_cc=$(
+  CC_TEST_MODE=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  CC_UI_PASS_ENV="cc-test-ui-pass-BBBB" \
+  CC_TOKEN_ENV="cc_testtoken0000000000000000000000" \
+  "$CC_SYNC" 2>&1
+) || {
+  echo "FAIL: coolercontrol-set-ui-pass exited non-zero: $out_cc" >&2
+  fail=1
+}
+unset WAYBAR_SCRIPTS
+if grep -F 'cc-test-ui-pass-BBBB' <<<"$out_cc"; then
+  echo "FAIL: sync output leaked ui_pass" >&2
+  fail=1
+fi
+if grep -F 'cc_testtoken0000000000000000000000' <<<"$out_cc"; then
+  echo "FAIL: sync output leaked token" >&2
+  fail=1
+fi
+mode_cc=$(stat -c '%a' "$TEST_DIR/data/waybar-secrets.jsonc" 2>/dev/null || stat -f '%OLp' "$TEST_DIR/data/waybar-secrets.jsonc")
+if [[ "$mode_cc" != "600" && "$mode_cc" != "0600" ]]; then
+  echo "FAIL: coolercontrol secrets mode expected 600 (got $mode_cc)" >&2
+  fail=1
+fi
+(
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/waybar-settings.sh"
+  got_pass=$(waybar_settings_get '.services.coolercontrol.ui_pass' '')
+  got_tok=$(waybar_settings_get '.services.coolercontrol.token' '')
+  got_user=$(waybar_settings_get '.services.coolercontrol.ui_user' '')
+  got_i2pd=$(waybar_settings_get '.services.i2pd.console_pass' '')
+  if [[ "$got_pass" != "cc-test-ui-pass-BBBB" ]]; then
+    echo "FAIL: coolercontrol ui_pass not written (got: $got_pass)" >&2
+    exit 1
+  fi
+  if [[ "$got_tok" != "cc_testtoken0000000000000000000000" ]]; then
+    echo "FAIL: coolercontrol token not written (got: $got_tok)" >&2
+    exit 1
+  fi
+  if [[ "$got_user" != "CCAdmin" ]]; then
+    echo "FAIL: coolercontrol ui_user default missing (got: $got_user)" >&2
+    exit 1
+  fi
+  if [[ "$got_i2pd" != "overlay-secret-pass-AAAA" ]]; then
+    echo "FAIL: coolercontrol sync clobbered i2pd console_pass" >&2
+    exit 1
+  fi
+) || fail=1
+
+# Idempotent re-run with credentials already present
+out_cc2=$(
+  CC_TEST_MODE=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  "$CC_SYNC" 2>&1
+)
+if ! grep -q 'credentials present\|unchanged\|Done' <<<"$out_cc2"; then
+  echo "FAIL: coolercontrol re-run should be idempotent. Output: $out_cc2" >&2
+  fail=1
+fi
+if grep -q 'wrote coolercontrol credentials' <<<"$out_cc2"; then
+  echo "FAIL: idempotent re-run should not rewrite secrets. Output: $out_cc2" >&2
+  fail=1
+fi
+
+# Token-only bootstrap
+printf '{}\n' >"$TEST_DIR/data/waybar-secrets.jsonc"
+out_tok=$(
+  CC_TEST_MODE=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  CC_TOKEN_ENV="cc_onlytoken1111111111111111111111" \
+  "$CC_SYNC" 2>&1
+) || {
+  echo "FAIL: token-only bootstrap failed: $out_tok" >&2
+  fail=1
+}
+(
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/waybar-settings.sh"
+  got=$(waybar_settings_get '.services.coolercontrol.token' '')
+  pass=$(waybar_settings_get '.services.coolercontrol.ui_pass' 'MISSING')
+  if [[ "$got" != "cc_onlytoken1111111111111111111111" ]]; then
+    echo "FAIL: token-only write mismatch (got: $got)" >&2
+    exit 1
+  fi
+  if [[ "$pass" != "MISSING" && -n "$pass" && "$pass" != "null" && "$pass" != "CHANGE_ME" ]]; then
+    echo "FAIL: token-only bootstrap should not invent ui_pass (got: $pass)" >&2
+    exit 1
+  fi
+) || fail=1
+
+# Pass-only bootstrap
+printf '{}\n' >"$TEST_DIR/data/waybar-secrets.jsonc"
+out_pass=$(
+  CC_TEST_MODE=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  CC_UI_PASS_ENV="cc-pass-only-CCCC" \
+  "$CC_SYNC" 2>&1
+) || {
+  echo "FAIL: pass-only bootstrap failed: $out_pass" >&2
+  fail=1
+}
+(
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/waybar-settings.sh"
+  got=$(waybar_settings_get '.services.coolercontrol.ui_pass' '')
+  tok=$(waybar_settings_get '.services.coolercontrol.token' 'MISSING')
+  if [[ "$got" != "cc-pass-only-CCCC" ]]; then
+    echo "FAIL: pass-only write mismatch (got: $got)" >&2
+    exit 1
+  fi
+  if [[ "$tok" != "MISSING" && -n "$tok" && "$tok" != "null" && "$tok" != "CHANGE_ME" ]]; then
+    echo "FAIL: pass-only bootstrap should not invent token (got: $tok)" >&2
+    exit 1
+  fi
+) || fail=1
+
+# Partial update: add token when pass already present
+out_partial=$(
+  CC_TEST_MODE=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  CC_TOKEN_ENV="cc_partialtoken2222222222222222222" \
+  "$CC_SYNC" 2>&1
+) || {
+  echo "FAIL: partial token update failed: $out_partial" >&2
+  fail=1
+}
+(
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/waybar-settings.sh"
+  got_pass=$(waybar_settings_get '.services.coolercontrol.ui_pass' '')
+  got_tok=$(waybar_settings_get '.services.coolercontrol.token' '')
+  if [[ "$got_pass" != "cc-pass-only-CCCC" ]]; then
+    echo "FAIL: partial update clobbered ui_pass (got: $got_pass)" >&2
+    exit 1
+  fi
+  if [[ "$got_tok" != "cc_partialtoken2222222222222222222" ]]; then
+    echo "FAIL: partial update did not write token (got: $got_tok)" >&2
+    exit 1
+  fi
+) || fail=1
+
+# Simulated sudo home resolution (CC_TEST_SUDO_HOME)
+SUDO_FAKE="$TEST_DIR/sudohome"
+mkdir -p "$SUDO_FAKE/.config/waybar"/{data,scripts/{lib,services/coolercontrol}}
+cp "$TEST_DIR/scripts/lib/waybar-settings.sh" "$SUDO_FAKE/.config/waybar/scripts/lib/"
+cp "$CC_SYNC" "$SUDO_FAKE/.config/waybar/scripts/services/coolercontrol/"
+cp "$TEST_DIR/data/waybar-settings.jsonc" "$SUDO_FAKE/.config/waybar/data/"
+cp "$TEST_DIR/data/waybar-secrets.example.jsonc" "$SUDO_FAKE/.config/waybar/data/"
+chmod +x "$SUDO_FAKE/.config/waybar/scripts/services/coolercontrol/"*.sh
+out_sudo=$(
+  CC_TEST_MODE=1 \
+  HOME=/root \
+  WAYBAR_HOME= \
+  SUDO_USER=fake-cc-user \
+  CC_TEST_SUDO_HOME="$SUDO_FAKE" \
+  WAYBAR_SCRIPTS=/root/.config/waybar/scripts \
+  CC_UI_PASS_ENV="cc-sudo-pass-DDDD" \
+  "$SUDO_FAKE/.config/waybar/scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh" 2>&1
+) || {
+  echo "FAIL: sudo-home resolution bootstrap failed: $out_sudo" >&2
+  fail=1
+}
+if [[ ! -f "$SUDO_FAKE/.config/waybar/data/waybar-secrets.jsonc" ]]; then
+  echo "FAIL: sudo-home sync did not write secrets under CC_TEST_SUDO_HOME" >&2
+  fail=1
+fi
+(
+  WAYBAR_HOME="$SUDO_FAKE/.config/waybar"
+  # shellcheck source=/dev/null
+  . "$SUDO_FAKE/.config/waybar/scripts/lib/waybar-settings.sh"
+  got=$(waybar_settings_get '.services.coolercontrol.ui_pass' '')
+  if [[ "$got" != "cc-sudo-pass-DDDD" ]]; then
+    echo "FAIL: sudo-home secrets mismatch (got: $got)" >&2
+    exit 1
+  fi
+) || fail=1
+
+# Mock curl auth path: must use POST /login (not GET) and Bearer /status
+CC_CURL_FAKE="$TEST_DIR/fakebin"
+mkdir -p "$CC_CURL_FAKE"
+CC_CURL_LOG="$TEST_DIR/curl-args.log"
+: >"$CC_CURL_LOG"
+cat >"$CC_CURL_FAKE/curl" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >>$(printf '%q' "$CC_CURL_LOG")
+joined="\$*"
+if [[ "\$joined" == *"/status"* && "\$joined" == *"Authorization: Bearer"* ]]; then
+  printf '200'
+  exit 0
+fi
+if [[ "\$joined" == *"/login"* ]]; then
+  if [[ "\$joined" != *"-X POST"* ]]; then
+    printf '405'
+    exit 0
+  fi
+  prev=""
+  for a in "\$@"; do
+    if [[ "\$prev" == "--netrc-file" && -f "\$a" ]]; then
+      if grep -q 'invalid-auth-check' "\$a" 2>/dev/null; then
+        printf '401'
+        exit 0
+      fi
+    fi
+    prev="\$a"
+  done
+  printf '200'
+  exit 0
+fi
+printf '000'
+exit 0
+EOF
+chmod +x "$CC_CURL_FAKE/curl"
+
+# Ensure secrets have both creds for auth exercise
+cat >"$TEST_DIR/data/waybar-secrets.jsonc" <<'JSON'
+{
+  "services": {
+    "coolercontrol": {
+      "ui_user": "CCAdmin",
+      "ui_pass": "cc-auth-pass-EEEE",
+      "token": "cc_authtoken333333333333333333333"
+    }
+  }
+}
+JSON
+out_auth=$(
+  PATH="$CC_CURL_FAKE:/usr/bin:/bin" \
+  CC_TEST_MODE=1 \
+  CC_FORCE_AUTH_CHECK=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  "$CC_SYNC" 2>&1
+) || {
+  echo "FAIL: forced auth check failed: $out_auth" >&2
+  fail=1
+}
+if ! grep -q 'API auth check: OK' <<<"$out_auth"; then
+  echo "FAIL: expected successful mock API auth. Output: $out_auth" >&2
+  echo "----- curl log -----" >&2
+  cat "$CC_CURL_LOG" >&2 || true
+  fail=1
+fi
+if ! grep -E -- '-X POST|.*/login' "$CC_CURL_LOG" >/dev/null 2>&1; then
+  # Bearer success may short-circuit before login; ensure either Bearer /status or POST /login was used
+  if ! grep -q '/status' "$CC_CURL_LOG"; then
+    echo "FAIL: mock curl never saw /status or /login. Log:" >&2
+    cat "$CC_CURL_LOG" >&2 || true
+    fail=1
+  fi
+fi
+# Bearer-only auth path
+: >"$CC_CURL_LOG"
+cat >"$TEST_DIR/data/waybar-secrets.jsonc" <<'JSON'
+{
+  "services": {
+    "coolercontrol": {
+      "token": "cc_authtoken333333333333333333333"
+    }
+  }
+}
+JSON
+out_auth_tok=$(
+  PATH="$CC_CURL_FAKE:/usr/bin:/bin" \
+  CC_TEST_MODE=1 \
+  CC_FORCE_AUTH_CHECK=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  "$CC_SYNC" 2>&1
+) || {
+  echo "FAIL: bearer auth check failed: $out_auth_tok" >&2
+  fail=1
+}
+if ! grep -q 'Bearer token' <<<"$out_auth_tok"; then
+  echo "FAIL: expected Bearer token auth OK message. Output: $out_auth_tok" >&2
+  fail=1
+fi
+if ! grep -q 'Authorization: Bearer' "$CC_CURL_LOG"; then
+  echo "FAIL: mock curl missing Bearer header. Log:" >&2
+  cat "$CC_CURL_LOG" >&2 || true
+  fail=1
+fi
+# Basic-only auth path must POST /login
+: >"$CC_CURL_LOG"
+cat >"$TEST_DIR/data/waybar-secrets.jsonc" <<'JSON'
+{
+  "services": {
+    "coolercontrol": {
+      "ui_user": "CCAdmin",
+      "ui_pass": "cc-auth-pass-EEEE"
+    }
+  }
+}
+JSON
+out_auth_basic=$(
+  PATH="$CC_CURL_FAKE:/usr/bin:/bin" \
+  CC_TEST_MODE=1 \
+  CC_FORCE_AUTH_CHECK=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  "$CC_SYNC" 2>&1
+) || {
+  echo "FAIL: basic auth check failed: $out_auth_basic" >&2
+  fail=1
+}
+if ! grep -q 'Basic login' <<<"$out_auth_basic"; then
+  echo "FAIL: expected Basic login auth OK message. Output: $out_auth_basic" >&2
+  fail=1
+fi
+if ! grep -E '(-X POST|/login)' "$CC_CURL_LOG" | grep -q '/login'; then
+  echo "FAIL: basic auth must hit POST /login. Log:" >&2
+  cat "$CC_CURL_LOG" >&2 || true
+  fail=1
+fi
+if ! grep -q -- '-X POST' "$CC_CURL_LOG"; then
+  echo "FAIL: /login must use POST (OpenAPI). Log:" >&2
+  cat "$CC_CURL_LOG" >&2 || true
+  fail=1
+fi
+# Password must not appear on curl argv (netrc only)
+if grep -F 'cc-auth-pass-EEEE' "$CC_CURL_LOG"; then
+  echo "FAIL: ui_pass appeared on curl argv" >&2
+  fail=1
+fi
+
+# Bearer rejected → ui_pass fallback (sync helper)
+: >"$CC_CURL_LOG"
+cat >"$CC_CURL_FAKE/curl" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >>$(printf '%q' "$CC_CURL_LOG")
+joined="\$*"
+if [[ "\$joined" == *"/status"* && "\$joined" == *"Authorization: Bearer"* ]]; then
+  if [[ "\$joined" == *"cc_bad"* ]]; then
+    printf '401'
+    exit 0
+  fi
+  printf '200'
+  exit 0
+fi
+if [[ "\$joined" == *"/login"* ]]; then
+  if [[ "\$joined" != *"-X POST"* ]]; then
+    printf '405'
+    exit 0
+  fi
+  prev=""
+  for a in "\$@"; do
+    if [[ "\$prev" == "--netrc-file" && -f "\$a" ]]; then
+      if grep -q 'invalid-auth-check' "\$a" 2>/dev/null; then
+        printf '401'
+        exit 0
+      fi
+    fi
+    prev="\$a"
+  done
+  printf '200'
+  exit 0
+fi
+printf '000'
+exit 0
+EOF
+chmod +x "$CC_CURL_FAKE/curl"
+cat >"$TEST_DIR/data/waybar-secrets.jsonc" <<'JSON'
+{
+  "services": {
+    "coolercontrol": {
+      "ui_user": "CCAdmin",
+      "ui_pass": "cc-auth-pass-EEEE",
+      "token": "cc_bad_token_should_fallback"
+    }
+  }
+}
+JSON
+out_auth_fb=$(
+  PATH="$CC_CURL_FAKE:/usr/bin:/bin" \
+  CC_TEST_MODE=1 \
+  CC_FORCE_AUTH_CHECK=1 \
+  WAYBAR_HOME="$TEST_DIR" \
+  "$CC_SYNC" 2>&1
+) || {
+  echo "FAIL: bearer→ui_pass fallback auth check failed: $out_auth_fb" >&2
+  fail=1
+}
+if ! grep -qi 'ui_pass fallback\|trying ui_pass' <<<"$out_auth_fb"; then
+  echo "FAIL: expected ui_pass fallback message. Output: $out_auth_fb" >&2
+  fail=1
+fi
+if ! grep -q 'API auth check: OK' <<<"$out_auth_fb"; then
+  echo "FAIL: fallback should still OK via ui_pass. Output: $out_auth_fb" >&2
+  fail=1
+fi
+if ! grep -q 'Authorization: Bearer' "$CC_CURL_LOG"; then
+  echo "FAIL: fallback should try Bearer first. Log:" >&2
+  cat "$CC_CURL_LOG" >&2 || true
+  fail=1
+fi
+if ! grep -q '/login' "$CC_CURL_LOG"; then
+  echo "FAIL: fallback should POST /login. Log:" >&2
+  cat "$CC_CURL_LOG" >&2 || true
+  fail=1
+fi
+
+echo "PASS: coolercontrol-set-ui-pass sync helper"
+
+# --- validate rejects coolercontrol secrets in compiled settings ---
+echo "Testing validate-generated-config coolercontrol credential guards..."
+# Restore clean compiled settings before injecting leaks
+(
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/waybar-settings.sh"
+)
+jq '.services.coolercontrol.ui_pass = "should-not-be-here"' \
+  "$TEST_DIR/data/waybar-settings.json" >"$TEST_DIR/data/waybar-settings.json.tmp"
+mv "$TEST_DIR/data/waybar-settings.json.tmp" "$TEST_DIR/data/waybar-settings.json"
+if WAYBAR_HOME="$TEST_DIR" "$TEST_DIR/scripts/ci/validate-generated-config.sh" >/dev/null 2>&1; then
+  echo "FAIL: validate should reject coolercontrol.ui_pass in settings JSON" >&2
+  fail=1
+else
+  echo "PASS: validate rejects coolercontrol.ui_pass in settings"
+fi
+(
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/waybar-settings.sh"
+)
+jq '.services.coolercontrol.token = "cc_should_not_be_here"' \
+  "$TEST_DIR/data/waybar-settings.json" >"$TEST_DIR/data/waybar-settings.json.tmp"
+mv "$TEST_DIR/data/waybar-settings.json.tmp" "$TEST_DIR/data/waybar-settings.json"
+if WAYBAR_HOME="$TEST_DIR" "$TEST_DIR/scripts/ci/validate-generated-config.sh" >/dev/null 2>&1; then
+  echo "FAIL: validate should reject coolercontrol.token in settings JSON" >&2
+  fail=1
+else
+  echo "PASS: validate rejects coolercontrol.token in settings"
+fi
+(
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/waybar-settings.sh"
+)
+
 # --- polish runtime script wiring ---
 echo "Testing polish runtime settings wiring..."
 cp "$ROOT/scripts/services/sync/updates-status.sh" "$TEST_DIR/scripts/services/sync/"
@@ -390,6 +937,9 @@ find "$TEST_DIR/scripts" \( -name '*.sh' -o -name '*.py' \) -exec chmod +x {} +
 
 mkdir -p "$TEST_DIR/bin" "$TEST_DIR/cache"
 export XDG_CACHE_HOME="$TEST_DIR/cache"
+# Stubs go first on PATH for polish runtime tests. Keep the pre-stub PATH so
+# compositor-gate (later) can use real host tools without checkupdates/rofi mocks.
+WAYBAR_TEST_HOST_PATH="$PATH"
 export PATH="$TEST_DIR/bin:$PATH"
 
 # Shared log for mocked tools
@@ -531,6 +1081,114 @@ if ! echo "$out" | jq -e '.tooltip | test("AUR updates: 0")' >/dev/null 2>&1; th
   echo "FAIL: AUR disabled should report 0. out=$out" >&2
   fail=1
 fi
+
+# Cross-distro backends (no paru required)
+cat >"$TEST_DIR/bin/apt" <<'EOF'
+#!/usr/bin/env sh
+if [ "${1:-}" = "list" ]; then
+  printf 'Listing...\npkg/stable 1.0 [upgradable from: 0.9]\n'
+fi
+EOF
+cat >"$TEST_DIR/bin/dnf" <<'EOF'
+#!/usr/bin/env sh
+printf 'foo.x86_64 1-1\n'
+exit 100
+EOF
+cat >"$TEST_DIR/bin/flatpak" <<'EOF'
+#!/usr/bin/env sh
+exit 0
+EOF
+chmod +x "$TEST_DIR/bin/apt" "$TEST_DIR/bin/dnf" "$TEST_DIR/bin/flatpak"
+rm -f "$TEST_DIR/bin/checkupdates" # force non-arch if backend not overridden
+: >"$TEST_DIR/bin/calls.log"
+out=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$TEST_DIR/cache" WAYBAR_BACKGROUND=1 \
+  WAYBAR_UPDATES_BACKEND=apt \
+    "$TEST_DIR/scripts/services/sync/updates-status.sh" --refresh 2>/dev/null | tail -n 1
+) || true
+if ! echo "$out" | jq -e '.tooltip | test("Backend: apt") and test("APT updates: 1")' >/dev/null 2>&1; then
+  echo "FAIL: updates-status apt backend. out=$out" >&2
+  fail=1
+fi
+out=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$TEST_DIR/cache" WAYBAR_BACKGROUND=1 \
+  WAYBAR_UPDATES_BACKEND=dnf \
+    "$TEST_DIR/scripts/services/sync/updates-status.sh" --refresh 2>/dev/null | tail -n 1
+) || true
+if ! echo "$out" | jq -e '.tooltip | test("Backend: dnf") and test("DNF updates: 1")' >/dev/null 2>&1; then
+  echo "FAIL: updates-status dnf backend. out=$out" >&2
+  fail=1
+fi
+# Restore Arch stubs for remaining tests
+cat >"$TEST_DIR/bin/checkupdates" <<'EOF'
+#!/usr/bin/env sh
+printf 'checkupdates\n' >>"${WAYBAR_HOME}/bin/calls.log"
+exit 0
+EOF
+chmod +x "$TEST_DIR/bin/checkupdates"
+
+# updates-review without paru: apt_update settings path
+python3 - "$TEST_DIR/data/waybar-settings.jsonc" <<'PY'
+import json, re, sys
+path = sys.argv[1]
+text = open(path, encoding="utf-8").read()
+text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+text = re.sub(r"^\s*//.*$", "", text, flags=re.M)
+data = json.loads(text)
+data.setdefault("apps", {})["apt_update"] = "MOCK_APT_UP"
+open(path, "w", encoding="utf-8").write(json.dumps(data, indent=2) + "\n")
+PY
+(
+  # shellcheck source=/dev/null
+  . "$TEST_DIR/scripts/lib/waybar-settings.sh"
+)
+cat >"$TEST_DIR/bin/apt" <<'EOF'
+#!/usr/bin/env sh
+printf 'pkg/stable 1.0 [upgradable from: 0.9]\n'
+EOF
+# Default polish rofi stub returns Close for System Updates — force Upgrade pick
+cat >"$TEST_DIR/bin/rofi" <<'EOF'
+#!/usr/bin/env sh
+printf 'rofi %s\n' "$*" >>"${WAYBAR_HOME}/bin/calls.log"
+printf '🚀 Upgrade System Now\n'
+EOF
+chmod +x "$TEST_DIR/bin/apt" "$TEST_DIR/bin/rofi"
+rm -f "$TEST_DIR/bin/paru"
+: >"$TEST_DIR/bin/calls.log"
+WAYBAR_HOME="$TEST_DIR" WAYBAR_UPDATES_BACKEND=apt \
+  "$TEST_DIR/scripts/services/sync/updates-review.sh" >/dev/null 2>&1 || true
+if ! grep -q 'app-open MOCK_APT_UP' "$TEST_DIR/bin/calls.log"; then
+  echo "FAIL: updates-review without paru should use apps.apt_update. log=$(cat "$TEST_DIR/bin/calls.log")" >&2
+  fail=1
+fi
+# Restore paru + default rofi stubs
+cat >"$TEST_DIR/bin/paru" <<'EOF'
+#!/usr/bin/env sh
+printf 'paru\n' >>"${WAYBAR_HOME}/bin/calls.log"
+printf 'aur/pkg 1-1 -> 1-2\n'
+EOF
+cat >"$TEST_DIR/bin/rofi" <<'EOF'
+#!/usr/bin/env sh
+printf 'rofi %s\n' "$*" >>"${WAYBAR_HOME}/bin/calls.log"
+# echo first menu line for click scripts that expect a selection
+if printf '%s' "$*" | grep -q 'Power Profile'; then
+  printf '⚡ performance\n'
+elif printf '%s' "$*" | grep -q 'System Updates'; then
+  printf '❌ Close\n'
+elif printf '%s' "$*" | grep -q 'Select Device'; then
+  printf 'Phone\n'
+elif printf '%s' "$*" | grep -q 'Action'; then
+  printf 'Ping\n'
+elif printf '%s' "$*" | grep -q 'Device Notifier'; then
+  printf '󰑐 Rescan Devices\n'
+elif printf '%s' "$*" | grep -q 'KDE Vaults'; then
+  exit 0
+else
+  cat >/dev/null
+  exit 0
+fi
+EOF
+chmod +x "$TEST_DIR/bin/paru" "$TEST_DIR/bin/rofi"
 
 # github-status: preview_limit=3 truncates 5 items
 : >"$TEST_DIR/bin/calls.log"
@@ -708,19 +1366,30 @@ else
   echo "PASS: secrets mode 600 asserted"
 fi
 
-# --- compositor-gate real behavior (not the polish stub) ---
+# --- compositor-gate real behavior (not the polish stub); host PATH, private runtime ---
+# Use HYPRLAND_INSTANCE_SIGNATURE (not WAYBAR_COMPOSITOR) so we exercise session
+# detection. Clear the session cache; earlier polish may have called detect_compositor
+# under host KDE env and written "kde" into $XDG_RUNTIME_DIR/waybar-compositor.
 GATE="$ROOT/scripts/lib/compositor-gate.sh"
-gate_out=$(HYPRLAND_INSTANCE_SIGNATURE=test-sig "$GATE" --show kde -- echo RAN 2>/dev/null || true)
+rm -f "${SUITE_RUNTIME}/waybar-compositor"
+gate_env=(
+  env
+  -u WAYBAR_COMPOSITOR
+  PATH="${WAYBAR_TEST_HOST_PATH:-/usr/bin:/bin}"
+  XDG_RUNTIME_DIR="$SUITE_RUNTIME"
+  HYPRLAND_INSTANCE_SIGNATURE=test-sig
+)
+gate_out=$("${gate_env[@]}" "$GATE" --show kde -- echo RAN 2>/dev/null || true)
 if ! printf '%s' "$gate_out" | grep -q '"class":"hidden"'; then
   echo "FAIL: compositor-gate --show kde on Hyprland should emit hidden JSON (got: $gate_out)" >&2
   fail=1
 fi
-gate_run=$(HYPRLAND_INSTANCE_SIGNATURE=test-sig "$GATE" --show hyprland -- echo RAN 2>/dev/null || true)
+gate_run=$("${gate_env[@]}" "$GATE" --show hyprland -- echo RAN 2>/dev/null || true)
 if [[ "$gate_run" != "RAN" ]]; then
   echo "FAIL: compositor-gate --show hyprland on Hyprland should exec command (got: $gate_run)" >&2
   fail=1
 fi
-gate_hide=$(HYPRLAND_INSTANCE_SIGNATURE=test-sig "$GATE" --hide hyprland -- echo RAN 2>/dev/null || true)
+gate_hide=$("${gate_env[@]}" "$GATE" --hide hyprland -- echo RAN 2>/dev/null || true)
 if ! printf '%s' "$gate_hide" | grep -q '"class":"hidden"'; then
   echo "FAIL: compositor-gate --hide hyprland on Hyprland should emit hidden JSON (got: $gate_hide)" >&2
   fail=1
@@ -762,6 +1431,13 @@ HOOK_REPO=$(mktemp -d)
   git add data/waybar-settings.jsonc
   if scripts/ci/pre-commit-check-secrets.sh; then
     echo "FAIL: pre-commit should block console_pass in settings" >&2
+    exit 1
+  fi
+  # Block coolercontrol ui_pass in settings
+  printf '{\n  "services": { "coolercontrol": { "ui_pass": "leak" } }\n}\n' >data/waybar-settings.jsonc
+  git add data/waybar-settings.jsonc
+  if scripts/ci/pre-commit-check-secrets.sh; then
+    echo "FAIL: pre-commit should block ui_pass in settings" >&2
     exit 1
   fi
   # Clean stage OK

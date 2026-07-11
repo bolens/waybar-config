@@ -28,6 +28,7 @@
       "custom/desk-drawer",
       "custom/notifications",
       "custom/powerprofiles",
+      "custom/asusctl",
       "custom/brightness",
       "bluetooth",
       "idle_inhibitor",
@@ -93,6 +94,7 @@
       "custom/nightlight",
       "custom/clipboard",
       "custom/colorpicker",
+      "custom/rgb",
       "custom/discord",
       "custom/weather"
     ]
@@ -171,9 +173,12 @@
       "custom/gpu",
       "custom/memory",
       "custom/disk",
+      "custom/nvme",
       "custom/psu",
       "custom/fans",
-      "custom/liquidctl"
+      "custom/liquidctl",
+      "custom/coolercontrol",
+      "custom/openlinkhub"
     ]
   },
   "group/security": {

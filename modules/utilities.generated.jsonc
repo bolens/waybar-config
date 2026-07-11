@@ -91,6 +91,19 @@
     "on-scroll-up": "$WAYBAR_HOME/scripts/system/powerprofiles-click.sh next",
     "on-scroll-down": "$WAYBAR_HOME/scripts/system/powerprofiles-click.sh next"
   },
+  "custom/asusctl": {
+    "format": "{}",
+    "return-type": "json",
+    "tooltip": true,
+    "signal": 28,
+    "interval": "once",
+    "exec": "$WAYBAR_HOME/scripts/system/asusctl-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/system/asusctl-click.sh menu",
+    "on-click-right": "$WAYBAR_HOME/scripts/system/asusctl-click.sh next",
+    "on-click-middle": "$WAYBAR_HOME/scripts/system/asusctl-status.sh --refresh",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/system/asusctl-click.sh next",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/system/asusctl-click.sh prev"
+  },
   "custom/discord": {
     "format": "{}",
     "return-type": "json",
@@ -148,6 +161,17 @@
     "format": "󰏘",
     "tooltip": "Color Picker · Click to grab color",
     "on-click": "$WAYBAR_HOME/scripts/capture/color-picker.sh"
+  },
+  "custom/rgb": {
+    "format": "{}",
+    "return-type": "json",
+    "tooltip": true,
+    "signal": 30,
+    "interval": 30,
+    "exec": "$WAYBAR_HOME/scripts/system/rgb-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/tools/app-open-key.sh openrgb",
+    "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open-key.sh ckb_next",
+    "on-click-middle": "$WAYBAR_HOME/scripts/system/rgb-status.sh --refresh"
   },
   "custom/vaults": {
     "format": "{}",

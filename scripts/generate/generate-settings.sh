@@ -234,6 +234,16 @@ build_system_json() {
         "on-click-right": click_app("btop"),
         "on-click-middle": ($scripts + "/system/disk-status.sh --refresh")
       },
+      "custom/nvme": {
+        format: "{}",
+        "return-type": "json",
+        tooltip: true,
+        interval: interval("nvme"),
+        exec: ($scripts + "/system/nvme-status.sh"),
+        "on-click": click_app("btop"),
+        "on-click-right": click_app("system_monitor"),
+        "on-click-middle": ($scripts + "/system/nvme-status.sh --refresh")
+      },
       "custom/uptime": {
         format: "{}",
         "return-type": "json",
@@ -273,6 +283,29 @@ build_system_json() {
         "on-click": click_app("btop"),
         "on-click-right": click_app("system_monitor"),
         "on-click-middle": ($scripts + "/system/liquidctl-status.sh --refresh")
+      },
+      "custom/coolercontrol": {
+        format: "{}",
+        "return-type": "json",
+        tooltip: true,
+        interval: interval("coolercontrol"),
+        signal: signal("coolercontrol"),
+        exec: ($scripts + "/services/coolercontrol/coolercontrol-status.sh"),
+        "on-click": ($settings[0].services.coolercontrol.on_click // ($app_open + " xdg-open " + ($settings[0].services.coolercontrol.ui_url // "http://127.0.0.1:11987"))),
+        "on-click-right": ($settings[0].services.coolercontrol.on_click_right // ($scripts + "/services/coolercontrol/coolercontrol-click.sh menu")),
+        "on-click-middle": ($settings[0].services.coolercontrol.on_click_middle // ($scripts + "/services/coolercontrol/coolercontrol-status.sh --refresh")),
+        "on-scroll-up": ($settings[0].services.coolercontrol.on_scroll_up // ($scripts + "/services/coolercontrol/coolercontrol-click.sh next")),
+        "on-scroll-down": ($settings[0].services.coolercontrol.on_scroll_down // ($scripts + "/services/coolercontrol/coolercontrol-click.sh prev"))
+      },
+      "custom/openlinkhub": {
+        format: "{}",
+        "return-type": "json",
+        tooltip: true,
+        interval: interval("openlinkhub"),
+        signal: signal("openlinkhub"),
+        exec: ($scripts + "/services/openlinkhub/openlinkhub-status.sh"),
+        "on-click": ($settings[0].services.openlinkhub.on_click // ($app_open + " xdg-open " + ($settings[0].services.openlinkhub.ui_url // "http://127.0.0.1:27003"))),
+        "on-click-middle": ($scripts + "/services/openlinkhub/openlinkhub-status.sh --refresh")
       },
       "custom/libredefender": {
         format: "{}",

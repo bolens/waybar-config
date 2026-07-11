@@ -43,6 +43,7 @@
     "clipboard": "once",
     "brightness": "once",
     "powerprofiles": "once",
+    "asusctl": "once",
     "discord": "once",
     "mic": "once",
     "vpn": "once",
@@ -79,6 +80,10 @@
     "device_battery": "once",
     "fans": 30,
     "liquidctl": 60,
+    "coolercontrol": 60,
+    "nvme": 30,
+    "openlinkhub": 60,
+    "rgb": 30,
     "libredefender": 300,
     "chkrootkit": 300,
     "syncthing": "once",
@@ -113,7 +118,11 @@
     "syncthing": 22,
     "sunshine": 23,
     "streamdeck": 24,
-    "i2pd": 25
+    "i2pd": 25,
+    "coolercontrol": 27,
+    "asusctl": 28,
+    "openlinkhub": 29,
+    "rgb": 30
   },
   "layouts": {
     "top": {
@@ -148,6 +157,7 @@
         "custom/desk-drawer",
         "custom/notifications",
         "custom/powerprofiles",
+        "custom/asusctl",
         "custom/brightness",
         "bluetooth",
         "idle_inhibitor",
@@ -186,6 +196,7 @@
         "custom/nightlight",
         "custom/clipboard",
         "custom/colorpicker",
+        "custom/rgb",
         "custom/discord",
         "custom/weather"
       ]
@@ -227,7 +238,7 @@
     },
     "hardware": {
       "drawer": "left",
-      "modules": ["custom/hardware-drawer", "custom/cpu", "custom/gpu", "custom/memory", "custom/disk", "custom/psu", "custom/fans", "custom/liquidctl"]
+      "modules": ["custom/hardware-drawer", "custom/cpu", "custom/gpu", "custom/memory", "custom/disk", "custom/nvme", "custom/psu", "custom/fans", "custom/liquidctl", "custom/coolercontrol", "custom/openlinkhub"]
     },
     "security": {
       "drawer": "left",
@@ -260,8 +271,11 @@
     "scroll_delay": 0.3 
   },
   "capture": {
-    "screenshot_dir": "/mnt/media/screenshots", 
-    "screenrecord_dir": "/mnt/media/screenrecordings", 
+    
+    
+    
+    "screenshot_dir": null,
+    "screenrecord_dir": null,
     "screenrecord_fps": 60 
   },
   "disk": {
@@ -269,7 +283,9 @@
   },
   "liquidctl": {
     "match": "", 
-    "pick": null 
+    "pick": null, 
+    
+    "skip_corsair_psu_if_hwmon": true
   },
   "updates": {
     "preview_limit": 40, 
@@ -315,6 +331,28 @@
       "service_name": "i2pd.service",
       "on_click": null,
       "on_click_right": null
+    },
+    "coolercontrol": {
+      "api_url": "http://127.0.0.1:11987",
+      "ui_url": "http://127.0.0.1:11987",
+      "ui_user": "CCAdmin",
+      
+      
+      
+      "service_name": "coolercontrold.service",
+      "on_click": null, 
+      "on_click_right": null, 
+      "on_click_middle": null, 
+      "on_scroll_up": null, 
+      "on_scroll_down": null 
+    },
+    "openlinkhub": {
+      "api_url": "http://127.0.0.1:27003",
+      "ui_url": "http://127.0.0.1:27003",
+      "service_name": "openlinkhub.service",
+      
+      "prefer_presence": true,
+      "on_click": null 
     }
   },
   "network": {
@@ -463,6 +501,15 @@
     "liquidctl": {
       "temp": { "warning": 55, "critical": 65 } 
     },
+    "coolercontrol": {
+      "temp": { "warning": 75, "critical": 90 } 
+    },
+    "nvme": {
+      "temp": { "warning": 60, "critical": 75 } 
+    },
+    "openlinkhub": {
+      "temp": { "warning": 60, "critical": 75 }
+    },
     "psu": {
       "temp": { "warning": 55, "critical": 65 }
     },
@@ -521,6 +568,14 @@
       "width": 250,
       "lines": 3
     },
+    "asusctl": {
+      "width": 280,
+      "lines": 4
+    },
+    "coolercontrol": {
+      "width": 320,
+      "lines": 6
+    },
     "kdeconnect": {
       "width": 400
     },
@@ -555,6 +610,8 @@
     "github_notifications": "https://github.com/notifications",
     "github_home": "https://github.com",
     "solaar": "solaar",
+    "openrgb": "openrgb",
+    "ckb_next": "ckb-next",
     "input_settings": "systemsettings",
     "power_settings": "systemsettings",
     "privacy_settings": "systemsettings6 kcm_app-permissions",

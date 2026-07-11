@@ -71,14 +71,11 @@ jobs:
               - '.shellcheckrc'
             scripts:
               - 'scripts/**'
+            # Generator suite copies/exercises almost every script domain + generated
+            # configs — keep this aligned with scripts/** so status/module changes
+            # actually re-run the integration harness (not only generate/*.sh).
             generator:
-              - 'scripts/generate/**'
-              - 'scripts/ci/run-generator-tests.sh'
-              - 'scripts/ci/check-shell-contracts.sh'
-              - 'scripts/ci/validate-generated-config.sh'
-              - 'scripts/lib/waybar-settings.sh'
-              - 'scripts/lib/waybar-cache-helpers.sh'
-              - 'scripts/lib/compositor-session.sh'
+              - 'scripts/**'
               - 'data/**'
               - 'layouts/**'
               - 'modules/**'
@@ -86,19 +83,36 @@ jobs:
               - 'theme/**'
               - 'theme.css'
               - 'config.jsonc'
+            # Secrets suite is narrower: helpers it copies + polish scripts it stubs.
             secrets:
               - 'scripts/ci/run-secrets-and-settings-tests.sh'
               - 'scripts/ci/pre-commit-check-secrets.sh'
               - 'scripts/ci/validate-generated-config.sh'
+              - 'scripts/ci/waybar-test-sanitize-env.sh'
               - 'scripts/lib/waybar-settings.sh'
               - 'scripts/lib/capture-lib.sh'
               - 'scripts/lib/compositor-gate.sh'
+              - 'scripts/lib/compositor-session.sh'
+              - 'scripts/lib/waybar-cache-helpers.sh'
+              - 'scripts/lib/unicode-animations-lib.sh'
+              - 'scripts/lib/notifications-lib.sh'
               - 'scripts/services/i2pd/i2pd-set-console-pass.sh'
+              - 'scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh'
+              - 'scripts/services/sync/updates-status.sh'
+              - 'scripts/services/sync/updates-review.sh'
+              - 'scripts/services/apps/github-status.sh'
+              - 'scripts/services/security/**'
+              - 'scripts/services/devices/**'
+              - 'scripts/system/powerprofiles-click.sh'
+              - 'scripts/workspaces/keybindhint-click.sh'
+              - 'scripts/tools/**'
               - 'data/waybar-secrets*'
               - 'data/waybar-settings*'
               - '.gitignore'
             validate:
               - 'scripts/ci/validate-generated-config.sh'
+              - 'scripts/generate/**'
+              - 'scripts/lib/waybar-settings.sh'
               - 'data/**'
               - 'layouts/**'
               - 'modules/**'
@@ -114,6 +128,7 @@ jobs:
               - 'scripts/infra/waybar-launch.sh'
               - 'scripts/infra/listener-ctl.sh'
               - 'scripts/infra/waybar-healthcheck.sh'
+              - 'scripts/infra/waybar-journal-drop.rg'
 
   # Fast fail-early checks before the heavier suites.
   syntax:

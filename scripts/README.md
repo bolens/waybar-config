@@ -12,7 +12,7 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `side-info/` | Side drawer tabs/summaries |
 | `dock/` | Dock launcher + dock-windows |
 | `workspaces/` | Workspaces, active window, keybind hints |
-| `system/` | CPU/mem/disk/gpu/fans/liquidctl/power/brightness/… |
+| `system/` | CPU/mem/disk/gpu/nvme/fans/liquidctl/asusctl/rgb/power/brightness/… |
 | `network/` | Wi‑Fi, VPN, ethernet, Tailscale, … |
 | `media/` | Audio, mic, MPRIS |
 | `notifications/` | Notifications + clipboard |
@@ -30,6 +30,8 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `containers/` | docker, runtimes |
 | `sync/` | updates, syncthing |
 | `i2pd/` | i2pd status + console-pass helper |
+| `coolercontrol/` | CoolerControl status/click + API helper + UI-pass sync + dumps ([deps](../README.md#dependencies)) |
+| `openlinkhub/` | OpenLinkHub status (hides when service/API down; PSU prefers corsairpsu — [deps](../README.md#dependencies)) |
 | `hypr/` | hypr-bar modules, hyprwhspr wrapper |
 | `desktop/` | nightlight |
 

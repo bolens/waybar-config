@@ -13,8 +13,6 @@
 # Docs:  README.md → "Secrets (i2pd console)"
 # Test:  I2PD_TEST_MODE=1 I2PD_ETC_CONF=... I2PD_VAR_CONF=... (skips root/systemd/auth)
 set -euo pipefail
-: "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
-: "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 umask 077
 
@@ -25,6 +23,7 @@ if [[ "$(id -u)" -ne 0 && "$I2PD_TEST_MODE" != "1" ]]; then
   exit 1
 fi
 
+# Resolve the invoking user's waybar tree under sudo (HOME is /root otherwise).
 WAYBAR_HOME="${WAYBAR_HOME:-}"
 if [[ -n "${SUDO_USER:-}" ]]; then
   SUDO_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
@@ -35,6 +34,8 @@ fi
 if [[ -z "$WAYBAR_HOME" ]]; then
   WAYBAR_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/waybar"
 fi
+# Always derive scripts from the resolved home (do not keep a stale /root path).
+WAYBAR_SCRIPTS="$WAYBAR_HOME/scripts"
 
 ETC_CONF="${I2PD_ETC_CONF:-/etc/i2pd/i2pd.conf}"
 VAR_CONF="${I2PD_VAR_CONF:-/var/lib/i2pd/i2pd.conf}"

@@ -35,3 +35,8 @@ data/waybar-secrets.jsonc
 
 # Note: data/waybar-settings.json and *.generated.{jsonc,css} are compiled
 # artifacts that ARE tracked so clones work before the first generate.
+
+# OpenLinkHub host dumps sometimes land in the waybar config dir — never commit.
+/config.json
+/dashboard.json
+/display.json

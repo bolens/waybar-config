@@ -123,6 +123,19 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "on-scroll-up": ($scripts + "/system/powerprofiles-click.sh next"),
       "on-scroll-down": ($scripts + "/system/powerprofiles-click.sh next")
     },
+    "custom/asusctl": {
+      format: "{}",
+      "return-type": "json",
+      tooltip: true,
+      signal: sig("asusctl"),
+      interval: iv("asusctl"),
+      exec: ($scripts + "/system/asusctl-status.sh"),
+      "on-click": ($scripts + "/system/asusctl-click.sh menu"),
+      "on-click-right": ($scripts + "/system/asusctl-click.sh next"),
+      "on-click-middle": ($scripts + "/system/asusctl-status.sh --refresh"),
+      "on-scroll-up": ($scripts + "/system/asusctl-click.sh next"),
+      "on-scroll-down": ($scripts + "/system/asusctl-click.sh prev")
+    },
     "custom/discord": {
       format: "{}",
       "return-type": "json",
@@ -180,6 +193,17 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       format: "󰏘",
       tooltip: "Color Picker · Click to grab color",
       "on-click": ($s[0].colorpicker.on_click // ($scripts + "/capture/color-picker.sh"))
+    },
+    "custom/rgb": {
+      format: "{}",
+      "return-type": "json",
+      tooltip: true,
+      signal: sig("rgb"),
+      interval: iv("rgb"),
+      exec: ($scripts + "/system/rgb-status.sh"),
+      "on-click": ($scripts + "/tools/app-open-key.sh openrgb"),
+      "on-click-right": ($scripts + "/tools/app-open-key.sh ckb_next"),
+      "on-click-middle": ($scripts + "/system/rgb-status.sh --refresh")
     },
     "custom/vaults": {
       format: "{}",
@@ -399,6 +423,7 @@ jq -n --slurpfile s "$settings" \
     {
       "custom/notifications": "Notifications",
       "custom/powerprofiles": "Power profile",
+      "custom/asusctl": "ASUS profile",
       "custom/brightness": "Brightness",
       "bluetooth": "Bluetooth",
       "idle_inhibitor": "Idle inhibitor",
@@ -426,6 +451,7 @@ jq -n --slurpfile s "$settings" \
       "custom/nightlight": "Night light",
       "custom/clipboard": "Clipboard",
       "custom/colorpicker": "Color picker",
+      "custom/rgb": "RGB",
       "custom/discord": "Discord",
       "custom/weather": "Weather",
       "custom/docker": "Docker",
@@ -443,9 +469,12 @@ jq -n --slurpfile s "$settings" \
       "custom/gpu": "GPU",
       "custom/memory": "Memory",
       "custom/disk": "Disk",
+      "custom/nvme": "NVMe",
       "custom/psu": "PSU",
       "custom/fans": "Fans",
       "custom/liquidctl": "Liquidctl",
+      "custom/coolercontrol": "CoolerControl",
+      "custom/openlinkhub": "OpenLinkHub",
       "custom/lock": "Lock",
       "custom/logout": "Logout",
       "custom/suspend": "Suspend",

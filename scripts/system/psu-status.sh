@@ -33,6 +33,11 @@ fi
 psu_temp_warn=$(waybar_settings_get '.thresholds.psu.temp.warning' '55')
 psu_temp_crit=$(waybar_settings_get '.thresholds.psu.temp.critical' '65')
 
+# Test/portability hook: fake hwmon tree via WAYBAR_HWMON_ROOT.
+# Path cache (corsairpsu-path.txt) stores an absolute directory — clear that file
+# when swapping roots in tests, or an old path will keep winning.
+hwmon_root="${WAYBAR_HWMON_ROOT:-/sys/class/hwmon}"
+
 # 1. Find corsairpsu hwmon path:
 # Corsair digital power supplies report real-time telemetry (watts, volts, temp) via the corsairpsu driver.
 # We cache the sysfs path under hwmon to avoid walking the directory tree on every refresh.
@@ -49,7 +54,7 @@ if [ -f "$psu_path_file" ]; then
   fi
 fi
 if [ -z "$psu_dir" ]; then
-  for d in /sys/class/hwmon/hwmon*; do
+  for d in "$hwmon_root"/hwmon*; do
     if [ -f "$d/name" ] && [ "$(cat "$d/name" 2>/dev/null)" = "corsairpsu" ]; then
       psu_dir="$d"
       tmp_psu="$psu_path_file.tmp.$$"

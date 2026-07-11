@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Waybar status for liquidctl devices (AIO coolers, USB PSUs, fan hubs, …).
-# Bar prefers liquid temp → other temps → pump RPM → fan RPM → power.
-# Hides (disconnected) when liquidctl is missing or no useful telemetry is available.
+# Waybar status for liquidctl devices (AIO coolers, fan hubs, …).
+# Prefers liquidctl for devices NOT already covered by cheaper sources:
+#   - CorsairHidPsu skipped when corsairpsu hwmon exists (custom/psu)
+#   - Aura RGB skipped (use OpenRGB/ckb-next)
+# Hides when nothing useful remains (avoids HID probes for covered devices).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -23,12 +25,12 @@ if [ "${1:-}" != "--refresh" ]; then
   exit 0
 fi
 
-# --refresh mode
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 temp_warn=$(waybar_settings_get '.thresholds.liquidctl.temp.warning' '55')
 temp_crit=$(waybar_settings_get '.thresholds.liquidctl.temp.critical' '65')
 match=$(waybar_settings_get '.liquidctl.match' '')
 pick=$(waybar_settings_get '.liquidctl.pick' '')
+skip_psu=$(waybar_settings_get '.liquidctl.skip_corsair_psu_if_hwmon' 'true')
 
 write_cache_and_exit() {
   json="$1"
@@ -50,7 +52,6 @@ resolve_liquidctl() {
       printf '%s' "$WAYBAR_LIQUIDCTL_BIN"
       return 0
     fi
-    # Stale override (e.g. deleted test fixture) — fall through to real lookup.
   fi
   if command -v liquidctl >/dev/null 2>&1; then
     command -v liquidctl
@@ -68,65 +69,151 @@ resolve_liquidctl() {
   return 1
 }
 
+has_corsairpsu_hwmon() {
+  # Test overrides: WAYBAR_CORSAIRPSU_PRESENT=0|1
+  case "${WAYBAR_CORSAIRPSU_PRESENT:-}" in
+    0|false|no) return 1 ;;
+    1|true|yes) return 0 ;;
+  esac
+  local psu_path_file="$cache_dir/corsairpsu-path.txt" d
+  local hwmon_root="${WAYBAR_HWMON_ROOT:-/sys/class/hwmon}"
+  if [ -f "$psu_path_file" ]; then
+    d=$(cat "$psu_path_file" 2>/dev/null || true)
+    if [ -n "$d" ] && [ -f "$d/name" ] && [ "$(cat "$d/name" 2>/dev/null)" = "corsairpsu" ]; then
+      return 0
+    fi
+  fi
+  for d in "$hwmon_root"/hwmon*; do
+    if [ -f "$d/name" ] && [ "$(cat "$d/name" 2>/dev/null)" = "corsairpsu" ]; then
+      printf '%s\n' "$d" >"$psu_path_file.tmp.$$" 2>/dev/null \
+        && mv -f "$psu_path_file.tmp.$$" "$psu_path_file" 2>/dev/null || true
+      return 0
+    fi
+  done
+  return 1
+}
+
+is_rgb_only() {
+  local driver="$1" desc="$2"
+  case "$driver" in
+    AuraLed|AuraLedController) return 0 ;;
+  esac
+  printf '%s' "$desc" | grep -qi 'Aura LED' && return 0
+  return 1
+}
+
+is_corsair_psu_driver() {
+  local driver="$1" desc="$2"
+  case "$driver" in
+    CorsairHidPsu|CorsairPsu) return 0 ;;
+  esac
+  printf '%s' "$desc" | grep -qiE 'HX[0-9]|RM[0-9]|HXi|RMi|Corsair.*(PSU|Power Supply)' && return 0
+  return 1
+}
+
+should_skip_device() {
+  local driver="$1" desc="$2"
+  if is_rgb_only "$driver" "$desc"; then
+    return 0
+  fi
+  if [ "$skip_psu_hwmon" -eq 1 ] && is_corsair_psu_driver "$driver" "$desc"; then
+    return 0
+  fi
+  return 1
+}
+
 if ! liquidctl_bin="$(resolve_liquidctl)"; then
   emit_disconnected "liquidctl not installed"
 fi
 
-# liquidctl omits --json output when *any* device errors (common with Aura LED).
-# Prefer a bulk status call; on empty/fail, probe each listed device with --pick.
+skip_psu_hwmon=0
+if [ "$skip_psu" = "true" ] || [ "$skip_psu" = "1" ]; then
+  if has_corsairpsu_hwmon; then
+    skip_psu_hwmon=1
+  fi
+fi
+
+# One list call: decide whether any device still needs liquidctl (avoid status/HID when PSU-only).
+list_json=""
+list_cmd=(timeout 4 "$liquidctl_bin" list --json)
+if [ -n "$match" ] && [ "$match" != "null" ]; then
+  list_cmd+=(--match "$match")
+fi
+list_json="$("${list_cmd[@]}" 2>/dev/null)" || true
+
+keep_count=0
+aura_n=0
+skipped_psu_n=0
+if [ -n "$list_json" ]; then
+  count="$(printf '%s' "$list_json" | jq 'length' 2>/dev/null || echo 0)"
+  i=0
+  while [ "$i" -lt "${count:-0}" ]; do
+    driver="$(printf '%s' "$list_json" | jq -r --argjson i "$i" '.[$i].driver // ""')"
+    desc="$(printf '%s' "$list_json" | jq -r --argjson i "$i" '.[$i].description // ""')"
+    if is_rgb_only "$driver" "$desc"; then
+      aura_n=$((aura_n + 1))
+    elif [ "$skip_psu_hwmon" -eq 1 ] && is_corsair_psu_driver "$driver" "$desc"; then
+      skipped_psu_n=$((skipped_psu_n + 1))
+    else
+      keep_count=$((keep_count + 1))
+    fi
+    i=$((i + 1))
+  done
+fi
+
+if [ "$keep_count" -eq 0 ]; then
+  reason="liquidctl: no exclusive devices"
+  if [ "$skipped_psu_n" -gt 0 ]; then
+    reason="liquidctl: PSU covered by corsairpsu hwmon (see PSU module)"
+  elif [ "$aura_n" -gt 0 ]; then
+    reason="liquidctl: only Aura RGB (use OpenRGB/ckb-next)"
+  fi
+  emit_disconnected "$reason"
+fi
+
+# Fetch status only for devices liquidctl still owns (never bulk when skips apply —
+# bulk still talks HID to PSU/Aura and races OpenLinkHub / corsairpsu).
 fetch_liquidctl_status_json() {
-  local bulk ec=0 chunk status_merged="[]" i count driver desc list_json
-  local -a bulk_cmd probe_cmd list_cmd
+  local bulk chunk status_merged="[]" i count driver desc
+  local -a bulk_cmd probe_cmd
+  local skipped_any=0
 
-  bulk_cmd=(timeout 4 "$liquidctl_bin" status --json)
-  if [ -n "$match" ] && [ "$match" != "null" ]; then
-    bulk_cmd+=(--match "$match")
-  fi
-  if [ -n "$pick" ] && [ "$pick" != "null" ]; then
-    bulk_cmd+=(--pick "$pick")
-  fi
-
-  bulk="$("${bulk_cmd[@]}" 2>/dev/null)" || ec=$?
-  if [ -n "$bulk" ]; then
+  # Explicit pick / match: honor user override (they asked for that device).
+  if { [ -n "$pick" ] && [ "$pick" != "null" ]; } || { [ -n "$match" ] && [ "$match" != "null" ]; }; then
+    bulk_cmd=(timeout 4 "$liquidctl_bin" status --json)
+    [ -n "$match" ] && [ "$match" != "null" ] && bulk_cmd+=(--match "$match")
+    [ -n "$pick" ] && [ "$pick" != "null" ] && bulk_cmd+=(--pick "$pick")
+    bulk="$("${bulk_cmd[@]}" 2>/dev/null)" || true
     printf '%s' "$bulk"
-    return 0
+    [ -n "$bulk" ]
+    return $?
   fi
 
-  # Explicit pick already failed — nothing left to try.
-  if [ -n "$pick" ] && [ "$pick" != "null" ]; then
-    return 1
+  if [ "$aura_n" -gt 0 ] || [ "$skipped_psu_n" -gt 0 ]; then
+    skipped_any=1
   fi
 
-  list_cmd=(timeout 4 "$liquidctl_bin" list --json)
-  if [ -n "$match" ] && [ "$match" != "null" ]; then
-    list_cmd+=(--match "$match")
-  fi
-  list_json="$("${list_cmd[@]}" 2>/dev/null)" || true
-  if [ -z "$list_json" ]; then
-    return 1
+  # Only bulk when every listed device is a keeper (no wasted HID).
+  if [ "$skipped_any" -eq 0 ]; then
+    bulk_cmd=(timeout 4 "$liquidctl_bin" status --json)
+    bulk="$("${bulk_cmd[@]}" 2>/dev/null)" || true
+    if [ -n "$bulk" ]; then
+      printf '%s' "$bulk"
+      return 0
+    fi
   fi
 
+  # Per-device probe for keepers only (Aura/PSU skipped).
   count="$(printf '%s' "$list_json" | jq 'length')"
   i=0
   while [ "$i" -lt "${count:-0}" ]; do
-    # Skip known RGB-only drivers that often error and add no telemetry.
     driver="$(printf '%s' "$list_json" | jq -r --argjson i "$i" '.[$i].driver // ""')"
     desc="$(printf '%s' "$list_json" | jq -r --argjson i "$i" '.[$i].description // ""')"
-    case "$driver" in
-      AuraLed|AuraLedController)
-        i=$((i + 1))
-        continue
-        ;;
-    esac
-    if printf '%s' "$desc" | grep -qi 'Aura LED'; then
+    if should_skip_device "$driver" "$desc"; then
       i=$((i + 1))
       continue
     fi
-
     probe_cmd=(timeout 4 "$liquidctl_bin" status --json --pick "$i")
-    if [ -n "$match" ] && [ "$match" != "null" ]; then
-      probe_cmd+=(--match "$match")
-    fi
     chunk="$("${probe_cmd[@]}" 2>/dev/null)" || true
     if [ -n "$chunk" ]; then
       status_merged="$(jq -c -s 'add' <(printf '%s' "$status_merged") <(printf '%s' "$chunk") 2>/dev/null || printf '%s' "$status_merged")"
@@ -149,9 +236,8 @@ if [ -z "$status_raw" ]; then
   emit_disconnected "liquidctl: no status (permissions or no device)"
 fi
 
-# Parse devices with useful telemetry (temps / rpm / power / current / voltage).
-# Skip RGB-only / empty status devices.
-parsed="$(printf '%s' "$status_raw" | jq -c '
+# Drop devices already covered / RGB-only from the status payload.
+parsed="$(printf '%s' "$status_raw" | jq -c --argjson skip_psu "$skip_psu_hwmon" '
   def useful($u; $k):
     ($u == "°C" or $u == "C" or $u == "rpm" or $u == "W" or $u == "V" or $u == "A" or $u == "%")
     or ($k | test("temperature|speed|power|voltage|current|duty|pump|fan|liquid"; "i"));
@@ -168,7 +254,13 @@ parsed="$(printf '%s' "$status_raw" | jq -c '
     elif ($k | test("power"; "i")) then 31
     else 100 end;
 
+  def skip_dev:
+    ((.driver // "") | test("Aura|CorsairHidPsu|CorsairPsu"; "i"))
+    or ((.description // "") | test("Aura LED"; "i"))
+    or ($skip_psu == 1 and ((.description // "") | test("HX[0-9]|RM[0-9]|HXi|RMi|Corsair.*(PSU|Power Supply)"; "i")));
+
   [ .[]?
+    | select(skip_dev | not)
     | . as $dev
     | ($dev.status // []) as $st
     | ($st | map(select(useful(.unit; .key)))) as $useful
@@ -176,21 +268,16 @@ parsed="$(printf '%s' "$status_raw" | jq -c '
     | {
         description: ($dev.description // "device"),
         status: $useful,
-        primary: (
-          $useful
-          | sort_by(rank_key(.key))
-          | .[0]
-        )
+        primary: ($useful | sort_by(rank_key(.key)) | .[0])
       }
   ]
 ')"
 
 device_count="$(printf '%s' "$parsed" | jq 'length')"
 if [ "${device_count:-0}" -eq 0 ]; then
-  emit_disconnected "liquidctl: no telemetry devices"
+  emit_disconnected "liquidctl: covered by hwmon/OpenLinkHub/RGB tools"
 fi
 
-# Primary bar metric: best-ranked reading across devices.
 primary="$(printf '%s' "$parsed" | jq -c '
   def rank_key($k):
     if ($k | test("^Liquid temperature$"; "i")) then 0
@@ -211,7 +298,6 @@ pvalue="$(printf '%s' "$primary" | jq -r '.primary.value')"
 punit="$(printf '%s' "$primary" | jq -r '.primary.unit')"
 pdesc="$(printf '%s' "$primary" | jq -r '.description')"
 
-# Max °C across useful readings for threshold class.
 max_temp="$(printf '%s' "$parsed" | jq -r '
   [ .[].status[] | select(.unit == "°C" or .unit == "C") | (.value | tonumber? // empty) ]
   | if length == 0 then empty else max end
@@ -227,7 +313,6 @@ if [ -n "${max_temp:-}" ]; then
   fi
 fi
 
-# Format bar text
 text="󰖌 --"
 case "$punit" in
   °C|C)
@@ -254,7 +339,6 @@ case "$punit" in
     ;;
 esac
 
-# Tooltip: one block per device
 tooltip="$(printf '%s' "$parsed" | jq -r --arg bar_hint "$pdesc · $pkey" --argjson multi "$device_count" '
   def fmt($v; $u):
     if ($v | type) == "number" then
@@ -289,8 +373,16 @@ tooltip="$(printf '%s' "$parsed" | jq -r --arg bar_hint "$pdesc · $pkey" --argj
   ] | map(select(. != null and . != "")) | join("\n")
 ')"
 
-# status_ec is informational once JSON parsed successfully
-: "${status_ec:=0}"
+notes=()
+if [ "$skipped_psu_n" -gt 0 ]; then
+  notes+=("Skipped $skipped_psu_n Corsair PSU (corsairpsu hwmon / PSU module)")
+fi
+if [ "$aura_n" -gt 0 ]; then
+  notes+=("Skipped $aura_n Aura RGB device(s) (use OpenRGB/ckb-next)")
+fi
+for n in "${notes[@]}"; do
+  tooltip=$(printf '%s\n%s' "$tooltip" "$n")
+done
 
-json=$(emit_waybar_json "$text" "$tooltip" "$class")
-write_cache_and_exit "$json"
+: "${status_ec:=0}"
+write_cache_and_exit "$(emit_waybar_json "$text" "$tooltip" "$class")"

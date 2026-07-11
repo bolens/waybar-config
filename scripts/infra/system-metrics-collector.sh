@@ -137,11 +137,17 @@ fi
 
 temp_path_file="$cache_dir/cpu-temp-path.txt"
 
+# Test/portability hooks: override sysfs roots for CI fixtures without touching host.
+# Path discovery still caches under $XDG_CACHE_HOME/waybar/*-path.txt — clear those
+# when swapping WAYBAR_HWMON_ROOT / WAYBAR_THERMAL_ROOT between test cases.
+hwmon_root="${WAYBAR_HWMON_ROOT:-/sys/class/hwmon}"
+thermal_root="${WAYBAR_THERMAL_ROOT:-/sys/class/thermal}"
+
 # find_temp_path: Scans hwmon system paths to locate a valid CPU temperature input file.
 # Matches specific drivers (intel coretemp, AMD k10temp, zenpower, nouveau, acpitz) to
 # filter out motherboard fan speeds or other auxiliary temperature sensors.
 find_temp_path() {
-  for path in /sys/class/hwmon/hwmon*/temp1_input; do
+  for path in "$hwmon_root"/hwmon*/temp1_input; do
     if [ -f "$path" ]; then
       name_file="${path%/*}/name"
       if [ -f "$name_file" ]; then
@@ -153,8 +159,8 @@ find_temp_path() {
       fi
     fi
   done
-  if [ -f /sys/class/thermal/thermal_zone0/temp ]; then
-    printf '/sys/class/thermal/thermal_zone0/temp'
+  if [ -f "$thermal_root/thermal_zone0/temp" ]; then
+    printf '%s' "$thermal_root/thermal_zone0/temp"
     return 0
   fi
   return 1
@@ -252,6 +258,7 @@ swap_total_gib="${9:-0.0}"
 gpu_available="false"
 gpu_suspended="false"
 gpu_name=""
+gpu_vendor=""
 gpu_util=0
 gpu_temp=0
 gpu_mem_used=0
@@ -260,6 +267,7 @@ gpu_vram_pct=0
 gpu_fan=0
 
 gpu_path_file="$cache_dir/gpu-pci-path.txt"
+amd_hwmon_file="$cache_dir/amdgpu-hwmon-path.txt"
 
 # find_gpu_path: Discovers NVIDIA PCI device path. 0x10de is the vendor ID for NVIDIA.
 find_gpu_path() {
@@ -270,6 +278,73 @@ find_gpu_path() {
     fi
   done
   return 1
+}
+
+find_amdgpu_hwmon() {
+  local d name
+  if [ -f "$amd_hwmon_file" ]; then
+    d=$(cat "$amd_hwmon_file" 2>/dev/null || true)
+    if [ -n "$d" ] && [ -f "$d/name" ] && [ "$(cat "$d/name" 2>/dev/null)" = "amdgpu" ]; then
+      printf '%s' "$d"
+      return 0
+    fi
+  fi
+  for d in "$hwmon_root"/hwmon*; do
+    [ -f "$d/name" ] || continue
+    name=$(cat "$d/name" 2>/dev/null || true)
+    if [ "$name" = "amdgpu" ]; then
+      printf '%s' "$d" >"$amd_hwmon_file.tmp.$$" 2>/dev/null && mv -f "$amd_hwmon_file.tmp.$$" "$amd_hwmon_file" 2>/dev/null || true
+      printf '%s' "$d"
+      return 0
+    fi
+  done
+  return 1
+}
+
+fill_amdgpu_metrics() {
+  local hwmon card_dev freq_hz vram_total vram_used
+  hwmon=$(find_amdgpu_hwmon || true)
+  [ -n "$hwmon" ] || return 1
+
+  gpu_available="true"
+  gpu_vendor="amd"
+  gpu_suspended="false"
+  gpu_fan=0
+  gpu_util=0
+  gpu_name="AMD GPU"
+  if [ -f "$hwmon/device/../../vendor" ] || [ -e "$hwmon/device" ]; then
+    card_dev=$(readlink -f "$hwmon/device" 2>/dev/null || true)
+    if [ -n "$card_dev" ] && [ -f "$card_dev/mem_info_vram_total" ]; then
+      vram_total=$(cat "$card_dev/mem_info_vram_total" 2>/dev/null || echo 0)
+      vram_used=$(cat "$card_dev/mem_info_vram_used" 2>/dev/null || echo 0)
+      if [ "${vram_total:-0}" -gt 0 ] 2>/dev/null; then
+        gpu_mem_total=$((vram_total / 1024 / 1024))
+        gpu_mem_used=$((vram_used / 1024 / 1024))
+        gpu_vram_pct=$((gpu_mem_used * 100 / gpu_mem_total))
+      fi
+    fi
+    # Pretty name from DRM product if present
+    if [ -n "$card_dev" ] && [ -f "$card_dev/product_name" ]; then
+      gpu_name=$(tr -d '\n' <"$card_dev/product_name" 2>/dev/null || echo "AMD GPU")
+    elif [ -n "$card_dev" ] && [ -f "$card_dev/label" ]; then
+      gpu_name=$(tr -d '\n' <"$card_dev/label" 2>/dev/null || echo "AMD GPU")
+    else
+      gpu_name="AMD iGPU"
+    fi
+  fi
+
+  if [ -f "$hwmon/temp1_input" ]; then
+    gpu_temp=$(($(cat "$hwmon/temp1_input") / 1000))
+  fi
+  # amdgpu rarely exposes busy % via hwmon; leave util at 0 (UI shows temp instead).
+  gpu_util=0
+  if [ -f "$hwmon/freq1_input" ]; then
+    freq_hz=$(cat "$hwmon/freq1_input" 2>/dev/null || echo 0)
+    if [ "${freq_hz:-0}" -gt 0 ] 2>/dev/null; then
+      gpu_name=$(printf '%s @ %d MHz' "$gpu_name" $((freq_hz / 1000000)))
+    fi
+  fi
+  return 0
 }
 
 if command -v nvidia-smi >/dev/null 2>&1; then
@@ -309,17 +384,23 @@ if command -v nvidia-smi >/dev/null 2>&1; then
   fi
 
   if [ "$gpu_suspended" = "true" ]; then
-    gpu_available="true"
-    gpu_name="NVIDIA GPU"
-    if [ -f "$cache_file" ]; then
-      gpu_name=$(jq -r '.gpu.name // "NVIDIA GPU"' "$cache_file" 2>/dev/null || echo "NVIDIA GPU")
-      gpu_name="${gpu_name% (Suspended)}"
+    # Prefer AMD iGPU telemetry while the dGPU sleeps (no nvidia-smi wake).
+    if ! fill_amdgpu_metrics; then
+      gpu_available="true"
+      gpu_vendor="nvidia"
+      gpu_name="NVIDIA GPU"
+      if [ -f "$cache_file" ]; then
+        gpu_name=$(jq -r '.gpu.name // "NVIDIA GPU"' "$cache_file" 2>/dev/null || echo "NVIDIA GPU")
+        gpu_name="${gpu_name% (Suspended)}"
+        gpu_name="${gpu_name%% @*}"
+      fi
+      gpu_name="$gpu_name (Suspended)"
     fi
-    gpu_name="$gpu_name (Suspended)"
   else
     line=$(timeout 2 nvidia-smi --query-gpu=name,utilization.gpu,temperature.gpu,memory.used,memory.total,fan.speed --format=csv,noheader,nounits 2>/dev/null | head -n1 || true)
     if [ -n "$line" ]; then
       gpu_available="true"
+      gpu_vendor="nvidia"
       tab=$(printf '\t')
       gpu_fields=$(printf '%s\n' "$line" | awk -F', *' -v OFS='\t' '{
         gsub(/^ +| +$/,"", $1);
@@ -343,6 +424,11 @@ if command -v nvidia-smi >/dev/null 2>&1; then
       fi
     fi
   fi
+fi
+
+# No usable NVIDIA path → AMD iGPU / dGPU via amdgpu hwmon
+if [ "$gpu_available" != "true" ]; then
+  fill_amdgpu_metrics || true
 fi
 
 # Retrieve top CPU processes. We cache this query for 24s to avoid expensive 'ps' calls on every poll.
@@ -425,6 +511,7 @@ json=$(
     --arg gpu_available "$gpu_available" \
     --arg gpu_suspended "$gpu_suspended" \
     --arg gpu_name "$gpu_name" \
+    --arg gpu_vendor "$gpu_vendor" \
     --argjson gpu_util "$gpu_util" \
     --argjson gpu_temp "$gpu_temp" \
     --argjson gpu_mem_used "$gpu_mem_used" \
@@ -462,7 +549,7 @@ json=$(
         },
         gpu: (
           if $gpu_available == "true" then
-            { available: true, name: $gpu_name, util: $gpu_util, temp: $gpu_temp,
+            { available: true, name: $gpu_name, vendor: $gpu_vendor, util: $gpu_util, temp: $gpu_temp,
               mem_used: $gpu_mem_used, mem_total: $gpu_mem_total, vram_pct: $gpu_vram_pct, fan: $gpu_fan,
               suspended: ($gpu_suspended == "true") }
           else

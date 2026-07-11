@@ -4,7 +4,6 @@ set -eu
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
   . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
@@ -38,6 +37,40 @@ elif [ "${WAYBAR_UPDATES_ENABLE_AUR:-}" = "0" ]; then
   enable_aur=false
 fi
 
+# Detect package backend: Arch (checkupdates) → Debian/Ubuntu (apt) → Fedora (dnf).
+# Flatpak is additive on every backend. Override with WAYBAR_UPDATES_BACKEND=arch|apt|dnf|none.
+# Note: `apt` exists on some Arch boxes as a wrapper — checkupdates is preferred first.
+detect_updates_backend() {
+  if [ -n "${WAYBAR_UPDATES_BACKEND:-}" ]; then
+    printf '%s' "$WAYBAR_UPDATES_BACKEND"
+    return 0
+  fi
+  if command -v checkupdates >/dev/null 2>&1; then
+    printf 'arch'
+  elif command -v apt >/dev/null 2>&1; then
+    printf 'apt'
+  elif command -v dnf >/dev/null 2>&1; then
+    printf 'dnf'
+  else
+    printf 'none'
+  fi
+}
+
+# Read package list on stdin; set globals _out_count / _out_preview (bash has no namerefs here).
+_count_preview() {
+  local list preview_lim="$1"
+  list=$(cat)
+  _out_count=0
+  _out_preview=""
+  if [ -n "$list" ]; then
+    _out_count=$(printf '%s\n' "$list" | awk 'NF {count++} END {print count + 0}')
+    _out_preview=$(printf '%s\n' "$list" | sed -n "1,${preview_lim}p")
+    if [ "$_out_count" -gt "$preview_lim" ]; then
+      _out_preview=$(printf '%s\n... and %s more' "$_out_preview" "$((_out_count - preview_lim))")
+    fi
+  fi
+}
+
 perform_checks_and_output() {
   repo_count=0
   aur_count=0
@@ -45,41 +78,52 @@ perform_checks_and_output() {
   repo_preview=""
   aur_preview=""
   flatpak_preview=""
+  backend=$(detect_updates_backend)
+  repo_label="Repo"
 
-  # Official repository updates check (Pacman):
-  if command -v checkupdates >/dev/null 2>&1; then
-    repo_list=$(timeout 25 checkupdates 2>/dev/null || true)
-    if [ -n "$repo_list" ]; then
-      repo_count=$(printf '%s\n' "$repo_list" | awk 'NF {count++} END {print count + 0}')
-      repo_preview=$(printf '%s\n' "$repo_list" | sed -n "1,${preview_limit}p")
-      if [ "$repo_count" -gt "$preview_limit" ]; then
-        repo_preview=$(printf '%s\n... and %s more' "$repo_preview" "$((repo_count - preview_limit))")
+  case "$backend" in
+    arch)
+      repo_label="Repo"
+      if command -v checkupdates >/dev/null 2>&1; then
+        repo_list=$(timeout 25 checkupdates 2>/dev/null || true)
+        _count_preview "$preview_limit" <<<"$repo_list"
+        repo_count=$_out_count
+        repo_preview=$_out_preview
       fi
-    fi
-  fi
-
-  # AUR updates check (settings.updates.enable_aur, or WAYBAR_UPDATES_ENABLE_AUR=0/1 override):
-  if [ "$enable_aur" = "true" ] && command -v paru >/dev/null 2>&1; then
-    aur_list=$(timeout 12 paru -Qua 2>/dev/null || true)
-    if [ -n "$aur_list" ]; then
-      aur_count=$(printf '%s\n' "$aur_list" | awk 'NF {count++} END {print count + 0}')
-      aur_preview=$(printf '%s\n' "$aur_list" | sed -n "1,${preview_limit}p")
-      if [ "$aur_count" -gt "$preview_limit" ]; then
-        aur_preview=$(printf '%s\n... and %s more' "$aur_preview" "$((aur_count - preview_limit))")
+      if [ "$enable_aur" = "true" ] && command -v paru >/dev/null 2>&1; then
+        aur_list=$(timeout 12 paru -Qua 2>/dev/null || true)
+        _count_preview "$preview_limit" <<<"$aur_list"
+        aur_count=$_out_count
+        aur_preview=$_out_preview
       fi
-    fi
-  fi
+      ;;
+    apt)
+      repo_label="APT"
+      # Skip the "Listing... Done" header; keep lines with "/suite ... upgradable".
+      repo_list=$(timeout 25 apt list --upgradable 2>/dev/null | grep -E '/[a-z].*upgradable' || true)
+      _count_preview "$preview_limit" <<<"$repo_list"
+      repo_count=$_out_count
+      repo_preview=$_out_preview
+      ;;
+    dnf)
+      repo_label="DNF"
+      # dnf check-upgrade exits 100 when updates exist — ignore status, parse stdout.
+      repo_list=$(timeout 40 dnf check-upgrade -q 2>/dev/null | awk 'NF && $1 !~ /^Obsoleting/ && $1 !~ /^Last/' || true)
+      _count_preview "$preview_limit" <<<"$repo_list"
+      repo_count=$_out_count
+      repo_preview=$_out_preview
+      ;;
+    *)
+      repo_label="Repo"
+      ;;
+  esac
 
-  # Flatpak updates check:
+  # Flatpak updates (additive on all distros):
   if command -v flatpak >/dev/null 2>&1; then
     flatpak_list=$(timeout 20 flatpak remote-ls --updates 2>/dev/null || true)
-    if [ -n "$flatpak_list" ]; then
-      flatpak_count=$(printf '%s\n' "$flatpak_list" | awk 'NF {count++} END {print count + 0}')
-      flatpak_preview=$(printf '%s\n' "$flatpak_list" | sed -n "1,${preview_limit}p")
-      if [ "$flatpak_count" -gt "$preview_limit" ]; then
-        flatpak_preview=$(printf '%s\n... and %s more' "$flatpak_preview" "$((flatpak_count - preview_limit))")
-      fi
-    fi
+    _count_preview "$preview_limit" <<<"$flatpak_list"
+    flatpak_count=$_out_count
+    flatpak_preview=$_out_preview
   fi
 
   total=$((repo_count + aur_count + flatpak_count))
@@ -92,10 +136,16 @@ perform_checks_and_output() {
     class="warning"
   fi
 
-  tooltip=$(printf 'Repo updates: %s\nAUR updates: %s\nFlatpak updates: %s\nTotal updates: %s' "$repo_count" "$aur_count" "$flatpak_count" "$total")
+  if [ "$backend" = "arch" ]; then
+    tooltip=$(printf '%s updates: %s\nAUR updates: %s\nFlatpak updates: %s\nTotal updates: %s\nBackend: %s' \
+      "$repo_label" "$repo_count" "$aur_count" "$flatpak_count" "$total" "$backend")
+  else
+    tooltip=$(printf '%s updates: %s\nFlatpak updates: %s\nTotal updates: %s\nBackend: %s' \
+      "$repo_label" "$repo_count" "$flatpak_count" "$total" "$backend")
+  fi
 
   if [ -n "$repo_preview" ]; then
-    tooltip=$(printf '%s\n\nRepo preview:\n%s' "$tooltip" "$repo_preview")
+    tooltip=$(printf '%s\n\n%s preview:\n%s' "$tooltip" "$repo_label" "$repo_preview")
   fi
 
   if [ -n "$aur_preview" ]; then

@@ -20,6 +20,9 @@ if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
 else
   . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 fi
+# shellcheck source=xdg-applications.sh
+# Walks XDG_DATA_HOME / XDG_DATA_DIRS / Flatpak exports (not only /usr/share).
+. "$WAYBAR_SCRIPTS/lib/xdg-applications.sh"
 
 session="$(detect_compositor)"
 tab=$'\t'
@@ -156,14 +159,13 @@ if [ ! -s "$CACHE_FILE" ]; then
   rebuild_cache=true
 else
   max_mtime=0
-  for d in "/usr/share/applications" "$HOME/.local/share/applications" "/var/lib/flatpak/exports/share/applications" "$HOME/.local/share/flatpak/exports/share/applications"; do
-    if [ -d "$d" ]; then
-      mtime=$(stat -c %Y "$d" 2>/dev/null || echo 0)
-      if [ "$mtime" -gt "$max_mtime" ]; then
-        max_mtime="$mtime"
-      fi
+  while IFS= read -r d; do
+    [ -d "$d" ] || continue
+    mtime=$(stat -c %Y "$d" 2>/dev/null || echo 0)
+    if [ "$mtime" -gt "$max_mtime" ]; then
+      max_mtime="$mtime"
     fi
-  done
+  done < <(xdg_application_dirs)
   
   cache_mtime=$(stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0)
   if [ "$max_mtime" -gt "$cache_mtime" ]; then
@@ -173,12 +175,11 @@ fi
 
 if [ "$rebuild_cache" = true ]; then
   shopt -s nullglob
-  files=(
-    "/usr/share/applications"/*.desktop
-    "$HOME/.local/share/applications"/*.desktop
-    "/var/lib/flatpak/exports/share/applications"/*.desktop
-    "$HOME/.local/share/flatpak/exports/share/applications"/*.desktop
-  )
+  files=()
+  while IFS= read -r d; do
+    [ -d "$d" ] || continue
+    files+=("$d"/*.desktop)
+  done < <(xdg_application_dirs)
   shopt -u nullglob
   
   declare -A tmp_class=()

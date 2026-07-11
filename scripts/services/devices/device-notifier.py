@@ -79,6 +79,7 @@ def get_description(target):
 
 def load_rofi_width(default=500):
     home = os.path.expanduser("~")
+    # Match shell: WAYBAR_HOME → $XDG_CONFIG_HOME/waybar → ~/.config/waybar
     waybar_home = os.environ.get("WAYBAR_HOME") or os.path.join(
         os.environ.get("XDG_CONFIG_HOME", os.path.join(home, ".config")), "waybar"
     )
@@ -198,7 +199,10 @@ def main():
         
         # Helper path for waybar-signal
         script_dir = os.path.dirname(os.path.realpath(__file__))
-        waybar_home = os.environ.get("WAYBAR_HOME", os.path.expanduser("~/.config/waybar"))
+        # Match shell: WAYBAR_HOME → $XDG_CONFIG_HOME/waybar → ~/.config/waybar
+        waybar_home = os.environ.get("WAYBAR_HOME") or os.path.join(
+            os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "waybar"
+        )
         waybar_scripts = os.environ.get("WAYBAR_SCRIPTS", os.path.join(waybar_home, "scripts"))
         signal_script = os.path.join(waybar_scripts, "lib", "waybar-signal.sh")
         cache_file = os.path.expanduser("~/.cache/waybar/device-notifier-status.json")

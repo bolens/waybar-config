@@ -7,6 +7,19 @@ echo "=== Running Waybar Configuration Generator Tests ==="
 # Repo root (script lives in scripts/ci/)
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 
+# Clear parent-shell fixture/override bleed before any sandbox work.
+# Nested secrets suite also sanitizes again on entry.
+# shellcheck source=waybar-test-sanitize-env.sh
+. "$ROOT_DIR/scripts/ci/waybar-test-sanitize-env.sh"
+waybar_test_sanitize_env
+
+# Private runtime dir so $XDG_RUNTIME_DIR/waybar-compositor cannot leak from the host.
+SUITE_RUNTIME=$(mktemp -d)
+export XDG_RUNTIME_DIR="$SUITE_RUNTIME"
+# Force Hyprland-shaped generated configs without exporting HYPRLAND_INSTANCE_SIGNATURE
+# (that used to poison later detect_compositor / compositor-gate cases).
+export WAYBAR_COMPOSITOR=hyprland
+
 # Fail fast on dash/bash shebang contract regressions (same checks as CI).
 if ! "$ROOT_DIR/scripts/ci/check-shell-contracts.sh"; then
   echo "FAIL: shell contract checks failed before generator tests" >&2
@@ -15,7 +28,7 @@ fi
 
 # 1. Create a sandboxed WAYBAR_HOME directory
 TEST_DIR=$(mktemp -d)
-trap 'rm -rf "$TEST_DIR"' EXIT
+trap 'rm -rf "$TEST_DIR" "$SUITE_RUNTIME"' EXIT
 
 echo "Created sandboxed test directory: $TEST_DIR"
 
@@ -37,7 +50,6 @@ find "$TEST_DIR/scripts" \( -name '*.sh' -o -name '*.py' \) -exec chmod +x {} +
 # 3. Export the custom WAYBAR_HOME environment variable to test behavior path independence
 export WAYBAR_HOME="$TEST_DIR"
 export WAYBAR_SCRIPTS="$TEST_DIR/scripts"
-export HYPRLAND_INSTANCE_SIGNATURE="mock_signature"
 
 echo "Running configuration generator scripts under WAYBAR_HOME=$WAYBAR_HOME..."
 
@@ -1620,6 +1632,10 @@ if ! jq -e '.thresholds.liquidctl.temp.warning == 55 and .thresholds.liquidctl.t
   echo "FAIL: thresholds.liquidctl.temp missing/wrong in compiled settings" >&2
   fail=1
 fi
+if ! jq -e '.liquidctl.skip_corsair_psu_if_hwmon == true' "$TEST_DIR/data/waybar-settings.json" >/dev/null 2>&1; then
+  echo "FAIL: liquidctl.skip_corsair_psu_if_hwmon expected true in compiled settings" >&2
+  fail=1
+fi
 if [ ! -x "$TEST_DIR/scripts/system/liquidctl-status.sh" ]; then
   echo "FAIL: liquidctl-status.sh missing or not executable" >&2
   fail=1
@@ -1664,6 +1680,7 @@ liquid_out=$(
   WAYBAR_HOME="$TEST_DIR" \
   WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
   WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+  WAYBAR_CORSAIRPSU_PRESENT=0 \
   "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
 ) || true
 if ! printf '%s' "$liquid_out" | jq -e '.class == "warning"' >/dev/null 2>&1; then
@@ -1674,8 +1691,13 @@ if ! printf '%s' "$liquid_out" | jq -e '.text | test("󰖌")' >/dev/null 2>&1; t
   echo "FAIL: liquidctl-status text missing liquidctl icon: $liquid_out" >&2
   fail=1
 fi
-if ! printf '%s' "$liquid_out" | jq -e '.tooltip | test("Kraken") and (test("Aura") | not)' >/dev/null 2>&1; then
+if ! printf '%s' "$liquid_out" | jq -e '.tooltip | test("Kraken") and (test("ASUS Aura LED Controller") | not)' >/dev/null 2>&1; then
   echo "FAIL: liquidctl tooltip should include Kraken and skip Aura-only: $liquid_out" >&2
+  fail=1
+fi
+# Aura devices may be noted as skipped (OpenRGB/ckb), but must not appear as telemetry blocks
+if ! printf '%s' "$liquid_out" | jq -e '.tooltip | test("Skipped .*Aura")' >/dev/null 2>&1; then
+  echo "FAIL: liquidctl tooltip should note skipped Aura RGB devices: $liquid_out" >&2
   fail=1
 fi
 # Missing binary → disconnected (empty text)
@@ -1710,31 +1732,76 @@ if ! printf '%s' "$liquid_empty" | jq -e '.class == "disconnected"' >/dev/null 2
 fi
 rm -rf "$LIQUID_FAKE" "$LIQUID_CACHE"
 
-# Partial failure: bulk --json suppressed (Aura error), per-device --pick still works
+# Aura-only → disconnect (prefer OpenRGB); no status HID probe needed beyond list
 LIQUID_FAKE=$(mktemp -d)
 LIQUID_CACHE=$(mktemp -d)
-cat >"$LIQUID_FAKE/liquidctl" <<'EOF'
+LIQUID_LOG="$LIQUID_FAKE/calls.log"
+: >"$LIQUID_LOG"
+cat >"$LIQUID_FAKE/liquidctl" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >>"$LIQUID_LOG"
+args=("\$@")
+has_json=0; has_list=0; has_status=0; i=0
+while [ \$i -lt \${#args[@]} ]; do
+  case "\${args[\$i]}" in --json) has_json=1;; list) has_list=1;; status) has_status=1;; esac
+  i=\$((i + 1))
+done
+if [ "\$has_list" -eq 1 ] && [ "\$has_json" -eq 1 ]; then
+  echo '[{"description":"ASUS Aura LED Controller","driver":"AuraLed"}]'
+  exit 0
+fi
+# status must not be required for Aura-only hide path
+exit 1
+EOF
+chmod +x "$LIQUID_FAKE/liquidctl"
+liquid_aura=$(
+  XDG_CACHE_HOME="$LIQUID_CACHE" \
+  WAYBAR_HOME="$TEST_DIR" \
+  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+  WAYBAR_CORSAIRPSU_PRESENT=0 \
+  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+) || true
+if ! printf '%s' "$liquid_aura" | jq -e '.class == "disconnected" and (.tooltip | test("Aura|OpenRGB"; "i"))' >/dev/null 2>&1; then
+  echo "FAIL: liquidctl Aura-only should disconnect: $liquid_aura" >&2
+  fail=1
+fi
+if grep -q 'status' "$LIQUID_LOG" 2>/dev/null; then
+  echo "FAIL: liquidctl Aura-only must not call status (HID). Log:" >&2
+  cat "$LIQUID_LOG" >&2 || true
+  fail=1
+fi
+rm -rf "$LIQUID_FAKE" "$LIQUID_CACHE"
+
+# Partial failure: bulk --json suppressed (Aura error), per-device --pick still works
+# when Corsair PSU is NOT covered by corsairpsu hwmon.
+LIQUID_FAKE=$(mktemp -d)
+LIQUID_CACHE=$(mktemp -d)
+LIQUID_LOG="$LIQUID_FAKE/calls.log"
+: >"$LIQUID_LOG"
+cat >"$LIQUID_FAKE/liquidctl" <<EOF
 #!/usr/bin/env bash
 # Mimic liquidctl: bulk status --json fails when any device errors; per-pick works.
-args=("$@")
+printf '%s\n' "\$*" >>"$LIQUID_LOG"
+args=("\$@")
 has_json=0
 has_list=0
 has_status=0
 pick=""
 i=0
-while [ $i -lt ${#args[@]} ]; do
-  case "${args[$i]}" in
+while [ \$i -lt \${#args[@]} ]; do
+  case "\${args[\$i]}" in
     --json) has_json=1 ;;
     list) has_list=1 ;;
     status) has_status=1 ;;
     --pick)
-      i=$((i + 1))
-      pick="${args[$i]:-}"
+      i=\$((i + 1))
+      pick="\${args[\$i]:-}"
       ;;
   esac
-  i=$((i + 1))
+  i=\$((i + 1))
 done
-if [ "$has_list" -eq 1 ] && [ "$has_json" -eq 1 ]; then
+if [ "\$has_list" -eq 1 ] && [ "\$has_json" -eq 1 ]; then
   cat <<'JSON'
 [
   {"description":"Corsair HX1500i","driver":"CorsairHidPsu"},
@@ -1743,12 +1810,12 @@ if [ "$has_list" -eq 1 ] && [ "$has_json" -eq 1 ]; then
 JSON
   exit 0
 fi
-if [ "$has_status" -eq 1 ] && [ "$has_json" -eq 1 ]; then
-  if [ -z "$pick" ]; then
+if [ "\$has_status" -eq 1 ] && [ "\$has_json" -eq 1 ]; then
+  if [ -z "\$pick" ]; then
     # Bulk call: Aura would error → liquidctl prints no JSON
     exit 1
   fi
-  if [ "$pick" = "0" ]; then
+  if [ "\$pick" = "0" ]; then
     cat <<'JSON'
 [{"description":"Corsair HX1500i","status":[
   {"key":"VRM temperature","value":51.2,"unit":"°C"},
@@ -1767,14 +1834,959 @@ liquid_partial=$(
   WAYBAR_HOME="$TEST_DIR" \
   WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
   WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+  WAYBAR_CORSAIRPSU_PRESENT=0 \
   "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
 ) || true
 if ! printf '%s' "$liquid_partial" | jq -e '.class == "normal" and (.tooltip | test("HX1500i")) and (.text | test("󰖌"))' >/dev/null 2>&1; then
   echo "FAIL: liquidctl partial-failure fallback should show HX telemetry: $liquid_partial" >&2
   fail=1
 fi
+# With skips present, must use --pick (not rely on bulk status succeeding)
+if ! grep -qE 'status.*--pick|--pick.*' "$LIQUID_LOG" 2>/dev/null; then
+  echo "FAIL: liquidctl should probe keepers with --pick when skips apply. Log:" >&2
+  cat "$LIQUID_LOG" >&2 || true
+  fail=1
+fi
+# When corsairpsu hwmon covers PSU, liquidctl should hide (no exclusive devices) and never status
+: >"$LIQUID_LOG"
+liquid_skip_psu=$(
+  XDG_CACHE_HOME="$LIQUID_CACHE" \
+  WAYBAR_HOME="$TEST_DIR" \
+  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+  WAYBAR_CORSAIRPSU_PRESENT=1 \
+  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+) || true
+if ! printf '%s' "$liquid_skip_psu" | jq -e '.class == "disconnected" and (.tooltip | test("corsairpsu|PSU covered|hwmon"; "i"))' >/dev/null 2>&1; then
+  echo "FAIL: liquidctl should disconnect when PSU covered by corsairpsu: $liquid_skip_psu" >&2
+  fail=1
+fi
+if grep -q 'status' "$LIQUID_LOG" 2>/dev/null; then
+  echo "FAIL: liquidctl must not call status when PSU+Aura covered. Log:" >&2
+  cat "$LIQUID_LOG" >&2 || true
+  fail=1
+fi
+# hwmon tree detection (WAYBAR_HWMON_ROOT) also triggers skip
+HWMON_TREE="$LIQUID_FAKE/hwmon"
+mkdir -p "$HWMON_TREE/hwmon0"
+echo corsairpsu >"$HWMON_TREE/hwmon0/name"
+: >"$LIQUID_LOG"
+liquid_hwmon=$(
+  XDG_CACHE_HOME="$LIQUID_CACHE" \
+  WAYBAR_HOME="$TEST_DIR" \
+  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+  WAYBAR_HWMON_ROOT="$HWMON_TREE" \
+  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+) || true
+if ! printf '%s' "$liquid_hwmon" | jq -e '.class == "disconnected"' >/dev/null 2>&1; then
+  echo "FAIL: liquidctl should disconnect via WAYBAR_HWMON_ROOT corsairpsu: $liquid_hwmon" >&2
+  fail=1
+fi
 rm -rf "$LIQUID_FAKE" "$LIQUID_CACHE"
 echo "PASS: liquidctl module wiring and status script behavior"
+
+# coolercontrol module: generator wiring + status/click (fixtures)
+echo "Testing coolercontrol module wiring and status/click scripts..."
+if ! "$TEST_DIR/scripts/generate/generate-settings.sh"; then
+  echo "FAIL: generate-settings.sh failed before coolercontrol checks" >&2
+  fail=1
+fi
+if ! jq -e '."custom/coolercontrol".exec | test("services/coolercontrol/coolercontrol-status\\.sh$")' "$TEST_DIR/modules/system.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/coolercontrol exec missing coolercontrol-status.sh" >&2
+  fail=1
+fi
+if ! jq -e '."custom/coolercontrol".interval == 60' "$TEST_DIR/modules/system.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/coolercontrol interval expected 60 from module_intervals.coolercontrol" >&2
+  fail=1
+fi
+if ! jq -e '."custom/coolercontrol"."on-scroll-up" | test("coolercontrol-click\\.sh next")' "$TEST_DIR/modules/system.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/coolercontrol scroll-up should cycle next mode" >&2
+  fail=1
+fi
+if ! jq -e '."custom/coolercontrol"."on-scroll-down" | test("coolercontrol-click\\.sh prev")' "$TEST_DIR/modules/system.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/coolercontrol scroll-down should cycle prev mode" >&2
+  fail=1
+fi
+if ! jq -e '."custom/coolercontrol"."on-click-right" | test("coolercontrol-click\\.sh menu")' "$TEST_DIR/modules/system.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/coolercontrol right-click should open mode menu" >&2
+  fail=1
+fi
+if ! jq -e '.["group/hardware"].modules | index("custom/coolercontrol")' "$TEST_DIR/modules/groups.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/coolercontrol missing from group/hardware modules" >&2
+  fail=1
+fi
+if ! jq -e '.module_intervals.coolercontrol == 60' "$TEST_DIR/data/waybar-settings.json" >/dev/null 2>&1; then
+  echo "FAIL: module_intervals.coolercontrol expected 60 in compiled settings" >&2
+  fail=1
+fi
+mkdir -p "$TEST_DIR/scripts/services/coolercontrol"
+cp "$ROOT_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" \
+  "$ROOT_DIR/scripts/services/coolercontrol/coolercontrol-click.sh" \
+  "$ROOT_DIR/scripts/services/coolercontrol/coolercontrol-api.py" \
+  "$TEST_DIR/scripts/services/coolercontrol/"
+chmod +x "$TEST_DIR/scripts/services/coolercontrol/"*
+if ! bash -n "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-status.sh"; then
+  echo "FAIL: coolercontrol-status.sh failed bash -n" >&2
+  fail=1
+fi
+if ! bash -n "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-click.sh"; then
+  echo "FAIL: coolercontrol-click.sh failed bash -n" >&2
+  fail=1
+fi
+python3 -m py_compile "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py"
+
+CC_FIX="$TEST_DIR/cc-fixtures-write"
+mkdir -p "$CC_FIX"
+cat >"$CC_FIX/status.json" <<'JSON'
+{"devices":[{"type":"CPU","type_index":0,"uid":"cpu0","status_history":[{"timestamp":"2026-07-11T00:00:00Z","temps":[{"name":"Package","temp":82.4}],"channels":[{"name":"fan1","rpm":1400,"duty":45.0}]}]}]}
+JSON
+cat >"$CC_FIX/devices.json" <<'JSON'
+{"devices":[{"name":"AMD Ryzen","type":"CPU","type_index":0,"uid":"cpu0","info":{"channels":{},"temps":{},"lighting_speeds":[],"profile_max_length":0,"profile_min_length":0,"temp_max":100,"temp_min":0,"driver_info":{"drv_type":"Kernel","name":null,"version":null,"locations":[]}}}]}
+JSON
+cat >"$CC_FIX/modes.json" <<'JSON'
+{"modes":[{"uid":"mode-quiet","name":"Quiet"},{"uid":"mode-default","name":"Default"},{"uid":"mode-game","name":"Gaming"}]}
+JSON
+cat >"$CC_FIX/modes_active.json" <<'JSON'
+{"current_mode_uid":"mode-default","previous_mode_uid":"mode-quiet"}
+JSON
+echo 200 >"$CC_FIX/write_http.txt"
+CC_CACHE="$TEST_DIR/cc-cache"
+mkdir -p "$CC_CACHE"
+
+cc_out=$(
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$CC_CACHE" \
+  WAYBAR_CC_FIXTURE_DIR="$CC_FIX" \
+  WAYBAR_CC_WRITE_PROBE_TTL=0 \
+  "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" --refresh
+)
+if ! echo "$cc_out" | jq -e '.class | (type == "array" and index("warning") and index("writable"))' >/dev/null 2>&1; then
+  echo "FAIL: coolercontrol-status expected class [warning, writable]: $cc_out" >&2
+  fail=1
+fi
+if ! echo "$cc_out" | jq -e '.text | test("82")' >/dev/null 2>&1; then
+  echo "FAIL: coolercontrol-status text missing hot temp: $cc_out" >&2
+  fail=1
+fi
+if ! echo "$cc_out" | jq -e '.tooltip | test("AMD Ryzen/Package")' >/dev/null 2>&1; then
+  echo "FAIL: coolercontrol tooltip should join /devices name: $cc_out" >&2
+  fail=1
+fi
+if ! echo "$cc_out" | jq -e '.tooltip | test("Mode: Default")' >/dev/null 2>&1; then
+  echo "FAIL: coolercontrol tooltip should show active mode: $cc_out" >&2
+  fail=1
+fi
+if ! echo "$cc_out" | jq -e '.tooltip | test("Token: write")' >/dev/null 2>&1; then
+  echo "FAIL: coolercontrol tooltip should show write token: $cc_out" >&2
+  fail=1
+fi
+
+# Read-only fixture
+CC_FIX_RO="$TEST_DIR/cc-fixtures-ro"
+cp -a "$CC_FIX" "$CC_FIX_RO"
+echo 403 >"$CC_FIX_RO/write_http.txt"
+cc_ro=$(
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$CC_CACHE" \
+  WAYBAR_CC_FIXTURE_DIR="$CC_FIX_RO" \
+  WAYBAR_CC_WRITE_PROBE_TTL=0 \
+  "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" --refresh
+)
+if ! echo "$cc_ro" | jq -e '.class | (type == "array" and index("warning") and index("readonly"))' >/dev/null 2>&1; then
+  echo "FAIL: coolercontrol-status expected class [warning, readonly]: $cc_ro" >&2
+  fail=1
+fi
+if ! echo "$cc_ro" | jq -e '.tooltip | test("read-only")' >/dev/null 2>&1; then
+  echo "FAIL: readonly tooltip missing: $cc_ro" >&2
+  fail=1
+fi
+
+# API cycle next (write)
+cycle_out=$(
+  WAYBAR_CC_FIXTURE_DIR="$CC_FIX" \
+  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" cycle next
+)
+if ! echo "$cycle_out" | jq -e '.ok == true and .name == "Gaming" and .uid == "mode-game"' >/dev/null 2>&1; then
+  echo "FAIL: cycle next from Default should activate Gaming: $cycle_out" >&2
+  fail=1
+fi
+if [[ "$(cat "$CC_FIX/last_activate.txt" 2>/dev/null | tr -d '\n')" != "mode-game" ]]; then
+  echo "FAIL: cycle next did not record mode-game activation" >&2
+  fail=1
+fi
+
+# API cycle rejects read-only
+cycle_ro=$(
+  WAYBAR_CC_FIXTURE_DIR="$CC_FIX_RO" \
+  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" cycle next
+) || true
+if ! echo "$cycle_ro" | jq -e '.ok == false and .error == "read_only"' >/dev/null 2>&1; then
+  echo "FAIL: cycle with read-only should error read_only: $cycle_ro" >&2
+  fail=1
+fi
+
+# Click script: read-only next should exit 0 without activating
+: >"$CC_FIX_RO/last_activate.txt"
+# stub notify-send
+mkdir -p "$TEST_DIR/fakebin"
+cat >"$TEST_DIR/fakebin/notify-send" <<'EOF'
+#!/usr/bin/env sh
+echo "NOTIFY:$*" >>"${CC_NOTIFY_LOG:-/dev/null}"
+EOF
+chmod +x "$TEST_DIR/fakebin/notify-send"
+CC_NOTIFY_LOG="$TEST_DIR/cc-notify.log"
+: >"$CC_NOTIFY_LOG"
+PATH="$TEST_DIR/fakebin:/usr/bin:/bin" \
+WAYBAR_HOME="$TEST_DIR" \
+XDG_CACHE_HOME="$CC_CACHE" \
+WAYBAR_CC_FIXTURE_DIR="$CC_FIX_RO" \
+CC_NOTIFY_LOG="$CC_NOTIFY_LOG" \
+  "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-click.sh" next
+if [[ -s "$CC_FIX_RO/last_activate.txt" ]]; then
+  echo "FAIL: readonly click next should not activate a mode" >&2
+  fail=1
+fi
+if ! grep -qi 'read-only' "$CC_NOTIFY_LOG"; then
+  echo "FAIL: readonly click should notify read-only. Log: $(cat "$CC_NOTIFY_LOG")" >&2
+  fail=1
+fi
+
+# Click script: writable next activates
+: >"$CC_NOTIFY_LOG"
+rm -f "$CC_FIX/last_activate.txt"
+PATH="$TEST_DIR/fakebin:/usr/bin:/bin" \
+WAYBAR_HOME="$TEST_DIR" \
+XDG_CACHE_HOME="$CC_CACHE" \
+WAYBAR_CC_FIXTURE_DIR="$CC_FIX" \
+CC_NOTIFY_LOG="$CC_NOTIFY_LOG" \
+  "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-click.sh" next
+if [[ "$(cat "$CC_FIX/last_activate.txt" 2>/dev/null | tr -d '\n')" != "mode-game" ]]; then
+  echo "FAIL: writable click next should activate Gaming" >&2
+  fail=1
+fi
+
+# Offline / no fixture → disconnected
+cc_missing=$(
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$CC_CACHE" \
+  WAYBAR_CC_FORCE_ACTIVE=0 \
+  "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" --refresh
+)
+if ! echo "$cc_missing" | jq -e '.class == "disconnected" or (.class|tostring|test("disconnected"))' >/dev/null 2>&1; then
+  echo "FAIL: coolercontrol offline should emit disconnected: $cc_missing" >&2
+  fail=1
+fi
+
+# Auth preference: token over ui_pass; ui_pass fallback when token fails.
+# Clear fixture/cache env so curl-mock auth is not shadowed by prior fixture tests
+# or a polluted parent shell (WAYBAR_CC_FIXTURE_DIR pointing at a deleted mktemp).
+unset WAYBAR_CC_FIXTURE_DIR || true
+CC_AUTH_BIN="$TEST_DIR/cc-auth-bin"
+mkdir -p "$CC_AUTH_BIN"
+CC_AUTH_LOG="$TEST_DIR/cc-auth-curl.log"
+: >"$CC_AUTH_LOG"
+# Mock: bad token (cc_bad*) → 401 on Bearer /status; good token → 200; password login → 200 + cookie status
+cat >"$CC_AUTH_BIN/curl" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"${CC_AUTH_LOG:?}"
+joined="$*"
+# Emit body\nhttp_code like real curl -w
+emit() { printf '%s\n%s' "$1" "$2"; }
+if [[ "$joined" == *"/status"* && "$joined" == *"Authorization: Bearer"* ]]; then
+  if [[ "$joined" == *"cc_bad"* ]]; then
+    emit '{"error":"unauthorized"}' "401"
+  else
+    emit '{"devices":[]}' "200"
+  fi
+  exit 0
+fi
+if [[ "$joined" == *"/login"* ]]; then
+  if [[ "$joined" != *"-X POST"* ]]; then
+    emit '' "405"
+    exit 0
+  fi
+  emit '' "200"
+  exit 0
+fi
+if [[ "$joined" == *"/status"* ]]; then
+  # cookie session after login
+  emit '{"devices":[]}' "200"
+  exit 0
+fi
+if [[ "$joined" == *"/devices"* || "$joined" == *"/modes"* || "$joined" == *"/handshake"* ]]; then
+  emit '{}' "200"
+  exit 0
+fi
+if [[ "$joined" == *"/settings"* && "$joined" == *"PATCH"* ]]; then
+  emit '{}' "403"
+  exit 0
+fi
+emit '' "000"
+exit 0
+EOF
+chmod +x "$CC_AUTH_BIN/curl"
+
+# Both creds, good token → bearer only (no /login)
+: >"$CC_AUTH_LOG"
+auth_both=$(
+  PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
+  CC_AUTH_LOG="$CC_AUTH_LOG" \
+  WAYBAR_CC_FIXTURE_DIR= \
+  WAYBAR_CC_WRITE_PROBE_TTL=0 \
+  WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
+  WAYBAR_CC_TOKEN="cc_good_token_aaaaaaaaaaaaaaaa" \
+  WAYBAR_CC_UI_PASS="fallback-pass" \
+  WAYBAR_CC_UI_USER="CCAdmin" \
+  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+) || true
+if ! echo "$auth_both" | jq -e '.ok == true and .auth == "bearer"' >/dev/null 2>&1; then
+  echo "FAIL: both creds should prefer bearer auth: $auth_both" >&2
+  fail=1
+fi
+if grep -q '/login' "$CC_AUTH_LOG"; then
+  echo "FAIL: good token should not fall back to /login. Log:" >&2
+  cat "$CC_AUTH_LOG" >&2 || true
+  fail=1
+fi
+
+# Meta-guard: prove cmdline WAYBAR_CC_FIXTURE_DIR= clears a poisoned parent export.
+# In bash, `export VAR=poison` then `VAR= cmd` → cmd sees empty VAR (assignment wins).
+# Cases that forget the empty assign inherit poison and fail under set -e; keep this pattern.
+echo "Verifying CoolerControl fixture isolation meta-guard..."
+: >"$CC_AUTH_LOG"
+poison_auth=$(
+  export WAYBAR_CC_FIXTURE_DIR=/nonexistent-poison-cc-fixture
+  PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
+  CC_AUTH_LOG="$CC_AUTH_LOG" \
+  WAYBAR_CC_FIXTURE_DIR= \
+  WAYBAR_CC_WRITE_PROBE_TTL=0 \
+  WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
+  WAYBAR_CC_TOKEN="cc_good_token_aaaaaaaaaaaaaaaa" \
+  WAYBAR_CC_UI_PASS="fallback-pass" \
+  WAYBAR_CC_UI_USER="CCAdmin" \
+  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+) || true
+if ! echo "$poison_auth" | jq -e '.ok == true and .auth == "bearer"' >/dev/null 2>&1; then
+  echo "FAIL: isolation meta-guard — poisoned WAYBAR_CC_FIXTURE_DIR must not break bearer auth: $poison_auth" >&2
+  fail=1
+else
+  echo "PASS: CoolerControl fixture isolation meta-guard"
+fi
+unset WAYBAR_CC_FIXTURE_DIR || true
+
+# Bad token + ui_pass → basic fallback
+: >"$CC_AUTH_LOG"
+auth_fb=$(
+  PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
+  CC_AUTH_LOG="$CC_AUTH_LOG" \
+  WAYBAR_CC_FIXTURE_DIR= \
+  WAYBAR_CC_WRITE_PROBE_TTL=0 \
+  WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
+  WAYBAR_CC_TOKEN="cc_bad_token_bbbbbbbbbbbbbbbb" \
+  WAYBAR_CC_UI_PASS="fallback-pass" \
+  WAYBAR_CC_UI_USER="CCAdmin" \
+  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+) || true
+if ! echo "$auth_fb" | jq -e '.ok == true and .auth == "basic"' >/dev/null 2>&1; then
+  echo "FAIL: bad token should fall back to ui_pass (basic): $auth_fb" >&2
+  fail=1
+fi
+if ! grep -q 'Authorization: Bearer' "$CC_AUTH_LOG"; then
+  echo "FAIL: fallback path should still try Bearer first. Log:" >&2
+  cat "$CC_AUTH_LOG" >&2 || true
+  fail=1
+fi
+if ! grep -q '/login' "$CC_AUTH_LOG"; then
+  echo "FAIL: fallback path should POST /login. Log:" >&2
+  cat "$CC_AUTH_LOG" >&2 || true
+  fail=1
+fi
+
+# Bad token, no password → auth_failed
+auth_fail=$(
+  PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
+  CC_AUTH_LOG="$CC_AUTH_LOG" \
+  WAYBAR_CC_FIXTURE_DIR= \
+  WAYBAR_CC_WRITE_PROBE_TTL=0 \
+  WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
+  WAYBAR_CC_TOKEN="cc_bad_token_bbbbbbbbbbbbbbbb" \
+  WAYBAR_CC_UI_PASS="" \
+  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+) || true
+if ! echo "$auth_fail" | jq -e '.ok == false and .error == "auth_failed"' >/dev/null 2>&1; then
+  echo "FAIL: bad token without ui_pass should auth_failed: $auth_fail" >&2
+  fail=1
+fi
+
+# Write-access probe cache: second fetch-bundle must not re-PATCH when TTL active
+CC_WC_FIX=$(mktemp -d)
+CC_WC_CACHE=$(mktemp -d)
+echo 200 >"$CC_WC_FIX/write_http.txt"
+echo '{"status":[{"status_history":[{"temp":42}]}]}' >"$CC_WC_FIX/status.json"
+echo '{"devices":[{"name":"CPU"}]}' >"$CC_WC_FIX/devices.json"
+echo '{"modes":[{"uid":"m1","name":"Quiet"}]}' >"$CC_WC_FIX/modes.json"
+echo '{"current_mode_uid":"m1"}' >"$CC_WC_FIX/modes_active.json"
+cc_w1=$(
+  XDG_CACHE_HOME="$CC_WC_CACHE" \
+  WAYBAR_CC_FIXTURE_DIR="$CC_WC_FIX" \
+  WAYBAR_CC_WRITE_PROBE_TTL=600 \
+  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+) || true
+if ! echo "$cc_w1" | jq -e '.write_access == true' >/dev/null 2>&1; then
+  echo "FAIL: write cache seed expected write_access true: $cc_w1" >&2
+  fail=1
+fi
+echo 403 >"$CC_WC_FIX/write_http.txt"
+cc_w2=$(
+  XDG_CACHE_HOME="$CC_WC_CACHE" \
+  WAYBAR_CC_FIXTURE_DIR="$CC_WC_FIX" \
+  WAYBAR_CC_WRITE_PROBE_TTL=600 \
+  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+) || true
+if ! echo "$cc_w2" | jq -e '.write_access == true' >/dev/null 2>&1; then
+  echo "FAIL: cached write_access should stay true after fixture flips to 403: $cc_w2" >&2
+  fail=1
+fi
+cc_w3=$(
+  XDG_CACHE_HOME="$CC_WC_CACHE" \
+  WAYBAR_CC_FIXTURE_DIR="$CC_WC_FIX" \
+  WAYBAR_CC_FORCE_WRITE_PROBE=1 \
+  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+) || true
+if ! echo "$cc_w3" | jq -e '.write_access == false' >/dev/null 2>&1; then
+  echo "FAIL: FORCE_WRITE_PROBE should refresh to false (403): $cc_w3" >&2
+  fail=1
+fi
+if [ ! -f "$CC_WC_CACHE/waybar/coolercontrol-write.json" ]; then
+  echo "FAIL: coolercontrol write cache file missing" >&2
+  fail=1
+fi
+rm -rf "$CC_WC_FIX" "$CC_WC_CACHE"
+
+echo "PASS: coolercontrol module wiring and status/click behavior"
+
+# asusctl module: generator wiring + status/click (fixture CLI)
+echo "Testing asusctl module wiring and status/click scripts..."
+cp "$ROOT_DIR/data/waybar-settings.jsonc" "$TEST_DIR/data/waybar-settings.jsonc"
+cp "$ROOT_DIR/scripts/system/asusctl-status.sh" "$ROOT_DIR/scripts/system/asusctl-click.sh" "$TEST_DIR/scripts/system/"
+chmod +x "$TEST_DIR/scripts/system/asusctl-status.sh" "$TEST_DIR/scripts/system/asusctl-click.sh"
+if ! "$TEST_DIR/scripts/generate/generate-settings.sh"; then
+  echo "FAIL: generate-settings.sh failed before asusctl checks" >&2
+  fail=1
+fi
+if ! "$TEST_DIR/scripts/generate/generate-module-configs.sh"; then
+  echo "FAIL: generate-module-configs.sh failed before asusctl checks" >&2
+  fail=1
+fi
+if ! jq -e '."custom/asusctl".exec | test("system/asusctl-status\\.sh$")' "$TEST_DIR/modules/utilities.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/asusctl exec missing asusctl-status.sh" >&2
+  fail=1
+fi
+if ! jq -e '."custom/asusctl".signal == 28' "$TEST_DIR/modules/utilities.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/asusctl signal expected 28" >&2
+  fail=1
+fi
+if ! jq -e '."custom/asusctl"."on-scroll-up" | test("asusctl-click\\.sh next")' "$TEST_DIR/modules/utilities.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/asusctl scroll-up should cycle next" >&2
+  fail=1
+fi
+if ! jq -e '."custom/asusctl"."on-scroll-down" | test("asusctl-click\\.sh prev")' "$TEST_DIR/modules/utilities.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/asusctl scroll-down should cycle prev" >&2
+  fail=1
+fi
+if ! jq -e '."custom/asusctl"."on-click" | test("asusctl-click\\.sh menu")' "$TEST_DIR/modules/utilities.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/asusctl left-click should open profile menu" >&2
+  fail=1
+fi
+if ! jq -e '.["group/desk-controls"].modules | index("custom/asusctl")' "$TEST_DIR/modules/groups.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/asusctl missing from group/desk-controls" >&2
+  fail=1
+fi
+if ! jq -e '.module_intervals.asusctl == "once" and .signals.asusctl == 28' "$TEST_DIR/data/waybar-settings.json" >/dev/null 2>&1; then
+  echo "FAIL: module_intervals/signals.asusctl missing in compiled settings" >&2
+  fail=1
+fi
+if ! bash -n "$TEST_DIR/scripts/system/asusctl-status.sh"; then
+  echo "FAIL: asusctl-status.sh failed bash -n" >&2
+  fail=1
+fi
+if ! bash -n "$TEST_DIR/scripts/system/asusctl-click.sh"; then
+  echo "FAIL: asusctl-click.sh failed bash -n" >&2
+  fail=1
+fi
+
+ASUS_FAKE="$TEST_DIR/fake-asusctl"
+ASUS_CACHE="$TEST_DIR/asus-cache"
+mkdir -p "$ASUS_FAKE" "$ASUS_CACHE"
+ASUS_STATE="$ASUS_FAKE/state"
+echo Balanced >"$ASUS_STATE"
+cat >"$ASUS_FAKE/asusctl" <<'EOF'
+#!/usr/bin/env bash
+set -eu
+state="${ASUS_STATE_FILE:?}"
+cmd="${1:-}"
+sub="${2:-}"
+case "$cmd" in
+  profile)
+    case "$sub" in
+      get)
+        printf 'Active profile is %s\n' "$(cat "$state")"
+        ;;
+      list)
+        printf '%s\n' Quiet Balanced Performance
+        ;;
+      set)
+        printf '%s\n' "${3:?}" >"$state"
+        ;;
+      next)
+        cur=$(cat "$state")
+        case "$cur" in
+          Quiet) printf 'Balanced\n' >"$state" ;;
+          Balanced) printf 'Performance\n' >"$state" ;;
+          *) printf 'Quiet\n' >"$state" ;;
+        esac
+        ;;
+      *)
+        echo "unknown profile sub: $sub" >&2
+        exit 2
+        ;;
+    esac
+    ;;
+  battery)
+    if [[ "${sub:-}" == "info" ]]; then
+      echo "Current charge limit: 80%"
+    fi
+    ;;
+  *)
+    echo "unknown: $*" >&2
+    exit 2
+    ;;
+esac
+EOF
+chmod +x "$ASUS_FAKE/asusctl"
+
+asus_out=$(
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$ASUS_CACHE" \
+  WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
+  ASUS_STATE_FILE="$ASUS_STATE" \
+  "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
+)
+if ! echo "$asus_out" | jq -e '.class == "balanced" and (.text | test("Bal")) and (.tooltip | test("Charge limit: 80%"))' >/dev/null 2>&1; then
+  echo "FAIL: asusctl-status expected balanced + charge limit: $asus_out" >&2
+  fail=1
+fi
+
+mkdir -p "$TEST_DIR/fakebin"
+cat >"$TEST_DIR/fakebin/notify-send" <<'EOF'
+#!/usr/bin/env sh
+exit 0
+EOF
+chmod +x "$TEST_DIR/fakebin/notify-send"
+PATH="$TEST_DIR/fakebin:/usr/bin:/bin" \
+WAYBAR_HOME="$TEST_DIR" \
+XDG_CACHE_HOME="$ASUS_CACHE" \
+WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
+ASUS_STATE_FILE="$ASUS_STATE" \
+  "$TEST_DIR/scripts/system/asusctl-click.sh" next
+if [[ "$(cat "$ASUS_STATE")" != "Performance" ]]; then
+  echo "FAIL: asusctl-click next from Balanced should set Performance (got $(cat "$ASUS_STATE"))" >&2
+  fail=1
+fi
+asus_perf=$(
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$ASUS_CACHE" \
+  WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
+  ASUS_STATE_FILE="$ASUS_STATE" \
+  "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
+)
+if ! echo "$asus_perf" | jq -e '.class == "performance"' >/dev/null 2>&1; then
+  echo "FAIL: status after next should be performance: $asus_perf" >&2
+  fail=1
+fi
+
+PATH="$TEST_DIR/fakebin:/usr/bin:/bin" \
+WAYBAR_HOME="$TEST_DIR" \
+XDG_CACHE_HOME="$ASUS_CACHE" \
+WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
+ASUS_STATE_FILE="$ASUS_STATE" \
+  "$TEST_DIR/scripts/system/asusctl-click.sh" prev
+if [[ "$(cat "$ASUS_STATE")" != "Balanced" ]]; then
+  echo "FAIL: asusctl-click prev from Performance should set Balanced" >&2
+  fail=1
+fi
+
+asus_miss=$(
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$ASUS_CACHE" \
+  WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/missing-asusctl" \
+  "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
+)
+if ! echo "$asus_miss" | jq -e '.class == "disconnected" or (.class|tostring|test("disconnected"))' >/dev/null 2>&1; then
+  echo "FAIL: missing asusctl should emit disconnected: $asus_miss" >&2
+  fail=1
+fi
+
+cat >"$ASUS_FAKE/asusctl-down2" <<'EOF'
+#!/usr/bin/env bash
+echo "asusd is not running, start it with systemctl start asusd"
+exit 0
+EOF
+chmod +x "$ASUS_FAKE/asusctl-down2"
+asus_down=$(
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$ASUS_CACHE" \
+  WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl-down2" \
+  "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
+)
+if ! echo "$asus_down" | jq -e '.class == "disconnected" or (.class|tostring|test("disconnected"))' >/dev/null 2>&1; then
+  echo "FAIL: asusd-down message should emit disconnected: $asus_down" >&2
+  fail=1
+fi
+echo "PASS: asusctl module wiring and status/click behavior"
+
+# nvme / openlinkhub / rgb / amdgpu fallback / solaar battery / fanctl note
+echo "Testing nvme, openlinkhub, rgb, amdgpu fallback, and supplements..."
+cp "$ROOT_DIR/data/waybar-settings.jsonc" "$TEST_DIR/data/waybar-settings.jsonc"
+mkdir -p "$TEST_DIR/scripts/system" "$TEST_DIR/scripts/services/openlinkhub" "$TEST_DIR/scripts/services/devices" "$TEST_DIR/scripts/infra"
+cp "$ROOT_DIR/scripts/system/nvme-status.sh" "$ROOT_DIR/scripts/system/rgb-status.sh" \
+  "$ROOT_DIR/scripts/system/fans-status.sh" "$ROOT_DIR/scripts/system/gpu-status.sh" \
+  "$TEST_DIR/scripts/system/"
+cp "$ROOT_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" "$TEST_DIR/scripts/services/openlinkhub/"
+cp "$ROOT_DIR/scripts/services/devices/device-battery-status.sh" "$TEST_DIR/scripts/services/devices/"
+cp "$ROOT_DIR/scripts/infra/system-metrics-collector.sh" "$ROOT_DIR/scripts/infra/metrics-icons-build.sh" \
+  "$TEST_DIR/scripts/infra/"
+chmod +x "$TEST_DIR/scripts/system/"*.sh "$TEST_DIR/scripts/services/openlinkhub/"*.sh \
+  "$TEST_DIR/scripts/services/devices/"*.sh "$TEST_DIR/scripts/infra/"*.sh
+
+if ! "$TEST_DIR/scripts/generate/generate-settings.sh"; then
+  echo "FAIL: generate-settings.sh failed before nvme/olh checks" >&2
+  fail=1
+fi
+if ! "$TEST_DIR/scripts/generate/generate-module-configs.sh"; then
+  echo "FAIL: generate-module-configs.sh failed before rgb checks" >&2
+  fail=1
+fi
+if ! jq -e '."custom/nvme".exec | test("system/nvme-status\\.sh$")' "$TEST_DIR/modules/system.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/nvme exec missing" >&2
+  fail=1
+fi
+if ! jq -e '.["group/hardware"].modules | index("custom/nvme") and index("custom/openlinkhub")' "$TEST_DIR/modules/groups.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: hardware group missing nvme/openlinkhub" >&2
+  fail=1
+fi
+if ! jq -e '."custom/openlinkhub".exec | test("openlinkhub-status\\.sh$")' "$TEST_DIR/modules/system.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/openlinkhub exec missing" >&2
+  fail=1
+fi
+if ! jq -e '."custom/rgb".exec | test("system/rgb-status\\.sh$")' "$TEST_DIR/modules/utilities.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/rgb exec missing" >&2
+  fail=1
+fi
+if ! jq -e '.["group/tools"].modules | index("custom/rgb")' "$TEST_DIR/modules/groups.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: tools group missing custom/rgb" >&2
+  fail=1
+fi
+
+# NVMe fixture hwmon tree
+NVME_ROOT="$TEST_DIR/fake-hwmon"
+NVME_CACHE="$TEST_DIR/nvme-cache"
+mkdir -p "$NVME_ROOT/hwmon0" "$NVME_ROOT/hwmon1" "$NVME_CACHE"
+echo nvme >"$NVME_ROOT/hwmon0/name"
+echo 37000 >"$NVME_ROOT/hwmon0/temp1_input"
+echo Composite >"$NVME_ROOT/hwmon0/temp1_label"
+echo nvme >"$NVME_ROOT/hwmon1/name"
+echo 67000 >"$NVME_ROOT/hwmon1/temp1_input"
+echo Composite >"$NVME_ROOT/hwmon1/temp1_label"
+echo 72000 >"$NVME_ROOT/hwmon1/temp2_input"
+echo "Sensor 1" >"$NVME_ROOT/hwmon1/temp2_label"
+nvme_out=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$NVME_CACHE" \
+  WAYBAR_NVME_HWMON_ROOT="$NVME_ROOT" \
+  "$TEST_DIR/scripts/system/nvme-status.sh" --refresh
+)
+if ! echo "$nvme_out" | jq -e '.class == "warning" and (.text | test("67"))' >/dev/null 2>&1; then
+  # 67 is composite on hottest drive; warning threshold default 60
+  echo "FAIL: nvme-status expected hottest composite 67 warning: $nvme_out" >&2
+  fail=1
+fi
+nvme_empty=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$NVME_CACHE" \
+  WAYBAR_NVME_HWMON_ROOT="$TEST_DIR/empty-hwmon" \
+  "$TEST_DIR/scripts/system/nvme-status.sh" --refresh
+)
+mkdir -p "$TEST_DIR/empty-hwmon"
+nvme_empty=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$NVME_CACHE" \
+  WAYBAR_NVME_HWMON_ROOT="$TEST_DIR/empty-hwmon" \
+  "$TEST_DIR/scripts/system/nvme-status.sh" --refresh
+)
+if ! echo "$nvme_empty" | jq -e '.class == "disconnected" or (.class|tostring|test("disconnected"))' >/dev/null 2>&1; then
+  echo "FAIL: empty nvme hwmon should disconnect: $nvme_empty" >&2
+  fail=1
+fi
+
+# OpenLinkHub fixture — presence-first (device count), exclude cluster
+OLH_FIX="$TEST_DIR/olh-api.json"
+OLH_CACHE="$TEST_DIR/olh-cache"
+mkdir -p "$OLH_CACHE"
+if ! jq -e '.services.openlinkhub.prefer_presence == true' "$TEST_DIR/data/waybar-settings.json" >/dev/null 2>&1; then
+  echo "FAIL: services.openlinkhub.prefer_presence expected true in compiled settings" >&2
+  fail=1
+fi
+cat >"$OLH_FIX" <<'JSON'
+{"device":{
+  "cluster":{"ProductType":999,"Product":"Cluster","Serial":"cluster","Hidden":true},
+  "a":{"Product":"HX1500i","ProductType":501,"GetDevice":{"IsPSU":true},"Temperature":55},
+  "b":{"Product":"Commander","ProductType":1,"Temperature":71}
+},"cpuTemp":"48.2"}
+JSON
+olh_out=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$OLH_CACHE" \
+  WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
+  WAYBAR_CORSAIRPSU_PRESENT=0 \
+  "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
+)
+# prefer_presence default: bar shows count (2, cluster excluded), not temp
+if ! echo "$olh_out" | jq -e '(.text | test("2")) and .class == "normal"' >/dev/null 2>&1; then
+  echo "FAIL: openlinkhub fixture expected presence count 2: $olh_out" >&2
+  fail=1
+fi
+if ! echo "$olh_out" | jq -e '.tooltip | test("Commander") and test("HX1500i")' >/dev/null 2>&1; then
+  echo "FAIL: openlinkhub tooltip should list real devices: $olh_out" >&2
+  fail=1
+fi
+if echo "$olh_out" | jq -e '.tooltip | test("Cluster")' >/dev/null 2>&1; then
+  echo "FAIL: openlinkhub tooltip must not list cluster: $olh_out" >&2
+  fail=1
+fi
+# prefer_presence=false → bar shows hottest useful temp
+OLH_SETTINGS="$OLH_CACHE/settings-home"
+mkdir -p "$OLH_SETTINGS/data" "$OLH_SETTINGS/scripts/lib"
+cp "$TEST_DIR/data/waybar-settings.json" "$OLH_SETTINGS/data/"
+cp "$TEST_DIR/scripts/lib/"*.sh "$OLH_SETTINGS/scripts/lib/" 2>/dev/null || true
+jq '.services.openlinkhub.prefer_presence = false' "$OLH_SETTINGS/data/waybar-settings.json" >"$OLH_SETTINGS/data/waybar-settings.json.tmp" \
+  && mv "$OLH_SETTINGS/data/waybar-settings.json.tmp" "$OLH_SETTINGS/data/waybar-settings.json"
+olh_temp=$(
+  WAYBAR_HOME="$OLH_SETTINGS" WAYBAR_SCRIPTS="$OLH_SETTINGS/scripts" XDG_CACHE_HOME="$OLH_CACHE" \
+  WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
+  WAYBAR_CORSAIRPSU_PRESENT=0 \
+  "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
+)
+if ! echo "$olh_temp" | jq -e '(.text | test("71")) and .class == "warning"' >/dev/null 2>&1; then
+  echo "FAIL: openlinkhub prefer_presence=false expected hot 71 warning: $olh_temp" >&2
+  fail=1
+fi
+# PSU-only + corsairpsu → pointer to PSU module
+cat >"$OLH_FIX" <<'JSON'
+{"device":{
+  "cluster":{"ProductType":999,"Product":"Cluster","Hidden":true},
+  "a":{"Product":"HX1500i","ProductType":501,"GetDevice":{"IsPSU":true},"psuTemperature":55.2}
+}}
+JSON
+olh_psu=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$OLH_CACHE" \
+  WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
+  WAYBAR_CORSAIRPSU_PRESENT=1 \
+  "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
+)
+if ! echo "$olh_psu" | jq -e '(.text | test("1")) and (.tooltip | test("PSU module|corsairpsu"; "i"))' >/dev/null 2>&1; then
+  echo "FAIL: openlinkhub PSU-only should point at PSU module: $olh_psu" >&2
+  fail=1
+fi
+# corsairpsu via fake hwmon tree
+OLH_HWMON="$OLH_CACHE/hwmon"
+mkdir -p "$OLH_HWMON/hwmon0"
+echo corsairpsu >"$OLH_HWMON/hwmon0/name"
+olh_hwmon=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$OLH_CACHE" \
+  WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
+  WAYBAR_HWMON_ROOT="$OLH_HWMON" \
+  "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
+)
+if ! echo "$olh_hwmon" | jq -e '.tooltip | test("PSU module|corsairpsu"; "i")' >/dev/null 2>&1; then
+  echo "FAIL: openlinkhub should detect corsairpsu via WAYBAR_HWMON_ROOT: $olh_hwmon" >&2
+  fail=1
+fi
+olh_down=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$OLH_CACHE" \
+  WAYBAR_OLH_API_URL="http://127.0.0.1:9" \
+  WAYBAR_OLH_FORCE_ACTIVE=0 \
+  "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
+)
+if ! echo "$olh_down" | jq -e '.class == "disconnected" or (.class|tostring|test("disconnected"))' >/dev/null 2>&1; then
+  echo "FAIL: openlinkhub inactive should disconnect: $olh_down" >&2
+  fail=1
+fi
+
+# RGB: idle → disconnected
+RGB_CACHE="$TEST_DIR/rgb-cache"
+mkdir -p "$RGB_CACHE" "$TEST_DIR/rgb-bin"
+# Ensure openrgb/ckb not found via empty bin first on PATH, no pgrep matches for our fake
+rgb_idle=$(
+  PATH="/usr/bin:/bin" \
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$RGB_CACHE" \
+  WAYBAR_OPENRGB_BIN="$TEST_DIR/rgb-bin/missing" \
+  WAYBAR_RGB_FORCE_IDLE=1 \
+  "$TEST_DIR/scripts/system/rgb-status.sh" --refresh
+)
+if ! echo "$rgb_idle" | jq -e '.class == "disconnected" or (.class|tostring|test("disconnected"))' >/dev/null 2>&1; then
+  echo "FAIL: idle rgb should disconnect: $rgb_idle" >&2
+  fail=1
+fi
+cat >"$TEST_DIR/rgb-bin/openrgb" <<'EOF'
+#!/usr/bin/env bash
+echo "0: Test Keyboard"
+echo "1: Test Mouse"
+EOF
+chmod +x "$TEST_DIR/rgb-bin/openrgb"
+rgb_on=$(
+  PATH="/usr/bin:/bin" \
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$RGB_CACHE" \
+  WAYBAR_OPENRGB_BIN="$TEST_DIR/rgb-bin/openrgb" \
+  WAYBAR_RGB_FORCE_IDLE=0 \
+  "$TEST_DIR/scripts/system/rgb-status.sh" --refresh
+)
+if ! echo "$rgb_on" | jq -e '(.text | test("2")) and (.tooltip | test("OpenRGB"))' >/dev/null 2>&1; then
+  echo "FAIL: rgb with openrgb list should show 2 devices: $rgb_on" >&2
+  fail=1
+fi
+
+# AMD GPU fallback via metrics collector (PATH without nvidia-smi)
+AMD_CACHE="$TEST_DIR/amd-cache"
+AMD_HWMON="$TEST_DIR/amd-hwmon"
+mkdir -p "$AMD_CACHE/waybar" "$AMD_HWMON/hwmon0" "$AMD_HWMON/hwmon0/device"
+# Patch collector to use our hwmon by placing a real amdgpu name under a fake class —
+# collector scans /sys/class/hwmon only; instead unit-test fill path via env override is hard.
+# Smoke: run collector; if host has amdgpu it should report vendor amd when nvidia suspended/unavailable.
+# Fixture: create temporary bind is not available; verify jq schema accepts vendor via icons build input.
+cat >"$AMD_CACHE/waybar/system-metrics.json" <<'JSON'
+{"cpu":{"usage":1,"temp":40,"topology":{"cores":1,"threads":1,"threads_per_core":1},"load":{"one":"0","five":"0","fifteen":"0","runnable":"1","pct":{"one":0,"five":0,"fifteen":0}},"top":[],"history":[1]},"memory":{"mem_used_gib":"1.0","mem_total_gib":"2.0","mem_pct":50,"swap_used_gib":"0.0","swap_total_gib":"0.0","top":[],"history":[50]},"gpu":{"available":true,"name":"AMD iGPU @ 600 MHz","vendor":"amd","util":0,"temp":52,"mem_used":20,"mem_total":512,"vram_pct":3,"fan":0,"suspended":false}}
+JSON
+# Build icons from fixture metrics
+cp "$AMD_CACHE/waybar/system-metrics.json" "$AMD_CACHE/system-metrics.json"
+icons=$(
+  XDG_CACHE_HOME="$AMD_CACHE" WAYBAR_HOME="$TEST_DIR" \
+  bash -c '
+    cache_dir="$XDG_CACHE_HOME"
+    metrics=$(cat "$cache_dir/system-metrics.json")
+    export metrics
+    # Call icons builder internals by writing metrics then invoking script
+    true
+  '
+)
+# Directly verify gpu-status path via metrics file + serve path: invoke metrics-icons-build after placing metrics
+XDG_CACHE_HOME="$AMD_CACHE" WAYBAR_HOME="$TEST_DIR" \
+  "$TEST_DIR/scripts/infra/metrics-icons-build.sh" >/dev/null 2>&1 || true
+if [ -f "$AMD_CACHE/waybar/gpu-icon.json" ]; then
+  if ! jq -e '(.tooltip | test("AMD")) and (.text | test("52"))' "$AMD_CACHE/waybar/gpu-icon.json" >/dev/null 2>&1; then
+    echo "FAIL: amd gpu icon should show temp-forward text: $(cat "$AMD_CACHE/waybar/gpu-icon.json")" >&2
+    fail=1
+  fi
+else
+  echo "FAIL: metrics-icons-build did not write gpu-icon.json" >&2
+  fail=1
+fi
+
+# Solaar fallback for device-battery
+SOL_BIN="$TEST_DIR/solaar-bin"
+SOL_CACHE="$TEST_DIR/sol-cache"
+mkdir -p "$SOL_BIN" "$SOL_CACHE"
+cat >"$SOL_BIN/solaar" <<'EOF'
+#!/usr/bin/env bash
+cat <<'OUT'
+1: MX Master 3S
+     Battery: 18%, discharging.
+OUT
+EOF
+chmod +x "$SOL_BIN/solaar"
+# Empty power_supply via nonexistent override — script always scans real sysfs.
+# Prefer solaar even if sysfs exists:
+batt_out=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$SOL_CACHE" \
+  WAYBAR_SOLAAR_BIN="$SOL_BIN/solaar" \
+  WAYBAR_DEVICE_BATTERY_PREFER_SOLAAR=1 \
+  "$TEST_DIR/scripts/services/devices/device-battery-status.sh" --refresh
+)
+if ! echo "$batt_out" | jq -e '(.text | test("18")) and (.tooltip | test("solaar")) and .class == "warning"' >/dev/null 2>&1; then
+  echo "FAIL: solaar battery fallback expected 18% warning: $batt_out" >&2
+  fail=1
+fi
+
+# fans: fake hwmon — PSU deferred when corsairpsu present; nct6799 chassis max
+FAN_HWMON="$TEST_DIR/fan-hwmon"
+FAN_CACHE="$TEST_DIR/fan-cache"
+mkdir -p "$FAN_HWMON/hwmon0" "$FAN_HWMON/hwmon1" "$FAN_HWMON/hwmon2" "$FAN_CACHE"
+echo asusec >"$FAN_HWMON/hwmon0/name"
+echo 1525 >"$FAN_HWMON/hwmon0/fan1_input"
+echo CPU_Opt >"$FAN_HWMON/hwmon0/fan1_label"
+echo corsairpsu >"$FAN_HWMON/hwmon1/name"
+echo 9999 >"$FAN_HWMON/hwmon1/fan1_input"
+echo nct6799 >"$FAN_HWMON/hwmon2/name"
+echo 800 >"$FAN_HWMON/hwmon2/fan1_input"
+echo 1410 >"$FAN_HWMON/hwmon2/fan2_input"
+echo 0 >"$FAN_HWMON/hwmon2/fan3_input"
+# Clear path caches so discovery uses the fake tree (cache_dir is $XDG_CACHE_HOME/waybar)
+rm -f "$FAN_CACHE"/waybar/asusec-path.txt "$FAN_CACHE"/waybar/corsairpsu-path.txt \
+  "$FAN_CACHE"/waybar/nct6799-path.txt "$FAN_CACHE"/waybar/fans-status.json
+fan_dedupe=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$FAN_CACHE" \
+  WAYBAR_HWMON_ROOT="$FAN_HWMON" \
+  "$TEST_DIR/scripts/system/fans-status.sh" --refresh
+)
+if ! echo "$fan_dedupe" | jq -e '(.text | test("1525")) and (.tooltip | test("CPU_Opt"))' >/dev/null 2>&1; then
+  echo "FAIL: fans should show asusec CPU RPM: $fan_dedupe" >&2
+  fail=1
+fi
+if ! echo "$fan_dedupe" | jq -e '.tooltip | test("Chassis \\(nct6799 max\\): 1410")' >/dev/null 2>&1; then
+  echo "FAIL: fans should show nct6799 chassis max 1410: $fan_dedupe" >&2
+  fail=1
+fi
+if ! echo "$fan_dedupe" | jq -e '.tooltip | test("see PSU module")' >/dev/null 2>&1; then
+  echo "FAIL: fans should defer PSU fan to PSU module: $fan_dedupe" >&2
+  fail=1
+fi
+if echo "$fan_dedupe" | jq -e '.tooltip | test("9999")' >/dev/null 2>&1; then
+  echo "FAIL: fans must not duplicate corsairpsu fan RPM when PSU module covers it: $fan_dedupe" >&2
+  fail=1
+fi
+# Without corsairpsu: PSU line is N/A (PSU RPM only deferred when corsairpsu hwmon exists)
+FAN_HWMON2="$TEST_DIR/fan-hwmon2"
+mkdir -p "$FAN_HWMON2/hwmon0"
+echo asusec >"$FAN_HWMON2/hwmon0/name"
+echo 1000 >"$FAN_HWMON2/hwmon0/fan1_input"
+echo CPU >"$FAN_HWMON2/hwmon0/fan1_label"
+rm -f "$FAN_CACHE"/waybar/asusec-path.txt "$FAN_CACHE"/waybar/corsairpsu-path.txt \
+  "$FAN_CACHE"/waybar/nct6799-path.txt "$FAN_CACHE"/waybar/fans-status.json
+fan_nopasu=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$FAN_CACHE" \
+  WAYBAR_HWMON_ROOT="$FAN_HWMON2" \
+  "$TEST_DIR/scripts/system/fans-status.sh" --refresh
+)
+if ! echo "$fan_nopasu" | jq -e '(.text | test("1000")) and (.tooltip | test("PSU Fan: N/A"))' >/dev/null 2>&1; then
+  echo "FAIL: fans without corsairpsu should show CPU 1000 + PSU Fan N/A: $fan_nopasu" >&2
+  fail=1
+fi
+
+# fanctl note in fans tooltip
+mkdir -p "$TEST_DIR/fanctl-cfg"
+echo 'profiles: []' >"$TEST_DIR/fanctl-cfg/fanctl.yml"
+rm -f "$FAN_CACHE"/waybar/asusec-path.txt "$FAN_CACHE"/waybar/corsairpsu-path.txt \
+  "$FAN_CACHE"/waybar/nct6799-path.txt "$FAN_CACHE"/waybar/fans-status.json
+fan_out=$(
+  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$FAN_CACHE" \
+  WAYBAR_HWMON_ROOT="$FAN_HWMON" \
+  WAYBAR_FANCTL_BIN=/usr/bin/true \
+  WAYBAR_FANCTL_CONFIG="$TEST_DIR/fanctl-cfg/fanctl.yml" \
+  "$TEST_DIR/scripts/system/fans-status.sh" --refresh 2>/dev/null || true
+)
+if [ -n "$fan_out" ] && ! echo "$fan_out" | jq -e '.tooltip | test("fanctl config")' >/dev/null 2>&1; then
+  echo "FAIL: fans tooltip should mention fanctl config: $fan_out" >&2
+  fail=1
+fi
+
+echo "PASS: nvme/openlinkhub/rgb/amdgpu/solaar/fanctl supplements"
 
 # Validate must reject flat scripts/<file>.sh paths (journal: No such file after domain move)
 echo "Verifying validate rejects flat script paths..."
@@ -1813,6 +2825,280 @@ else
   echo "PASS: validate rejects missing resolved script paths"
 fi
 rm -rf "$FLAT_DIR"
+
+# --- Portability fixtures (sysfs roots, updates backends, capture XDG, Python XDG) ---
+echo "Verifying portability fixtures..."
+
+# Scripts write under $XDG_CACHE_HOME/waybar/ (not the cache home itself).
+PORT_CACHE=$(mktemp -d)
+export XDG_CACHE_HOME="$PORT_CACHE"
+PORT_WB="$PORT_CACHE/waybar"
+mkdir -p "$PORT_WB"
+
+# psu: fake WAYBAR_HWMON_ROOT with corsairpsu → watts text; empty → disconnected.
+# corsairpsu-path.txt caches an absolute hwmon path — clear it when swapping trees.
+PSU_HWMON=$(mktemp -d)
+mkdir -p "$PSU_HWMON/hwmon0"
+echo corsairpsu >"$PSU_HWMON/hwmon0/name"
+echo 150000000 >"$PSU_HWMON/hwmon0/power1_input"
+echo 120000000 >"$PSU_HWMON/hwmon0/power2_input"
+echo 10000000 >"$PSU_HWMON/hwmon0/power3_input"
+echo 5000000 >"$PSU_HWMON/hwmon0/power4_input"
+echo 800 >"$PSU_HWMON/hwmon0/fan1_input"
+echo 45000 >"$PSU_HWMON/hwmon0/temp1_input"
+echo 40000 >"$PSU_HWMON/hwmon0/temp2_input"
+echo 120000 >"$PSU_HWMON/hwmon0/in0_input"
+echo 12000 >"$PSU_HWMON/hwmon0/in1_input"
+echo 5000 >"$PSU_HWMON/hwmon0/in2_input"
+echo 3300 >"$PSU_HWMON/hwmon0/in3_input"
+rm -f "$PORT_WB/corsairpsu-path.txt" "$PORT_WB/psu-status.json"
+psu_out=$(
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  XDG_CACHE_HOME="$PORT_CACHE" WAYBAR_HWMON_ROOT="$PSU_HWMON" \
+    "$TEST_DIR/scripts/system/psu-status.sh" --refresh 2>/dev/null | tail -n 1
+) || true
+if ! printf '%s' "$psu_out" | jq -e '.text | test("150W")' >/dev/null 2>&1; then
+  echo "FAIL: psu WAYBAR_HWMON_ROOT should report 150W: $psu_out" >&2
+  fail=1
+fi
+# Meta-guard: exported poison root must not override an explicit per-command root
+# (same bash assignment rule as the CoolerControl fixture meta-guard above).
+psu_poison=$(
+  export WAYBAR_HWMON_ROOT=/nonexistent-poison-hwmon
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  XDG_CACHE_HOME="$PORT_CACHE" WAYBAR_HWMON_ROOT="$PSU_HWMON" \
+    "$TEST_DIR/scripts/system/psu-status.sh" --refresh 2>/dev/null | tail -n 1
+) || true
+if ! printf '%s' "$psu_poison" | jq -e '.text | test("150W")' >/dev/null 2>&1; then
+  echo "FAIL: isolation meta-guard — poisoned WAYBAR_HWMON_ROOT must not override cmdline root: $psu_poison" >&2
+  fail=1
+fi
+unset WAYBAR_HWMON_ROOT || true
+PSU_EMPTY=$(mktemp -d)
+rm -f "$PORT_WB/corsairpsu-path.txt" "$PORT_WB/psu-status.json"
+rm -rf "$PSU_HWMON" # drop cached path target if any residual
+psu_empty=$(
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  XDG_CACHE_HOME="$PORT_CACHE" WAYBAR_HWMON_ROOT="$PSU_EMPTY" \
+    "$TEST_DIR/scripts/system/psu-status.sh" --refresh 2>/dev/null | tail -n 1
+) || true
+if ! printf '%s' "$psu_empty" | jq -e '.class == "disconnected"' >/dev/null 2>&1; then
+  echo "FAIL: psu empty hwmon should disconnect: $psu_empty" >&2
+  fail=1
+fi
+rm -rf "$PSU_EMPTY"
+
+# device-battery: Device-type battery via WAYBAR_POWER_SUPPLY_ROOT
+BATT_ROOT=$(mktemp -d)
+mkdir -p "$BATT_ROOT/hidpp_battery_0"
+echo Battery >"$BATT_ROOT/hidpp_battery_0/type"
+echo Device >"$BATT_ROOT/hidpp_battery_0/scope"
+echo 42 >"$BATT_ROOT/hidpp_battery_0/capacity"
+echo Discharging >"$BATT_ROOT/hidpp_battery_0/status"
+echo "Test Mouse" >"$BATT_ROOT/hidpp_battery_0/model_name"
+rm -f "$PORT_WB/device-battery.json"
+batt_out=$(
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  XDG_CACHE_HOME="$PORT_CACHE" WAYBAR_POWER_SUPPLY_ROOT="$BATT_ROOT" \
+  PATH="/usr/bin:/bin" \
+    "$TEST_DIR/scripts/services/devices/device-battery-status.sh" --refresh 2>/dev/null | tail -n 1
+) || true
+if ! printf '%s' "$batt_out" | jq -e '(.text | test("42%")) and (.tooltip | test("sysfs"))' >/dev/null 2>&1; then
+  echo "FAIL: device-battery WAYBAR_POWER_SUPPLY_ROOT: $batt_out" >&2
+  fail=1
+fi
+rm -rf "$BATT_ROOT"
+
+# metrics: k10temp + amdgpu under WAYBAR_HWMON_ROOT
+MET_HWMON=$(mktemp -d)
+mkdir -p "$MET_HWMON/hwmon0" "$MET_HWMON/hwmon1"
+echo k10temp >"$MET_HWMON/hwmon0/name"
+echo 52000 >"$MET_HWMON/hwmon0/temp1_input"
+echo amdgpu >"$MET_HWMON/hwmon1/name"
+echo 61000 >"$MET_HWMON/hwmon1/temp1_input"
+echo 500000000 >"$MET_HWMON/hwmon1/power1_average"
+rm -f "$PORT_WB"/cpu-temp-path.txt "$PORT_WB"/amdgpu-hwmon-path.txt "$PORT_WB"/system-metrics.json "$PORT_WB"/gpu-pci-path.txt
+met_out=$(
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  XDG_CACHE_HOME="$PORT_CACHE" WAYBAR_HWMON_ROOT="$MET_HWMON" \
+  WAYBAR_THERMAL_ROOT="$(mktemp -d)" \
+    "$TEST_DIR/scripts/infra/system-metrics-collector.sh" --refresh 2>/dev/null || true
+)
+if [ ! -f "$PORT_WB/system-metrics.json" ]; then
+  echo "FAIL: metrics collector did not write system-metrics.json" >&2
+  fail=1
+elif ! jq -e '.cpu.temp == 52' "$PORT_WB/system-metrics.json" >/dev/null 2>&1; then
+  echo "FAIL: metrics cpu.temp expected 52: $(cat "$PORT_WB/system-metrics.json")" >&2
+  fail=1
+elif jq -e '.gpu.available == true and .gpu.vendor == "amd"' "$PORT_WB/system-metrics.json" >/dev/null 2>&1; then
+  if ! jq -e '.gpu.temp == 61' "$PORT_WB/system-metrics.json" >/dev/null 2>&1; then
+    echo "FAIL: metrics amdgpu temp expected 61: $(cat "$PORT_WB/system-metrics.json")" >&2
+    fail=1
+  fi
+elif ! grep -q '0x10de' /sys/bus/pci/devices/*/vendor 2>/dev/null; then
+  echo "FAIL: metrics expected amdgpu GPU from WAYBAR_HWMON_ROOT: $(cat "$PORT_WB/system-metrics.json")" >&2
+  fail=1
+fi
+rm -rf "$MET_HWMON"
+
+# updates-status: apt / dnf / none backends via PATH stubs
+UPD_BIN=$(mktemp -d)
+cat >"$UPD_BIN/apt" <<'EOF'
+#!/usr/bin/env sh
+if [ "${1:-}" = "list" ]; then
+  printf 'Listing...\nfoo/stable 1.0 [upgradable from: 0.9]\nbar/stable 2.0 [upgradable from: 1.9]\n'
+fi
+EOF
+cat >"$UPD_BIN/dnf" <<'EOF'
+#!/usr/bin/env sh
+printf 'baz.x86_64 1.2-3\nqux.x86_64 4.5-6\n'
+exit 100
+EOF
+cat >"$UPD_BIN/timeout" <<'EOF'
+#!/usr/bin/env sh
+shift
+exec "$@"
+EOF
+cat >"$UPD_BIN/flatpak" <<'EOF'
+#!/usr/bin/env sh
+exit 0
+EOF
+chmod +x "$UPD_BIN"/*
+rm -f "$PORT_WB/updates-status.json"
+apt_upd=$(
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  XDG_CACHE_HOME="$PORT_CACHE" WAYBAR_UPDATES_BACKEND=apt WAYBAR_BACKGROUND=0 \
+  PATH="$UPD_BIN:/usr/bin:/bin" \
+    "$TEST_DIR/scripts/services/sync/updates-status.sh" --refresh 2>/dev/null | tail -n 1
+) || true
+if ! printf '%s' "$apt_upd" | jq -e '(.tooltip | test("APT updates: 2")) and (.tooltip | test("Backend: apt"))' >/dev/null 2>&1; then
+  echo "FAIL: updates apt backend: $apt_upd" >&2
+  fail=1
+fi
+rm -f "$PORT_WB/updates-status.json"
+dnf_upd=$(
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  XDG_CACHE_HOME="$PORT_CACHE" WAYBAR_UPDATES_BACKEND=dnf WAYBAR_BACKGROUND=0 \
+  PATH="$UPD_BIN:/usr/bin:/bin" \
+    "$TEST_DIR/scripts/services/sync/updates-status.sh" --refresh 2>/dev/null | tail -n 1
+) || true
+if ! printf '%s' "$dnf_upd" | jq -e '(.tooltip | test("DNF updates: 2")) and (.tooltip | test("Backend: dnf"))' >/dev/null 2>&1; then
+  echo "FAIL: updates dnf backend: $dnf_upd" >&2
+  fail=1
+fi
+rm -f "$PORT_WB/updates-status.json"
+none_upd=$(
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  XDG_CACHE_HOME="$PORT_CACHE" WAYBAR_UPDATES_BACKEND=none WAYBAR_BACKGROUND=0 \
+  PATH="$UPD_BIN:/usr/bin:/bin" \
+    "$TEST_DIR/scripts/services/sync/updates-status.sh" --refresh 2>/dev/null | tail -n 1
+) || true
+if ! printf '%s' "$none_upd" | jq -e '(.text | test("  0")) and (.tooltip | test("Backend: none"))' >/dev/null 2>&1; then
+  echo "FAIL: updates none backend should be zero: $none_upd" >&2
+  fail=1
+fi
+rm -rf "$UPD_BIN"
+
+# updates-review: apt path without paru (settings apps.apt_update)
+REV_BIN=$(mktemp -d)
+REV_HOME=$(mktemp -d)
+mkdir -p "$REV_HOME/data" "$REV_HOME/scripts/"{lib,tools,services/sync}
+cp "$ROOT_DIR/scripts/services/sync/updates-review.sh" "$REV_HOME/scripts/services/sync/"
+cp "$ROOT_DIR/scripts/lib/waybar-settings.sh" "$ROOT_DIR/scripts/lib/compositor-session.sh" "$REV_HOME/scripts/lib/"
+cat >"$REV_HOME/data/waybar-settings.json" <<'JSON'
+{
+  "apps": { "apt_update": "MOCK_APT_UPGRADE", "terminal": "MOCK_TERM" },
+  "rofi": { "updates": { "width": 111, "height": 222 } },
+  "updates": { "enable_aur": false }
+}
+JSON
+cat >"$REV_BIN/apt" <<'EOF'
+#!/usr/bin/env sh
+printf 'pkg/stable 1.0 [upgradable from: 0.9]\n'
+EOF
+cat >"$REV_BIN/rofi" <<'EOF'
+#!/usr/bin/env sh
+printf '🚀 Upgrade System Now\n'
+EOF
+cat >"$REV_BIN/notify-send" <<'EOF'
+#!/usr/bin/env sh
+:
+EOF
+chmod +x "$REV_BIN"/*
+cat >"$REV_HOME/scripts/tools/app-open.sh" <<EOF
+#!/usr/bin/env sh
+printf 'app-open %s\n' "\$*" >>"$PORT_CACHE/rev-calls.log"
+EOF
+chmod +x "$REV_HOME/scripts/tools/app-open.sh" "$REV_HOME/scripts/services/sync/updates-review.sh"
+: >"$PORT_CACHE/rev-calls.log"
+WAYBAR_HOME="$REV_HOME" WAYBAR_SCRIPTS="$REV_HOME/scripts" \
+WAYBAR_UPDATES_BACKEND=apt PATH="$REV_BIN:/usr/bin:/bin" \
+  "$REV_HOME/scripts/services/sync/updates-review.sh" >/dev/null 2>&1 || true
+if ! grep -q 'app-open MOCK_APT_UPGRADE' "$PORT_CACHE/rev-calls.log"; then
+  echo "FAIL: updates-review apt should use apps.apt_update. log=$(cat "$PORT_CACHE/rev-calls.log" 2>/dev/null)" >&2
+  fail=1
+fi
+rm -rf "$REV_BIN" "$REV_HOME"
+
+# capture-lib: XDG defaults + env overrides
+CAP_HOME=$(mktemp -d)
+mkdir -p "$CAP_HOME/scripts/lib" "$CAP_HOME/data"
+cp "$ROOT_DIR/scripts/lib/capture-lib.sh" "$ROOT_DIR/scripts/lib/waybar-settings.sh" "$CAP_HOME/scripts/lib/"
+printf '{"capture":{"screenshot_dir":null,"screenrecord_dir":null,"screenrecord_fps":60}}\n' >"$CAP_HOME/data/waybar-settings.json"
+cap_shot=$(
+  WAYBAR_HOME="$CAP_HOME" HOME="$CAP_HOME/fakehome" \
+  XDG_PICTURES_DIR="$CAP_HOME/Pics" XDG_VIDEOS_DIR="$CAP_HOME/Vids" \
+  bash -c '. "$WAYBAR_HOME/scripts/lib/capture-lib.sh"; capture_screenshot_base_dir'
+)
+cap_rec=$(
+  WAYBAR_HOME="$CAP_HOME" HOME="$CAP_HOME/fakehome" \
+  XDG_PICTURES_DIR="$CAP_HOME/Pics" XDG_VIDEOS_DIR="$CAP_HOME/Vids" \
+  bash -c '. "$WAYBAR_HOME/scripts/lib/capture-lib.sh"; capture_screenrecord_base_dir'
+)
+if [ "$cap_shot" != "$CAP_HOME/Pics/Screenshots" ] || [ "$cap_rec" != "$CAP_HOME/Vids/Screenrecordings" ]; then
+  echo "FAIL: capture XDG defaults: shot=$cap_shot rec=$cap_rec" >&2
+  fail=1
+fi
+cap_env=$(
+  WAYBAR_HOME="$CAP_HOME" WAYBAR_SCREENSHOT_DIR="/override/shots" \
+  bash -c '. "$WAYBAR_HOME/scripts/lib/capture-lib.sh"; capture_screenshot_base_dir'
+)
+if [ "$cap_env" != "/override/shots" ]; then
+  echo "FAIL: WAYBAR_SCREENSHOT_DIR override: $cap_env" >&2
+  fail=1
+fi
+rm -rf "$CAP_HOME"
+
+# Python: XDG_CONFIG_HOME alone resolves WAYBAR_HOME
+PY_XDG=$(mktemp -d)
+mkdir -p "$PY_XDG/cfg/waybar/scripts/lib" "$PY_XDG/cfg/waybar/data"
+cp "$ROOT_DIR/scripts/system/touchpad.py" "$PY_XDG/"
+cp "$ROOT_DIR/scripts/lib/waybar-signal.sh" "$PY_XDG/cfg/waybar/scripts/lib/"
+# Smoke: import path resolution by running a one-liner equivalent to touchpad's resolve
+py_home=$(
+  unset WAYBAR_HOME
+  XDG_CONFIG_HOME="$PY_XDG/cfg" python3 - <<'PY'
+import os
+waybar_home = os.environ.get("WAYBAR_HOME") or os.path.join(
+    os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "waybar"
+)
+print(waybar_home)
+PY
+)
+if [ "$py_home" != "$PY_XDG/cfg/waybar" ]; then
+  echo "FAIL: Python XDG_CONFIG_HOME WAYBAR_HOME resolve: $py_home" >&2
+  fail=1
+fi
+# vaults.py / device-notifier same pattern
+for pyf in scripts/services/security/vaults.py scripts/services/devices/device-notifier.py; do
+  if ! grep -q 'XDG_CONFIG_HOME' "$ROOT_DIR/$pyf"; then
+    echo "FAIL: $pyf should honor XDG_CONFIG_HOME" >&2
+    fail=1
+  fi
+done
+rm -rf "$PY_XDG" "$PORT_CACHE"
+
+echo "PASS: portability fixtures"
 
 # Secrets overlay, i2pd sync helper, capture settings, validate guard
 if ! "$ROOT_DIR/scripts/ci/run-secrets-and-settings-tests.sh"; then

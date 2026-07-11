@@ -75,6 +75,10 @@
 #custom-device-battery,
 #custom-fans,
 #custom-liquidctl,
+#custom-coolercontrol,
+#custom-nvme,
+#custom-openlinkhub,
+#custom-rgb,
 #custom-libredefender,
 #custom-chkrootkit,
 #custom-syncthing,
@@ -100,6 +104,10 @@
 #custom-device-battery:hover,
 #custom-fans:hover,
 #custom-liquidctl:hover,
+#custom-coolercontrol:hover,
+#custom-nvme:hover,
+#custom-openlinkhub:hover,
+#custom-rgb:hover,
 #custom-libredefender:hover,
 #custom-chkrootkit:hover,
 #custom-syncthing:hover,
@@ -307,6 +315,86 @@
     border: none;
     background: transparent;
     box-shadow: none;
+}
+
+/* CoolerControl daemon telemetry (matches Fans / liquidctl cyan theme) */
+#custom-coolercontrol {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}
+#custom-coolercontrol.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-coolercontrol.critical {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+#custom-coolercontrol.writable {
+    /* subtle cue that mode cycling is available */
+    border-color: rgba(44, 255, 176, 0.35);
+}
+#custom-coolercontrol.readonly {
+    /* no extra emphasis — monitoring only */
+}
+#custom-coolercontrol.disconnected {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* ASUS / asusctl platform profiles (desk-controls; hides when asusd unavailable) */
+#custom-asusctl.disconnected {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+#custom-nvme {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}
+#custom-nvme.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-nvme.critical {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+#custom-nvme.disconnected,
+#custom-openlinkhub.disconnected,
+#custom-rgb.disconnected {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+#custom-openlinkhub {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}
+#custom-openlinkhub.warning {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+#custom-openlinkhub.critical {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+#custom-rgb {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
 }
 
 /* LibreDefender & chkrootkit Security Badges */
