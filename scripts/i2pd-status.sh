@@ -1,11 +1,13 @@
 #!/usr/bin/env sh
 # i2pd Status module for Waybar.
 set -eu
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/i2pd-status.json"
 lock_dir="$cache_dir/i2pd-status.lock.d"
-ttl=30
+ttl="$(waybar_module_interval i2pd 30)"
 stale_lock_ttl=20
 
 mkdir -p "$cache_dir"
@@ -15,6 +17,11 @@ if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
   . "$script_dir/waybar-cache-helpers.sh"
 else
   . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
+fi
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
+else
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
 fi
 
 if [ "${1:-}" != "--refresh" ]; then
@@ -26,8 +33,9 @@ if [ "${1:-}" != "--refresh" ]; then
 fi
 
 # Check service status
+i2pd_service=$(waybar_settings_get '.services.i2pd.service_name' 'i2pd.service')
 service_active=0
-if systemctl is-active -q i2pd.service 2>/dev/null; then
+if systemctl is-active -q "$i2pd_service" 2>/dev/null; then
   service_active=1
 elif pgrep -x i2pd >/dev/null 2>&1 || pgrep -x i2pd-daemon >/dev/null 2>&1; then
   service_active=1
@@ -41,11 +49,16 @@ if [ "$service_active" -eq 0 ]; then
 fi
 
 # Fetch and parse Web Console
-user="i2pd"
-pass="RdSBHHBGV7YlQnadYsqG3+4dQ5TQKyHx"
-console_url="http://127.0.0.1:7070/"
+user=$(waybar_settings_get '.services.i2pd.console_user' 'i2pd')
+# Prefer env, then secrets overlay / settings (secrets via waybar_settings_get merge)
+pass="${WAYBAR_I2PD_CONSOLE_PASS:-$(waybar_settings_get '.services.i2pd.console_pass' '')}"
+console_url=$(waybar_settings_get '.services.i2pd.console_url' 'http://127.0.0.1:7070/')
 
-web_data=$(timeout 3 curl -H "Host: localhost:7070" -u "$user:$pass" -s "$console_url" || true)
+if [ -n "$pass" ]; then
+  web_data=$(timeout 3 curl -H "Host: localhost:7070" -u "$user:$pass" -s "$console_url" || true)
+else
+  web_data=$(timeout 3 curl -H "Host: localhost:7070" -s "$console_url" || true)
+fi
 
 if [ -z "$web_data" ]; then
   json=$(emit_waybar_json "󱚽 On" "i2pd running (Web Console unreachable)" "normal")

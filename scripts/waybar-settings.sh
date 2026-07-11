@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
-# Read ${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/data/waybar-settings.json with sane fallbacks.
+# Settings helpers for Waybar.
+#
+# Source of truth: data/waybar-settings.jsonc
+# Compiled artifact: data/waybar-settings.json (overwritten from jsonc on load)
+# Optional secrets overlay: data/waybar-secrets.jsonc (gitignored; merged at read time)
 set -euo pipefail
 
 WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 WAYBAR_SETTINGS="${WAYBAR_SETTINGS:-$WAYBAR_HOME/data/waybar-settings.json}"
+WAYBAR_SETTINGS_JSONC="${WAYBAR_SETTINGS_JSONC:-${WAYBAR_SETTINGS}c}"
+WAYBAR_SECRETS="${WAYBAR_SECRETS:-$WAYBAR_HOME/data/waybar-secrets.json}"
+WAYBAR_SECRETS_JSONC="${WAYBAR_SECRETS_JSONC:-${WAYBAR_SECRETS}c}"
 WAYBAR_SERVICES_LEGACY="${WAYBAR_HOME}/data/waybar-services.json"
 
 strip_jsonc_comments() {
@@ -15,15 +22,17 @@ strip_jsonc_comments() {
 
 compile_jsonc_settings() {
   local json_file="$WAYBAR_SETTINGS"
-  local jsonc_file="${WAYBAR_SETTINGS}c"
+  local jsonc_file="$WAYBAR_SETTINGS_JSONC"
 
   local base_dir
   base_dir=$(dirname "$json_file")
   mkdir -p "$base_dir"
 
+  # Prefer jsonc as the only editable source; always compile it to json.
   if [[ -f "$jsonc_file" ]]; then
     strip_jsonc_comments "$jsonc_file" > "$json_file" 2>/dev/null || true
   elif [[ -f "$json_file" ]]; then
+    # One-time bootstrap: promote commented json to jsonc, then strip json.
     local original
     local stripped
     original=$(cat "$json_file" 2>/dev/null || true)
@@ -41,23 +50,51 @@ waybar_settings_file() {
   printf '%s' "$WAYBAR_SETTINGS"
 }
 
-waybar_settings_get() {
-  local path="$1"
-  local default="${2:-}"
+# Emit settings JSON with optional secrets overlay merged on top (deep merge).
+# Secrets are never written into waybar-settings.json.
+waybar_settings_merged_json() {
+  local settings_json="{}"
+  local secrets_json="{}"
   local file
   file="$(waybar_settings_file)"
 
-  if [[ ! -f "$file" ]] || ! command -v jq >/dev/null 2>&1; then
+  if [[ -f "$file" ]]; then
+    settings_json=$(strip_jsonc_comments "$file" 2>/dev/null || cat "$file" 2>/dev/null || echo "{}")
+    [[ -n "$settings_json" ]] || settings_json="{}"
+  fi
+
+  if [[ -f "$WAYBAR_SECRETS_JSONC" ]]; then
+    secrets_json=$(strip_jsonc_comments "$WAYBAR_SECRETS_JSONC" 2>/dev/null || echo "{}")
+  elif [[ -f "$WAYBAR_SECRETS" ]]; then
+    secrets_json=$(strip_jsonc_comments "$WAYBAR_SECRETS" 2>/dev/null || cat "$WAYBAR_SECRETS" 2>/dev/null || echo "{}")
+  fi
+  [[ -n "$secrets_json" ]] || secrets_json="{}"
+
+  if ! command -v jq >/dev/null 2>&1; then
+    printf '%s' "$settings_json"
+    return
+  fi
+
+  jq -s '.[0] * (.[1] // {})' \
+    <(printf '%s' "$settings_json") \
+    <(printf '%s' "$secrets_json") 2>/dev/null \
+    || printf '%s' "$settings_json"
+}
+
+waybar_settings_get() {
+  local path="$1"
+  local default="${2:-}"
+
+  if ! command -v jq >/dev/null 2>&1; then
     printf '%s' "$default"
     return
   fi
 
-  local clean_json
-  if ! clean_json=$(strip_jsonc_comments "$file" 2>/dev/null) || [[ -z "$clean_json" ]]; then
-    clean_json=$(cat "$file" 2>/dev/null || echo "{}")
-  fi
+  local merged
+  merged="$(waybar_settings_merged_json)"
+  [[ -n "$merged" ]] || merged="{}"
 
-  printf '%s' "$clean_json" | jq -r --arg default "$default" "if ($path != null) then $path else \$default end" 2>/dev/null || printf '%s' "$default"
+  printf '%s' "$merged" | jq -r --arg default "$default" "if ($path != null) then $path else \$default end" 2>/dev/null || printf '%s' "$default"
 }
 
 waybar_services_nut_target() {
@@ -76,14 +113,27 @@ waybar_services_nut_target() {
   printf 'ups@127.0.0.1:3493'
 }
 
-waybar_poll_interval() {
+waybar_module_interval() {
   local key="$1"
   local fallback="${2:-0}"
   local value
-  value="$(waybar_settings_get ".poll_intervals.${key}" "$fallback")"
+  # Canonical map is module_intervals; poll_intervals kept as read fallback only.
+  value="$(waybar_settings_get ".module_intervals.${key}" "")"
+  if [[ -z "$value" || "$value" == "null" ]]; then
+    value="$(waybar_settings_get ".poll_intervals.${key}" "$fallback")"
+  fi
+  if [[ "$value" == "once" || -z "$value" || "$value" == "null" ]]; then
+    printf '%s' "$fallback"
+    return
+  fi
   if [[ "$value" =~ ^[0-9]+$ ]]; then
     printf '%s' "$value"
   else
     printf '%s' "$fallback"
   fi
+}
+
+# Back-compat alias used by older scripts/docs.
+waybar_poll_interval() {
+  waybar_module_interval "$@"
 }

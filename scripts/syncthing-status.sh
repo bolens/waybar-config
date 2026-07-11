@@ -1,11 +1,13 @@
 #!/usr/bin/env sh
 # Syncthing status module for Waybar.
 set -eu
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/syncthing-status.json"
 lock_dir="$cache_dir/syncthing-status.lock.d"
-ttl=30
+ttl="$(waybar_module_interval syncthing 30)"
 stale_lock_ttl=20
 
 mkdir -p "$cache_dir"

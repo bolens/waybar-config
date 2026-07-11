@@ -1,6 +1,25 @@
 #!/usr/bin/env sh
 # Shared cache helpers for Waybar status scripts.
 
+waybar_module_interval() {
+  # Usage: waybar_module_interval <key> [fallback]
+  # Reads module_intervals from compiled settings JSON. "once" → fallback.
+  key="$1"
+  fallback="${2:-60}"
+  settings="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/data/waybar-settings.json"
+  if [ ! -f "$settings" ] || ! command -v jq >/dev/null 2>&1; then
+    printf '%s' "$fallback"
+    return
+  fi
+  val="$(jq -r --arg k "$key" --argjson fb "$fallback" '
+    (.module_intervals[$k] // .poll_intervals[$k] // $fb) as $v
+    | if ($v|type) == "number" then $v
+      elif $v == "once" then $fb
+      else $fb end
+  ' "$settings" 2>/dev/null || printf '%s' "$fallback")"
+  printf '%s' "$val"
+}
+
 cache_file_age() {
   file="$1"
   [ -f "$file" ] || { printf '%s' 999999; return; }

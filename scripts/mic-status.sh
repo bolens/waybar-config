@@ -7,7 +7,7 @@ source_cache="$cache_dir/mic-source-label.txt"
 status_cache="$cache_dir/mic-status.json"
 lock_dir="$cache_dir/mic-status.lock.d"
 source_cache_ttl=60
-ttl=60
+ttl="$(waybar_module_interval mic 60)"
 stale_lock_ttl=90
 
 mkdir -p "$cache_dir"

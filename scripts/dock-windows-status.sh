@@ -5,7 +5,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 cache_file="$cache_dir/dock-windows-status.json"
 lock_dir="$cache_dir/dock-windows-status.lock.d"
-ttl=120
+ttl="$(waybar_module_interval dock_windows 120)"
 stale_lock_ttl=180
 
 mkdir -p "$cache_dir"

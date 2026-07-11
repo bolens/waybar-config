@@ -64,9 +64,9 @@ start_spectacle_recording() {
 start_wf_recording() {
   compositor="$(detect_compositor)"
   output_tag="$(capture_output_tag "$compositor")"
-  record_fps="${WAYBAR_SCREENREC_FPS:-60}"
+  record_fps="$(capture_screenrecord_fps)"
   year="$(date '+%Y')"
-  save_dir="/mnt/media/screenrecordings/$year"
+  save_dir="$(capture_screenrecord_base_dir)/$year"
 
   if ! mkdir -p "$save_dir" 2>/dev/null; then
     capture_notify "Recording" "Cannot create $save_dir"

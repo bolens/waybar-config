@@ -3,9 +3,9 @@ set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/discord-status.json"
-ttl=60
-
 . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
+ttl="$(waybar_module_interval discord 60)"
+
 
 cached="$(read_fresh_cache_file "$cache_file" "$ttl" 2>/dev/null || true)"
 if [ -n "$cached" ]; then

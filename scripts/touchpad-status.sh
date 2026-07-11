@@ -1,11 +1,13 @@
 #!/usr/bin/env sh
 # Touchpad status retrieval wrapper matching the Waybar cache pattern.
 set -eu
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/touchpad-status.json"
 lock_dir="$cache_dir/touchpad-status.lock.d"
-ttl=1800
+ttl="$(waybar_module_interval touchpad 1800)"
 stale_lock_ttl=10
 
 mkdir -p "$cache_dir"

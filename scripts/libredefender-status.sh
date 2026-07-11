@@ -1,10 +1,12 @@
 #!/usr/bin/env sh
 set -eu
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/libredefender-status.json"
 lock_dir="$cache_dir/libredefender-status.lock.d"
-ttl=15
+ttl="$(waybar_module_interval libredefender 15)"
 stale_lock_ttl=20
 
 mkdir -p "$cache_dir"

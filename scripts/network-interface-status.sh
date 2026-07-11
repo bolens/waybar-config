@@ -19,7 +19,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 
 cache_file="$cache_dir/network-interfaces-status.json"
 lock_dir="$cache_dir/network-interfaces-status.lock.d"
-ttl=15
+ttl="$(waybar_module_interval network_iface 60)"
 stale_lock_ttl=30
 
 mkdir -p "$cache_dir"

@@ -5,7 +5,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 cache_file="$cache_dir/docker-status.json"
 lock_dir="$cache_dir/docker-status.lock.d"
-ttl=30
+ttl="$(waybar_module_interval docker 30)"
 stale_lock_ttl=20
 
 mkdir -p "$cache_dir"

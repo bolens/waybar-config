@@ -4,13 +4,14 @@ set -eu
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/weather-status.json"
 lock_dir="$cache_dir/weather-status.lock.d"
-ttl=1800 # 30 minutes cache to prevent wttr.in rate limiting
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
+ttl="$(waybar_module_interval weather 1800)"
 stale_lock_ttl=30
 
 mkdir -p "$cache_dir"
 
 script_dir="${0%/*}"
-. "$script_dir/waybar-cache-helpers.sh"
 . "$script_dir/waybar-settings.sh"
 
 weather_unit=$(waybar_settings_get '.weather.unit' '')

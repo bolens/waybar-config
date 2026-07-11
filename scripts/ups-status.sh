@@ -4,13 +4,17 @@ set -eu
 
 script_dir="$(dirname "$0")"
 . "$script_dir/waybar-cache-helpers.sh"
+. "$script_dir/waybar-settings.sh"
+
+ups_warn=$(waybar_settings_get '.thresholds.ups.charge.warning' '25')
+ups_crit=$(waybar_settings_get '.thresholds.ups.charge.critical' '10')
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 slug="$(printf '%s' "${NUT_TARGET:-auto}" | tr -c 'A-Za-z0-9._-' '_' | head -c 120)"
 [ -z "$slug" ] && slug="auto"
 cache_file="$cache_dir/ups-status.${slug}.json"
 lock_dir="$cache_dir/ups-status.${slug}.lock.d"
-ttl=30
+ttl="$(waybar_module_interval ups 30)"
 stale_lock_ttl=45
 
 mkdir -p "$cache_dir"
@@ -124,9 +128,9 @@ json_from_nut_info() {
   fi
 
   cls="good"
-  if [ -n "$num" ] && [ "$num" -le 10 ]; then
+  if [ -n "$num" ] && [ "$num" -le "$ups_crit" ]; then
     cls="critical"
-  elif [ -n "$num" ] && [ "$num" -le 25 ]; then
+  elif [ -n "$num" ] && [ "$num" -le "$ups_warn" ]; then
     cls="warning"
   elif [ "$is_discharging" -eq 1 ]; then
     cls="warning"
@@ -201,9 +205,9 @@ EOF
   fi
 
   cls="good"
-  if [ -n "$num" ] && [ "$num" -le 10 ]; then
+  if [ -n "$num" ] && [ "$num" -le "$ups_crit" ]; then
     cls="critical"
-  elif [ -n "$num" ] && [ "$num" -le 25 ]; then
+  elif [ -n "$num" ] && [ "$num" -le "$ups_warn" ]; then
     cls="warning"
   elif [ "$st" = "discharging" ]; then
     cls="warning"

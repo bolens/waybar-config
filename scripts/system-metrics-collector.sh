@@ -9,7 +9,7 @@ lock_dir="$cache_dir/system-metrics.lock.d"
 stat_prev="$cache_dir/cpu-stat.prev"
 topology_file="$cache_dir/cpu-topology.json"
 
-ttl=8
+ttl="$(waybar_module_interval cpu 8)"
 topology_ttl=86400
 stale_lock_ttl=30
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env sh
 # Sunshine Game Streaming Status module for Waybar.
 set -eu
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/sunshine-status.json"
 lock_dir="$cache_dir/sunshine-status.lock.d"
-ttl=10
+ttl="$(waybar_module_interval sunshine 10)"
 stale_lock_ttl=15
 
 mkdir -p "$cache_dir"

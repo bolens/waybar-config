@@ -12,7 +12,7 @@ mode="$(normalize_capture_mode "${1:-select}")"
 compositor="$(detect_compositor)"
 output_tag="$(capture_output_tag "$compositor")"
 year="$(date '+%Y')"
-save_dir="/mnt/media/screenshots/$year"
+save_dir="$(capture_screenshot_base_dir)/$year"
 
 if ! mkdir -p "$save_dir" 2>/dev/null; then
   capture_notify "Screenshot" "Cannot create $save_dir"

@@ -4,13 +4,14 @@ set -eu
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/systemd-status.json"
 lock_dir="$cache_dir/systemd-status.lock.d"
-ttl=15
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
+ttl="$(waybar_module_interval systemd 15)"
 stale_lock_ttl=10
 
 mkdir -p "$cache_dir"
 
 script_dir="${0%/*}"
-. "$script_dir/waybar-cache-helpers.sh"
 
 
 if [ "${1:-}" != "--refresh" ]; then

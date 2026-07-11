@@ -3,8 +3,8 @@
     "format": "{}",
     "return-type": "json",
     "escape": true,
-    "exec": "$WAYBAR_HOME/scripts/active-window-scroll.sh",
+    "exec": "/home/panda/.config/waybar/scripts/active-window-scroll.sh",
     "tooltip": true,
-    "on-click": "$WAYBAR_HOME/scripts/window-switcher.sh"
+    "on-click": "/home/panda/.config/waybar/scripts/window-switcher.sh"
   }
 }

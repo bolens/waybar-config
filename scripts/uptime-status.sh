@@ -4,13 +4,14 @@ set -eu
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/uptime-status.json"
 lock_dir="$cache_dir/uptime-status.lock.d"
-ttl=60
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
+ttl="$(waybar_module_interval uptime 60)"
 stale_lock_ttl=15
 
 mkdir -p "$cache_dir"
 
 script_dir="${0%/*}"
-. "$script_dir/waybar-cache-helpers.sh"
 
 
 if [ "${1:-}" != "--refresh" ]; then

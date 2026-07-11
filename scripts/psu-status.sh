@@ -1,10 +1,12 @@
 #!/usr/bin/env sh
 set -eu
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/psu-status.json"
 lock_dir="$cache_dir/psu-status.lock.d"
-ttl=10
+ttl="$(waybar_module_interval psu 10)"
 stale_lock_ttl=15
 
 mkdir -p "$cache_dir"

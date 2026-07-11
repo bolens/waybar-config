@@ -1,11 +1,12 @@
 #!/usr/bin/env sh
 # KDE / Plasma notification bell for Waybar (one-shot; listener keeps cache warm).
 set -eu
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 
 script_dir="${0%/*}"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/notifications-status.json"
-cache_ttl=120
+cache_ttl="$(waybar_module_interval notifications 120)"
 
 # shellcheck source=waybar-cache-helpers.sh
 . "$script_dir/waybar-cache-helpers.sh"

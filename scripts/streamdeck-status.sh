@@ -1,11 +1,13 @@
 #!/usr/bin/env sh
 # Stream Deck UI Status module for Waybar.
 set -eu
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/streamdeck-status.json"
 lock_dir="$cache_dir/streamdeck-status.lock.d"
-ttl=30
+ttl="$(waybar_module_interval streamdeck 30)"
 stale_lock_ttl=20
 
 mkdir -p "$cache_dir"

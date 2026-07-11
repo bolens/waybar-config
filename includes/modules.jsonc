@@ -1,7 +1,7 @@
 {
   "include": [
     "$WAYBAR_HOME/modules/hyprland.native.generated.jsonc",
-    "$WAYBAR_HOME/modules/workspaces.jsonc",
+    "$WAYBAR_HOME/modules/workspaces.generated.jsonc",
     "$WAYBAR_HOME/modules/groups-desk-hypr.generated.jsonc",
     "$WAYBAR_HOME/modules/compositor.generated.jsonc",
     "$WAYBAR_HOME/modules/center-extras.generated.jsonc",

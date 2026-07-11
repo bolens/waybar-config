@@ -21,12 +21,12 @@ cache_file_for() {
 cache_ttl_for() {
   tab="$1"
   case "$tab" in
-    docker) printf '30' ;;
-    updates) printf '300' ;;
-    stats) printf '8' ;;
-    network) printf '15' ;;
-    system) printf '15' ;;
-    runtimes) printf '600' ;;
+    docker) waybar_module_interval docker 30 ;;
+    updates) waybar_module_interval updates_tab 300 ;;
+    stats) waybar_module_interval cpu 8 ;;
+    network) waybar_module_interval network_tab 15 ;;
+    system) waybar_module_interval system_tab 15 ;;
+    runtimes) waybar_module_interval runtimes 600 ;;
     *) printf '0' ;;
   esac
 }

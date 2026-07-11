@@ -59,61 +59,86 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 # shellcheck source=waybar-settings.sh
 . "$WAYBAR_SCRIPTS/waybar-settings.sh"
 
-if [ -x "$WAYBAR_SCRIPTS/generate-settings.sh" ]; then
-	"$WAYBAR_SCRIPTS/generate-settings.sh"
-fi
+config_inputs_newer_than() {
+	local stamp="$1"
+	local f
+	[ -f "$stamp" ] || return 0
+	for f in \
+		"$WAYBAR_HOME/data/waybar-settings.jsonc" \
+		"$WAYBAR_HOME/data/waybar-settings.json" \
+		"$WAYBAR_HOME/data/network-interfaces.json" \
+		"$WAYBAR_HOME/data/dock-apps.json" \
+		"$WAYBAR_HOME/data/workspace-desktops.json" \
+		"$WAYBAR_HOME/data/workspace-glyphs.json" \
+		"$WAYBAR_HOME/data/workspace-bar.json" \
+		"$WAYBAR_SCRIPTS/generate-settings.sh" \
+		"$WAYBAR_SCRIPTS/generate-module-configs.sh" \
+		"$WAYBAR_SCRIPTS/generate-compositor-modules.sh" \
+		"$WAYBAR_SCRIPTS/generate-dock-modules.sh" \
+		"$WAYBAR_SCRIPTS/generate-network-modules.sh" \
+		"$WAYBAR_SCRIPTS/generate-workspaces-css.sh"
+	do
+		[ -f "$f" ] || continue
+		[ "$f" -nt "$stamp" ] && return 0
+	done
+	# Missing generated outputs force regen
+	for f in \
+		"$WAYBAR_HOME/includes/bar-defaults.generated.jsonc" \
+		"$WAYBAR_HOME/modules/workspaces.generated.jsonc" \
+		"$WAYBAR_HOME/modules/system.generated.jsonc"
+	do
+		[ -f "$f" ] || return 0
+	done
+	return 1
+}
 
-if [ -x "$WAYBAR_SCRIPTS/generate-compositor-modules.sh" ]; then
-	"$WAYBAR_SCRIPTS/generate-compositor-modules.sh"
-fi
+regen_stamp="${XDG_CACHE_HOME}/waybar/generated.stamp"
+mkdir -p "${XDG_CACHE_HOME}/waybar"
 
-if [ -x "$WAYBAR_SCRIPTS/generate-workspaces-css.sh" ]; then
-	"$WAYBAR_SCRIPTS/generate-workspaces-css.sh"
-fi
+if config_inputs_newer_than "$regen_stamp"; then
+	if [ -x "$WAYBAR_SCRIPTS/generate-settings.sh" ]; then
+		"$WAYBAR_SCRIPTS/generate-settings.sh"
+	fi
 
-if [ -x "$WAYBAR_SCRIPTS/generate-dock-modules.sh" ]; then
-	"$WAYBAR_SCRIPTS/generate-dock-modules.sh"
-fi
+	if [ -x "$WAYBAR_SCRIPTS/generate-compositor-modules.sh" ]; then
+		"$WAYBAR_SCRIPTS/generate-compositor-modules.sh"
+	fi
 
-if [ -x "$WAYBAR_SCRIPTS/generate-network-modules.sh" ]; then
-	"$WAYBAR_SCRIPTS/generate-network-modules.sh"
+	if [ -x "$WAYBAR_SCRIPTS/generate-workspaces-css.sh" ]; then
+		"$WAYBAR_SCRIPTS/generate-workspaces-css.sh"
+	fi
+
+	# generate-settings already invokes dock/network/module generators; only
+	# re-run them here when generate-settings is absent.
+	if [ ! -x "$WAYBAR_SCRIPTS/generate-settings.sh" ]; then
+		if [ -x "$WAYBAR_SCRIPTS/generate-dock-modules.sh" ]; then
+			"$WAYBAR_SCRIPTS/generate-dock-modules.sh"
+		fi
+		if [ -x "$WAYBAR_SCRIPTS/generate-network-modules.sh" ]; then
+			"$WAYBAR_SCRIPTS/generate-network-modules.sh"
+		fi
+	fi
+
+	touch "$regen_stamp"
 fi
 
 if [ -x "$WAYBAR_SCRIPTS/validate-generated-config.sh" ]; then
 	"$WAYBAR_SCRIPTS/validate-generated-config.sh"
 fi
 
-# Prime expensive module caches asynchronously so Waybar can render immediately.
+# Prime a smaller critical set asynchronously; remaining modules refresh on interval/signal.
 . "$WAYBAR_SCRIPTS/waybar-cache-helpers.sh"
 cleanup_stale_tmp_files "$XDG_CACHE_HOME/waybar"
 cleanup_side_info_refresh_locks
 
 for script in \
 	"$WAYBAR_SCRIPTS/system-metrics-collector.sh" \
-	"$WAYBAR_SCRIPTS/docker-status.sh" \
-	"$WAYBAR_SCRIPTS/vpn-status.sh" \
-	"$WAYBAR_SCRIPTS/tailscale-status.sh" \
-	"$WAYBAR_SCRIPTS/runtimes-status.sh" \
-	"$WAYBAR_SCRIPTS/updates-status.sh" \
-	"$WAYBAR_SCRIPTS/nightlight-status.sh" \
-	"$WAYBAR_SCRIPTS/mic-status.sh" \
 	"$WAYBAR_SCRIPTS/active-window-status.sh" \
-	"$WAYBAR_SCRIPTS/side-info-system-tab.sh" \
-	"$WAYBAR_SCRIPTS/side-info-network-tab.sh" \
-	"$WAYBAR_SCRIPTS/disk-status.sh" \
-	"$WAYBAR_SCRIPTS/kdeconnect-status.sh" \
-	"$WAYBAR_SCRIPTS/weather-status.sh" \
-	"$WAYBAR_SCRIPTS/systemd-status.sh" \
-	"$WAYBAR_SCRIPTS/github-status.sh" \
-	"$WAYBAR_SCRIPTS/uptime-status.sh" \
-	"$WAYBAR_SCRIPTS/psu-status.sh" \
-	"$WAYBAR_SCRIPTS/device-battery-status.sh" \
-	"$WAYBAR_SCRIPTS/fans-status.sh" \
-	"$WAYBAR_SCRIPTS/libredefender-status.sh" \
-	"$WAYBAR_SCRIPTS/chkrootkit-status.sh" \
+	"$WAYBAR_SCRIPTS/vpn-status.sh" \
+	"$WAYBAR_SCRIPTS/mic-status.sh" \
+	"$WAYBAR_SCRIPTS/nightlight-status.sh" \
 	"$WAYBAR_SCRIPTS/device-notifier-status.sh" \
-	"$WAYBAR_SCRIPTS/touchpad-status.sh" \
-	"$WAYBAR_SCRIPTS/vaults-status.sh"
+	"$WAYBAR_SCRIPTS/updates-status.sh"
 do
 	if [ -x "$script" ]; then
 		launch_detached "$script"
@@ -121,12 +146,10 @@ do
 done
 
 launch_detached "$WAYBAR_SCRIPTS/network-interface-status.sh" --refresh
-
-launch_detached env NUT_TARGET="$(waybar_services_nut_target)" "$WAYBAR_SCRIPTS/ups-status.sh"
 launch_detached "$WAYBAR_SCRIPTS/brightness-status.sh" --refresh
 
-# Start background listeners after a short delay to ensure Waybar is fully
-# initialized and has registered its signal handlers before receiving updates.
+# Clear any leftover listeners, then start fresh after waybar can accept signals.
+"$WAYBAR_SCRIPTS/listener-ctl.sh" stop-all >/dev/null 2>&1 || true
 (
 	sleep 1.5
 	if [ -x "$WAYBAR_SCRIPTS/privacy-listener.sh" ]; then

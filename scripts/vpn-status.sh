@@ -5,7 +5,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 cache_file="$cache_dir/vpn-status.json"
 lock_dir="$cache_dir/vpn-status.lock.d"
-ttl=15
+ttl="$(waybar_module_interval vpn 15)"
 stale_lock_ttl=20
 
 mkdir -p "$cache_dir"

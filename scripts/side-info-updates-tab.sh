@@ -9,7 +9,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/updates-status.json"
 
 # TTL matches updates-status.sh / bottom-bar custom/updates interval (300s).
-ttl=300
+ttl="$(waybar_module_interval updates_tab 300)"
 
 if [ -f "$cache_file" ]; then
   age=$(cache_file_age "$cache_file")

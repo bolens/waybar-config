@@ -5,7 +5,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 cache_file="$cache_dir/tailscale-status.json"
 lock_dir="$cache_dir/tailscale-status.lock.d"
-ttl=15
+ttl="$(waybar_module_interval tailscale 15)"
 stale_lock_ttl=25
 
 mkdir -p "$cache_dir"

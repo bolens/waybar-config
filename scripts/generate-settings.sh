@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerate bar defaults, layouts, groups, and system modules from data/waybar-settings.json.
+# Regenerate bar defaults, layouts, groups, and system modules from data/waybar-settings.jsonc (compiled to .json).
 set -euo pipefail
 
 WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
@@ -109,6 +109,10 @@ build_system_json() {
   libredefender_service=$(waybar_settings_get '.services.libredefender.service_name' 'libredefender-scan.service')
   local chkrootkit_service
   chkrootkit_service=$(waybar_settings_get '.services.chkrootkit.service_name' 'chkrootkit-scan.service')
+  local syncthing_service
+  syncthing_service=$(waybar_settings_get '.services.syncthing.service_name' 'syncthing')
+  local terminal_app
+  terminal_app=$(waybar_settings_get '.apps.terminal' 'ghostty')
 
   jq -n \
     --slurpfile settings "$settings" \
@@ -118,15 +122,19 @@ build_system_json() {
     --arg eth_popup "python3 ${scripts}/ethernet-popup.py" \
     --arg libredefender_service "$libredefender_service" \
     --arg chkrootkit_service "$chkrootkit_service" \
+    --arg syncthing_service "$syncthing_service" \
+    --arg terminal_app "$terminal_app" \
     '
     def app($key): $settings[0].apps[$key] // "";
     def interval($key): ($settings[0].module_intervals[$key] // $settings[0].poll_intervals[$key] // 1);
     def signal($key): $settings[0].signals[$key] // null;
     def click_app($key): ($app_open + " " + app($key));
+    def term_cmd($cmd): ($app_open + " " + $terminal_app + " -e " + $cmd);
     {
       "custom/cpu": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("cpu"),
         exec: ($scripts + "/cpu-status.sh"),
         "on-click": click_app("system_monitor"),
@@ -136,6 +144,7 @@ build_system_json() {
       "custom/gpu": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("gpu"),
         exec: ($scripts + "/gpu-status.sh"),
         "on-click": click_app("system_monitor"),
@@ -145,6 +154,7 @@ build_system_json() {
       "custom/memory": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("memory"),
         exec: ($scripts + "/memory-status.sh"),
         "on-click": click_app("system_monitor"),
@@ -154,6 +164,7 @@ build_system_json() {
       "custom/docker": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("docker"),
         exec: ($scripts + "/docker-status.sh"),
         "on-click": click_app("lazydocker"),
@@ -163,6 +174,7 @@ build_system_json() {
       "custom/system": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("system_tab"),
         exec: ($scripts + "/side-info-system-tab.sh"),
         "on-click": click_app("system_monitor"),
@@ -172,6 +184,7 @@ build_system_json() {
       "custom/network": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("network_tab"),
         exec: ($scripts + "/side-info-network-tab.sh"),
         "on-click": ($eth_popup + " " + $bond_iface),
@@ -181,6 +194,7 @@ build_system_json() {
       "custom/runtimes": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("runtimes"),
         exec: ($scripts + "/runtimes-status.sh"),
         "on-click": click_app("virt_manager"),
@@ -190,6 +204,7 @@ build_system_json() {
       "custom/updates": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         signal: signal("updates"),
         interval: interval("updates"),
         escape: true,
@@ -202,23 +217,26 @@ build_system_json() {
         format: "{}",
         interval: interval("ups"),
         "return-type": "json",
+        tooltip: true,
         exec: ($scripts + "/ups-status-wrapper.sh"),
-        "on-click": ($app_open + " systemsettings"),
+        "on-click": click_app("power_settings"),
         "on-click-right": click_app("btop"),
         "on-click-middle": ($scripts + "/ups-status.sh --refresh")
       },
       "custom/disk": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("disk"),
         exec: ($scripts + "/disk-status.sh"),
-        "on-click": ($app_open + " xdg-open $HOME"),
+        "on-click": click_app("file_manager"),
         "on-click-right": click_app("btop"),
         "on-click-middle": ($scripts + "/disk-status.sh --refresh")
       },
       "custom/uptime": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("uptime"),
         exec: ($scripts + "/uptime-status.sh"),
         "on-click": click_app("btop"),
@@ -228,6 +246,7 @@ build_system_json() {
       "custom/psu": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("psu"),
         exec: ($scripts + "/psu-status.sh"),
         "on-click": click_app("system_monitor"),
@@ -237,6 +256,7 @@ build_system_json() {
       "custom/fans": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("fans"),
         exec: ($scripts + "/fans-status.sh"),
         "on-click": click_app("nvtop"),
@@ -246,41 +266,43 @@ build_system_json() {
       "custom/libredefender": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("libredefender"),
         exec: ($scripts + "/libredefender-status.sh"),
         "on-click": ($settings[0].services.libredefender.on_click // ($app_open + " systemctl start " + $libredefender_service)),
-        "on-click-right": ($settings[0].services.libredefender.on_click_right // ($app_open + " ghostty -e journalctl -u " + $libredefender_service + " -f")),
+        "on-click-right": ($settings[0].services.libredefender.on_click_right // term_cmd("journalctl -u " + $libredefender_service + " -f")),
         "on-click-middle": ($settings[0].services.libredefender.on_click_middle // ($scripts + "/libredefender-status.sh --refresh"))
       },
       "custom/chkrootkit": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("chkrootkit"),
         exec: ($scripts + "/chkrootkit-status.sh"),
         "on-click": ($settings[0].services.chkrootkit.on_click // ($app_open + " systemctl start " + $chkrootkit_service)),
-        "on-click-right": ($settings[0].services.chkrootkit.on_click_right // ($app_open + " ghostty -e journalctl -u " + $chkrootkit_service + " -f")),
+        "on-click-right": ($settings[0].services.chkrootkit.on_click_right // term_cmd("journalctl -u " + $chkrootkit_service + " -f")),
         "on-click-middle": ($settings[0].services.chkrootkit.on_click_middle // ($scripts + "/chkrootkit-status.sh --refresh"))
       },
       "custom/syncthing": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("syncthing"),
         signal: signal("syncthing"),
-        tooltip: true,
         exec: ($scripts + "/syncthing-status.sh"),
-        "on-click": ($app_open + " xdg-open https://localhost:8384"),
-        "on-click-right": ($app_open + " systemctl --user restart syncthing"),
+        "on-click": ($settings[0].services.syncthing.on_click // ($app_open + " xdg-open " + ($settings[0].services.syncthing.gui_url // "https://localhost:8384"))),
+        "on-click-right": ($settings[0].services.syncthing.on_click_right // ($app_open + " systemctl --user restart " + ($settings[0].services.syncthing.service_name // $syncthing_service))),
         "on-click-middle": ($scripts + "/syncthing-status.sh --refresh")
       },
       "custom/sunshine": {
         format: "{}",
         "return-type": "json",
+        tooltip: true,
         interval: interval("sunshine"),
         signal: signal("sunshine"),
-        tooltip: true,
         exec: ($scripts + "/sunshine-status.sh"),
-        "on-click": ($app_open + " xdg-open https://localhost:47990"),
-        "on-click-right": ($app_open + " systemctl --user restart app-dev.lizardbyte.app.Sunshine.service"),
+        "on-click": ($settings[0].services.sunshine.on_click // ($app_open + " xdg-open " + ($settings[0].services.sunshine.gui_url // "https://localhost:47990"))),
+        "on-click-right": ($settings[0].services.sunshine.on_click_right // ($app_open + " systemctl --user restart " + ($settings[0].services.sunshine.service_name // "app-dev.lizardbyte.app.Sunshine.service"))),
         "on-click-middle": ($scripts + "/sunshine-status.sh --refresh")
       }
     }

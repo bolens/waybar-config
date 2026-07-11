@@ -1,11 +1,13 @@
 #!/usr/bin/env sh
 # KDE Vaults status retrieval wrapper matching the Waybar cache pattern.
 set -eu
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/vaults-status.json"
 lock_dir="$cache_dir/vaults-status.lock.d"
-ttl=60
+ttl="$(waybar_module_interval vaults 60)"
 stale_lock_ttl=10
 
 mkdir -p "$cache_dir"

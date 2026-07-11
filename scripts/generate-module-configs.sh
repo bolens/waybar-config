@@ -6,7 +6,7 @@ WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 . "${0%/*}/waybar-settings.sh"
 . "${0%/*}/waybar-cache-helpers.sh"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
-scripts='$WAYBAR_HOME/scripts'
+scripts="$WAYBAR_HOME/scripts"
 
 hour_format=$(detect_clock_format)
 date_format=$(detect_date_format)
@@ -211,14 +211,16 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "return-type": "json",
       interval: iv("systemd"),
       exec: ($scripts + "/systemd-status.sh"),
-      "on-click": (app_open + " ghostty -e bash -c \"echo \\\"Failed System Services:\\\"; systemctl --failed; echo \\\"\\\"; echo \\\"Failed User Services:\\\"; systemctl --user --failed; echo \\\"\\\"; read -p \\\"Press Enter to close... \\\"\"")
+      "on-click": (app_open + " " + (app("systemd_failed") // "ghostty -e bash -c \"echo \\\"Failed System Services:\\\"; systemctl --failed; echo \\\"\\\"; echo \\\"Failed User Services:\\\"; systemctl --user --failed; echo \\\"\\\"; read -p \\\"Press Enter to close... \\\"\""))
     },
     "custom/github": {
       format: "{}",
       "return-type": "json",
       interval: iv("github"),
       exec: ($scripts + "/github-status.sh"),
-      "on-click": (app_open + " xdg-open https://github.com/notifications")
+      "on-click": ((($s[0].github // {}).on_click) // (app_open + " xdg-open " + (app("github_notifications") // "https://github.com/notifications"))),
+      "on-click-right": ((($s[0].github // {}).on_click_right) // (app_open + " xdg-open " + (app("github_home") // "https://github.com"))),
+      "on-click-middle": ((($s[0].github // {}).on_click_middle) // ($scripts + "/github-status.sh --refresh"))
     },
     "custom/device-battery": {
       format: "{}",
@@ -226,8 +228,8 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       signal: sig("device_battery"),
       interval: iv("device_battery"),
       exec: ($scripts + "/device-battery-status.sh"),
-      "on-click": (app_open + " solaar"),
-      "on-click-right": (app_open + " systemsettings"),
+      "on-click": (app_open + " " + (app("solaar") // "solaar")),
+      "on-click-right": (app_open + " " + (app("input_settings") // "systemsettings")),
       "on-click-middle": ($scripts + "/device-battery-status.sh --refresh")
     },
     "custom/streamdeck": {
@@ -237,9 +239,9 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       interval: iv("streamdeck"),
       tooltip: true,
       exec: ($scripts + "/streamdeck-status.sh"),
-      "on-click": ($s[0].streamdeck.on_click // (app_open + " streamdeck")),
-      "on-click-right": ($s[0].streamdeck.on_click_right // (app_open + " systemctl --user restart app-streamdeck-ui@autostart.service")),
-      "on-click-middle": ($s[0].streamdeck.on_click_middle // ($scripts + "/streamdeck-status.sh --refresh"))
+      "on-click": ((($s[0].streamdeck // {}).on_click) // (app_open + " streamdeck")),
+      "on-click-right": ((($s[0].streamdeck // {}).on_click_right) // (app_open + " systemctl --user restart " + ((($s[0].streamdeck // {}).service_name) // "app-streamdeck-ui@autostart.service"))),
+      "on-click-middle": ((($s[0].streamdeck // {}).on_click_middle) // ($scripts + "/streamdeck-status.sh --refresh"))
     }
   } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/utilities.generated.jsonc"
@@ -279,7 +281,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       interval: 2,
       exec: ($scripts + "/media-prev.sh"),
       "on-click": "playerctl previous",
-      "on-click-right": "playerctl position 30-"
+      "on-click-right": ("playerctl position " + (((($s[0].audio // {}).seek_back_sec) // 30) | tostring) + "-")
     },
     "custom/media-next": {
       format: "{}",
@@ -287,7 +289,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       interval: 2,
       exec: ($scripts + "/media-next.sh"),
       "on-click": "playerctl next",
-      "on-click-right": "playerctl position 10+"
+      "on-click-right": ("playerctl position " + (((($s[0].audio // {}).seek_forward_sec) // 10) | tostring) + "+")
     },
     pulseaudio: {
       format: "{icon} {volume:3}%",
@@ -337,7 +339,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
   --arg hour_format "$hour_format" \
   --arg date_format "$date_format" \
   --argjson first_day "$first_day" '
-  def iv($k): ($s[0].poll_intervals[$k] // 1);
+  def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
   def calfmt: ($s[0].clocks.calendar.format // {});
 
   def default_bottom_format:
@@ -374,15 +376,147 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
   }
 ' | jq '.' >"$mod_dir/clock.generated.jsonc"
 
-jq -n --slurpfile s "$settings" '
-  def drawer($key; $module):
+jq -n --slurpfile s "$settings" \
+  --slurpfile dock "${WAYBAR_HOME}/data/dock-apps.json" \
+  --slurpfile net "${WAYBAR_HOME}/data/network-interfaces.json" '
+  def drawer_group($key):
     {
-      key: ("custom/" + $module),
-      value: {
-        format: ($s[0].drawers.icons[$key].format // ""),
-        tooltip: ($s[0].drawers.icons[$key].tooltip // "")
-      }
-    };
+      desk: "desk-controls",
+      tray: "tray-apps",
+      media: "media",
+      net: "net",
+      tools: "tools",
+      infra: "infra",
+      hardware: "hardware",
+      power: "power",
+      privacy: "privacy",
+      security: "security"
+    }[$key];
+
+  def module_label($mod):
+    {
+      "custom/notifications": "Notifications",
+      "custom/powerprofiles": "Power profile",
+      "custom/brightness": "Brightness",
+      "bluetooth": "Bluetooth",
+      "idle_inhibitor": "Idle inhibitor",
+      "custom/keyboard-layout": "Keyboard layout",
+      "custom/kdeconnect": "KDE Connect",
+      "custom/device-notifier": "Removable devices",
+      "custom/streamdeck": "Stream Deck",
+      "custom/vaults": "Vaults",
+      "custom/touchpad": "Touchpad",
+      "custom/device-battery": "Device battery",
+      "custom/media-prev": "Previous",
+      "custom/mpris": "Now playing",
+      "custom/media-next": "Next",
+      "pulseaudio": "Volume",
+      "custom/mic": "Microphone",
+      "network#bandwidthUpBytes": "Upload",
+      "network#bandwidthDownBytes": "Download",
+      "custom/vpnstatus": "VPN",
+      "custom/tailscale": "Tailscale",
+      "custom/i2pd": "i2pd",
+      "network#bond": "Bond",
+      "@network.interfaces": "Interfaces",
+      "custom/screenshot": "Screenshot",
+      "custom/screenrecord": "Screen record",
+      "custom/nightlight": "Night light",
+      "custom/clipboard": "Clipboard",
+      "custom/colorpicker": "Color picker",
+      "custom/discord": "Discord",
+      "custom/weather": "Weather",
+      "custom/docker": "Docker",
+      "custom/syncthing": "Syncthing",
+      "custom/sunshine": "Sunshine",
+      "custom/system": "System",
+      "custom/network": "Network summary",
+      "custom/runtimes": "Runtimes",
+      "custom/updates": "Updates",
+      "custom/ups": "UPS",
+      "custom/systemd": "Systemd",
+      "custom/github": "GitHub",
+      "custom/uptime": "Uptime",
+      "custom/cpu": "CPU",
+      "custom/gpu": "GPU",
+      "custom/memory": "Memory",
+      "custom/disk": "Disk",
+      "custom/psu": "PSU",
+      "custom/fans": "Fans",
+      "custom/lock": "Lock",
+      "custom/logout": "Logout",
+      "custom/suspend": "Suspend",
+      "custom/reboot": "Reboot",
+      "custom/shutdown": "Shutdown",
+      "custom/privacy-screenshare": "Screen share",
+      "custom/privacy-webcam": "Webcam",
+      "custom/privacy-audio-in": "Mic privacy",
+      "custom/privacy-audio-out": "Audio privacy",
+      "custom/privacy-location": "Location",
+      "tray": "System tray",
+      "custom/libredefender": "LibreDefender",
+      "custom/chkrootkit": "chkrootkit"
+    }[$mod] // (
+      $mod
+      | sub("^custom/"; "")
+      | sub("^network#"; "")
+      | sub("^group/"; "")
+      | gsub("-"; " ")
+    );
+
+  def drawer_contents($key):
+    if $key == "dock" then
+      if ($dock | length) > 0 then
+        ($dock[0] | to_entries | map(.value.tooltip // .key) | map(split(" — ")[0] | split(" - ")[0]))
+      else
+        ["Pinned apps"]
+      end
+    else
+      (drawer_group($key) as $g
+        | ($s[0].groups[$g].modules // [])
+        | map(select(. != ("custom/" + $key + "-drawer")))
+        | map(
+            if . == "@network.interfaces" then
+              if ($net | length) > 0 then
+                (($net[0].interfaces // []) | map(.id // .interface // empty))
+              else
+                ["Interfaces"]
+              end
+            else
+              [module_label(.)]
+            end
+          )
+        | add // []
+        | map(select(. != null and . != ""))
+      )
+    end;
+
+  def drawer_tooltip($key):
+    ($s[0].drawers.icons[$key].tooltip // ($key)) as $title
+    | (drawer_contents($key)) as $items
+    | (
+        [$title]
+        + (if ($items | length) > 0 then
+            ["Contains: " + ($items | join(" · "))]
+          else
+            []
+          end)
+        + ["Click to toggle"]
+      ) | join("\n");
+
+  def drawer($key; $module):
+    ($s[0].drawers.icons[$key].format // "") as $icon
+    | drawer_tooltip($key) as $tip
+    | {
+        key: ("custom/" + $module),
+        value: {
+          # Static custom modules (no exec): Waybar only uses tooltip as a bool.
+          # Put copy in tooltip-format so it shows; escape braces for fmt::format.
+          format: $icon,
+          tooltip: true,
+          "tooltip-format": ($tip | gsub("\\{"; "{{") | gsub("\\}"; "}}"))
+        }
+      };
 
   [
     drawer("desk"; "desk-drawer"),
@@ -440,8 +574,8 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       signal: sig("i2pd"),
       tooltip: true,
       exec: ($scripts + "/i2pd-status.sh"),
-      "on-click": (app_open + " xdg-open http://127.0.0.1:7070"),
-      "on-click-right": (app_open + " systemctl restart i2pd.service"),
+      "on-click": ($s[0].services.i2pd.on_click // (app_open + " xdg-open " + (($s[0].services.i2pd.console_url // "http://127.0.0.1:7070/") | sub("/$"; "")))),
+      "on-click-right": ($s[0].services.i2pd.on_click_right // (app_open + " systemctl restart " + ($s[0].services.i2pd.service_name // "i2pd.service"))),
       "on-click-middle": ($scripts + "/i2pd-status.sh --refresh")
     }
   } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
@@ -500,11 +634,11 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       signal: sig("keyboard_layout"),
       interval: iv("keyboard_layout"),
       exec: ($scripts + "/keyboard-layout-status.sh"),
-      "on-click": $s[0].keyboard.on_click,
-      "on-click-right": $s[0].keyboard.on_click_right,
+      "on-click": ($s[0].keyboard.on_click // ($scripts + "/keyboard-layout-click.sh next")),
+      "on-click-right": ($s[0].keyboard.on_click_right // ($scripts + "/keyboard-layout-click.sh prev")),
       "on-click-middle": $s[0].keyboard.on_click_middle,
-      "on-scroll-up": $s[0].keyboard.on_scroll_up,
-      "on-scroll-down": $s[0].keyboard.on_scroll_down,
+      "on-scroll-up": ($s[0].keyboard.on_scroll_up // ($scripts + "/keyboard-layout-click.sh prev")),
+      "on-scroll-down": ($s[0].keyboard.on_scroll_down // ($scripts + "/keyboard-layout-click.sh next")),
       tooltip: true
     },
     "custom/gamemode": {
@@ -546,7 +680,8 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       exec: ($scripts + "/dock-windows-status.sh"),
       "on-click": ($scripts + "/dock-windows-click.sh activate"),
       "on-click-right": ($scripts + "/dock-windows-click.sh close-focused"),
-      "on-click-middle": ($scripts + "/dock-windows-click.sh cycle")
+      "on-click-middle": ($scripts + "/dock-windows-click.sh cycle"),
+      tooltip: true
     }
   } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/dock-windows.generated.jsonc"
@@ -561,7 +696,7 @@ jq -n --slurpfile s "$settings" '
 ' | jq '.' >"$mod_dir/tray.generated.jsonc"
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
-  def iv($k): ($s[0].poll_intervals[$k] // 0);
+  def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 0);
 
   {
     "custom/hyprnotify": {
@@ -600,6 +735,7 @@ jq -n --slurpfile s "$settings" '
   | ($t.font_size // 13) as $size
   | ($t.tooltip_font_size // 12) as $tsize
   | ($t.border_radius // 8) as $radius
+  | ($t.tooltip_padding // "8px 10px") as $tpad
   | "/* Generated from data/waybar-settings.json theme — do not edit by hand */\n\n"
     + "* {\n"
     + "    font-family: \"" + $font + "\", monospace;\n"
@@ -616,14 +752,14 @@ jq -n --slurpfile s "$settings" '
     + "    border-top: 1px solid " + ($c.border // "rgba(0, 229, 255, 0.25)") + ";\n"
     + "}\n\n"
     + "tooltip, #tooltip {\n"
-    + "    background: #06070e;\n"
-    + "    border: 1px solid #005c66;\n"
+    + "    background: " + ($c.tooltip_background // "#06070e") + ";\n"
+    + "    border: 1px solid " + ($c.tooltip_border // "#005c66") + ";\n"
     + "    border-radius: " + ($radius | tostring) + "px;\n"
     + "}\n\n"
     + "tooltip label, #tooltip label {\n"
     + "    color: " + ($c.foreground // "#c8f6ff") + ";\n"
     + "    background: transparent;\n"
-    + "    padding: 8px 10px;\n"
+    + "    padding: " + $tpad + ";\n"
     + "    font-family: \"" + $font + "\", monospace;\n"
     + "    font-size: " + ($tsize | tostring) + "px;\n"
     + "}\n"

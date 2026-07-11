@@ -1,9 +1,10 @@
 #!/usr/bin/env sh
 # Brightness status for Waybar (one-shot; listener keeps cache warm on KDE).
 set -eu
+. "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 
 script_dir="${0%/*}"
-cache_ttl=120
+cache_ttl="$(waybar_module_interval brightness 120)"
 
 # shellcheck source=waybar-cache-helpers.sh
 . "$script_dir/waybar-cache-helpers.sh"

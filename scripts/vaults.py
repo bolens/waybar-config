@@ -47,16 +47,30 @@ def is_mounted(mount_path):
 def main():
     home = os.path.expanduser("~")
     base_dir = os.path.join(home, "Vaults")
+    rofi_width = 400
 
-    # Read base_dir override from waybar-settings if possible
+    # Read overrides from waybar-settings if possible
     settings_file = os.path.join(home, ".config/waybar/data/waybar-settings.json")
-    if os.path.isfile(settings_file):
-        try:
-            with open(settings_file, "r") as f:
-                settings = json.load(f)
-                base_dir = settings.get("vaults", {}).get("base_dir", base_dir)
-        except Exception:
-            pass
+    waybar_home = os.environ.get("WAYBAR_HOME") or os.path.join(
+        os.environ.get("XDG_CONFIG_HOME", os.path.join(home, ".config")), "waybar"
+    )
+    for candidate in (
+        os.path.join(waybar_home, "data", "waybar-settings.json"),
+        settings_file,
+    ):
+        if os.path.isfile(candidate):
+            try:
+                with open(candidate, "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+                bd = settings.get("vaults", {}).get("base_dir")
+                if bd:
+                    base_dir = bd
+                rofi_width = int(
+                    settings.get("rofi", {}).get("vaults", {}).get("width", rofi_width)
+                )
+            except Exception:
+                pass
+            break
 
     vaults = get_vaults(base_dir)
 
@@ -83,10 +97,11 @@ def main():
                 menu_lines.append(f"󰌾 Unlock {v['name']}")
 
         options_str = "\n".join(menu_lines)
+        theme_str = f"window {{width: {rofi_width}px;}}"
 
         try:
             rofi_res = subprocess.run(
-                ["rofi", "-dmenu", "-p", "KDE Vaults", "-theme-str", "window {width: 400px;}"],
+                ["rofi", "-dmenu", "-p", "KDE Vaults", "-theme-str", theme_str],
                 input=options_str, capture_output=True, text=True
             )
             selected = rofi_res.stdout.strip()
@@ -108,7 +123,7 @@ def main():
             # Prompt password via rofi
             try:
                 pass_res = subprocess.run(
-                    ["rofi", "-dmenu", "-password", "-p", f"Password for {selected_vault_name}", "-theme-str", "window {width: 400px;}"],
+                    ["rofi", "-dmenu", "-password", "-p", f"Password for {selected_vault_name}", "-theme-str", theme_str],
                     capture_output=True, text=True
                 )
                 password = pass_res.stdout.strip()

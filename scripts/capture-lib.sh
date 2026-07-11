@@ -5,6 +5,42 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 screenrecord_pid_file="$cache_dir/screenrecord.pid"
 screenrecord_meta_file="$cache_dir/screenrecord.meta"
 
+_capture_scripts_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
+if ! type waybar_settings_get >/dev/null 2>&1; then
+  if [ -f "$_capture_scripts_dir/waybar-settings.sh" ]; then
+    # shellcheck source=waybar-settings.sh
+    . "$_capture_scripts_dir/waybar-settings.sh"
+  fi
+fi
+
+capture_screenshot_base_dir() {
+  if type waybar_settings_get >/dev/null 2>&1; then
+    waybar_settings_get '.capture.screenshot_dir' '/mnt/media/screenshots'
+  else
+    printf '%s' '/mnt/media/screenshots'
+  fi
+}
+
+capture_screenrecord_base_dir() {
+  if type waybar_settings_get >/dev/null 2>&1; then
+    waybar_settings_get '.capture.screenrecord_dir' '/mnt/media/screenrecordings'
+  else
+    printf '%s' '/mnt/media/screenrecordings'
+  fi
+}
+
+capture_screenrecord_fps() {
+  if [ -n "${WAYBAR_SCREENREC_FPS:-}" ]; then
+    printf '%s' "$WAYBAR_SCREENREC_FPS"
+    return
+  fi
+  if type waybar_settings_get >/dev/null 2>&1; then
+    waybar_settings_get '.capture.screenrecord_fps' '60'
+  else
+    printf '%s' '60'
+  fi
+}
+
 capture_notify() {
   notify-send "$1" "$2" 2>/dev/null || true
 }
@@ -116,7 +152,7 @@ capture_build_screenshot_path() {
   backend_name="$3"
   ext="$4"
   year="$(date '+%Y')"
-  save_dir="/mnt/media/screenshots/$year"
+  save_dir="$(capture_screenshot_base_dir)/$year"
   stamp_name="$(date '+%Y-%d-%m_%H%M%S')"
   printf '%s/%s-%s-%s-%s.%s' "$save_dir" "$stamp_name" "$mode_name" "$output_name" "$backend_name" "$ext"
 }
@@ -128,7 +164,7 @@ capture_build_screenrecord_path() {
   ext="$4"
   fps_name="$5"
   year="$(date '+%Y')"
-  save_dir="/mnt/media/screenrecordings/$year"
+  save_dir="$(capture_screenrecord_base_dir)/$year"
   stamp_name="$(date '+%Y-%d-%m_%H%M%S')"
   printf '%s/%s-%s-%s-%s-%sfps.%s' "$save_dir" "$stamp_name" "$mode_name" "$output_name" "$backend_name" "$fps_name" "$ext"
 }

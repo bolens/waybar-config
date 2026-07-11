@@ -4,15 +4,19 @@ set -eu
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/github-status.json"
 lock_dir="$cache_dir/github-status.lock.d"
-ttl=300 # 5 minutes cache
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
+fi
+ttl="$(waybar_module_interval github 300)"
 stale_lock_ttl=30
+preview_limit=$(waybar_settings_get '.github.preview_limit' '5')
+case "$preview_limit" in
+  ''|*[!0-9]*) preview_limit=5 ;;
+esac
 
 mkdir -p "$cache_dir"
-
-script_dir="${0%/*}"
-# shellcheck disable=SC1091
-. "$script_dir/waybar-cache-helpers.sh"
-
 
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
@@ -52,7 +56,7 @@ perform_github_checks_and_output() {
     
     json=$(emit_waybar_json "󰊤" "$tooltip" "$class")
   else
-    json=$(printf '%s' "$raw_notifs" | jq -c '
+    json=$(printf '%s' "$raw_notifs" | jq -c --argjson limit "$preview_limit" '
       if type != "array" then
         {
           text: "󰊤",
@@ -69,8 +73,8 @@ perform_github_checks_and_output() {
           }
         else
           [ .[] | "- [\(.repository.full_name)] \(.subject.title | gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;")) (\(.reason))" ] as $items |
-          ($items[0:5] | join("\n")) as $preview |
-          (if $len > 5 then "\n... and \($len - 5) more" else "" end) as $more |
+          ($items[0:$limit] | join("\n")) as $preview |
+          (if $len > $limit then "\n... and \($len - $limit) more" else "" end) as $more |
           {
             text: "󰊤 \($len)",
             tooltip: "GitHub Notifications: \($len) unread\n\nLatest:\n\($preview)\($more)\n\nLeft: open notifications · Right: github.com · Middle: refresh",

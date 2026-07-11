@@ -11,6 +11,22 @@ script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 [ "$(detect_compositor)" = "hyprland" ] || exit 0
 command -v socat >/dev/null 2>&1 || exit 0
 
+WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
+settings="$WAYBAR_HOME/data/waybar-settings.json"
+sig() {
+  local key="$1"
+  local fallback="$2"
+  if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
+    jq -r --arg k "$key" --argjson fb "$fallback" '.signals[$k] // $fb' "$settings" 2>/dev/null || printf '%s' "$fallback"
+  else
+    printf '%s' "$fallback"
+  fi
+}
+SIG_WORKSPACES="$(sig workspaces 16)"
+SIG_ACTIVE_WINDOW="$(sig active_window 13)"
+SIG_KEYBOARD="$(sig keyboard_layout 2)"
+SIG_DOCK_WINDOWS="$(sig dock_windows 11)"
+
 # Discover Hyprland Instance Signature:
 # Hyprland registers active sessions with a unique instance hash.
 # We use this signature to locate the correct Unix event socket (.socket2.sock).
@@ -48,26 +64,22 @@ socat -u "UNIX-CONNECT:${socket}" - 2>/dev/null | while IFS= read -r line; do
     workspace|focusedmon|moveworkspace)
       # Invalidate stale cache files
       rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/waybar"/workspaces-*.json 2>/dev/null || true
-      # Signal 16 triggers custom/workspaces refresh
-      "$script_dir/waybar-signal.sh" 16
+      "$script_dir/waybar-signal.sh" "$SIG_WORKSPACES"
       ;;
     activewindow|windowtitle)
       update_active_window_cache
-      # Signal 13 triggers custom/active-window refresh
-      "$script_dir/waybar-signal.sh" 13
+      "$script_dir/waybar-signal.sh" "$SIG_ACTIVE_WINDOW"
       ;;
     activelayout)
-      # Signal 2 triggers custom/keyboard-layout refresh
-      "$script_dir/waybar-signal.sh" 2
+      "$script_dir/waybar-signal.sh" "$SIG_KEYBOARD"
       ;;
     openwindow|closewindow|movewindow|changefloatingmode|float)
       update_active_window_cache
-      # Signal 11 triggers custom/dock-windows refresh
       if [ -x "$script_dir/dock-windows-signal.sh" ]; then
         "$script_dir/dock-windows-signal.sh"
       else
-        "$script_dir/waybar-signal.sh" 11
-        "$script_dir/waybar-signal.sh" 13
+        "$script_dir/waybar-signal.sh" "$SIG_DOCK_WINDOWS"
+        "$script_dir/waybar-signal.sh" "$SIG_ACTIVE_WINDOW"
       fi
       ;;
   esac

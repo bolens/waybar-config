@@ -1,6 +1,9 @@
+
+
+
 {
   "bars": {
-    "layer": "top",
+    "layer": "overlay",
     "output": ["*"],
     "exclusive": true,
     "passthrough": false,
@@ -18,17 +21,17 @@
       "right": true
     },
     "icons": {
-      "desk": { "format": "󰍜", "tooltip": "Session controls · click to expand" },
-      "dock": { "format": "󰀻", "tooltip": "Applications · click to expand" },
-      "tray": { "format": "󰇝", "tooltip": "Background apps · click to expand" },
-      "media": { "format": "󰝚", "tooltip": "Now playing and volume · click to expand" },
-      "net": { "format": "󰖩", "tooltip": "Network · click to expand" },
-      "tools": { "format": "󰒓", "tooltip": "Quick tools · click to expand" },
-      "infra": { "format": "󰒍", "tooltip": "Infrastructure · click to expand" },
-      "hardware": { "format": "󰻠", "tooltip": "Hardware · click to expand" },
-      "power": { "format": "", "tooltip": "Power menu · click to expand" },
-      "privacy": { "format": "󰕥", "tooltip": "Privacy controls · click to expand" },
-      "security": { "format": "󰒃", "tooltip": "Security · click to expand" }
+      "desk": { "format": "󰍜", "tooltip": "Session controls" },
+      "dock": { "format": "󰀻", "tooltip": "Applications" },
+      "tray": { "format": "󰇝", "tooltip": "Background apps" },
+      "media": { "format": "󰝚", "tooltip": "Media & volume" },
+      "net": { "format": "󰖩", "tooltip": "Network" },
+      "tools": { "format": "󰒓", "tooltip": "Quick tools" },
+      "infra": { "format": "󰒍", "tooltip": "Infrastructure" },
+      "hardware": { "format": "󰻠", "tooltip": "Hardware" },
+      "power": { "format": "", "tooltip": "Power menu" },
+      "privacy": { "format": "󰕥", "tooltip": "Privacy" },
+      "security": { "format": "󰒃", "tooltip": "Security" }
     }
   },
   "module_intervals": {
@@ -70,7 +73,7 @@
     "systemd": 60,
     "github": 300,
     "network_iface": 60,
-    "network_bandwidth": 2,
+    "network_bandwidth": 5,
     "clock": 60,
     "psu": 10,
     "device_battery": "once",
@@ -80,7 +83,8 @@
     "syncthing": 30,
     "sunshine": 10,
     "streamdeck": 30,
-    "i2pd": 30
+    "i2pd": 30,
+    "updates_tab": 1800
   },
   "signals": {
     "notifications": 10,
@@ -108,52 +112,6 @@
     "sunshine": 23,
     "streamdeck": 24,
     "i2pd": 25
-  },
-  "poll_intervals": {
-    "dock_apps": "once",
-    "cpu": 8,
-    "gpu": 12,
-    "memory": 12,
-    "vpn": "once",
-    "network_tab": 15,
-    "system_tab": 15,
-    "tailscale": "once",
-    "network_iface": 60,
-    "network_bandwidth": 2,
-    "docker": 30,
-    "ups": 30,
-    "hyprwhspr": 30,
-    "hypr_tools": 60,
-    "dock_windows": 120,
-    "powerprofiles": "once",
-    "brightness": "once",
-    "mic": "once",
-    "nightlight": "once",
-    "discord": 120,
-    "screenrecord": "once",
-    "privacy": "once",
-    "clipboard": 600,
-    "runtimes": 600,
-    "updates": 1800,
-    "updates_tab": 1800,
-    "notifications": "once",
-    "screenshot": "once",
-    "active_window": 1800,
-    "keyboard_layout": "once",
-    "gamemode": "once",
-    "clock": 60,
-    "psu": 10,
-    "device_battery": "once",
-    "fans": 10,
-    "libredefender": 300,
-    "chkrootkit": 300,
-    "weather": 900,
-    "disk": 300,
-    "uptime": 60,
-    "syncthing": 30,
-    "sunshine": 10,
-    "streamdeck": 30,
-    "i2pd": 30
   },
   "layouts": {
     "top": {
@@ -288,6 +246,7 @@
     "slot_count": 5 
   },
   "dock_windows": {
+    "enabled": false, 
     "min_length": 64,
     "max_length": 160,
     "expand": true,
@@ -297,6 +256,24 @@
     "zscroll": true, 
     "max_length": 40, 
     "scroll_delay": 0.3 
+  },
+  "capture": {
+    "screenshot_dir": "/mnt/media/screenshots", 
+    "screenrecord_dir": "/mnt/media/screenrecordings", 
+    "screenrecord_fps": 60 
+  },
+  "disk": {
+    "path": "/" 
+  },
+  "updates": {
+    "preview_limit": 40, 
+    "enable_aur": false 
+  },
+  "github": {
+    "preview_limit": 5, 
+    "on_click": null, 
+    "on_click_right": null, 
+    "on_click_middle": null 
   },
   "services": {
     "ups": {
@@ -311,6 +288,27 @@
       "service_name": "libredefender-scan.service",
       "on_click": null, 
       "on_click_right": null 
+    },
+    "syncthing": {
+      "gui_url": "https://localhost:8384",
+      "service_name": "syncthing", 
+      "on_click": null, 
+      "on_click_right": null 
+    },
+    "sunshine": {
+      "gui_url": "https://localhost:47990",
+      "service_name": "app-dev.lizardbyte.app.Sunshine.service",
+      "on_click": null,
+      "on_click_right": null
+    },
+    "i2pd": {
+      "console_url": "http://127.0.0.1:7070/",
+      "console_user": "i2pd",
+      
+      
+      "service_name": "i2pd.service",
+      "on_click": null,
+      "on_click_right": null
     }
   },
   "network": {
@@ -329,6 +327,8 @@
     "mpris_scroll_delay": 0.3, 
     "volume_step": 5, 
     "max_volume": 1.5, 
+    "seek_back_sec": 30, 
+    "seek_forward_sec": 10, 
     "pulseaudio_mute_cmd": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
     "on_click": null, 
     "on_click_right": null 
@@ -368,11 +368,14 @@
     "font_size": 13,
     "tooltip_font_size": 12,
     "border_radius": 8,
+    "tooltip_padding": "8px 10px",
     "colors": {
       "foreground": "#c8f6ff",
       "background": "rgba(6, 7, 14, 0.92)",
       "border": "rgba(0, 229, 255, 0.25)",
       "accent": "rgba(255, 42, 127, 0.32)",
+      "tooltip_background": "#06070e",
+      "tooltip_border": "#005c66",
       "workspace_active": "rgba(255, 42, 127, 0.32)",
       "workspace_inactive": "rgba(200, 246, 255, 0.45)",
       "workspace_visible": "#00e5ff"
@@ -382,7 +385,8 @@
     "hyprwhspr_record": "/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh record",
     "hyprwhspr_restart": "/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh restart",
     "hyprnotify_click": "hyprnotify show",
-    "hyprlight_click": "hyprlight osd"
+    "hyprlight_click": "hyprlight osd",
+    "keybinds_config": null 
   },
   "weather": {
     "unit": "auto", 
@@ -452,6 +456,17 @@
     },
     "psu": {
       "temp": { "warning": 55, "critical": 65 }
+    },
+    "ups": {
+      "charge": { "warning": 25, "critical": 10 } 
+    },
+    "updates": {
+      "warning": 1, 
+      "critical": 75
+    },
+    "device_battery": {
+      "warning": 30, 
+      "critical": 15
     }
   },
   "nightlight": {
@@ -488,6 +503,23 @@
     },
     "switcher": {
       "width": 650
+    },
+    "updates": {
+      "width": 650,
+      "height": 500
+    },
+    "powerprofiles": {
+      "width": 250,
+      "lines": 3
+    },
+    "kdeconnect": {
+      "width": 400
+    },
+    "vaults": {
+      "width": 400
+    },
+    "device_notifier": {
+      "width": 500
     }
   },
   "apps": {
@@ -509,9 +541,20 @@
     "paru_update": "ghostty -e paru -Syu",
     "updates_review": "$WAYBAR_HOME/scripts/updates-review.sh",
     "audio_mixer": "goxlr-launcher",
-    "discord": "discord"
+    "discord": "discord",
+    "file_manager": "xdg-open $HOME",
+    "github_notifications": "https://github.com/notifications",
+    "github_home": "https://github.com",
+    "solaar": "solaar",
+    "input_settings": "systemsettings",
+    "power_settings": "systemsettings",
+    "privacy_settings": "systemsettings6 kcm_app-permissions",
+    "camera_settings": "systemsettings6 kcm_kamera",
+    "notifications_settings": "systemsettings6 kcm_notifications",
+    "systemd_failed": "ghostty -e bash -c \"echo \\\"Failed System Services:\\\"; systemctl --failed; echo \\\"\\\"; echo \\\"Failed User Services:\\\"; systemctl --user --failed; echo \\\"\\\"; read -p \\\"Press Enter to close... \\\"\""
   },
   "streamdeck": {
+    "service_name": "app-streamdeck-ui@autostart.service",
     "on_click": null,
     "on_click_right": null,
     "on_click_middle": null

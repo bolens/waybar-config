@@ -6,9 +6,19 @@ kind="${1:-}"
 action="${2:-click}"
 script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/waybar/privacy-status.json"
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$script_dir/waybar-settings.sh"
+fi
 
 notify() {
   command -v notify-send >/dev/null 2>&1 && notify-send "$1" "$2" || true
+}
+
+open_settings_app() {
+  local cmd="$1"
+  # shellcheck disable=SC2086
+  "$script_dir/app-open.sh" $cmd
 }
 
 refresh_privacy() {
@@ -39,12 +49,14 @@ is_active() {
 }
 
 open_app_permissions() {
-  "$script_dir/app-open.sh" systemsettings6 kcm_app-permissions
+  open_settings_app "$(waybar_settings_get '.apps.privacy_settings' 'systemsettings6 kcm_app-permissions')"
 }
 
 open_camera_settings() {
-  if command -v systemsettings6 >/dev/null 2>&1; then
-    "$script_dir/app-open.sh" systemsettings6 kcm_kamera
+  local cam
+  cam=$(waybar_settings_get '.apps.camera_settings' 'systemsettings6 kcm_kamera')
+  if [ -n "$cam" ]; then
+    open_settings_app "$cam"
     return
   fi
   open_app_permissions

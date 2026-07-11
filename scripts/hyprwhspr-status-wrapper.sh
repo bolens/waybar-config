@@ -14,7 +14,7 @@ fi
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/hyprwhspr-status.json"
 lock_dir="$cache_dir/hyprwhspr-status.lock.d"
-ttl=30
+ttl="$(waybar_module_interval hyprwhspr 30)"
 stale_lock_ttl=45
 
 mkdir -p "$cache_dir"

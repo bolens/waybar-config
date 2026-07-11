@@ -38,6 +38,19 @@ kde_open_notifications() {
 }
 
 kde_open_settings() {
+  local script_dir
+  script_dir="$(dirname "${BASH_SOURCE[0]:-$0}")"
+  if [ -f "$script_dir/waybar-settings.sh" ]; then
+    # shellcheck disable=SC1091
+    . "$script_dir/waybar-settings.sh"
+  fi
+  local cmd
+  cmd=$(waybar_settings_get '.apps.notifications_settings' 'systemsettings6 kcm_notifications')
+  if [ -n "$cmd" ] && [ -x "$script_dir/app-open.sh" ]; then
+    # shellcheck disable=SC2086
+    "$script_dir/app-open.sh" $cmd
+    return 0
+  fi
   if command -v systemsettings6 >/dev/null 2>&1; then
     systemsettings6 kcm_notifications
     return 0

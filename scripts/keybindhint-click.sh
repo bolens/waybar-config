@@ -8,7 +8,13 @@ else
   . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
 fi
 
-config="${HYPRLAND_CONFIG:-$HOME/.config/hypr/hyprland.conf}"
+config_override=$(waybar_settings_get '.hypr_tools.keybinds_config' '')
+if [ -n "$config_override" ] && [ "$config_override" != "null" ]; then
+  config="$config_override"
+else
+  config="${HYPRLAND_CONFIG:-$HOME/.config/hypr/hyprland.conf}"
+fi
+terminal_app=$(waybar_settings_get '.apps.terminal' 'ghostty')
 rofi_theme_configured=$(waybar_settings_get '.rofi.theme' '')
 rofi_theme_configured="${rofi_theme_configured/\$WAYBAR_HOME/$WAYBAR_HOME}"
 rofi_theme_configured="${rofi_theme_configured/\$\{WAYBAR_HOME\}/$WAYBAR_HOME}"
@@ -50,4 +56,4 @@ if command -v wofi >/dev/null 2>&1; then
   exit 0
 fi
 
-"$script_dir/app-open.sh" ghostty -e less "$cache_file"
+"$script_dir/app-open.sh" "$terminal_app" -e less "$cache_file"

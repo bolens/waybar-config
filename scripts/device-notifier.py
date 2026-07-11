@@ -77,6 +77,28 @@ def get_description(target):
             
     return f"{desc} ({size})"
 
+def load_rofi_width(default=500):
+    home = os.path.expanduser("~")
+    waybar_home = os.environ.get("WAYBAR_HOME") or os.path.join(
+        os.environ.get("XDG_CONFIG_HOME", os.path.join(home, ".config")), "waybar"
+    )
+    for candidate in (
+        os.path.join(waybar_home, "data", "waybar-settings.json"),
+        os.path.join(home, ".config/waybar/data/waybar-settings.json"),
+    ):
+        if not os.path.isfile(candidate):
+            continue
+        try:
+            with open(candidate, "r", encoding="utf-8") as f:
+                settings = json.load(f)
+            return int(
+                settings.get("rofi", {}).get("device_notifier", {}).get("width", default)
+            )
+        except Exception:
+            break
+    return default
+
+
 def main():
     try:
         res = subprocess.run(
@@ -143,10 +165,13 @@ def main():
         else:
             options_str = "\n".join(item["text"] for item in menu_items)
 
+        rofi_width = load_rofi_width(500)
+        theme_str = f"window {{width: {rofi_width}px;}}"
+
         # Run rofi
         try:
             rofi_res = subprocess.run(
-                ["rofi", "-dmenu", "-p", "Device Notifier", "-theme-str", "window {width: 500px;}"],
+                ["rofi", "-dmenu", "-p", "Device Notifier", "-theme-str", theme_str],
                 input=options_str, capture_output=True, text=True
             )
             selected = rofi_res.stdout.strip()

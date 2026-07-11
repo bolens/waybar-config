@@ -9,7 +9,7 @@ if [ -f "$script_dir/waybar-settings.sh" ]; then
 fi
 cache_file="$cache_dir/updates-status.json"
 lock_dir="$cache_dir/updates-status.lock.d"
-ttl=300
+ttl="$(waybar_module_interval updates 300)"
 stale_lock_ttl=120
 
 mkdir -p "$cache_dir"
@@ -26,7 +26,15 @@ fi
 # shellcheck source=unicode-animations-lib.sh
 . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/unicode-animations-lib.sh"
 
-preview_limit=40
+preview_limit=$(waybar_settings_get '.updates.preview_limit' '40')
+updates_warn=$(waybar_settings_get '.thresholds.updates.warning' '1')
+updates_crit=$(waybar_settings_get '.thresholds.updates.critical' '75')
+enable_aur=$(waybar_settings_get '.updates.enable_aur' 'false')
+if [ "${WAYBAR_UPDATES_ENABLE_AUR:-}" = "1" ]; then
+  enable_aur=true
+elif [ "${WAYBAR_UPDATES_ENABLE_AUR:-}" = "0" ]; then
+  enable_aur=false
+fi
 
 perform_checks_and_output() {
   repo_count=0
@@ -48,8 +56,8 @@ perform_checks_and_output() {
     fi
   fi
 
-  # AUR updates check:
-  if [ "${WAYBAR_UPDATES_ENABLE_AUR:-0}" = "1" ] && command -v paru >/dev/null 2>&1; then
+  # AUR updates check (settings.updates.enable_aur, or WAYBAR_UPDATES_ENABLE_AUR=0/1 override):
+  if [ "$enable_aur" = "true" ] && command -v paru >/dev/null 2>&1; then
     aur_list=$(timeout 12 paru -Qua 2>/dev/null || true)
     if [ -n "$aur_list" ]; then
       aur_count=$(printf '%s\n' "$aur_list" | awk 'NF {count++} END {print count + 0}')
@@ -76,9 +84,9 @@ perform_checks_and_output() {
   total_text=$(printf '%3d' "$total")
 
   class="normal"
-  if [ "$total" -ge 75 ]; then
+  if [ "$total" -ge "$updates_crit" ]; then
     class="critical"
-  elif [ "$total" -gt 0 ]; then
+  elif [ "$total" -ge "$updates_warn" ]; then
     class="warning"
   fi
 

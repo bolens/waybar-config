@@ -14,6 +14,52 @@ import threading
 import signal
 import time
 
+
+def load_waybar_signals():
+    """Load RTMIN offsets from waybar-settings.json (signals.*)."""
+    defaults = {
+        "active_window": 13,
+        "workspaces": 16,
+        "clipboard": 9,
+        "notifications": 10,
+        "keyboard_layout": 2,
+        "nightlight": 14,
+        "brightness": 8,
+        "vpn": 5,
+        "tailscale": 12,
+        "kdeconnect": 18,
+        "device_battery": 4,
+        "powerprofiles": 3,
+        "dock_windows": 11,
+    }
+    home = os.environ.get("WAYBAR_HOME") or os.path.join(
+        os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "waybar"
+    )
+    path = os.path.join(home, "data", "waybar-settings.json")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        signals = data.get("signals") or {}
+        out = dict(defaults)
+        for key, val in signals.items():
+            if isinstance(val, int):
+                out[key] = val
+        return out
+    except Exception:
+        return defaults
+
+SIGNALS = load_waybar_signals()
+
+def waybar_rtmin(key):
+    offset = SIGNALS.get(key)
+    if offset is None:
+        return
+    subprocess.run(
+        ["pkill", "-x", f"-RTMIN+{offset}", "waybar"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
 # Single-instance locking
 def acquire_lock(lock_name):
     runtime_dir = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
@@ -361,7 +407,7 @@ class ActiveWindowServer:
         except Exception:
             pass
         
-        subprocess.run(["pkill", "-x", "-RTMIN+13", "waybar"], capture_output=True)
+        waybar_rtmin("active_window")
         return False
 
     def flush_windows_changed(self):
@@ -398,7 +444,7 @@ class ActiveWindowServer:
                 json.dump(data, f)
             os.replace(tmp_file, cache_file)
             self.clear_workspace_cache()
-            subprocess.run(["pkill", "-x", "-RTMIN+16", "waybar"], stderr=subprocess.DEVNULL)
+            waybar_rtmin("workspaces")
         except Exception as e:
             print(f"Error updating KDE desktops: {e}", file=sys.stderr)
 
@@ -620,7 +666,7 @@ class ActiveWindowServer:
                 "tooltip": tooltip
             }
         self.write_json_atomically(self.clipboard_cache, status)
-        subprocess.run(["pkill", "-x", "-RTMIN+9", "waybar"], stderr=subprocess.DEVNULL)
+        waybar_rtmin("clipboard")
 
     def write_json_atomically(self, path, data):
         tmp_file = path + f".tmp.{os.getpid()}"
@@ -690,7 +736,7 @@ class ActiveWindowServer:
         
         self.write_json_atomically(self.status_cache, status)
         self.write_json_atomically(self.history_cache, self.notifications)
-        subprocess.run(["pkill", "-x", "-RTMIN+10", "waybar"], stderr=subprocess.DEVNULL)
+        waybar_rtmin("notifications")
 
     def start_dbus_monitor(self):
         def monitor_thread():
@@ -855,7 +901,7 @@ class ActiveWindowServer:
         return True
 
     def on_keyboard_layout_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        subprocess.run(["pkill", "-x", "-RTMIN+2", "waybar"], stderr=subprocess.DEVNULL)
+        waybar_rtmin("keyboard_layout")
 
     def on_nightlight_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
         cache_dir = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "waybar")
@@ -865,14 +911,14 @@ class ActiveWindowServer:
                 os.remove(cache_file)
         except OSError:
             pass
-        subprocess.run(["pkill", "-x", "-RTMIN+14", "waybar"], stderr=subprocess.DEVNULL)
+        waybar_rtmin("nightlight")
 
     def on_brightness_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
         script_dir = os.path.dirname(os.path.abspath(__file__))
         brightness_script = os.path.join(script_dir, "brightness-status.sh")
         if os.path.exists(brightness_script):
             subprocess.run([brightness_script, "--refresh"], stderr=subprocess.DEVNULL)
-            subprocess.run(["pkill", "-x", "-RTMIN+8", "waybar"], stderr=subprocess.DEVNULL)
+            waybar_rtmin("brightness")
 
     # NetworkManager fires rapid bursts of StateChanged/PropertiesChanged signals
     # during interface state shifts. Debounce by 500ms to avoid launching concurrent
@@ -903,10 +949,10 @@ class ActiveWindowServer:
             try:
                 if os.path.exists(vpn_script):
                     subprocess.run([vpn_script, "--refresh"], stderr=subprocess.DEVNULL)
-                    subprocess.run(["pkill", "-x", "-RTMIN+5", "waybar"], stderr=subprocess.DEVNULL)
+                    waybar_rtmin("vpn")
                 if os.path.exists(ts_script):
                     subprocess.run([ts_script, "--refresh"], stderr=subprocess.DEVNULL)
-                    subprocess.run(["pkill", "-x", "-RTMIN+12", "waybar"], stderr=subprocess.DEVNULL)
+                    waybar_rtmin("tailscale")
             finally:
                 with self.network_lock:
                     self.network_refreshing = False
@@ -937,7 +983,7 @@ class ActiveWindowServer:
         def run_refresh():
             try:
                 subprocess.run([kdeconnect_script, "--refresh"], stderr=subprocess.DEVNULL)
-                subprocess.run(["pkill", "-x", "-RTMIN+18", "waybar"], stderr=subprocess.DEVNULL)
+                waybar_rtmin("kdeconnect")
             finally:
                 with self.kdeconnect_lock:
                     self.kdeconnect_refreshing = False
@@ -950,7 +996,7 @@ class ActiveWindowServer:
     def on_virtual_desktops_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
         if signal_name in ("currentChanged", "desktopCreated", "desktopRemoved", "desktopDataChanged"):
             self.clear_workspace_cache()
-            subprocess.run(["pkill", "-x", "-RTMIN+16", "waybar"], stderr=subprocess.DEVNULL)
+            waybar_rtmin("workspaces")
 
     def on_upower_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
         with self.upower_lock:
@@ -972,7 +1018,7 @@ class ActiveWindowServer:
         def run_refresh():
             try:
                 subprocess.run([battery_script, "--refresh"], stderr=subprocess.DEVNULL)
-                subprocess.run(["pkill", "-x", "-RTMIN+4", "waybar"], stderr=subprocess.DEVNULL)
+                waybar_rtmin("device_battery")
             finally:
                 with self.upower_lock:
                     self.upower_refreshing = False
@@ -983,7 +1029,7 @@ class ActiveWindowServer:
         threading.Thread(target=run_refresh, daemon=True).start()
 
     def on_powerprofiles_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        subprocess.run(["pkill", "-x", "-RTMIN+3", "waybar"], stderr=subprocess.DEVNULL)
+        waybar_rtmin("powerprofiles")
 
     def cleanup(self):
         if self.script_id:

@@ -2,6 +2,11 @@
 set -eu
 
 target="${1:-next}"
+script_dir="${0%/*}"
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$script_dir/waybar-settings.sh"
+fi
 
 if ! command -v powerprofilesctl >/dev/null 2>&1; then
   exit 0
@@ -13,8 +18,10 @@ current=$(powerprofilesctl get 2>/dev/null || true)
 case "$target" in
   menu)
     if command -v rofi >/dev/null 2>&1; then
+      pp_width=$(waybar_settings_get '.rofi.powerprofiles.width' '250')
+      pp_lines=$(waybar_settings_get '.rofi.powerprofiles.lines' '3')
       profiles="⚡ performance\n⚖️ balanced\n🔋 power-saver"
-      selected=$(printf "%b" "$profiles" | rofi -dmenu -i -p "Power Profile" -theme-str 'window {width: 250px; lines: 3;}')
+      selected=$(printf "%b" "$profiles" | rofi -dmenu -i -p "Power Profile" -theme-str "window {width: ${pp_width}px; lines: ${pp_lines};}")
       if [ -n "$selected" ]; then
         target=$(printf "%s" "$selected" | awk '{print $NF}')
       else
@@ -45,7 +52,6 @@ esac
 powerprofilesctl set "$target" >/dev/null 2>&1 || exit 0
 notify-send "Power profile" "Switched to $target" 2>/dev/null || true
 
-script_dir="${0%/*}"
 # shellcheck source=waybar-signal.sh
 if [ -f "$script_dir/waybar-signal.sh" ]; then
   "$script_dir/waybar-signal.sh" 3

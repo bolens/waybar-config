@@ -1,10 +1,12 @@
 #!/usr/bin/env sh
 set -eu
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/device-battery.json"
 lock_dir="$cache_dir/device-battery.lock.d"
-ttl=30
+ttl="$(waybar_module_interval device_battery 30)"
 stale_lock_ttl=45
 
 mkdir -p "$cache_dir"
@@ -16,7 +18,14 @@ if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
 else
   . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
 fi
+if [ -f "$script_dir/waybar-settings.sh" ]; then
+  . "$script_dir/waybar-settings.sh"
+else
+  . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-settings.sh"
+fi
 
+batt_warn=$(waybar_settings_get '.thresholds.device_battery.warning' '30')
+batt_crit=$(waybar_settings_get '.thresholds.device_battery.critical' '15')
 
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
@@ -73,9 +82,9 @@ esac
 class="normal"
 if [ "$status" = "Charging" ]; then
   class="charging"
-elif [ "$capacity" -le 15 ]; then
+elif [ "$capacity" -le "$batt_crit" ]; then
   class="critical"
-elif [ "$capacity" -le 30 ]; then
+elif [ "$capacity" -le "$batt_warn" ]; then
   class="warning"
 fi
 

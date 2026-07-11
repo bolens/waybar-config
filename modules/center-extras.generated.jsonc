@@ -4,7 +4,11 @@
     "return-type": "json",
     "signal": 2,
     "interval": "once",
-    "exec": "$WAYBAR_HOME/scripts/keyboard-layout-status.sh",
+    "exec": "/home/panda/.config/waybar/scripts/keyboard-layout-status.sh",
+    "on-click": "/home/panda/.config/waybar/scripts/keyboard-layout-click.sh next",
+    "on-click-right": "/home/panda/.config/waybar/scripts/keyboard-layout-click.sh prev",
+    "on-scroll-up": "/home/panda/.config/waybar/scripts/keyboard-layout-click.sh prev",
+    "on-scroll-down": "/home/panda/.config/waybar/scripts/keyboard-layout-click.sh next",
     "tooltip": true
   },
   "custom/gamemode": {
@@ -12,17 +16,17 @@
     "return-type": "json",
     "signal": 15,
     "interval": "once",
-    "exec": "$WAYBAR_HOME/scripts/gamemode-status.sh",
-    "on-click": "$WAYBAR_HOME/scripts/gamemode-click.sh toggle",
-    "on-click-right": "$WAYBAR_HOME/scripts/gamemode-click.sh restore",
+    "exec": "/home/panda/.config/waybar/scripts/gamemode-status.sh",
+    "on-click": "/home/panda/.config/waybar/scripts/gamemode-click.sh toggle",
+    "on-click-right": "/home/panda/.config/waybar/scripts/gamemode-click.sh restore",
     "tooltip": true
   },
   "custom/keybindhint": {
     "format": "{}",
     "return-type": "json",
     "interval": "once",
-    "exec": "$WAYBAR_HOME/scripts/keybindhint-status.sh",
-    "on-click": "$WAYBAR_HOME/scripts/keybindhint-click.sh",
+    "exec": "/home/panda/.config/waybar/scripts/keybindhint-status.sh",
+    "on-click": "/home/panda/.config/waybar/scripts/keybindhint-click.sh",
     "tooltip": true
   }
 }

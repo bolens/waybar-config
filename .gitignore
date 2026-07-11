@@ -15,3 +15,8 @@ vpn-status-debug.log
 
 # Exclude the dry-run folder with large tarballs
 dry-run/
+
+# Local secrets (merged over settings at read time — never commit)
+data/waybar-secrets.json
+data/waybar-secrets.jsonc
+!data/waybar-secrets.example.jsonc

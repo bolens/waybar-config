@@ -4,10 +4,10 @@
     "return-type": "json",
     "interval": "once",
     "signal": 17,
-    "exec": "$WAYBAR_HOME/scripts/privacy-status.sh screenshare",
-    "on-click": "$WAYBAR_HOME/scripts/privacy-click.sh screenshare click",
-    "on-click-middle": "$WAYBAR_HOME/scripts/privacy-click.sh screenshare middle",
-    "on-click-right": "$WAYBAR_HOME/scripts/privacy-click.sh screenshare right",
+    "exec": "/home/panda/.config/waybar/scripts/privacy-status.sh screenshare",
+    "on-click": "/home/panda/.config/waybar/scripts/privacy-click.sh screenshare click",
+    "on-click-middle": "/home/panda/.config/waybar/scripts/privacy-click.sh screenshare middle",
+    "on-click-right": "/home/panda/.config/waybar/scripts/privacy-click.sh screenshare right",
     "tooltip": true
   },
   "custom/privacy-webcam": {
@@ -15,10 +15,10 @@
     "return-type": "json",
     "interval": "once",
     "signal": 17,
-    "exec": "$WAYBAR_HOME/scripts/privacy-status.sh webcam",
-    "on-click": "$WAYBAR_HOME/scripts/privacy-click.sh webcam click",
-    "on-click-middle": "$WAYBAR_HOME/scripts/privacy-click.sh webcam middle",
-    "on-click-right": "$WAYBAR_HOME/scripts/privacy-click.sh webcam right",
+    "exec": "/home/panda/.config/waybar/scripts/privacy-status.sh webcam",
+    "on-click": "/home/panda/.config/waybar/scripts/privacy-click.sh webcam click",
+    "on-click-middle": "/home/panda/.config/waybar/scripts/privacy-click.sh webcam middle",
+    "on-click-right": "/home/panda/.config/waybar/scripts/privacy-click.sh webcam right",
     "tooltip": true
   },
   "custom/privacy-audio-in": {
@@ -26,10 +26,10 @@
     "return-type": "json",
     "interval": "once",
     "signal": 17,
-    "exec": "$WAYBAR_HOME/scripts/privacy-status.sh audio-in",
-    "on-click": "$WAYBAR_HOME/scripts/privacy-click.sh audio-in click",
-    "on-click-middle": "$WAYBAR_HOME/scripts/privacy-click.sh audio-in middle",
-    "on-click-right": "$WAYBAR_HOME/scripts/privacy-click.sh audio-in right",
+    "exec": "/home/panda/.config/waybar/scripts/privacy-status.sh audio-in",
+    "on-click": "/home/panda/.config/waybar/scripts/privacy-click.sh audio-in click",
+    "on-click-middle": "/home/panda/.config/waybar/scripts/privacy-click.sh audio-in middle",
+    "on-click-right": "/home/panda/.config/waybar/scripts/privacy-click.sh audio-in right",
     "tooltip": true
   },
   "custom/privacy-audio-out": {
@@ -37,10 +37,10 @@
     "return-type": "json",
     "interval": "once",
     "signal": 17,
-    "exec": "$WAYBAR_HOME/scripts/privacy-status.sh audio-out",
-    "on-click": "$WAYBAR_HOME/scripts/privacy-click.sh audio-out click",
-    "on-click-middle": "$WAYBAR_HOME/scripts/privacy-click.sh audio-out middle",
-    "on-click-right": "$WAYBAR_HOME/scripts/privacy-click.sh audio-out right",
+    "exec": "/home/panda/.config/waybar/scripts/privacy-status.sh audio-out",
+    "on-click": "/home/panda/.config/waybar/scripts/privacy-click.sh audio-out click",
+    "on-click-middle": "/home/panda/.config/waybar/scripts/privacy-click.sh audio-out middle",
+    "on-click-right": "/home/panda/.config/waybar/scripts/privacy-click.sh audio-out right",
     "tooltip": true
   },
   "custom/privacy-location": {
@@ -48,10 +48,10 @@
     "return-type": "json",
     "interval": "once",
     "signal": 17,
-    "exec": "$WAYBAR_HOME/scripts/privacy-status.sh location",
-    "on-click": "$WAYBAR_HOME/scripts/privacy-click.sh location click",
-    "on-click-middle": "$WAYBAR_HOME/scripts/privacy-click.sh location middle",
-    "on-click-right": "$WAYBAR_HOME/scripts/privacy-click.sh location right",
+    "exec": "/home/panda/.config/waybar/scripts/privacy-status.sh location",
+    "on-click": "/home/panda/.config/waybar/scripts/privacy-click.sh location click",
+    "on-click-middle": "/home/panda/.config/waybar/scripts/privacy-click.sh location middle",
+    "on-click-right": "/home/panda/.config/waybar/scripts/privacy-click.sh location right",
     "tooltip": true
   }
 }

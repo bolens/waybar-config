@@ -1,10 +1,12 @@
 #!/usr/bin/env sh
 set -eu
+script_dir="${0%/*}"
+. "$script_dir/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/fans-status.json"
 lock_dir="$cache_dir/fans-status.lock.d"
-ttl=10
+ttl="$(waybar_module_interval fans 10)"
 stale_lock_ttl=15
 
 mkdir -p "$cache_dir"

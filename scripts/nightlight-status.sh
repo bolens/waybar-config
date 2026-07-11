@@ -6,7 +6,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 force_state_file="$cache_dir/nightlight-kde-force"
 cache_file="$cache_dir/nightlight-status.json"
 lock_dir="$cache_dir/nightlight-status.lock.d"
-ttl=60
+ttl="$(waybar_module_interval nightlight 60)"
 stale_lock_ttl=90
 
 mkdir -p "$cache_dir"

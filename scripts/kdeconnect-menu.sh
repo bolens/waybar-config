@@ -13,6 +13,9 @@ fi
 devices=()
 device_ids=()
 device_names=()
+kde_width=$(waybar_settings_get '.rofi.kdeconnect.width' '400')
+file_width=$((kde_width + 200))
+[ "$file_width" -lt 600 ] && file_width=600
 
 # kdeconnect-cli -a --id-name-only prints format:
 # <device_id> <device_name>
@@ -41,7 +44,7 @@ if [ "$num_devices" -eq 1 ]; then
   target_device_name="${device_names[0]}"
 else
   # Show rofi menu to select device
-  selected_dev=$(printf "%s\n" "${device_names[@]}" | rofi -dmenu -p "Select Device" -theme-str 'window {width: 400px;}')
+  selected_dev=$(printf "%s\n" "${device_names[@]}" | rofi -dmenu -p "Select Device" -theme-str "window {width: ${kde_width}px;}")
   [ -z "$selected_dev" ] && exit 0
   
   for i in "${!device_names[@]}"; do
@@ -65,7 +68,7 @@ actions=(
   "󰍜 Unmount Storage"
 )
 
-selected_action=$(printf "%s\n" "${actions[@]}" | rofi -dmenu -p "Action ($target_device_name)" -theme-str 'window {width: 400px;}')
+selected_action=$(printf "%s\n" "${actions[@]}" | rofi -dmenu -p "Action ($target_device_name)" -theme-str "window {width: ${kde_width}px;}")
 [ -z "$selected_action" ] && exit 0
 
 case "$selected_action" in
@@ -96,7 +99,7 @@ case "$selected_action" in
         notify-send "KDE Connect" "Sending file to $target_device_name..."
       fi
     else
-      file_path=$(rofi -dmenu -p "Enter File Path" -theme-str 'window {width: 600px;}')
+      file_path=$(rofi -dmenu -p "Enter File Path" -theme-str "window {width: ${file_width}px;}")
       if [ -n "$file_path" ] && [ -f "$file_path" ]; then
         kdeconnect-cli -d "$target_device_id" --share "$file_path" >/dev/null 2>&1 || true
         notify-send "KDE Connect" "Sending file to $target_device_name..."

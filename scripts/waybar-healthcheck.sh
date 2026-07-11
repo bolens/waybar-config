@@ -37,7 +37,15 @@ check_and_heal_listeners() {
     "$script_dir/listener-ctl.sh" start "$script_dir/privacy-listener.sh" privacy
   fi
 
-  # 2. Compositor-specific listener
+  # 2. Device notifier (removable storage) on all compositors
+  if ! is_listener_running "device-notifier"; then
+    if [ -x "$script_dir/device-notifier-listener.sh" ]; then
+      log "device-notifier listener dead; restarting"
+      "$script_dir/listener-ctl.sh" start "$script_dir/device-notifier-listener.sh" device-notifier
+    fi
+  fi
+
+  # 3. Compositor-specific listener
   comp="$(detect_compositor)"
   if [ "$comp" = "hyprland" ]; then
     if ! is_listener_running "hypr-workspaces"; then
