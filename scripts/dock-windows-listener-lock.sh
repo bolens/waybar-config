@@ -1,8 +1,16 @@
 #!/usr/bin/env sh
 # Ensure only one dock-windows listener runs per compositor backend.
+#
+# Must be sourced (sets EXIT trap in the listener). Dash ignores arguments to
+# `.`, so pass the lock name via WAYBAR_LISTENER_LOCK_NAME (bash still accepts $1).
 set -eu
 
-listener_name="$1"
+listener_name="${WAYBAR_LISTENER_LOCK_NAME:-${1-}}"
+if [ -z "$listener_name" ]; then
+  printf 'dock-windows-listener-lock: set WAYBAR_LISTENER_LOCK_NAME or pass name as \$1\n' >&2
+  exit 1
+fi
+
 lock_dir="${XDG_RUNTIME_DIR:-/tmp}/waybar-dock-listener-${listener_name}.lock.d"
 lock_pid_file="$lock_dir/pid"
 

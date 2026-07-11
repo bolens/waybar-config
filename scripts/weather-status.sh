@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"

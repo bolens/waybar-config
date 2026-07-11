@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Shared helpers for compositor-aware notification modules.
 
 signal_waybar() {

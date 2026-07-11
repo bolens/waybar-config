@@ -4,7 +4,8 @@ set -eu
 
 script_dir="${0%/*}"
 # shellcheck source=dock-windows-listener-lock.sh
-. "$script_dir/dock-windows-listener-lock.sh" device-notifier
+WAYBAR_LISTENER_LOCK_NAME=device-notifier
+. "$script_dir/dock-windows-listener-lock.sh"
 
 cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/waybar/device-notifier-status.json"
 WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"

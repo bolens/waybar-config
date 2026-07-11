@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # i2pd Status module for Waybar.
 set -eu
 script_dir="${0%/*}"

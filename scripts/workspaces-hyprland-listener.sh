@@ -4,7 +4,8 @@ set -euo pipefail
 
 script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 # shellcheck source=dock-windows-listener-lock.sh
-. "$script_dir/dock-windows-listener-lock.sh" hypr-workspaces
+WAYBAR_LISTENER_LOCK_NAME=hypr-workspaces
+. "$script_dir/dock-windows-listener-lock.sh"
 # shellcheck source=compositor-session.sh
 . "$script_dir/compositor-session.sh"
 

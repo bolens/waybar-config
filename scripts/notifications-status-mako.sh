@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Mako notification bell for Waybar on Hyprland (long-running).
 set -eu
 

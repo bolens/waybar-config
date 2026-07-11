@@ -7,6 +7,12 @@ echo "=== Running Waybar Configuration Generator Tests ==="
 # Repo root (script lives in scripts/)
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
+# Fail fast on dash/bash shebang contract regressions (same checks as CI).
+if ! "$ROOT_DIR/scripts/check-shell-contracts.sh"; then
+  echo "FAIL: shell contract checks failed before generator tests" >&2
+  exit 1
+fi
+
 # 1. Create a sandboxed WAYBAR_HOME directory
 TEST_DIR=$(mktemp -d)
 trap 'rm -rf "$TEST_DIR"' EXIT
@@ -438,13 +444,17 @@ fi
 echo "Testing listener-ctl lifecycle..."
 runtime_stub="$TEST_DIR/runtime"
 mkdir -p "$runtime_stub"
-cat > "$TEST_DIR/scripts/mock-listener.sh" <<'MOCK'
-#!/usr/bin/env sh
+# Prefer dash shebang when available so local runs match Ubuntu CI (/bin/sh -> dash).
+mock_shebang='#!/usr/bin/env sh'
+command -v dash >/dev/null 2>&1 && mock_shebang='#!/usr/bin/env dash'
+cat > "$TEST_DIR/scripts/mock-listener.sh" <<MOCK
+${mock_shebang}
 set -eu
-script_dir="${0%/*}"
-lock_name="${WAYBAR_MOCK_LOCK_NAME:-mock-listener}"
+script_dir="\${0%/*}"
+# Dash ignores \`. file arg\` — lock name must be in the env (see dock-windows-listener-lock.sh).
+WAYBAR_LISTENER_LOCK_NAME="\${WAYBAR_MOCK_LOCK_NAME:-mock-listener}"
 # shellcheck source=dock-windows-listener-lock.sh
-. "$script_dir/dock-windows-listener-lock.sh" "$lock_name"
+. "\$script_dir/dock-windows-listener-lock.sh"
 sleep 30
 MOCK
 chmod +x "$TEST_DIR/scripts/mock-listener.sh"
@@ -478,9 +488,9 @@ else
   fi
 fi
 
-# device-notifier listener must take the singleton lock
-if ! grep -q 'dock-windows-listener-lock.sh" device-notifier' "$TEST_DIR/scripts/device-notifier-listener.sh"; then
-  echo "FAIL: device-notifier-listener.sh does not acquire device-notifier lock" >&2
+# device-notifier listener must take the singleton lock (env form — dash-safe)
+if ! grep -q 'WAYBAR_LISTENER_LOCK_NAME=device-notifier' "$TEST_DIR/scripts/device-notifier-listener.sh"; then
+  echo "FAIL: device-notifier-listener.sh does not set WAYBAR_LISTENER_LOCK_NAME=device-notifier" >&2
   fail=1
 fi
 
@@ -1421,6 +1431,18 @@ for script in syncthing-status.sh sunshine-status.sh streamdeck-status.sh i2pd-s
     echo "FAIL: $script did not output valid JSON with text, tooltip, and class fields. Output: $out" >&2
     fail=1
   fi
+done
+
+# i2pd/settings consumers must keep a bash shebang (regression for Ubuntu dash CI).
+for script in i2pd-status.sh updates-status.sh github-status.sh; do
+  sheb="$(head -1 "$TEST_DIR/scripts/$script" || true)"
+  case "$sheb" in
+    '#!/usr/bin/env bash'|'#!/bin/bash') ;;
+    *)
+      echo "FAIL: $script must use bash shebang after sandbox copy (got: $sheb)" >&2
+      fail=1
+      ;;
+  esac
 done
 
 # Verify behavior when waybar-settings.jsonc is missing

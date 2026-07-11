@@ -8,7 +8,8 @@ cache_file="$cache_dir/privacy-status.json"
 poll_seconds=15
 
 # shellcheck source=dock-windows-listener-lock.sh
-. "$script_dir/dock-windows-listener-lock.sh" privacy
+WAYBAR_LISTENER_LOCK_NAME=privacy
+. "$script_dir/dock-windows-listener-lock.sh"
 # shellcheck source=privacy-status.sh
 # collect_privacy_json is defined in privacy-status.sh --refresh path
 

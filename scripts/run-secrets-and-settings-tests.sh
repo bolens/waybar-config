@@ -499,7 +499,7 @@ chmod +x "$TEST_DIR/scripts/app-open.sh" "$TEST_DIR/scripts/compositor-gate.sh" 
 out=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$TEST_DIR/cache" WAYBAR_BACKGROUND=1 \
     "$TEST_DIR/scripts/updates-status.sh" --refresh 2>/dev/null | tail -n 1
-)
+) || true
 if ! grep -q '^paru$' "$TEST_DIR/bin/calls.log"; then
   echo "FAIL: updates-status should call paru when updates.enable_aur=true. log=$(cat "$TEST_DIR/bin/calls.log") out=$out" >&2
   fail=1
@@ -515,7 +515,7 @@ out=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$TEST_DIR/cache" WAYBAR_BACKGROUND=1 \
   WAYBAR_UPDATES_ENABLE_AUR=0 \
     "$TEST_DIR/scripts/updates-status.sh" --refresh 2>/dev/null | tail -n 1
-)
+) || true
 if grep -q '^paru$' "$TEST_DIR/bin/calls.log"; then
   echo "FAIL: WAYBAR_UPDATES_ENABLE_AUR=0 should skip paru" >&2
   fail=1

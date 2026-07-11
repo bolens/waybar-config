@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Compositor-aware notification center actions for Waybar.
 set -eu
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Shared helpers for compositor-aware clipboard modules.
 script_dir="${script_dir:-$(dirname "$0")}"
 if [ -f "$script_dir/waybar-settings.sh" ]; then

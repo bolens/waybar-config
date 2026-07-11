@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Cached UPS status (one NUT/UPower probe per TTL across all Waybar instances).
 set -eu
 

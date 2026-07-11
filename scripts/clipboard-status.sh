@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Route clipboard status to the active compositor backend.
 set -eu
 

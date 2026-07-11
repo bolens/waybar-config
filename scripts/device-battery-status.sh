@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 set -eu
 script_dir="${0%/*}"
 . "$script_dir/waybar-cache-helpers.sh"
