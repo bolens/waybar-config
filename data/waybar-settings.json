@@ -383,8 +383,8 @@
   },
   "clocks": {
     "locale": "auto", 
-    "hour_format": "auto", 
-    "date_format": "auto", 
+    "hour_format": "12", 
+    "date_format": "month-first", 
     "bottom": {
       "format": "auto",
       "tooltip_format": "auto"

@@ -383,8 +383,8 @@
   },
   "clocks": {
     "locale": "auto", // Locale override for clock formatting (e.g. "fr_FR.UTF-8") or "auto" (use system LANG)
-    "hour_format": "auto", // Clock hour format: "12", "24", or "auto" (detect from locale)
-    "date_format": "auto", // Clock date format: "day-first", "month-first", or "auto" (detect from locale)
+    "hour_format": "12", // "12", "24", or "auto" (locale). Pinned for deterministic CI generate.
+    "date_format": "month-first", // "day-first", "month-first", or "auto". Pinned for deterministic CI generate.
     "bottom": {
       "format": "auto",
       "tooltip_format": "auto"

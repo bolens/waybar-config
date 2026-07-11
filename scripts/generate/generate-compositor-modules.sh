@@ -121,12 +121,10 @@ if [ "$comp" = "hyprland" ]; then
       --argjson tail "$hypr_tail" \
       '$slots + $tail'
   )"
-elif [ "$comp" = "kde" ]; then
+else
+  # kde and unknown (CI / headless): workspace slots only — never wipe desk modules.
   printf '{}\n' >"$native_out"
   modules_json="$workspace_modules"
-else
-  printf '{}\n' >"$native_out"
-  modules_json='[]'
 fi
 
 top_left_modules='[
