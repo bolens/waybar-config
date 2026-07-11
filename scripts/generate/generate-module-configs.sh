@@ -195,7 +195,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "return-type": "json",
       signal: sig("touchpad"),
       interval: iv("touchpad"),
-      exec: ($scripts + "/system/touchpad-status.sh"),
+      exec: ($scripts + "/lib/compositor-gate.sh --show hyprland -- " + $scripts + "/system/touchpad-status.sh"),
       "on-click": ($s[0].touchpad.on_click // ($scripts + "/system/touchpad.py --toggle")),
       "on-click-right": ($s[0].touchpad.on_click_right // ($scripts + "/system/touchpad-status.sh --refresh && " + $scripts + "/lib/waybar-signal.sh " + ((sig("touchpad") // 20) | tostring)))
     },
@@ -231,7 +231,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       interval: iv("device_battery"),
       exec: ($scripts + "/services/devices/device-battery-status.sh"),
       "on-click": (app_open + " " + (app("solaar") // "solaar")),
-      "on-click-right": (app_open + " " + (app("input_settings") // "systemsettings")),
+      "on-click-right": ($scripts + "/tools/app-open-key.sh input_settings"),
       "on-click-middle": ($scripts + "/services/devices/device-battery-status.sh --refresh")
     },
     "custom/streamdeck": {
@@ -280,7 +280,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
     "custom/media-prev": {
       format: "{}",
       "return-type": "json",
-      interval: 2,
+      interval: "once",
       exec: ($scripts + "/media/media-prev.sh"),
       "on-click": "playerctl previous",
       "on-click-right": ("playerctl position " + (((($s[0].audio // {}).seek_back_sec) // 30) | tostring) + "-")
@@ -288,7 +288,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
     "custom/media-next": {
       format: "{}",
       "return-type": "json",
-      interval: 2,
+      interval: "once",
       exec: ($scripts + "/media/media-next.sh"),
       "on-click": "playerctl next",
       "on-click-right": ("playerctl position " + (((($s[0].audio // {}).seek_forward_sec) // 10) | tostring) + "+")
@@ -445,6 +445,7 @@ jq -n --slurpfile s "$settings" \
       "custom/disk": "Disk",
       "custom/psu": "PSU",
       "custom/fans": "Fans",
+      "custom/liquidctl": "Liquidctl",
       "custom/lock": "Lock",
       "custom/logout": "Logout",
       "custom/suspend": "Suspend",

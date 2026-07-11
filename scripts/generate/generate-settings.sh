@@ -129,7 +129,7 @@ build_system_json() {
     def app($key): $settings[0].apps[$key] // "";
     def interval($key): ($settings[0].module_intervals[$key] // $settings[0].poll_intervals[$key] // 1);
     def signal($key): $settings[0].signals[$key] // null;
-    def click_app($key): ($app_open + " " + app($key));
+    def click_app($key): ($scripts + "/tools/app-open-key.sh " + $key);
     def term_cmd($cmd): ($app_open + " " + $terminal_app + " -e " + $cmd);
     {
       "custom/cpu": {
@@ -263,6 +263,16 @@ build_system_json() {
         "on-click": click_app("nvtop"),
         "on-click-right": click_app("btop"),
         "on-click-middle": ($scripts + "/system/fans-status.sh --refresh")
+      },
+      "custom/liquidctl": {
+        format: "{}",
+        "return-type": "json",
+        tooltip: true,
+        interval: interval("liquidctl"),
+        exec: ($scripts + "/system/liquidctl-status.sh"),
+        "on-click": click_app("btop"),
+        "on-click-right": click_app("system_monitor"),
+        "on-click-middle": ($scripts + "/system/liquidctl-status.sh --refresh")
       },
       "custom/libredefender": {
         format: "{}",

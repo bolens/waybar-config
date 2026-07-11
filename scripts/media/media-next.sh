@@ -1,9 +1,4 @@
 #!/usr/bin/env sh
+# Static next control — CSS class comes from the mpris module; avoid polling playerctl.
 set -eu
-status=$(playerctl status 2>/dev/null || echo "NoPlayer")
-case "$status" in
-  Playing) class="playing" ;;
-  Paused) class="paused" ;;
-  *) class="stopped" ;;
-esac
-printf '{"text":"󰒭","class":"%s"}\n' "$class"
+printf '{"text":"󰒭","class":"media-control"}\n'

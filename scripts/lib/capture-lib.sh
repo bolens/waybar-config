@@ -70,10 +70,24 @@ capture_sanitize_tag() {
 
 capture_output_tag() {
   compositor="$1"
+  if [ -n "${WAYBAR_OUTPUT_NAME:-}" ]; then
+    capture_sanitize_tag "$WAYBAR_OUTPUT_NAME"
+    return 0
+  fi
   case "$compositor" in
     hyprland)
       if command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
         out=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused==true) | .name' | head -n1 || true)
+        if [ -n "$out" ]; then
+          capture_sanitize_tag "$out"
+          return 0
+        fi
+      fi
+      ;;
+    kde)
+      # Best-effort: first connected output from kscreen-doctor.
+      if command -v kscreen-doctor >/dev/null 2>&1; then
+        out=$(kscreen-doctor -o 2>/dev/null | awk '/Output:/ {print $2; exit}' || true)
         if [ -n "$out" ]; then
           capture_sanitize_tag "$out"
           return 0
@@ -115,12 +129,28 @@ capture_screenshot_backend() {
 
 capture_screenrecord_backend() {
   compositor="$1"
-  if command -v wf-recorder >/dev/null 2>&1; then
-    printf 'wf-recorder'
-    return 0
-  fi
   case "$compositor" in
     kde)
+      if command -v spectacle >/dev/null 2>&1; then
+        printf 'spectacle'
+        return 0
+      fi
+      if command -v wf-recorder >/dev/null 2>&1; then
+        printf 'wf-recorder'
+        return 0
+      fi
+      ;;
+    hyprland)
+      if command -v wf-recorder >/dev/null 2>&1; then
+        printf 'wf-recorder'
+        return 0
+      fi
+      ;;
+    *)
+      if command -v wf-recorder >/dev/null 2>&1; then
+        printf 'wf-recorder'
+        return 0
+      fi
       if command -v spectacle >/dev/null 2>&1; then
         printf 'spectacle'
         return 0

@@ -54,7 +54,7 @@
     "format": "{0}{icon}",
     "return-type": "json",
     "signal": 9,
-    "interval": 60,
+    "interval": "once",
     "escape": true,
     "exec": "$WAYBAR_HOME/scripts/notifications/clipboard-status.sh",
     "format-icons": {
@@ -94,7 +94,7 @@
   "custom/discord": {
     "format": "{}",
     "return-type": "json",
-    "interval": 120,
+    "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/services/apps/discord-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh discord",
     "on-click-right": "$WAYBAR_HOME/scripts/services/apps/discord-click.sh mute",
@@ -163,7 +163,7 @@
     "return-type": "json",
     "signal": 20,
     "interval": "once",
-    "exec": "$WAYBAR_HOME/scripts/system/touchpad-status.sh",
+    "exec": "$WAYBAR_HOME/scripts/lib/compositor-gate.sh --show hyprland -- $WAYBAR_HOME/scripts/system/touchpad-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/system/touchpad.py --toggle",
     "on-click-right": "$WAYBAR_HOME/scripts/system/touchpad-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh 20"
   },
@@ -199,14 +199,14 @@
     "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/services/devices/device-battery-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh solaar",
-    "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open.sh systemsettings",
+    "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open-key.sh input_settings",
     "on-click-middle": "$WAYBAR_HOME/scripts/services/devices/device-battery-status.sh --refresh"
   },
   "custom/streamdeck": {
     "format": "{}",
     "return-type": "json",
     "signal": 24,
-    "interval": 30,
+    "interval": "once",
     "tooltip": true,
     "exec": "$WAYBAR_HOME/scripts/services/devices/streamdeck-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh streamdeck",

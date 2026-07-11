@@ -12,6 +12,8 @@ if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
   # shellcheck disable=SC1091
   . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 fi
+# shellcheck source=compositor-session.sh
+. "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 
 notify() {
   command -v notify-send >/dev/null 2>&1 && notify-send "$1" "$2" || true
@@ -51,17 +53,63 @@ is_active() {
 }
 
 open_app_permissions() {
-  open_settings_app "$(waybar_settings_get '.apps.privacy_settings' 'systemsettings6 kcm_app-permissions')"
+  local comp settings hypr_override
+  comp="$(detect_compositor)"
+  settings="$(waybar_settings_get '.apps.privacy_settings' 'systemsettings6 kcm_app-permissions')"
+  case "$comp" in
+    kde)
+      open_settings_app "$settings"
+      ;;
+    *)
+      hypr_override="$(waybar_settings_get '.apps.privacy_settings_hyprland' '')"
+      if [ -n "$hypr_override" ]; then
+        open_settings_app "$hypr_override"
+        return
+      fi
+      # Honor explicit non-Plasma overrides (tests / custom tooling).
+      case "$settings" in
+        systemsettings*|kcm_*)
+          refresh_privacy
+          status_notify "Privacy" screenshare
+          notify "Privacy" "On Hyprland, revoke sharing from the portal prompt or close the sharing app"
+          ;;
+        *)
+          open_settings_app "$settings"
+          ;;
+      esac
+      ;;
+  esac
 }
 
 open_camera_settings() {
-  local cam
-  cam=$(waybar_settings_get '.apps.camera_settings' 'systemsettings6 kcm_kamera')
-  if [ -n "$cam" ]; then
-    open_settings_app "$cam"
-    return
-  fi
-  open_app_permissions
+  local comp cam hypr_override
+  comp="$(detect_compositor)"
+  cam="$(waybar_settings_get '.apps.camera_settings' 'systemsettings6 kcm_kamera')"
+  case "$comp" in
+    kde)
+      if [ -n "$cam" ]; then
+        open_settings_app "$cam"
+        return
+      fi
+      open_app_permissions
+      ;;
+    *)
+      hypr_override="$(waybar_settings_get '.apps.camera_settings_hyprland' '')"
+      if [ -n "$hypr_override" ]; then
+        open_settings_app "$hypr_override"
+        return
+      fi
+      case "$cam" in
+        systemsettings*|kcm_*)
+          refresh_privacy
+          status_notify "Webcam" webcam
+          ;;
+        *)
+          open_settings_app "$cam"
+          ;;
+      esac
+      ;;
+  esac
 }
 
 status_notify() {

@@ -25,13 +25,29 @@ else
 fi
 
 open_bt_settings() {
+  compositor=$(detect_compositor)
+
+  case "$compositor" in
+    kde)
+      for cmd in systemsettings6 systemsettings; do
+        if command -v "$cmd" >/dev/null 2>&1; then
+          "$cmd" kcm_bluetooth &
+          exit 0
+        fi
+      done
+      if command -v kcmshell6 >/dev/null 2>&1; then
+        kcmshell6 kcm_bluetooth &
+        exit 0
+      fi
+      ;;
+  esac
+
   if command -v blueman-manager >/dev/null 2>&1; then
     blueman-manager &
     exit 0
   fi
 
   if command -v bluetoothctl >/dev/null 2>&1; then
-    compositor=$(detect_compositor)
     term=$(_pick_terminal "$compositor")
     if [ -n "$term" ]; then
       _run_in_terminal "$term" bluetoothctl

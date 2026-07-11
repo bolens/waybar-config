@@ -91,10 +91,20 @@ case "$action" in
     confirm_action "logout" || exit 0
     case "$compositor" in
       hyprland)
-        hyprctl dispatch exit
+        if command -v hyprctl >/dev/null 2>&1; then
+          hyprctl dispatch exit || loginctl terminate-session "${XDG_SESSION_ID:-}"
+        else
+          loginctl terminate-session "${XDG_SESSION_ID:-}"
+        fi
         ;;
       kde)
-        qdbus org.kde.Shutdown /Shutdown org.kde.Shutdown.logout || loginctl terminate-session "${XDG_SESSION_ID:-}"
+        if command -v qdbus6 >/dev/null 2>&1; then
+          qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout || loginctl terminate-session "${XDG_SESSION_ID:-}"
+        elif command -v qdbus >/dev/null 2>&1; then
+          qdbus org.kde.Shutdown /Shutdown org.kde.Shutdown.logout || loginctl terminate-session "${XDG_SESSION_ID:-}"
+        else
+          loginctl terminate-session "${XDG_SESSION_ID:-}"
+        fi
         ;;
       *)
         loginctl terminate-session "${XDG_SESSION_ID:-}"

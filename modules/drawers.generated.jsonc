@@ -37,7 +37,7 @@
   "custom/hardware-drawer": {
     "format": "󰻠",
     "tooltip": true,
-    "tooltip-format": "Hardware\nContains: CPU · GPU · Memory · Disk · PSU · Fans\nClick to toggle"
+    "tooltip-format": "Hardware\nContains: CPU · GPU · Memory · Disk · PSU · Fans · Liquidctl\nClick to toggle"
   },
   "custom/power-drawer": {
     "format": "",

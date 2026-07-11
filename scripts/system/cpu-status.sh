@@ -7,18 +7,19 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
 
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-
-cpu_warn=$(waybar_settings_get '.thresholds.cpu.usage.warning' '60')
-cpu_crit=$(waybar_settings_get '.thresholds.cpu.usage.critical' '85')
-cpu_temp_warn=$(waybar_settings_get '.thresholds.cpu.temp.warning' '75')
-cpu_temp_crit=$(waybar_settings_get '.thresholds.cpu.temp.critical' '85')
 
 cached_file="$cache_dir/cpu-icon.json"
 
 if serve_metrics_cache_or_refresh "$cached_file" 8 "$cache_dir" "$script_dir"; then
   exit 0
 fi
+
+# Thresholds only needed on cache miss / icon rebuild.
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+cpu_warn=$(waybar_settings_get '.thresholds.cpu.usage.warning' '60')
+cpu_crit=$(waybar_settings_get '.thresholds.cpu.usage.critical' '85')
+cpu_temp_warn=$(waybar_settings_get '.thresholds.cpu.temp.warning' '75')
+cpu_temp_crit=$(waybar_settings_get '.thresholds.cpu.temp.critical' '85')
 
 # 3. Hard fallback for the first launch if cache does not exist yet
 metrics="$("$WAYBAR_SCRIPTS/infra/system-metrics-collector.sh" 2>/dev/null || true)"

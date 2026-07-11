@@ -20,6 +20,22 @@ def get_touchpad_device():
         pass
     return None
 
+def detect_compositor() -> str:
+    env = os.environ.get("WAYBAR_COMPOSITOR", "").strip()
+    if env in ("hyprland", "kde", "unknown"):
+        return env
+    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        return "hyprland"
+    desktop = "".join(
+        os.environ.get(key, "")
+        for key in ("XDG_CURRENT_DESKTOP", "XDG_SESSION_DESKTOP", "DESKTOP_SESSION")
+    )
+    if any(token in desktop for token in ("Hyprland", "hyprland")):
+        return "hyprland"
+    if any(token in desktop for token in ("KDE", "Plasma", "plasma")):
+        return "kde"
+    return "unknown"
+
 def main():
     home = os.path.expanduser("~")
     cache_dir = os.environ.get("XDG_CACHE_HOME", os.path.join(home, ".cache"))
@@ -40,6 +56,9 @@ def main():
     cache_file = os.path.join(cache_dir, "waybar/touchpad-status.json")
 
     if mode == "--toggle":
+        if detect_compositor() != "hyprland":
+            subprocess.run(["notify-send", "Touchpad Status", "Touchpad toggle is only available on Hyprland."])
+            sys.exit(0)
         device_name = get_touchpad_device()
         if not device_name:
             subprocess.run(["notify-send", "Touchpad Status", "No touchpad device found."])

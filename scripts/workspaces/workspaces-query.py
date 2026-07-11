@@ -233,6 +233,10 @@ def build_hyprland_state(output: str | None = None) -> dict:
 
 
 def detect_compositor() -> str:
+    env = os.environ.get("WAYBAR_COMPOSITOR", "").strip()
+    if env in ("hyprland", "kde", "unknown"):
+        return env
+
     if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
         return "hyprland"
 
@@ -246,22 +250,32 @@ def detect_compositor() -> str:
     if any(token in desktop for token in ("KDE", "Plasma", "plasma")):
         return "kde"
 
-    try:
-        subprocess.run(["pgrep", "-x", "Hyprland"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return "hyprland"
-    except subprocess.CalledProcessError:
-        pass
-
-    try:
-        subprocess.run(
-            ["pgrep", "-x", "kwin_wayland"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+    if os.environ.get("KDE_SESSION_VERSION"):
         return "kde"
-    except subprocess.CalledProcessError:
-        pass
+
+    for proc in ("kwin_wayland", "kwin_x11"):
+        try:
+            subprocess.run(
+                ["pgrep", "-x", proc],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            return "kde"
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+    for proc in ("Hyprland", "hyprland"):
+        try:
+            subprocess.run(
+                ["pgrep", "-x", proc],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            return "hyprland"
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
 
     return "unknown"
 

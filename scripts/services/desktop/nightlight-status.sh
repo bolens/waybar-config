@@ -22,11 +22,11 @@ temp_setting=$(waybar_settings_get '.nightlight.temperature' '')
 
 get_backend() {
   comp="$(detect_compositor)"
-  if [ "$comp" = "kde" ]; then
-    printf 'kde\n'
-  else
-    printf 'hypr\n'
-  fi
+  case "$comp" in
+    kde) printf 'kde\n' ;;
+    hyprland) printf 'hypr\n' ;;
+    *) printf 'none\n' ;;
+  esac
 }
 
 qdbus_cmd() {
@@ -110,7 +110,7 @@ EOF
 
       emit_inactive "kde"
       ;;
-    *)
+    hypr)
       if pgrep -x hyprsunset >/dev/null 2>&1; then
         cmdline=$(pgrep -af '^hyprsunset' | awk 'NR==1 {print; exit}' || true)
         temp=$(printf '%s\n' "$cmdline" | sed -n 's/.* -t \([0-9][0-9]*\).*/\1/p')
@@ -120,6 +120,9 @@ EOF
       fi
 
       emit_inactive "hyprsunset"
+      ;;
+    *)
+      emit_inactive "unavailable"
       ;;
   esac
 }

@@ -7,12 +7,6 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
 
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-
-gpu_warn=$(waybar_settings_get '.thresholds.gpu.util.warning' '70')
-gpu_crit=$(waybar_settings_get '.thresholds.gpu.util.critical' '90')
-gpu_temp_warn=$(waybar_settings_get '.thresholds.gpu.temp.warning' '75')
-gpu_temp_crit=$(waybar_settings_get '.thresholds.gpu.temp.critical' '83')
 
 cached_file="$cache_dir/gpu-icon.json"
 
@@ -20,6 +14,12 @@ if serve_metrics_cache_or_refresh "$cached_file" 12 "$cache_dir" "$script_dir"; 
   exit 0
 fi
 
+# Thresholds only needed on cache miss / icon rebuild.
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+gpu_warn=$(waybar_settings_get '.thresholds.gpu.util.warning' '70')
+gpu_crit=$(waybar_settings_get '.thresholds.gpu.util.critical' '90')
+gpu_temp_warn=$(waybar_settings_get '.thresholds.gpu.temp.warning' '75')
+gpu_temp_crit=$(waybar_settings_get '.thresholds.gpu.temp.critical' '83')
 
 # 3. Hard fallback for the first launch if cache does not exist yet
 metrics="$("$WAYBAR_SCRIPTS/infra/system-metrics-collector.sh" 2>/dev/null || true)"

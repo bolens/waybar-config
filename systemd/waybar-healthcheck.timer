@@ -3,8 +3,8 @@ Description=Run Waybar healthcheck periodically
 
 [Timer]
 OnBootSec=45s
-OnUnitActiveSec=10s
-AccuracySec=5s
+OnUnitActiveSec=30s
+AccuracySec=10s
 Unit=waybar-healthcheck.service
 
 [Install]

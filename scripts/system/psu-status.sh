@@ -20,11 +20,6 @@ if [ -f "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh" ]; then
 else
   . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 fi
-. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-psu_temp_warn=$(waybar_settings_get '.thresholds.psu.temp.warning' '55')
-psu_temp_crit=$(waybar_settings_get '.thresholds.psu.temp.critical' '65')
-
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -34,6 +29,10 @@ if [ "${1:-}" != "--refresh" ]; then
 fi
 
 # --refresh mode
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+psu_temp_warn=$(waybar_settings_get '.thresholds.psu.temp.warning' '55')
+psu_temp_crit=$(waybar_settings_get '.thresholds.psu.temp.critical' '65')
+
 # 1. Find corsairpsu hwmon path:
 # Corsair digital power supplies report real-time telemetry (watts, volts, temp) via the corsairpsu driver.
 # We cache the sysfs path under hwmon to avoid walking the directory tree on every refresh.

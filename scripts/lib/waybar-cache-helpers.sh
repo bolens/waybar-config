@@ -5,7 +5,8 @@
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 waybar_module_interval() {
   # Usage: waybar_module_interval <key> [fallback]
-  # Reads module_intervals from compiled settings JSON. "once" → fallback.
+  # Reads module_intervals from compiled settings JSON.
+  # "once" → long cache TTL (signal-driven modules should not be re-probed by libraries).
   key="$1"
   fallback="${2:-60}"
   settings="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/data/waybar-settings.json"
@@ -16,7 +17,7 @@ waybar_module_interval() {
   val="$(jq -r --arg k "$key" --argjson fb "$fallback" '
     (.module_intervals[$k] // .poll_intervals[$k] // $fb) as $v
     | if ($v|type) == "number" then $v
-      elif $v == "once" then $fb
+      elif $v == "once" then 86400
       else $fb end
   ' "$settings" 2>/dev/null || printf '%s' "$fallback")"
   printf '%s' "$val"
@@ -388,7 +389,7 @@ check_systemd_scan_service() {
   local is_refresh="${14:-}"
 
   if [ "$is_refresh" != "--refresh" ]; then
-    # Check if scan is running
+    # Non-blocking: if a scan is active, emit one "scanning" frame and refresh later.
     local active_state
     active_state=$(timeout 2 systemctl show -p ActiveState "$service_name" 2>/dev/null | awk -F= '{print $2}')
     if [ "$active_state" = "active" ] || [ "$active_state" = "activating" ]; then
@@ -397,36 +398,25 @@ check_systemd_scan_service() {
         . "$WAYBAR_SCRIPTS/lib/unicode-animations-lib.sh"
       fi
 
-      # Load last scan date to show in tooltip
       local last_scan_date="N/A"
       local stamp_file="/var/lib/systemd/timers/stamp-${timer_name}.timer"
       if [ -f "$stamp_file" ]; then
         last_scan_date=$(format_locale_datetime "$(stat -c %Y "$stamp_file")")
       fi
 
-      local frame=0
-      local i
-      for i in $(seq 1 75); do # 75 * 0.2s = 15s
-        if [ $((i % 25)) -eq 0 ]; then
-          local state
-          state=$(timeout 2 systemctl show -p ActiveState "$service_name" 2>/dev/null | awk -F= '{print $2}')
-          if [ "$state" != "active" ] && [ "$state" != "activating" ]; then
-            break
-          fi
-        fi
-        local spinner
-        if command -v get_anim_frame >/dev/null 2>&1; then
-          spinner=$(get_anim_frame "dots" "$frame")
-        else
-          spinner="󰑐"
-        fi
-        emit_waybar_json "$spinner $label" "${display_name}\nStatus: Scanning...\nLast Scan: $last_scan_date\n\nScan is running in background..." "scanning"
-        frame=$((frame + 1))
-        sleep 0.2
-      done
-
-      # Trigger refresh to write final state to cache
-      "$script_path" --refresh >/dev/null 2>&1 &
+      local spinner="󰑐"
+      if command -v get_anim_frame >/dev/null 2>&1; then
+        spinner=$(get_anim_frame "dots" 0)
+      fi
+      emit_waybar_json "$spinner $label" "${display_name}\nStatus: Scanning...\nLast Scan: $last_scan_date\n\nScan is running in background..." "scanning"
+      # Background refresh will replace cache when the scan finishes.
+      (
+        while timeout 2 systemctl show -p ActiveState "$service_name" 2>/dev/null | awk -F= '{print $2}' \
+          | grep -Eq '^(active|activating)$'; do
+          sleep 2
+        done
+        "$script_path" --refresh >/dev/null 2>&1 || true
+      ) &
       exit 0
     fi
 

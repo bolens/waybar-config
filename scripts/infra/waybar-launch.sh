@@ -92,10 +92,27 @@ config_inputs_newer_than() {
 	return 1
 }
 
+# shellcheck source=compositor-session.sh
+. "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
+# Drop stale session cache so launch always re-detects (Plasma ↔ Hyprland switch).
+rm -f "${XDG_RUNTIME_DIR:-/tmp}/waybar-compositor" 2>/dev/null || true
+unset WAYBAR_COMPOSITOR
+launch_compositor="$(detect_compositor)"
+export WAYBAR_COMPOSITOR="$launch_compositor"
+
 regen_stamp="${XDG_CACHE_HOME}/waybar/generated.stamp"
+comp_stamp="${XDG_CACHE_HOME}/waybar/generated-compositor"
 mkdir -p "${XDG_CACHE_HOME}/waybar"
 
+need_regen=0
 if config_inputs_newer_than "$regen_stamp"; then
+	need_regen=1
+elif [ ! -f "$comp_stamp" ] || [ "$(cat "$comp_stamp" 2>/dev/null || true)" != "$launch_compositor" ]; then
+	# Desk/hypr modules are compositor-specific; force regen on switch.
+	need_regen=1
+fi
+
+if [ "$need_regen" -eq 1 ]; then
 	if [ -x "$WAYBAR_SCRIPTS/generate/generate-settings.sh" ]; then
 		"$WAYBAR_SCRIPTS/generate/generate-settings.sh"
 	fi
@@ -120,10 +137,11 @@ if config_inputs_newer_than "$regen_stamp"; then
 	fi
 
 	touch "$regen_stamp"
-fi
+	printf '%s\n' "$launch_compositor" >"$comp_stamp"
 
-if [ -x "$WAYBAR_SCRIPTS/ci/validate-generated-config.sh" ]; then
-	"$WAYBAR_SCRIPTS/ci/validate-generated-config.sh"
+	if [ -x "$WAYBAR_SCRIPTS/ci/validate-generated-config.sh" ]; then
+		"$WAYBAR_SCRIPTS/ci/validate-generated-config.sh"
+	fi
 fi
 
 # Prime a smaller critical set asynchronously; remaining modules refresh on interval/signal.
@@ -156,13 +174,18 @@ launch_detached "$WAYBAR_SCRIPTS/system/brightness-status.sh" --refresh
 		start_waybar_listener "$WAYBAR_SCRIPTS/listeners/privacy-listener.sh" privacy
 	fi
 
-	if [ -x "$WAYBAR_SCRIPTS/listeners/active-window-listener-kde.py" ]; then
-		start_waybar_listener "$WAYBAR_SCRIPTS/listeners/active-window-listener-kde.py" kde-activewindow
-	fi
-
-	if [ -x "$WAYBAR_SCRIPTS/listeners/workspaces-hyprland-listener.sh" ]; then
-		start_waybar_listener "$WAYBAR_SCRIPTS/listeners/workspaces-hyprland-listener.sh" hypr-workspaces
-	fi
+	case "$launch_compositor" in
+		kde)
+			if [ -x "$WAYBAR_SCRIPTS/listeners/active-window-listener-kde.py" ]; then
+				start_waybar_listener "$WAYBAR_SCRIPTS/listeners/active-window-listener-kde.py" kde-activewindow
+			fi
+			;;
+		hyprland)
+			if [ -x "$WAYBAR_SCRIPTS/listeners/workspaces-hyprland-listener.sh" ]; then
+				start_waybar_listener "$WAYBAR_SCRIPTS/listeners/workspaces-hyprland-listener.sh" hypr-workspaces
+			fi
+			;;
+	esac
 
 	if [ -x "$WAYBAR_SCRIPTS/listeners/device-notifier-listener.sh" ]; then
 		start_waybar_listener "$WAYBAR_SCRIPTS/listeners/device-notifier-listener.sh" device-notifier

@@ -172,7 +172,8 @@
       "custom/memory",
       "custom/disk",
       "custom/psu",
-      "custom/fans"
+      "custom/fans",
+      "custom/liquidctl"
     ]
   },
   "group/security": {

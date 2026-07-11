@@ -6,10 +6,6 @@ set -eu
 
 script_dir="$(dirname "$0")"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-
-ups_warn=$(waybar_settings_get '.thresholds.ups.charge.warning' '25')
-ups_crit=$(waybar_settings_get '.thresholds.ups.charge.critical' '10')
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 slug="$(printf '%s' "${NUT_TARGET:-auto}" | tr -c 'A-Za-z0-9._-' '_' | head -c 120)"
@@ -20,6 +16,10 @@ ttl="$(waybar_module_interval ups 30)"
 stale_lock_ttl=45
 
 mkdir -p "$cache_dir"
+
+# Thresholds loaded only on --refresh (after cache miss).
+ups_warn=25
+ups_crit=10
 
 
 format_runtime() {
@@ -69,9 +69,6 @@ format_runtime() {
 }
 
 upsc_list=""
-if command -v upsc >/dev/null 2>&1; then
-  upsc_list=$(timeout 2 upsc -l 127.0.0.1 2>/dev/null || true)
-fi
 
 # nut_target_candidates:
 # Generates a list of potential NUT targets to try.
@@ -164,6 +161,10 @@ find_upower_ups_device() {
 # Main orchestrator for UPS state discovery.
 # Tries NUT (via local/remote daemons) first, then falls back to local UPower.
 collect_json() {
+  if command -v upsc >/dev/null 2>&1; then
+    upsc_list=$(timeout 2 upsc -l 127.0.0.1 2>/dev/null || true)
+  fi
+
   nut_listed=""
   if [ -n "$upsc_list" ]; then
     nut_listed=$(printf '%s\n' "$upsc_list" | awk 'NF {print; exit}')
@@ -235,6 +236,10 @@ if [ "${1:-}" != "--refresh" ]; then
   emit_waybar_json "󰦌" "Refreshing UPS status in background" "disabled"
   exit 0
 fi
+
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+ups_warn=$(waybar_settings_get '.thresholds.ups.charge.warning' '25')
+ups_crit=$(waybar_settings_get '.thresholds.ups.charge.critical' '10')
 
 json="$(collect_json)"
 printf '%s\n' "$json"

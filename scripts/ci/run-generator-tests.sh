@@ -384,7 +384,7 @@ fi
 cp -f data/waybar-settings.jsonc "$TEST_DIR/data/waybar-settings.jsonc"
 WAYBAR_HOME="$TEST_DIR" bash -c ". '$TEST_DIR/scripts/lib/waybar-settings.sh'" >/dev/null
 
-# waybar_module_interval reads module_intervals (and maps once -> fallback)
+# waybar_module_interval reads module_intervals ("once" → long cache TTL)
 ttl_weather=$(WAYBAR_HOME="$TEST_DIR" bash -c ". '$TEST_DIR/scripts/lib/waybar-cache-helpers.sh'; waybar_module_interval weather 999")
 ttl_once=$(WAYBAR_HOME="$TEST_DIR" bash -c ". '$TEST_DIR/scripts/lib/waybar-cache-helpers.sh'; waybar_module_interval keyboard_layout 42")
 ttl_missing=$(WAYBAR_HOME="$TEST_DIR" bash -c ". '$TEST_DIR/scripts/lib/waybar-cache-helpers.sh'; waybar_module_interval totally_missing_key_xyz 77")
@@ -392,9 +392,9 @@ if [ "$ttl_weather" != "1800" ]; then
   echo "FAIL: waybar_module_interval weather expected 1800 got $ttl_weather" >&2
   fail=1
 fi
-# keyboard_layout is "once" in settings → fallback
-if [ "$ttl_once" != "42" ]; then
-  echo "FAIL: waybar_module_interval once-key should return fallback 42 got $ttl_once" >&2
+# keyboard_layout is "once" in settings → long TTL (not the short fallback)
+if [ "$ttl_once" != "86400" ]; then
+  echo "FAIL: waybar_module_interval once-key should return 86400 got $ttl_once" >&2
   fail=1
 fi
 if [ "$ttl_missing" != "77" ]; then
@@ -974,12 +974,12 @@ if ! echo "$clean_sys" | jq -e '."custom/sunshine"."on-click-right" == "TEST_SUN
   echo "FAIL: Custom sunshine on-click-right override not compiled correctly into system.generated.jsonc" >&2
   fail=1
 fi
-if ! echo "$clean_sys" | jq -e '."custom/disk"."on-click" | test("TEST_FILE_MANAGER")' >/dev/null 2>&1; then
-  echo "FAIL: apps.file_manager not wired into custom/disk on-click" >&2
+if ! echo "$clean_sys" | jq -e '."custom/disk"."on-click" | test("app-open-key\\.sh file_manager")' >/dev/null 2>&1; then
+  echo "FAIL: apps.file_manager not wired into custom/disk on-click via app-open-key.sh" >&2
   fail=1
 fi
-if ! echo "$clean_sys" | jq -e '."custom/ups"."on-click" | test("TEST_POWER_SETTINGS")' >/dev/null 2>&1; then
-  echo "FAIL: apps.power_settings not wired into custom/ups on-click" >&2
+if ! echo "$clean_sys" | jq -e '."custom/ups"."on-click" | test("app-open-key\\.sh power_settings")' >/dev/null 2>&1; then
+  echo "FAIL: apps.power_settings not wired into custom/ups on-click via app-open-key.sh" >&2
   fail=1
 fi
 
@@ -1095,8 +1095,8 @@ if ! echo "$clean_utils" | jq -e '."custom/device-battery"."on-click" | test("TE
   echo "FAIL: apps.solaar not wired into custom/device-battery on-click" >&2
   fail=1
 fi
-if ! echo "$clean_utils" | jq -e '."custom/device-battery"."on-click-right" | test("TEST_INPUT_SETTINGS")' >/dev/null 2>&1; then
-  echo "FAIL: apps.input_settings not wired into custom/device-battery on-click-right" >&2
+if ! echo "$clean_utils" | jq -e '."custom/device-battery"."on-click-right" | test("app-open-key\\.sh input_settings")' >/dev/null 2>&1; then
+  echo "FAIL: apps.input_settings not wired into custom/device-battery on-click-right via app-open-key.sh" >&2
   fail=1
 fi
 if ! echo "$clean_utils" | jq -e '."custom/systemd"."on-click" | test("TEST_SYSTEMD_FAILED")' >/dev/null 2>&1; then
@@ -1587,6 +1587,194 @@ print(','.join(json.loads(t)['group/desk-hypr']['modules']))
   esac
 fi
 rm -rf "$HYPR_DIR"
+
+# liquidctl module: generator wiring + status script behavior (fixture CLI)
+echo "Testing liquidctl module wiring and status script..."
+# Restore SoT settings (prior override tests replace waybar-settings.jsonc) and regenerate.
+cp "$ROOT_DIR/data/waybar-settings.jsonc" "$TEST_DIR/data/waybar-settings.jsonc"
+if ! "$TEST_DIR/scripts/generate/generate-settings.sh"; then
+  echo "FAIL: generate-settings.sh failed before liquidctl checks" >&2
+  fail=1
+fi
+if ! jq -e '."custom/liquidctl".exec | test("system/liquidctl-status\\.sh$")' "$TEST_DIR/modules/system.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/liquidctl exec missing system/liquidctl-status.sh" >&2
+  fail=1
+fi
+if ! jq -e '."custom/liquidctl".interval == 60' "$TEST_DIR/modules/system.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/liquidctl interval expected 60 from module_intervals.liquidctl" >&2
+  fail=1
+fi
+if ! jq -e '."custom/liquidctl"."on-click-middle" | test("liquidctl-status\\.sh --refresh")' "$TEST_DIR/modules/system.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/liquidctl middle-click should refresh" >&2
+  fail=1
+fi
+if ! jq -e '.["group/hardware"].modules | index("custom/liquidctl")' "$TEST_DIR/modules/groups.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: custom/liquidctl missing from group/hardware modules" >&2
+  fail=1
+fi
+if ! jq -e '.module_intervals.liquidctl == 60' "$TEST_DIR/data/waybar-settings.json" >/dev/null 2>&1; then
+  echo "FAIL: module_intervals.liquidctl expected 60 in compiled settings" >&2
+  fail=1
+fi
+if ! jq -e '.thresholds.liquidctl.temp.warning == 55 and .thresholds.liquidctl.temp.critical == 65' "$TEST_DIR/data/waybar-settings.json" >/dev/null 2>&1; then
+  echo "FAIL: thresholds.liquidctl.temp missing/wrong in compiled settings" >&2
+  fail=1
+fi
+if [ ! -x "$TEST_DIR/scripts/system/liquidctl-status.sh" ]; then
+  echo "FAIL: liquidctl-status.sh missing or not executable" >&2
+  fail=1
+fi
+if ! bash -n "$TEST_DIR/scripts/system/liquidctl-status.sh"; then
+  echo "FAIL: liquidctl-status.sh failed bash -n" >&2
+  fail=1
+fi
+
+LIQUID_FAKE=$(mktemp -d)
+cat >"$LIQUID_FAKE/liquidctl" <<'EOF'
+#!/usr/bin/env bash
+# Fixture: AIO + RGB-only device (RGB should be ignored)
+cat <<'JSON'
+[
+  {
+    "description": "NZXT Kraken X63",
+    "bus": "hid",
+    "address": "/dev/hidraw0",
+    "status": [
+      {"key": "Liquid temperature", "value": 56.5, "unit": "°C"},
+      {"key": "Fan speed", "value": 1200.0, "unit": "rpm"},
+      {"key": "Pump speed", "value": 2150.0, "unit": "rpm"}
+    ]
+  },
+  {
+    "description": "ASUS Aura LED Controller",
+    "bus": "hid",
+    "address": "/dev/hidraw1",
+    "status": [
+      {"key": "ARGB channels", "value": 3, "unit": ""},
+      {"key": "RGB channels", "value": 1, "unit": ""}
+    ]
+  }
+]
+JSON
+EOF
+chmod +x "$LIQUID_FAKE/liquidctl"
+LIQUID_CACHE=$(mktemp -d)
+liquid_out=$(
+  XDG_CACHE_HOME="$LIQUID_CACHE" \
+  WAYBAR_HOME="$TEST_DIR" \
+  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+) || true
+if ! printf '%s' "$liquid_out" | jq -e '.class == "warning"' >/dev/null 2>&1; then
+  echo "FAIL: liquidctl-status expected warning class at 56.5°C (warn=55): $liquid_out" >&2
+  fail=1
+fi
+if ! printf '%s' "$liquid_out" | jq -e '.text | test("󰖌")' >/dev/null 2>&1; then
+  echo "FAIL: liquidctl-status text missing liquidctl icon: $liquid_out" >&2
+  fail=1
+fi
+if ! printf '%s' "$liquid_out" | jq -e '.tooltip | test("Kraken") and (test("Aura") | not)' >/dev/null 2>&1; then
+  echo "FAIL: liquidctl tooltip should include Kraken and skip Aura-only: $liquid_out" >&2
+  fail=1
+fi
+# Missing binary → disconnected (empty text)
+liquid_missing=$(
+  XDG_CACHE_HOME="$LIQUID_CACHE" \
+  WAYBAR_HOME="$TEST_DIR" \
+  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/no-such-liquidctl" \
+  PATH="/usr/bin:/bin" \
+  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+) || true
+if ! printf '%s' "$liquid_missing" | jq -e '.class == "disconnected" and .text == ""' >/dev/null 2>&1; then
+  echo "FAIL: liquidctl missing binary should emit disconnected: $liquid_missing" >&2
+  fail=1
+fi
+# Empty status JSON → disconnected
+cat >"$LIQUID_FAKE/liquidctl" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' '[]'
+EOF
+chmod +x "$LIQUID_FAKE/liquidctl"
+liquid_empty=$(
+  XDG_CACHE_HOME="$LIQUID_CACHE" \
+  WAYBAR_HOME="$TEST_DIR" \
+  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+) || true
+if ! printf '%s' "$liquid_empty" | jq -e '.class == "disconnected"' >/dev/null 2>&1; then
+  echo "FAIL: liquidctl empty status should emit disconnected: $liquid_empty" >&2
+  fail=1
+fi
+rm -rf "$LIQUID_FAKE" "$LIQUID_CACHE"
+
+# Partial failure: bulk --json suppressed (Aura error), per-device --pick still works
+LIQUID_FAKE=$(mktemp -d)
+LIQUID_CACHE=$(mktemp -d)
+cat >"$LIQUID_FAKE/liquidctl" <<'EOF'
+#!/usr/bin/env bash
+# Mimic liquidctl: bulk status --json fails when any device errors; per-pick works.
+args=("$@")
+has_json=0
+has_list=0
+has_status=0
+pick=""
+i=0
+while [ $i -lt ${#args[@]} ]; do
+  case "${args[$i]}" in
+    --json) has_json=1 ;;
+    list) has_list=1 ;;
+    status) has_status=1 ;;
+    --pick)
+      i=$((i + 1))
+      pick="${args[$i]:-}"
+      ;;
+  esac
+  i=$((i + 1))
+done
+if [ "$has_list" -eq 1 ] && [ "$has_json" -eq 1 ]; then
+  cat <<'JSON'
+[
+  {"description":"Corsair HX1500i","driver":"CorsairHidPsu"},
+  {"description":"ASUS Aura LED Controller","driver":"AuraLed"}
+]
+JSON
+  exit 0
+fi
+if [ "$has_status" -eq 1 ] && [ "$has_json" -eq 1 ]; then
+  if [ -z "$pick" ]; then
+    # Bulk call: Aura would error → liquidctl prints no JSON
+    exit 1
+  fi
+  if [ "$pick" = "0" ]; then
+    cat <<'JSON'
+[{"description":"Corsair HX1500i","status":[
+  {"key":"VRM temperature","value":51.2,"unit":"°C"},
+  {"key":"Total power output","value":154.0,"unit":"W"}
+]}]
+JSON
+    exit 0
+  fi
+  exit 1
+fi
+exit 1
+EOF
+chmod +x "$LIQUID_FAKE/liquidctl"
+liquid_partial=$(
+  XDG_CACHE_HOME="$LIQUID_CACHE" \
+  WAYBAR_HOME="$TEST_DIR" \
+  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+) || true
+if ! printf '%s' "$liquid_partial" | jq -e '.class == "normal" and (.tooltip | test("HX1500i")) and (.text | test("󰖌"))' >/dev/null 2>&1; then
+  echo "FAIL: liquidctl partial-failure fallback should show HX telemetry: $liquid_partial" >&2
+  fail=1
+fi
+rm -rf "$LIQUID_FAKE" "$LIQUID_CACHE"
+echo "PASS: liquidctl module wiring and status script behavior"
 
 # Validate must reject flat scripts/<file>.sh paths (journal: No such file after domain move)
 echo "Verifying validate rejects flat script paths..."

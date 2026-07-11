@@ -20,13 +20,6 @@ if [ -f "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh" ]; then
 else
   . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 fi
-. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-fan_cpu_warn=$(waybar_settings_get '.thresholds.fans.cpu.warning' '1600')
-fan_cpu_crit=$(waybar_settings_get '.thresholds.fans.cpu.critical' '2000')
-fan_gpu_warn=$(waybar_settings_get '.thresholds.fans.gpu.warning' '70')
-fan_gpu_crit=$(waybar_settings_get '.thresholds.fans.gpu.critical' '85')
-
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -36,6 +29,12 @@ if [ "${1:-}" != "--refresh" ]; then
 fi
 
 # --refresh mode
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+fan_cpu_warn=$(waybar_settings_get '.thresholds.fans.cpu.warning' '1600')
+fan_cpu_crit=$(waybar_settings_get '.thresholds.fans.cpu.critical' '2000')
+fan_gpu_warn=$(waybar_settings_get '.thresholds.fans.gpu.warning' '70')
+fan_gpu_crit=$(waybar_settings_get '.thresholds.fans.gpu.critical' '85')
+
 
 # 1. Discover asusec (Motherboard fan controller via ASUS Embedded Controller driver):
 # Traverses Linux Hardware Monitoring (hwmon) sysfs interfaces.

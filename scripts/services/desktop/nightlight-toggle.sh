@@ -18,11 +18,11 @@ temp="${temp_setting:-${HYPRSUNSET_TEMP:-4200}}"
 
 get_backend() {
   comp="$(detect_compositor)"
-  if [ "$comp" = "kde" ]; then
-    printf 'kde\n'
-  else
-    printf 'hypr\n'
-  fi
+  case "$comp" in
+    kde) printf 'kde\n' ;;
+    hyprland) printf 'hypr\n' ;;
+    *) printf 'none\n' ;;
+  esac
 }
 
 qdbus_cmd() {
@@ -123,7 +123,7 @@ case "$mode" in
           notify-send "Night light" "Failed to toggle KDE Night Color" 2>/dev/null || true
         fi
         ;;
-      *)
+      hypr)
         if pgrep -x hyprsunset >/dev/null 2>&1; then
           pkill -x hyprsunset >/dev/null 2>&1 || true
           notify-send "Night light" "Disabled" 2>/dev/null || true
@@ -135,6 +135,9 @@ case "$mode" in
           fi
         fi
         ;;
+      *)
+        notify-send "Night light" "Unsupported compositor" 2>/dev/null || true
+        ;;
     esac
     refresh_waybar
     ;;
@@ -144,13 +147,16 @@ case "$mode" in
         kde_reconfigure
         notify-send "Night light" "KDE Night Color reloaded" 2>/dev/null || true
         ;;
-      *)
+      hypr)
         pkill -x hyprsunset >/dev/null 2>&1 || true
         if start_nightlight; then
           notify-send "Night light" "Restarted at ${temp}K" 2>/dev/null || true
         else
           notify-send "Night light" "Failed to restart (hyprsunset backend unavailable or unsupported compositor)" 2>/dev/null || true
         fi
+        ;;
+      *)
+        notify-send "Night light" "Unsupported compositor" 2>/dev/null || true
         ;;
     esac
     refresh_waybar
@@ -180,7 +186,7 @@ case "$mode" in
           fi
         fi
         ;;
-      *)
+      hypr)
         if pgrep -x hyprsunset >/dev/null 2>&1; then
           pkill -x hyprsunset >/dev/null 2>&1 || true
           notify-send "Night light" "Force off" 2>/dev/null || true
@@ -191,6 +197,9 @@ case "$mode" in
             notify-send "Night light" "Failed to force on" 2>/dev/null || true
           fi
         fi
+        ;;
+      *)
+        notify-send "Night light" "Unsupported compositor" 2>/dev/null || true
         ;;
     esac
     refresh_waybar
@@ -204,13 +213,11 @@ case "$mode" in
           notify-send "Night light" "Could not open KDE settings" 2>/dev/null || true
         fi
         ;;
+      hypr)
+        notify-send "Night light" "Edit .nightlight in waybar-settings.jsonc (no GUI on Hyprland)" 2>/dev/null || true
+        ;;
       *)
-        pkill -x hyprsunset >/dev/null 2>&1 || true
-        if start_nightlight; then
-          notify-send "Night light" "Restarted at ${temp}K" 2>/dev/null || true
-        else
-          notify-send "Night light" "Failed to restart (hyprsunset backend unavailable or unsupported compositor)" 2>/dev/null || true
-        fi
+        notify-send "Night light" "Unsupported compositor" 2>/dev/null || true
         ;;
     esac
     refresh_waybar

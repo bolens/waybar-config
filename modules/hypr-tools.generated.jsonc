@@ -2,7 +2,7 @@
   "custom/hyprnotify": {
     "format": "{}",
     "return-type": "json",
-    "interval": 60,
+    "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/services/hypr/hypr-bar-module-status.sh notify",
     "tooltip": false,
     "on-click": "hyprnotify show"
@@ -10,7 +10,7 @@
   "custom/hyprlight": {
     "format": "{}",
     "return-type": "json",
-    "interval": 60,
+    "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/services/hypr/hypr-bar-module-status.sh light",
     "tooltip": false,
     "on-click": "hyprlight osd"

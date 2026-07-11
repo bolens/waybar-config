@@ -206,11 +206,12 @@ def get_default_iface():
 
 def get_mouse_position():
     import os
-    # Try Hyprland
-    if os.environ.get('XDG_CURRENT_DESKTOP', '').lower() == 'hyprland' or os.environ.get('HYPRLAND_INSTANCE_SIGNATURE'):
+    # Prefer shared launch export, then Hyprland signature.
+    comp = (os.environ.get("WAYBAR_COMPOSITOR") or "").strip().lower()
+    if comp == "hyprland" or os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
         try:
-            out = subprocess.check_output(['hyprctl', 'cursorpos'], text=True).strip()
-            x, y = map(int, out.split(','))
+            out = subprocess.check_output(["hyprctl", "cursorpos"], text=True).strip()
+            x, y = map(int, out.split(","))
             return x, y
         except Exception:
             pass
@@ -225,30 +226,44 @@ def get_mouse_position():
         pass
     # Try xdotool (X11)
     try:
-        out = subprocess.check_output(['xdotool', 'getmouselocation', '--shell'], text=True)
-        vals = dict(line.split('=') for line in out.strip().splitlines() if '=' in line)
-        return int(vals['X']), int(vals['Y'])
+        out = subprocess.check_output(["xdotool", "getmouselocation", "--shell"], text=True)
+        vals = dict(line.split("=") for line in out.strip().splitlines() if "=" in line)
+        return int(vals["X"]), int(vals["Y"])
     except Exception:
         pass
     # Try swaymsg (Wayland, sway)
     try:
-        out = subprocess.check_output(['swaymsg', '-t', 'get_seats'], text=True)
+        out = subprocess.check_output(["swaymsg", "-t", "get_seats"], text=True)
         import json
         seats = json.loads(out)
         for seat in seats:
-            if 'devices' in seat:
-                for dev in seat['devices']:
-                    if dev.get('type') == 'pointer' and 'xy' in dev:
-                        return dev['xy']
+            if "devices" in seat:
+                for dev in seat["devices"]:
+                    if dev.get("type") == "pointer" and "xy" in dev:
+                        return dev["xy"]
     except Exception:
         pass
-    # Fallback: center of screen
+    # GTK seat pointer (works on Plasma Wayland once display is up)
+    try:
         display = Gdk.Display.get_default()
-        monitor = display.get_primary_monitor() if display else None
-        if monitor:
-            geo = monitor.get_geometry()
-            return geo.x + geo.width // 2, geo.y + geo.height // 2
-        return 960, 540  # Fallback to 1080p center
+        if display is not None:
+            seat = display.get_default_seat()
+            if seat is not None:
+                pointer = seat.get_pointer()
+                if pointer is not None:
+                    # Gdk 3: get_position; Gdk 4 differs — try both.
+                    if hasattr(pointer, "get_position"):
+                        _screen, x, y = pointer.get_position()
+                        return int(x), int(y)
+            monitor = display.get_primary_monitor() if hasattr(display, "get_primary_monitor") else None
+            if monitor is None and hasattr(display, "get_monitor"):
+                monitor = display.get_monitor(0)
+            if monitor is not None:
+                geo = monitor.get_geometry()
+                return geo.x + geo.width // 2, geo.y + geo.height // 2
+    except Exception:
+        pass
+    return 960, 540  # Fallback to 1080p center
 
 def get_bond_master(iface):
     import os

@@ -39,16 +39,7 @@ open_sound_settings() {
     fi
   done
 
-  # Last resort: KDE system settings (if available and not already tried)
-  if [ "$compositor" != "kde" ]; then
-    for cmd in systemsettings6 systemsettings; do
-      if command -v "$cmd" >/dev/null 2>&1; then
-        "$cmd" kcm_pulseaudio &
-        exit 0
-      fi
-    done
-  fi
-
+  # Last resort only on Plasma (already tried above for kde).
   notify-send "Audio" "No sound settings app found" 2>/dev/null || true
 }
 

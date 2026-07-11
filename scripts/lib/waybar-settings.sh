@@ -29,6 +29,7 @@ compile_jsonc_settings() {
   mkdir -p "$base_dir"
 
   # Prefer jsonc as the only editable source; always compile it to json.
+  # (mtime short-circuits break restore/replace flows where .json outlives .jsonc.)
   if [[ -f "$jsonc_file" ]]; then
     strip_jsonc_comments "$jsonc_file" > "$json_file" 2>/dev/null || true
   elif [[ -f "$json_file" ]]; then
@@ -122,7 +123,12 @@ waybar_module_interval() {
   if [[ -z "$value" || "$value" == "null" ]]; then
     value="$(waybar_settings_get ".poll_intervals.${key}" "$fallback")"
   fi
-  if [[ "$value" == "once" || -z "$value" || "$value" == "null" ]]; then
+  # Signal-driven modules: keep a long cache TTL so library callers do not re-probe.
+  if [[ "$value" == "once" ]]; then
+    printf '86400'
+    return
+  fi
+  if [[ -z "$value" || "$value" == "null" ]]; then
     printf '%s' "$fallback"
     return
   fi

@@ -7,7 +7,7 @@
     "expand": true,
     "align": 0.5,
     "signal": 11,
-    "interval": 120,
+    "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh activate",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close-focused",

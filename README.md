@@ -176,5 +176,5 @@ ShellCheck runs in CI at **warning** severity (see `.shellcheckrc`).
 A list of optional integration packages:
 * **Core**: `qt6-tools` (KDE DBus), `socat` (Hyprland events), `jq` (JSON parsing), `wireplumber` (audio).
 * **Menus**: `rofi` or `wofi` (interactive menus), `cliphist` (clipboard history).
-* **Telemetry**: `networkmanager`, `brightnessctl`, `ddcutil`, `docker`, `upower`, `nut` (UPS status).
+* **Telemetry**: `networkmanager`, `brightnessctl`, `ddcutil`, `docker`, `upower`, `nut` (UPS status), `liquidctl` (AIO / USB cooler & digital PSU status; may need udev rules for non-root HID access).
 * **Hyprland extras** (optional): `hyprwhspr` (voice/dictation module + CSS import in `style.css`).

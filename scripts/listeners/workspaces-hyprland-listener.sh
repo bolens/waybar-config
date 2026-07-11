@@ -39,8 +39,19 @@ if [ -z "$signature" ] && command -v hyprctl >/dev/null 2>&1; then
 fi
 
 [ -n "$signature" ] || exit 0
-socket="/tmp/hypr/${signature}/.socket2.sock"
-[ -S "$socket" ] || exit 0
+# Prefer XDG runtime socket (Hyprland ≥0.40); fall back to legacy /tmp/hypr.
+socket=""
+for candidate in \
+	"${XDG_RUNTIME_DIR:-}/hypr/${signature}/.socket2.sock" \
+	"/tmp/hypr/${signature}/.socket2.sock"
+do
+	[ -n "$candidate" ] || continue
+	if [ -S "$candidate" ]; then
+		socket="$candidate"
+		break
+	fi
+done
+[ -n "$socket" ] || exit 0
 
 update_active_window_cache() {
   if command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then

@@ -19,6 +19,7 @@ drawer_duration='500'
 drawer_class='drawer-child'
 drawer_ltr='false'
 interval=5
+dock_signal=26
 
 if [ -f "$settings" ]; then
   section_order_json="$(jq -c '.dock.section_order // ["web","dev","misc"]' "$settings")"
@@ -27,6 +28,7 @@ if [ -f "$settings" ]; then
   drawer_class="$(jq -r '.drawers.children_class // "drawer-child"' "$settings")"
   drawer_ltr="$(jq -r '.drawers.left_to_right.right // true' "$settings")"
   interval="$(jq -r '.module_intervals.dock_apps // 5' "$settings")"
+  dock_signal="$(jq -r '.signals.dock_apps // 26' "$settings")"
 fi
 
 mapfile -t app_ids < <(
@@ -50,7 +52,7 @@ mapfile -t app_ids < <(
     "format": "{}",
     "return-type": "json",
     "interval": "${interval}",
-    "signal": 11,
+    "signal": ${dock_signal},
     "exec": "${scripts}/dock/dock-launcher.sh ${id} status",
     "on-click": "${scripts}/dock/dock-launcher.sh ${id} click on-click",
     "on-click-right": "${scripts}/dock/dock-launcher.sh ${id} click on-click-right",

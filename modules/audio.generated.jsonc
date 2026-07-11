@@ -24,7 +24,7 @@
   "custom/media-prev": {
     "format": "{}",
     "return-type": "json",
-    "interval": 2,
+    "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/media/media-prev.sh",
     "on-click": "playerctl previous",
     "on-click-right": "playerctl position 30-"
@@ -32,7 +32,7 @@
   "custom/media-next": {
     "format": "{}",
     "return-type": "json",
-    "interval": 2,
+    "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/media/media-next.sh",
     "on-click": "playerctl next",
     "on-click-right": "playerctl position 10+"

@@ -84,10 +84,12 @@ case "$compositor" in
       open) hyprland_open ;;
       dnd|toggle-dnd) hyprland_toggle_dnd ;;
       settings)
-        if command -v swaync-client >/dev/null 2>&1; then
-          swaync-client -t -sw
+        if [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/swaync/config.json" ]; then
+          notify-send "Notifications" "Edit ~/.config/swaync/config.json (no GUI settings on Hyprland)" 2>/dev/null || true
+        elif [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/mako/config" ]; then
+          notify-send "Notifications" "Edit ~/.config/mako/config (no GUI settings on Hyprland)" 2>/dev/null || true
         else
-          hyprland_open
+          notify-send "Notifications" "Configure swaync/mako in ~/.config (no GUI settings on Hyprland)" 2>/dev/null || true
         fi
         ;;
       *) hyprland_open ;;

@@ -12,7 +12,7 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `side-info/` | Side drawer tabs/summaries |
 | `dock/` | Dock launcher + dock-windows |
 | `workspaces/` | Workspaces, active window, keybind hints |
-| `system/` | CPU/mem/disk/gpu/fans/power/brightness/… |
+| `system/` | CPU/mem/disk/gpu/fans/liquidctl/power/brightness/… |
 | `network/` | Wi‑Fi, VPN, ethernet, Tailscale, … |
 | `media/` | Audio, mic, MPRIS |
 | `notifications/` | Notifications + clipboard |

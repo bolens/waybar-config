@@ -69,6 +69,16 @@ case "$action" in
         ;;
     esac
     run_detached "$script_dir/dock-app.sh" "$app_id" "$click_action"
+    # Refresh dock app running indicators (dedicated signal; not dock_windows).
+    sig=26
+    if [ -f "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/data/waybar-settings.json" ] \
+      && command -v jq >/dev/null 2>&1; then
+      sig="$(jq -r '.signals.dock_apps // 26' "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/data/waybar-settings.json")"
+    fi
+    (
+      sleep 1
+      "${WAYBAR_SCRIPTS:-${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts}/lib/waybar-signal.sh" "$sig" >/dev/null 2>&1 || true
+    ) &
     exit 0
     ;;
   *)

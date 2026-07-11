@@ -982,7 +982,7 @@ class ActiveWindowServer:
 
     def trigger_kdeconnect_refresh(self):
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        kdeconnect_script = os.path.join(waybar_scripts_dir(), "services", "kdeconnect-status.sh")
+        kdeconnect_script = os.path.join(waybar_scripts_dir(), "services", "devices", "kdeconnect-status.sh")
         if not os.path.exists(kdeconnect_script):
             with self.kdeconnect_lock:
                 self.kdeconnect_refreshing = False
@@ -1017,7 +1017,7 @@ class ActiveWindowServer:
 
     def trigger_upower_refresh(self):
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        battery_script = os.path.join(waybar_scripts_dir(), "services", "device-battery-status.sh")
+        battery_script = os.path.join(waybar_scripts_dir(), "services", "devices", "device-battery-status.sh")
         if not os.path.exists(battery_script):
             with self.upower_lock:
                 self.upower_refreshing = False
@@ -1058,7 +1058,48 @@ class ActiveWindowServer:
         finally:
             self.cleanup()
 
+def detect_compositor() -> str:
+    env = os.environ.get("WAYBAR_COMPOSITOR", "").strip()
+    if env in ("hyprland", "kde", "unknown"):
+        return env
+    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        return "hyprland"
+    desktop = "".join(
+        os.environ.get(key, "")
+        for key in ("XDG_CURRENT_DESKTOP", "XDG_SESSION_DESKTOP", "DESKTOP_SESSION")
+    )
+    if any(token in desktop for token in ("Hyprland", "hyprland")):
+        return "hyprland"
+    if any(token in desktop for token in ("KDE", "Plasma", "plasma")):
+        return "kde"
+    if os.environ.get("KDE_SESSION_VERSION"):
+        return "kde"
+    try:
+        subprocess.run(
+            ["pgrep", "-x", "kwin_wayland"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return "kde"
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    try:
+        subprocess.run(
+            ["pgrep", "-x", "kwin_x11"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return "kde"
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return "unknown"
+
+
 if __name__ == "__main__":
+    if detect_compositor() != "kde":
+        sys.exit(0)
     acquire_lock("kde-activewindow")
     server = ActiveWindowServer()
     server.run()

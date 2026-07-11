@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Hide Hyprland-only bar modules when not running Hyprland (hyprwhspr stays visible on KDE).
+# Hide Hyprland-only bar modules (hyprnotify/hyprlight) when not on Hyprland.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

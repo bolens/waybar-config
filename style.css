@@ -475,7 +475,8 @@
 #custom-streamdeck.disabled,
 #custom-i2pd.offline,
 #custom-i2pd.disabled,
-#custom-ups.disconnected {
+#custom-ups.disconnected,
+#custom-liquidctl.disconnected {
     color: rgba(200, 246, 255, 0.45);
     text-shadow: none;
 }

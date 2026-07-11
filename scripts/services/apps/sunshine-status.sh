@@ -49,8 +49,9 @@ fi
 # If there are active connection states on these ports, a client is streaming.
 streaming=0
 if command -v ss >/dev/null 2>&1; then
-  # Look for established connections on Sunshine streaming ports
-  if ss -t -u -n -a 2>/dev/null | grep -E -q "ESTAB.*(:47998|:47999|:48010)"; then
+  # Narrow filter to Sunshine streaming ports (avoid dumping all sockets).
+  if ss -H -tuan '( sport = :47998 or sport = :47999 or sport = :48010 )' 2>/dev/null \
+    | grep -Eq 'ESTAB|ESTABLISHED'; then
     streaming=1
   fi
 fi
