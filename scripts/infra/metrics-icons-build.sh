@@ -2,13 +2,31 @@
 # Pre-render Waybar JSON payloads for cpu/gpu/memory icon modules.
 set -eu
 
+: "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
+: "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
+# shellcheck source=waybar-locale-lib.sh
+. "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
+
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 metrics_file="${1:-$cache_dir/system-metrics.json}"
 icons_file="${2:-$cache_dir/metrics-icons.json}"
 
 [ -f "$metrics_file" ] || exit 0
 
-json="$(jq -cn --slurpfile m "$metrics_file" '
+cpu_temp_raw="$(jq -r '.cpu.temp // 0' "$metrics_file" 2>/dev/null || echo 0)"
+gpu_temp_raw="$(jq -r '.gpu.temp // 0' "$metrics_file" 2>/dev/null || echo 0)"
+cpu_temp_fmt="N/A"
+gpu_temp_fmt="N/A"
+if [ "$cpu_temp_raw" -gt 0 ] 2>/dev/null; then
+  cpu_temp_fmt=$(format_locale_temp "$cpu_temp_raw" short | tr -d '\n')
+fi
+if [ "$gpu_temp_raw" -gt 0 ] 2>/dev/null; then
+  gpu_temp_fmt=$(format_locale_temp "$gpu_temp_raw" short | tr -d '\n')
+fi
+
+json="$(jq -cn --slurpfile m "$metrics_file" \
+  --arg cpu_temp_fmt "$cpu_temp_fmt" \
+  --arg gpu_temp_fmt "$gpu_temp_fmt" '
   def pad3($val): ($val | tostring) as $s | if ($s | length) == 1 then "  " + $s elif ($s | length) == 2 then " " + $s else $s end;
   def sparkline($history):
     [" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"] as $blocks |
@@ -42,7 +60,7 @@ json="$(jq -cn --slurpfile m "$metrics_file" '
     cpu: {
       text: "󰍛 \(sparkline($cpu_hist)) \(pad3($usage))%",
       tooltip: (
-        "CPU Utilization: \($usage)% (Temp: \($temp)°C)\n"
+        "CPU Utilization: \($usage)% (Temp: \($cpu_temp_fmt))\n"
         + "Topology: \($cores) cores / \($threads) threads (\($tpc)T per core)\n"
         + "Load 1m/5m/15m: \($l1) / \($l5) / \($l15)\n"
         + "Load vs thread capacity: \($lp1)% / \($lp5)% / \($lp15)%\n"
@@ -70,12 +88,12 @@ json="$(jq -cn --slurpfile m "$metrics_file" '
         {
           text: (
             if $vendor == "amd" and $util < 5 and $temp > 0 then
-              "󰢮 \($temp)C"
+              "󰢮 \($gpu_temp_fmt)"
             else
               "󰢮 \(pad3($util))%"
             end
           ),
-          tooltip: "\($name)\nUtil: \($util)%\nTemp: \($temp)C\nVRAM: \($gmu)/\($gmt) MiB (\($vp)%)",
+          tooltip: "\($name)\nUtil: \($util)%\nTemp: \($gpu_temp_fmt)\nVRAM: \($gmu)/\($gmt) MiB (\($vp)%)",
           class: (
             if $suspended then "suspended"
             elif $temp >= 83 or $util >= 90 then "critical"

@@ -38,6 +38,7 @@ import re
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 DEBUG = os.environ.get("WAYBAR_DEBUG", "").strip().lower() in ("1", "true", "yes")
 
@@ -52,35 +53,27 @@ except (ValueError, ImportError):
 
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
-# Cache public IP for the session
-_PUBLIC_IP = None
+_scripts = os.environ.get("WAYBAR_SCRIPTS") or str(Path(__file__).resolve().parents[1])
+_lib = str(Path(_scripts) / "lib")
+if _lib not in sys.path:
+    sys.path.insert(0, _lib)
+from gtk_popup_helpers import (  # noqa: E402
+    get_mouse_position,
+    get_real_and_vpn_ip,
+)
 
-# Cache both real and VPN public IPs
+# Cache both real and VPN public IPs for this popup lifetime.
 _REAL_PUBLIC_IP = None
 _VPN_PUBLIC_IP = None
+
+
 def get_public_ips():
     global _REAL_PUBLIC_IP, _VPN_PUBLIC_IP
-    # If already fetched, return cached
     if _REAL_PUBLIC_IP is not None and _VPN_PUBLIC_IP is not None:
         return _REAL_PUBLIC_IP, _VPN_PUBLIC_IP
-    # Try to get real public IP by temporarily disabling VPN if possible
-    # For now, just fetch current (VPN) IP, and try to fetch real IP by using the physical interface if possible
-    try:
-        _VPN_PUBLIC_IP = subprocess.check_output("curl -s --max-time 1 https://checkip.amazonaws.com", shell=True, text=True, timeout=1).strip()
-        if not re.match(r"^\d+\.\d+\.\d+\.\d+$", _VPN_PUBLIC_IP):
-            _VPN_PUBLIC_IP = 'n/a'
-    except Exception:
-        _VPN_PUBLIC_IP = 'n/a'
-    # Try to get real public IP by using --interface if possible (Linux only)
-    try:
-        # Try to use the default physical interface for outgoing traffic
-        default_iface = subprocess.check_output("ip route get 1 | awk '{print $5; exit}'", shell=True, text=True, timeout=2).strip()
-        _REAL_PUBLIC_IP = subprocess.check_output(f"curl --interface {default_iface} -s --max-time 1 https://checkip.amazonaws.com", shell=True, text=True, timeout=1).strip()
-        if not re.match(r"^\d+\.\d+\.\d+\.\d+$", _REAL_PUBLIC_IP):
-            _REAL_PUBLIC_IP = 'n/a'
-    except Exception:
-        _REAL_PUBLIC_IP = _VPN_PUBLIC_IP
+    _REAL_PUBLIC_IP, _VPN_PUBLIC_IP = get_real_and_vpn_ip()
     return _REAL_PUBLIC_IP, _VPN_PUBLIC_IP
+
 
 def nmcli_device_connection(iface):
     try:
@@ -203,67 +196,6 @@ def get_default_iface():
     except Exception:
         pass
     return 'eno1'
-
-def get_mouse_position():
-    import os
-    # Prefer shared launch export, then Hyprland signature.
-    comp = (os.environ.get("WAYBAR_COMPOSITOR") or "").strip().lower()
-    if comp == "hyprland" or os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-        try:
-            out = subprocess.check_output(["hyprctl", "cursorpos"], text=True).strip()
-            x, y = map(int, out.split(","))
-            return x, y
-        except Exception:
-            pass
-    # Try X11
-    try:
-        import Xlib.display
-        display = Xlib.display.Display()
-        root = display.screen().root
-        pointer = root.query_pointer()
-        return pointer.root_x, pointer.root_y
-    except Exception:
-        pass
-    # Try xdotool (X11)
-    try:
-        out = subprocess.check_output(["xdotool", "getmouselocation", "--shell"], text=True)
-        vals = dict(line.split("=") for line in out.strip().splitlines() if "=" in line)
-        return int(vals["X"]), int(vals["Y"])
-    except Exception:
-        pass
-    # Try swaymsg (Wayland, sway)
-    try:
-        out = subprocess.check_output(["swaymsg", "-t", "get_seats"], text=True)
-        import json
-        seats = json.loads(out)
-        for seat in seats:
-            if "devices" in seat:
-                for dev in seat["devices"]:
-                    if dev.get("type") == "pointer" and "xy" in dev:
-                        return dev["xy"]
-    except Exception:
-        pass
-    # GTK seat pointer (works on Plasma Wayland once display is up)
-    try:
-        display = Gdk.Display.get_default()
-        if display is not None:
-            seat = display.get_default_seat()
-            if seat is not None:
-                pointer = seat.get_pointer()
-                if pointer is not None:
-                    # Gdk 3: get_position; Gdk 4 differs — try both.
-                    if hasattr(pointer, "get_position"):
-                        _screen, x, y = pointer.get_position()
-                        return int(x), int(y)
-            monitor = display.get_primary_monitor() if hasattr(display, "get_primary_monitor") else None
-            if monitor is None and hasattr(display, "get_monitor"):
-                monitor = display.get_monitor(0)
-            if monitor is not None:
-                geo = monitor.get_geometry()
-                return geo.x + geo.width // 2, geo.y + geo.height // 2
-    except Exception:
-        pass
-    return 960, 540  # Fallback to 1080p center
 
 def get_bond_master(iface):
     import os
@@ -530,7 +462,7 @@ class EthPopup(Gtk.Window):
             while Gtk.events_pending():
                 Gtk.main_iteration_do(False)
             time.sleep(0.01)
-        x, y = get_mouse_position()
+        x, y = get_mouse_position(Gdk)
         alloc = self.get_allocation()
         win_width = alloc.width or 400
         win_height = alloc.height or 200

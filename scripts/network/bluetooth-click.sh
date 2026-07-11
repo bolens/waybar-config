@@ -7,22 +7,16 @@ mode="${1:-list}"
 
 script_dir="${0%/*}"
 # shellcheck source=waybar-cache-helpers.sh
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 
 # shellcheck source=compositor-session.sh
 if [ -f "$WAYBAR_SCRIPTS/lib/compositor-session.sh" ]; then
   . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 fi
 
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+# shellcheck source=rofi-popup-lib.sh
+. "$WAYBAR_SCRIPTS/lib/rofi-popup-lib.sh"
 
 open_bt_settings() {
   compositor=$(detect_compositor)
@@ -58,29 +52,6 @@ open_bt_settings() {
   fi
 
   notify-send "Bluetooth" "No bluetooth manager found" 2>/dev/null || true
-}
-
-format_header_row() {
-  label="$1"
-  value="$2"
-  width="${3:-52}"
-  awk -v l="$label" -v v="$value" -v w="$width" 'BEGIN {
-    pad = w - length(l) - length(v)
-    if (pad < 1) pad = 1
-    printf "%s%*s%s", l, pad, "", v
-  }'
-}
-
-# ---------------------------------------------------------------------------
-format_hints_row() {
-  hint1="$1"
-  hint2="$2"
-  width="${3:-52}"
-  awk -v h1="$hint1" -v h2="$hint2" -v w="$width" 'BEGIN {
-    pad = w - length(h1) - length(h2)
-    if (pad < 1) pad = 1
-    printf "%s%*s%s", h1, pad, "", h2
-  }'
 }
 
 get_bt_snapshot() {

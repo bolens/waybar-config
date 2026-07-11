@@ -6,6 +6,9 @@ set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
+. "$WAYBAR_SCRIPTS/lib/system-metrics-cpu.sh"
+. "$WAYBAR_SCRIPTS/lib/system-metrics-gpu.sh"
+. "$WAYBAR_SCRIPTS/lib/system-metrics-top.sh"
 cache_file="$cache_dir/system-metrics.json"
 lock_dir="$cache_dir/system-metrics.lock.d"
 stat_prev="$cache_dir/cpu-stat.prev"
@@ -16,71 +19,6 @@ topology_ttl=86400
 stale_lock_ttl=30
 
 mkdir -p "$cache_dir"
-
-# ensure_topology_file: Discovers CPU core/thread count. Topology changes are rare,
-# so we cache this discovery for 24 hours (86400s) to avoid running lscpu on every poll.
-ensure_topology_file() {
-  age=$(cache_file_age "$topology_file")
-  if [ "$age" -le "$topology_ttl" ] 2>/dev/null && [ -f "$topology_file" ]; then
-    return 0
-  fi
-  cores=1
-  threads=1
-  threads_per_core=1
-  if command -v nproc >/dev/null 2>&1; then
-    threads="$(nproc)"
-  fi
-  if command -v lscpu >/dev/null 2>&1; then
-    c="$(lscpu 2>/dev/null | awk -F: '/^Core\(s\) per socket:/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' || true)"
-    tpc="$(lscpu 2>/dev/null | awk -F: '/^Thread\(s\) per core:/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' || true)"
-    [ -n "$c" ] && cores="$c"
-    [ -n "$tpc" ] && threads_per_core="$tpc"
-  fi
-  tmp="$topology_file.tmp.$$"
-  jq -cn \
-    --argjson cores "$cores" \
-    --argjson threads "$threads" \
-    --argjson threads_per_core "$threads_per_core" \
-    '{cores:$cores,threads:$threads,threads_per_core:$threads_per_core}' >"$tmp"
-  mv -f "$tmp" "$topology_file"
-}
-
-# read_cpu_counters: Reads aggregate CPU ticks from /proc/stat.
-# Returns ticks for: user, nice, system, idle, iowait, irq, softirq, steal.
-read_cpu_counters() {
-  awk '/^cpu / {print $2, $3, $4, $5, $6, $7, $8, $9; exit}' /proc/stat
-}
-
-# compute_cpu_usage_percent: Calculates CPU load over time by comparing current
-# counters with a previously saved state in stat_prev.
-compute_cpu_usage_percent() {
-  local user nice system idle iowait irq softirq steal
-  local total_now idle_now total_prev idle_prev delta_total delta_idle usage
-
-  IFS=' ' read -r user nice system idle iowait irq softirq steal < <(read_cpu_counters)
-  total_now=$((user + nice + system + idle + iowait + irq + softirq + steal))
-  idle_now=$((idle + iowait))
-
-  if [ ! -f "$stat_prev" ]; then
-    printf '%s %s\n' "$total_now" "$idle_now" >"$stat_prev"
-    sleep 0.15
-    IFS=' ' read -r user nice system idle iowait irq softirq steal < <(read_cpu_counters)
-    total_now=$((user + nice + system + idle + iowait + irq + softirq + steal))
-    idle_now=$((idle + iowait))
-  fi
-
-  IFS=' ' read -r total_prev idle_prev <"$stat_prev"
-  printf '%s %s\n' "$total_now" "$idle_now" >"$stat_prev"
-
-  delta_total=$((total_now - total_prev))
-  delta_idle=$((idle_now - idle_prev))
-
-  usage=0
-  if [ "$delta_total" -gt 0 ]; then
-    usage=$(((delta_total - delta_idle) * 100 / delta_total))
-  fi
-  printf '%s' "$usage"
-}
 
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
@@ -121,75 +59,6 @@ temp_path_file="$cache_dir/cpu-temp-path.txt"
 hwmon_root="${WAYBAR_HWMON_ROOT:-/sys/class/hwmon}"
 thermal_root="${WAYBAR_THERMAL_ROOT:-/sys/class/thermal}"
 
-# find_temp_path: Scans hwmon system paths to locate a valid CPU temperature input file.
-# Matches specific drivers (intel coretemp, AMD k10temp, zenpower, nouveau, acpitz) to
-# filter out motherboard fan speeds or other auxiliary temperature sensors.
-find_temp_path() {
-  for path in "$hwmon_root"/hwmon*/temp1_input; do
-    if [ -f "$path" ]; then
-      name_file="${path%/*}/name"
-      if [ -f "$name_file" ]; then
-        name=$(cat "$name_file" 2>/dev/null || true)
-        if [ "$name" = "coretemp" ] || [ "$name" = "k10temp" ] || [ "$name" = "zenpower" ] || [ "$name" = "nouveau" ] || [ "$name" = "acpitz" ]; then
-          printf '%s' "$path"
-          return 0
-        fi
-      fi
-    fi
-  done
-  if [ -f "$thermal_root/thermal_zone0/temp" ]; then
-    printf '%s' "$thermal_root/thermal_zone0/temp"
-    return 0
-  fi
-  return 1
-}
-
-# read_cpu_temperature: Retrieves current CPU temperature in Celsius.
-# Cache path search is stored in temp_path_file to avoid scanning sysfs directories
-# on every poll. Performs validation checks to ensure the sensor driver name remains valid.
-read_cpu_temperature() {
-  path=""
-  if [ -f "$temp_path_file" ]; then
-    path=$(cat "$temp_path_file" 2>/dev/null || true)
-    if [ -n "$path" ] && [ -f "$path" ]; then
-      # If it's a hwmon path, validate the sensor driver name
-      if [ "${path%/temp1_input}" != "$path" ]; then
-        name_file="${path%/*}/name"
-        if [ -f "$name_file" ]; then
-          name=$(cat "$name_file" 2>/dev/null || true)
-          if [ "$name" != "coretemp" ] && [ "$name" != "k10temp" ] && [ "$name" != "zenpower" ] && [ "$name" != "nouveau" ] && [ "$name" != "acpitz" ]; then
-            path=""
-          fi
-        else
-          path=""
-        fi
-      fi
-    else
-      path=""
-    fi
-  fi
-
-  if [ -z "$path" ]; then
-    path=$(find_temp_path || true)
-    if [ -n "$path" ]; then
-      tmp_temp_path="$temp_path_file.tmp.$$"
-      printf '%s' "$path" >"$tmp_temp_path"
-      mv -f "$tmp_temp_path" "$temp_path_file"
-    else
-      tmp_temp_path="$temp_path_file.tmp.$$"
-      printf '' >"$tmp_temp_path"
-      mv -f "$tmp_temp_path" "$temp_path_file"
-    fi
-  fi
-
-  if [ -n "$path" ] && [ -f "$path" ]; then
-    raw_temp=$(cat "$path" 2>/dev/null || echo 0)
-    printf '%d' $((raw_temp / 1000))
-  else
-    printf '0'
-  fi
-}
-
 ensure_topology_file
 read -r cores threads threads_per_core <<EOF
 $(jq -r '[.cores // 1, .threads // 1, .threads_per_core // 1] | @tsv' "$topology_file")
@@ -222,6 +91,8 @@ mem_info=$(awk '
   }
 ' /proc/meminfo)
 
+# Word-split whitespace fields from awk (quoted read avoids SC2086).
+# shellcheck disable=SC2086
 set -- $mem_info
 mem_total_kib="${1:-0}"
 mem_available_kib="${2:-0}"
@@ -246,84 +117,6 @@ gpu_fan=0
 
 gpu_path_file="$cache_dir/gpu-pci-path.txt"
 amd_hwmon_file="$cache_dir/amdgpu-hwmon-path.txt"
-
-# find_gpu_path: Discovers NVIDIA PCI device path. 0x10de is the vendor ID for NVIDIA.
-find_gpu_path() {
-  for dev in /sys/bus/pci/devices/*; do
-    if [ -f "$dev/vendor" ] && [ "$(cat "$dev/vendor")" = "0x10de" ]; then
-      printf '%s' "$dev"
-      return 0
-    fi
-  done
-  return 1
-}
-
-find_amdgpu_hwmon() {
-  local d name
-  if [ -f "$amd_hwmon_file" ]; then
-    d=$(cat "$amd_hwmon_file" 2>/dev/null || true)
-    if [ -n "$d" ] && [ -f "$d/name" ] && [ "$(cat "$d/name" 2>/dev/null)" = "amdgpu" ]; then
-      printf '%s' "$d"
-      return 0
-    fi
-  fi
-  for d in "$hwmon_root"/hwmon*; do
-    [ -f "$d/name" ] || continue
-    name=$(cat "$d/name" 2>/dev/null || true)
-    if [ "$name" = "amdgpu" ]; then
-      printf '%s' "$d" >"$amd_hwmon_file.tmp.$$" 2>/dev/null && mv -f "$amd_hwmon_file.tmp.$$" "$amd_hwmon_file" 2>/dev/null || true
-      printf '%s' "$d"
-      return 0
-    fi
-  done
-  return 1
-}
-
-fill_amdgpu_metrics() {
-  local hwmon card_dev freq_hz vram_total vram_used
-  hwmon=$(find_amdgpu_hwmon || true)
-  [ -n "$hwmon" ] || return 1
-
-  gpu_available="true"
-  gpu_vendor="amd"
-  gpu_suspended="false"
-  gpu_fan=0
-  gpu_util=0
-  gpu_name="AMD GPU"
-  if [ -f "$hwmon/device/../../vendor" ] || [ -e "$hwmon/device" ]; then
-    card_dev=$(readlink -f "$hwmon/device" 2>/dev/null || true)
-    if [ -n "$card_dev" ] && [ -f "$card_dev/mem_info_vram_total" ]; then
-      vram_total=$(cat "$card_dev/mem_info_vram_total" 2>/dev/null || echo 0)
-      vram_used=$(cat "$card_dev/mem_info_vram_used" 2>/dev/null || echo 0)
-      if [ "${vram_total:-0}" -gt 0 ] 2>/dev/null; then
-        gpu_mem_total=$((vram_total / 1024 / 1024))
-        gpu_mem_used=$((vram_used / 1024 / 1024))
-        gpu_vram_pct=$((gpu_mem_used * 100 / gpu_mem_total))
-      fi
-    fi
-    # Pretty name from DRM product if present
-    if [ -n "$card_dev" ] && [ -f "$card_dev/product_name" ]; then
-      gpu_name=$(tr -d '\n' <"$card_dev/product_name" 2>/dev/null || echo "AMD GPU")
-    elif [ -n "$card_dev" ] && [ -f "$card_dev/label" ]; then
-      gpu_name=$(tr -d '\n' <"$card_dev/label" 2>/dev/null || echo "AMD GPU")
-    else
-      gpu_name="AMD iGPU"
-    fi
-  fi
-
-  if [ -f "$hwmon/temp1_input" ]; then
-    gpu_temp=$(($(cat "$hwmon/temp1_input") / 1000))
-  fi
-  # amdgpu rarely exposes busy % via hwmon; leave util at 0 (UI shows temp instead).
-  gpu_util=0
-  if [ -f "$hwmon/freq1_input" ]; then
-    freq_hz=$(cat "$hwmon/freq1_input" 2>/dev/null || echo 0)
-    if [ "${freq_hz:-0}" -gt 0 ] 2>/dev/null; then
-      gpu_name=$(printf '%s @ %d MHz' "$gpu_name" $((freq_hz / 1000000)))
-    fi
-  fi
-  return 0
-}
 
 if command -v nvidia-smi >/dev/null 2>&1; then
   gpu_dev=""
@@ -387,6 +180,7 @@ if command -v nvidia-smi >/dev/null 2>&1; then
 
       old_ifs=$IFS
       IFS=$tab
+      # shellcheck disable=SC2086 # intentional split of tab-separated nvidia-smi fields
       set -- $gpu_fields
       IFS=$old_ifs
 
@@ -409,55 +203,9 @@ if [ "$gpu_available" != "true" ]; then
   fill_amdgpu_metrics || true
 fi
 
-# Retrieve top CPU processes. We cache this query for 24s to avoid expensive 'ps' calls on every poll.
-# The write is done atomically to prevent other modules from reading incomplete JSON configurations.
-cpu_top_file="$cache_dir/cpu-top.json"
-if [ "$(cache_file_age "$cpu_top_file")" -ge 24 ] 2>/dev/null || [ ! -f "$cpu_top_file" ]; then
-  cpu_top=$(ps -eo pcpu,comm --sort=-pcpu 2>/dev/null | awk '
-    NR>1 && NR<=4 {
-      pcpu=$1; $1=""
-      sub(/^ +/, "")
-      gsub(/"/, "\\\"", $0)
-      items = items (items ? "," : "") "\"" $0 " (" pcpu "%)\""
-    }
-    END {
-      print "[" items "]"
-    }
-  ')
-  [ -z "$cpu_top" ] || [ "$cpu_top" = "null" ] && cpu_top="[]"
-  tmp_cpu_top="$cpu_top_file.tmp.$$"
-  printf '%s\n' "$cpu_top" >"$tmp_cpu_top"
-  mv -f "$tmp_cpu_top" "$cpu_top_file"
-else
-  cpu_top=$(cat "$cpu_top_file" 2>/dev/null || echo "[]")
-fi
-
-# Retrieve top memory consuming processes. Cached for 24s and written atomically.
-mem_top_file="$cache_dir/mem-top.json"
-if [ "$(cache_file_age "$mem_top_file")" -ge 24 ] 2>/dev/null || [ ! -f "$mem_top_file" ]; then
-  mem_top=$(ps -eo pmem,rss,comm --sort=-rss 2>/dev/null | awk '
-    NR>1 && NR<=4 {
-      pmem=$1; rss=$2; $1=""; $2=""
-      sub(/^ +/, "")
-      gsub(/"/, "\\\"", $0)
-      if (rss > 1048576) {
-        size=sprintf("%.1f GiB", rss/1048576)
-      } else {
-        size=sprintf("%d MiB", rss/1024)
-      }
-      items = items (items ? "," : "") "\"" $0 " (" size ")\""
-    }
-    END {
-      print "[" items "]"
-    }
-  ')
-  [ -z "$mem_top" ] || [ "$mem_top" = "null" ] && mem_top="[]"
-  tmp_mem_top="$mem_top_file.tmp.$$"
-  printf '%s\n' "$mem_top" >"$tmp_mem_top"
-  mv -f "$tmp_mem_top" "$mem_top_file"
-else
-  mem_top=$(cat "$mem_top_file" 2>/dev/null || echo "[]")
-fi
+cpu_top="[]"
+mem_top="[]"
+refresh_process_tops
 
 old_json="{}"
 if [ -f "$cache_file" ]; then

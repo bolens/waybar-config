@@ -4,11 +4,11 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 
 | Folder | Purpose |
 |--------|---------|
-| `lib/` | Shared helpers (`waybar-settings`, cache helpers, `app-open-lib`, `*-lib`, compositor helpers, signals) |
-| `generate/` | Config generators (`generate-*.sh`) |
+| `lib/` | Shared helpers — see table below |
+| `generate/` | Config generators (`generate-*.sh`); `generate-settings.sh` orchestrates network/dock/domain emitters |
 | `ci/` | Contract checks, unit tests, validate, pre-commit hook |
 | `infra/` | Launch, healthcheck, listener-ctl, metrics collector |
-| `listeners/` | Long-running watchers |
+| `listeners/` | Long-running watchers (`active-window-listener-kde.py` + `lib/kde_listener/` mixins) |
 | `dock/` | Dock launcher + dock-windows |
 | `workspaces/` | Workspaces, active window, keybind hints |
 | `system/` | CPU/mem/disk/gpu/nvme/fans/liquidctl/asusctl/rgb/power/brightness/… |
@@ -18,6 +18,30 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `capture/` | Screenshot / screenrecord / color picker |
 | `services/` | Third-party integrations (see subfolders below) |
 | `tools/` | Small UX helpers (`app-open`, `calendar-popup`) |
+
+### `lib/` helpers
+
+| File / package | Role |
+|----------------|------|
+| `waybar-cache-helpers.sh` | Intervals, cache/locks, `serve_*`, `emit_waybar_json` |
+| `waybar-locale-lib.sh` | `detect_*` clock/date/weather + `format_locale_*` (`WAYBAR_WEATHER_UNIT` pins unit for CI) |
+| `locale_temp.py` | Python twin of `format_locale_temp` (CoolerControl etc.) |
+| `waybar-systemd-scan-lib.sh` | `check_systemd_scan_service` (libredefender / chkrootkit) |
+| `waybar-settings.sh` | Settings compile / getters |
+| `rofi-popup-lib.sh` | Shared Rofi header/hints rows + `center_text` |
+| `network-ip-lib.sh` | `get_public_ip` (multi-endpoint curl/wget) |
+| `xdg-applications.sh` / `xdg-icons-lib.sh` | Desktop dirs + icon map / `guess_icon` |
+| `gtk_popup_helpers.py` | Shared mouse position / public IP for GTK popups |
+| `system-metrics-{cpu,gpu,top}.sh` | Sourced by `infra/system-metrics-collector.sh` |
+| `kde_listener/` | Mixins/helpers for the KDE session listener |
+
+### `generate/` domain emitters
+
+`generate-settings.sh` runs network + dock generators, then these domain scripts (no pass-through orchestrator):
+
+`generate-utilities-modules.sh`, `generate-audio-modules.sh`, `generate-clock-modules.sh`, `generate-drawers-modules.sh`, `generate-network-custom-modules.sh`, `generate-privacy-modules.sh`, `generate-active-window-modules.sh`, `generate-center-extras-modules.sh`, `generate-dock-windows-modules.sh`, `generate-tray-modules.sh`, `generate-hypr-tools-modules.sh`, `generate-theme-tokens.sh`.
+
+Sibling scripts (also invoked from Makefile / launch): `generate-compositor-modules.sh`, `generate-workspaces-css.sh`, `generate-dock-modules.sh`, `generate-network-modules.sh`.
 
 ### `services/` subfolders
 

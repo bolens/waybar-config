@@ -1,161 +1,42 @@
 #!/usr/bin/env python3
-import atexit
+"""KDE Plasma active-window / notifications / clipboard session listener."""
 import json
 import os
-import re
-import shutil
 import signal
 import subprocess
 import sys
 import threading
-import time
 
-import gi
+_LIB = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib")
+if _LIB not in sys.path:
+    sys.path.insert(0, _LIB)
+
+import gi  # noqa: E402
 
 gi.require_version("Gio", "2.0")
 gi.require_version("GLib", "2.0")
 from gi.repository import Gio, GLib  # noqa: E402
 
+from kde_listener.active_window import ActiveWindowMixin  # noqa: E402
+from kde_listener.clipboard import ClipboardMixin  # noqa: E402
+from kde_listener.compositor import detect_compositor  # noqa: E402
+from kde_listener.lock import acquire_lock  # noqa: E402
+from kde_listener.notifications import NotificationsMixin  # noqa: E402
+from kde_listener.refreshers import RefreshersMixin  # noqa: E402
 
-def waybar_scripts_dir():
-    """Return scripts/ root (parent of this file's domain folder)."""
-    env = os.environ.get("WAYBAR_SCRIPTS")
-    if env:
-        return env
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
-def load_waybar_signals():
-    """Load RTMIN offsets from waybar-settings.json (signals.*)."""
-    defaults = {
-        "workspaces": 16,
-        "clipboard": 9,
-        "notifications": 10,
-        "keyboard_layout": 2,
-        "nightlight": 14,
-        "brightness": 8,
-        "vpn": 5,
-        "tailscale": 12,
-        "kdeconnect": 18,
-        "device_battery": 4,
-        "powerprofiles": 3,
-        "dock_windows": 11,
-    }
-    home = os.environ.get("WAYBAR_HOME") or os.path.join(
-        os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "waybar"
-    )
-    path = os.path.join(home, "data", "waybar-settings.json")
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        signals = data.get("signals") or {}
-        out = dict(defaults)
-        for key, val in signals.items():
-            if isinstance(val, int):
-                out[key] = val
-        return out
-    except Exception:
-        return defaults
-
-SIGNALS = load_waybar_signals()
-
-def waybar_rtmin(key):
-    offset = SIGNALS.get(key)
-    if offset is None:
-        return
-    subprocess.run(
-        ["pkill", "-x", f"-RTMIN+{offset}", "waybar"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-# Single-instance locking
-def acquire_lock(lock_name):
-    runtime_dir = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
-    lock_dir = os.path.join(runtime_dir, f"waybar-dock-listener-{lock_name}.lock.d")
-    lock_pid_file = os.path.join(lock_dir, "pid")
-    
-    try:
-        os.makedirs(lock_dir, exist_ok=False)
-    except FileExistsError:
-        if os.path.exists(lock_pid_file):
-            try:
-                with open(lock_pid_file, "r") as f:
-                    old_pid = int(f.read().strip())
-                os.kill(old_pid, 0)
-                sys.exit(0)
-            except (ValueError, OSError):
-                pass
-        shutil.rmtree(lock_dir, ignore_errors=True)
-        try:
-            os.makedirs(lock_dir, exist_ok=False)
-        except Exception:
-            sys.exit(0)
-            
-    with open(lock_pid_file, "w") as f:
-        f.write(str(os.getpid()))
-        
-    def cleanup_lock():
-        try:
-            os.remove(lock_pid_file)
-            os.rmdir(lock_dir)
-        except Exception:
-            pass
-            
-    atexit.register(cleanup_lock)
-
-XML = """
-<node>
-  <interface name="org.waybar.ActiveWindow">
-    <method name="update">
-      <arg direction="in" type="s" name="title"/>
-      <arg direction="in" type="s" name="app"/>
-    </method>
-    <method name="windowsChanged"/>
-    <method name="desktopsChanged">
-      <arg direction="in" type="s" name="mapping_json"/>
-    </method>
-  </interface>
-</node>
-"""
-
-def trim_title(s, max_len=70):
-    s = s.replace('\n', ' ').replace('\t', ' ')
-    s = re.sub(r'\s+', ' ', s).strip()
-    
-    s = re.sub(r'(.*) - Mozilla Firefox$', r'\1', s)
-    s = re.sub(r'(.*) - Zen Browser$', r'\1', s)
-    s = re.sub(r'(.*) - Google Chrome$', r'\1', s)
-    s = re.sub(r'(.*) - Floorp$', r'\1', s)
-    s = re.sub(r'(.*) - Chromium$', r'\1', s)
-    s = re.sub(r'(.*) - Brave$', r'\1', s)
-    s = re.sub(r'(.*) - Vivaldi$', r'\1', s)
-    
-    if len(s) <= max_len:
-        return s
-    else:
-        return s[:max_len - 3] + "..."
-
-def clean_title(s):
-    s = s.replace('\n', ' ').replace('\t', ' ')
-    s = re.sub(r'\s+', ' ', s).strip()
-    
-    s = re.sub(r'(.*) - Mozilla Firefox$', r'\1', s)
-    s = re.sub(r'(.*) - Zen Browser$', r'\1', s)
-    s = re.sub(r'(.*) - Google Chrome$', r'\1', s)
-    s = re.sub(r'(.*) - Floorp$', r'\1', s)
-    s = re.sub(r'(.*) - Chromium$', r'\1', s)
-    s = re.sub(r'(.*) - Brave$', r'\1', s)
-    s = re.sub(r'(.*) - Vivaldi$', r'\1', s)
-    return s
-
-class ActiveWindowServer:
+class ActiveWindowServer(
+    ActiveWindowMixin,
+    ClipboardMixin,
+    NotificationsMixin,
+    RefreshersMixin,
+):
     def __init__(self):
         self.script_id = None
         self.cache_dir = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "waybar")
         self.cache_file = os.path.join(self.cache_dir, "active-window.json")
         os.makedirs(self.cache_dir, exist_ok=True)
-        
+
         self.count_file = os.path.join(self.cache_dir, "kde-unread-count.txt")
         self.status_cache = os.path.join(self.cache_dir, "notifications-status.json")
         self.history_cache = os.path.join(self.cache_dir, "kde-notifications-history.json")
@@ -164,7 +45,7 @@ class ActiveWindowServer:
         self.kdeconnect_refreshing = False
         self.kdeconnect_pending = False
         self.kdeconnect_lock = threading.Lock()
-        
+
         self.upower_refreshing = False
         self.upower_pending = False
         self.upower_lock = threading.Lock()
@@ -173,7 +54,7 @@ class ActiveWindowServer:
         self.network_pending = False
         self.network_lock = threading.Lock()
         self.network_timeout_id = 0
-        
+
         self.pending_title = None
         self.pending_app = None
         self.active_window_timeout_id = 0
@@ -205,7 +86,7 @@ class ActiveWindowServer:
                     self.unread_count = int(f.read().strip())
             except Exception:
                 pass
-        
+
         self.owner_id = Gio.bus_own_name(
             Gio.BusType.SESSION,
             "org.waybar.activewindow",
@@ -214,9 +95,9 @@ class ActiveWindowServer:
             self.on_name_acquired,
             self.on_name_lost
         )
-        
+
         self.session_bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
-        
+
         self.session_bus.signal_subscribe(
             None,
             "org.kde.klipper.klipper",
@@ -227,7 +108,7 @@ class ActiveWindowServer:
             self.on_clipboard_changed,
             None
         )
-        
+
         self.session_bus.signal_subscribe(
             None,
             "org.kde.KeyboardLayouts",
@@ -238,7 +119,7 @@ class ActiveWindowServer:
             self.on_keyboard_layout_changed,
             None
         )
-        
+
         self.session_bus.signal_subscribe(
             None,
             "org.freedesktop.DBus.Properties",
@@ -284,7 +165,7 @@ class ActiveWindowServer:
         )
 
         self.system_bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
-        
+
         self.system_bus.signal_subscribe(
             "org.freedesktop.NetworkManager",
             "org.freedesktop.NetworkManager",
@@ -295,7 +176,7 @@ class ActiveWindowServer:
             self.on_network_changed,
             None
         )
-        
+
         self.system_bus.signal_subscribe(
             "org.freedesktop.NetworkManager",
             "org.freedesktop.DBus.Properties",
@@ -331,7 +212,7 @@ class ActiveWindowServer:
 
         # Start dbus-monitor subprocess in a thread to monitor notifications
         self.start_dbus_monitor()
-        
+
         # Prime caches asynchronously/initially
         self.update_notifications_cache()
         threading.Thread(target=self.check_and_write_clipboard, daemon=True).start()
@@ -341,676 +222,6 @@ class ActiveWindowServer:
         GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGUSR2, self.handle_sigusr2)
 
         self.loop = GLib.MainLoop()
-
-    def on_bus_acquired(self, conn, name):
-        node = Gio.DBusNodeInfo.new_for_xml(XML)
-        conn.register_object(
-            "/ActiveWindow",
-            node.interfaces[0],
-            self.handle_method_call,
-            None,
-            None
-        )
-
-    def on_name_acquired(self, conn, name):
-        self.script_id = self.load_kwin_script()
-
-    def on_name_lost(self, conn, name):
-        self.cleanup()
-        sys.exit(1)
-
-    def handle_method_call(self, conn, sender, path, interface, method, params, invocation):
-        if method == "update":
-            title, app = params.unpack()
-            self.update_active_window(title, app)
-            invocation.return_value(None)
-        elif method == "windowsChanged":
-            if self.windows_changed_timeout_id != 0:
-                GLib.source_remove(self.windows_changed_timeout_id)
-            self.windows_changed_timeout_id = GLib.timeout_add(250, self.flush_windows_changed)
-            invocation.return_value(None)
-        elif method == "desktopsChanged":
-            mapping_json = params.unpack()[0]
-            self.update_kde_desktops(mapping_json)
-            invocation.return_value(None)
-
-    def update_active_window(self, title, app):
-        self.pending_title = title
-        self.pending_app = app
-        if self.active_window_timeout_id != 0:
-            GLib.source_remove(self.active_window_timeout_id)
-        self.active_window_timeout_id = GLib.timeout_add(150, self.flush_active_window_update)
-
-    def flush_active_window_update(self):
-        self.active_window_timeout_id = 0
-        title = self.pending_title
-
-        trimmed = trim_title(title)
-        if not title:
-            data = {
-                "text": "󰇄  Desktop",
-                "tooltip": "No active window",
-                "class": "desktop"
-            }
-        else:
-            import html
-            data = {
-                "text": f"󰖲  {html.escape(trimmed)}",
-                "tooltip": html.escape(title),
-                "class": "active"
-            }
-        
-        tmp_file = self.cache_file + ".tmp"
-        with open(tmp_file, "w") as f:
-            json.dump(data, f)
-        os.replace(tmp_file, self.cache_file)
-
-        # Write raw title to active-window-title.raw for scrolling module
-        raw_title_file = os.path.join(self.cache_dir, "active-window-title.raw")
-        cleaned_title = clean_title(title) if title else ""
-        try:
-            with open(raw_title_file + ".tmp", "w") as f:
-                f.write(cleaned_title)
-            os.replace(raw_title_file + ".tmp", raw_title_file)
-        except Exception:
-            pass
-
-        return False
-
-    def flush_windows_changed(self):
-        self.windows_changed_timeout_id = 0
-        signal_script = os.path.join(waybar_scripts_dir(), "dock", "dock-windows-signal.sh")
-        if os.path.exists(signal_script):
-            subprocess.run([signal_script], stderr=subprocess.DEVNULL)
-        return False
-
-    def clear_workspace_cache(self):
-        """
-        Invalidates output-specific workspaces JSON caches (e.g. workspaces-DP-1.json).
-        This bypasses the 0.2-second cache TTL inside workspaces-query.py, avoiding
-        stale layout displays during desktop transitions when signals arrive before 
-        DBus states have finished writing.
-        """
-        import glob
-        try:
-            for fpath in glob.glob(os.path.join(self.cache_dir, "workspaces-*.json")):
-                try:
-                    os.remove(fpath)
-                except OSError:
-                    pass
-        except Exception:
-            pass
-
-    def update_kde_desktops(self, mapping_json):
-        try:
-            data = json.loads(mapping_json)
-            cache_file = os.path.join(self.cache_dir, "kde-active-desktops.json")
-            tmp_file = cache_file + ".tmp"
-            with open(tmp_file, "w") as f:
-                json.dump(data, f)
-            os.replace(tmp_file, cache_file)
-            self.clear_workspace_cache()
-            waybar_rtmin("workspaces")
-        except Exception as e:
-            print(f"Error updating KDE desktops: {e}", file=sys.stderr)
-
-# load_kwin_script:
-# Under Wayland, standard active window query tools like xdotool or xprop do not work.
-# To retrieve window titles and workspace layout transitions under KDE, we inject a custom
-# Javascript script directly into KWin's scripting engine. This script runs inside KWin's
-# process space, binds to workspace events, and triggers DBus callbacks to this server.
-    def load_kwin_script(self):
-        script_content = """
-        var currentConn = null;
-        function notifyActiveWindow() {
-            var win = workspace.activeWindow;
-            var title = win ? win.caption : "";
-            var app = (win && win.resourceClass) ? win.resourceClass.toString() : "";
-            callDBus(
-                "org.waybar.activewindow",
-                "/ActiveWindow",
-                "org.waybar.ActiveWindow",
-                "update",
-                title,
-                app
-            );
-            notifyDesktops();
-        }
-
-        workspace.windowActivated.connect(function(client) {
-            if (currentConn) {
-                try {
-                    currentConn.captionChanged.disconnect(notifyActiveWindow);
-                } catch(e) {}
-            }
-            currentConn = client;
-            if (client) {
-                client.captionChanged.connect(notifyActiveWindow);
-            }
-            notifyActiveWindow();
-        });
-
-        workspace.windowAdded.connect(function() {
-            callDBus(
-                "org.waybar.activewindow",
-                "/ActiveWindow",
-                "org.waybar.ActiveWindow",
-                "windowsChanged"
-            );
-        });
-        workspace.windowRemoved.connect(function() {
-            callDBus(
-                "org.waybar.activewindow",
-                "/ActiveWindow",
-                "org.waybar.ActiveWindow",
-                "windowsChanged"
-            );
-        });
-
-        function notifyDesktops() {
-            var mapping = {};
-            if (workspace.screens && workspace.screens.length) {
-                for (var i = 0; i < workspace.screens.length; i++) {
-                    var output = workspace.screens[i];
-                    if (!output) continue;
-                    var name = output.name || output.toString() || ("Screen" + i);
-                    var desc = null;
-                    if (typeof workspace.currentDesktopForScreen === "function") {
-                        try {
-                            desc = workspace.currentDesktopForScreen(output);
-                        } catch(e) {
-                            // Fallback
-                        }
-                    }
-                    if (!desc) {
-                        desc = workspace.currentDesktop;
-                    }
-                    if (desc) {
-                        mapping[name] = desc.id;
-                    }
-                }
-            } else {
-                var screens = Array.from({length: 8}, (_, i) => i);
-                for (var i = 0; i < screens.length; i++) {
-                    var scr = screens[i];
-                    var name = null;
-                    try {
-                        name = workspace.screenAt ? workspace.screenAt(scr) : null;
-                    } catch(e) {}
-                    if (name && typeof name.name === "string") {
-                        name = name.name;
-                    } else if (name && typeof name.toString === "function") {
-                        name = name.toString();
-                    } else {
-                        name = "Screen" + scr;
-                    }
-                    var desc = null;
-                    if (typeof workspace.currentDesktopForScreen === "function") {
-                        try {
-                            desc = workspace.currentDesktopForScreen(scr);
-                        } catch(e) {}
-                    }
-                    if (!desc) {
-                        desc = workspace.currentDesktop;
-                    }
-                    if (desc) {
-                        mapping[name] = desc.id;
-                    }
-                }
-            }
-            if (Object.keys(mapping).length === 0 && workspace.currentDesktop) {
-                mapping["default"] = workspace.currentDesktop.id;
-            }
-            callDBus(
-                "org.waybar.activewindow",
-                "/ActiveWindow",
-                "org.waybar.ActiveWindow",
-                "desktopsChanged",
-                JSON.stringify(mapping)
-            );
-        }
-
-        workspace.currentDesktopChanged.connect(notifyDesktops);
-        if (workspace.desktopChanged) {
-            workspace.desktopChanged.connect(notifyDesktops);
-        }
-        notifyDesktops();
-        """
-        
-        script_path = "/tmp/active_window_watcher.js"
-        with open(script_path, "w") as f:
-            f.write(script_content)
-            
-        # Cleanup first
-        subprocess.run([
-            "qdbus6", "org.kde.KWin", "/Scripting",
-            "org.kde.kwin.Scripting.unloadScript", "active_window_watcher"
-        ], capture_output=True)
-        
-        res = subprocess.run([
-            "qdbus6", "org.kde.KWin", "/Scripting",
-            "org.kde.kwin.Scripting.loadScript", script_path, "active_window_watcher"
-        ], capture_output=True, text=True)
-        script_id = res.stdout.strip()
-        
-        if script_id.isdigit():
-            subprocess.run([
-                "qdbus6", "org.kde.KWin", f"/Scripting/Script{script_id}",
-                "org.kde.kwin.Script.run"
-            ], capture_output=True)
-            return script_id
-        return None
-
-    def on_clipboard_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        threading.Thread(target=self.check_and_write_clipboard, daemon=True).start()
-
-    def check_and_write_clipboard(self):
-        try:
-            # Query current klipper contents to verify clip cache synchronization
-            res = self.session_bus.call_sync(
-                "org.kde.klipper.klipper",
-                "/klipper",
-                "org.kde.klipper.klipper",
-                "getClipboardHistoryMenu",
-                None,
-                None,
-                Gio.DBusCallFlags.NONE,
-                -1,
-                None
-            )
-            val = res.get_child_value(0).get_string()
-            self.write_clipboard_json(val)
-        except Exception:
-            pass
-
-    def write_clipboard_json(self, val):
-        lines = [line.strip() for line in val.split("\n") if line.strip()]
-        count = len(lines)
-        if count == 0:
-            status = {
-                "text": "0",
-                "alt": "empty",
-                "class": "empty",
-                "tooltip": "Clipboard empty"
-            }
-        else:
-            latest = lines[0]
-            preview = latest if len(latest) <= 200 else latest[:197] + "..."
-            tooltip = f"Clipboard history: {count} entries (Klipper)\nLatest:\n{preview}\n\nLeft: open history · Right: clear · Middle: edit/sync"
-            status = {
-                "text": str(count),
-                "alt": "normal",
-                "class": "normal",
-                "tooltip": tooltip
-            }
-        self.write_json_atomically(self.clipboard_cache, status)
-        waybar_rtmin("clipboard")
-
-    def write_json_atomically(self, path, data):
-        tmp_file = path + f".tmp.{os.getpid()}"
-        try:
-            with open(tmp_file, "w") as f:
-                json.dump(data, f)
-            os.replace(tmp_file, path)
-        except Exception as e:
-            print(f"Error writing to {path}: {e}", file=sys.stderr)
-
-    def get_inhibited(self):
-        try:
-            val = self.session_bus.call_sync(
-                "org.kde.plasmashell",
-                "/org/freedesktop/Notifications",
-                "org.freedesktop.DBus.Properties",
-                "Get",
-                GLib.Variant("(ss)", ("org.freedesktop.Notifications", "Inhibited")),
-                None,
-                Gio.DBusCallFlags.NONE,
-                -1,
-                None
-            )
-            return val.get_child_value(0).get_variant().get_boolean()
-        except Exception:
-            return False
-
-    def update_notifications_cache(self):
-        inhibited = self.get_inhibited()
-        count = self.unread_count
-        
-        try:
-            # Write unread notifications count file atomically
-            tmp_count = self.count_file + f".tmp.{os.getpid()}"
-            with open(tmp_count, "w") as f:
-                f.write(str(count))
-            os.replace(tmp_count, self.count_file)
-        except Exception as e:
-            print(f"Error writing count file: {e}", file=sys.stderr)
-            
-        text = str(count) if count > 0 else ""
-        if count > 0:
-            if inhibited:
-                class_name = "dnd-notification"
-                alt_name = "dnd-notification"
-                tooltip = f"{count} unread notification(s) (Do not disturb)"
-            else:
-                class_name = "notification"
-                alt_name = "notification"
-                tooltip = f"{count} unread notification(s)"
-        else:
-            if inhibited:
-                class_name = "dnd-none"
-                alt_name = "dnd-none"
-                tooltip = "Do not disturb"
-            else:
-                class_name = "none"
-                alt_name = "none"
-                tooltip = "Notifications"
-                
-        status = {
-            "text": text,
-            "class": class_name,
-            "alt": alt_name,
-            "tooltip": tooltip
-        }
-        
-        self.write_json_atomically(self.status_cache, status)
-        self.write_json_atomically(self.history_cache, self.notifications)
-        waybar_rtmin("notifications")
-
-    def start_dbus_monitor(self):
-        def monitor_thread():
-            cmd = [
-                "dbus-monitor",
-                "interface='org.freedesktop.Notifications'",
-                "sender='org.freedesktop.Notifications'",
-            ]
-            try:
-                self.dbus_monitor_proc = subprocess.Popen(
-                    cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
-                )
-                for line in self.dbus_monitor_proc.stdout:
-                    GLib.idle_add(self.process_dbus_monitor_line, line.rstrip("\r\n"))
-            except Exception as e:
-                print(f"Error running dbus-monitor: {e}", file=sys.stderr)
-
-        threading.Thread(target=monitor_thread, daemon=True).start()
-
-    def unescape_dbus_str(self, s):
-        return s.replace('\\"', '"').replace('\\\\', '\\')
-
-    def check_notify_args_complete(self):
-        if self.notif_method == "Notify" and len(self.notif_args) >= 5:
-            app_name = self.unescape_dbus_str(str(self.notif_args[0]))
-            replaces_id = int(self.notif_args[1])
-            app_icon = self.unescape_dbus_str(str(self.notif_args[2]))
-            summary = self.unescape_dbus_str(str(self.notif_args[3]))
-            body = self.unescape_dbus_str(str(self.notif_args[4]))
-            
-            GLib.idle_add(self.handle_notify_call, self.notif_serial, app_name, app_icon, summary, body, replaces_id)
-            self.notif_method = None
-
-    def process_dbus_monitor_line(self, line):
-        if self.notif_in_string:
-            if line.endswith('"') and not line.endswith('\\"'):
-                self.notif_current_string += "\n" + line[:-1]
-                self.notif_args.append(self.notif_current_string)
-                self.notif_in_string = False
-                self.check_notify_args_complete()
-            else:
-                self.notif_current_string += "\n" + line
-            return
-            
-        stripped = line.strip()
-        if "member=Notify" in line and "method call" in line:
-            self.notif_method = "Notify"
-            m = re.search(r'serial=(\d+)', line)
-            self.notif_serial = int(m.group(1)) if m else None
-            self.notif_args = []
-            return
-            
-        if "method return" in line:
-            m = re.search(r'reply_serial=(\d+)', line)
-            reply_serial = int(m.group(1)) if m else None
-            self.notif_method = ("Reply", reply_serial)
-            self.notif_args = []
-            return
-            
-        if "member=NotificationClosed" in line and "signal" in line:
-            self.notif_method = "NotificationClosed"
-            self.notif_args = []
-            return
-            
-        if "member=PropertiesChanged" in line and "signal" in line:
-            if "path=/org/freedesktop/Notifications" in line:
-                GLib.idle_add(self.handle_properties_changed)
-            return
-            
-        if self.notif_method == "Notify":
-            if len(self.notif_args) >= 5:
-                return
-            if stripped.startswith('string "'):
-                val = stripped[8:]
-                if val.endswith('"') and not val.endswith('\\"'):
-                    self.notif_args.append(val[:-1])
-                    self.check_notify_args_complete()
-                else:
-                    self.notif_in_string = True
-                    self.notif_current_string = val
-            elif stripped.startswith('uint32 '):
-                try:
-                    val = int(stripped[7:])
-                    self.notif_args.append(val)
-                    self.check_notify_args_complete()
-                except ValueError:
-                    pass
-                    
-        elif isinstance(self.notif_method, tuple) and self.notif_method[0] == "Reply":
-            if stripped.startswith('uint32 '):
-                try:
-                    notif_id = int(stripped[7:])
-                    reply_serial = self.notif_method[1]
-                    GLib.idle_add(self.handle_notify_return, reply_serial, notif_id)
-                except ValueError:
-                    pass
-                self.notif_method = None
-                
-        elif self.notif_method == "NotificationClosed":
-            if stripped.startswith('uint32 '):
-                try:
-                    val = int(stripped[7:])
-                    self.notif_args.append(val)
-                    if len(self.notif_args) == 2:
-                        GLib.idle_add(self.handle_notification_closed, self.notif_args[0], self.notif_args[1])
-                        self.notif_method = None
-                except ValueError:
-                    pass
-
-    def handle_notify_call(self, serial, app_name, app_icon, summary, body_text, replaces_id):
-        self.notif_pending[serial] = {
-            "app_name": app_name,
-            "app_icon": app_icon,
-            "summary": summary,
-            "body": body_text,
-            "replaces_id": replaces_id,
-            "timestamp": int(time.time())
-        }
-
-    def handle_notify_return(self, reply_serial, notif_id):
-        if reply_serial in self.notif_pending:
-            notif_data = self.notif_pending.pop(reply_serial)
-            notif_data["id"] = notif_id
-            replaces_id = notif_data.pop("replaces_id", 0)
-            
-            replaced = False
-            if replaces_id > 0:
-                for idx, item in enumerate(self.notifications):
-                    if item.get("id") == replaces_id:
-                        self.notifications[idx] = notif_data
-                        replaced = True
-                        break
-            if not replaced:
-                for idx, item in enumerate(self.notifications):
-                    if item.get("id") == notif_id:
-                        self.notifications[idx] = notif_data
-                        replaced = True
-                        break
-                        
-            if not replaced:
-                self.notifications.append(notif_data)
-                self.unread_count += 1
-                
-            if len(self.notifications) > 50:
-                self.notifications.pop(0)
-                
-            self.update_notifications_cache()
-
-    def handle_notification_closed(self, notif_id, reason):
-        if reason in (2, 3, 4):
-            initial_len = len(self.notifications)
-            self.notifications = [n for n in self.notifications if n.get("id") != notif_id]
-            if len(self.notifications) != initial_len:
-                self.unread_count = max(0, self.unread_count - 1)
-                self.update_notifications_cache()
-
-    def handle_properties_changed(self):
-        self.update_notifications_cache()
-
-    def handle_sigusr1(self):
-        self.unread_count = 0
-        self.update_notifications_cache()
-        return True
-
-    def handle_sigusr2(self):
-        self.notifications = []
-        self.unread_count = 0
-        self.update_notifications_cache()
-        return True
-
-    def on_keyboard_layout_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        waybar_rtmin("keyboard_layout")
-
-    def on_nightlight_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        cache_dir = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "waybar")
-        cache_file = os.path.join(cache_dir, "nightlight-status.json")
-        try:
-            if os.path.exists(cache_file):
-                os.remove(cache_file)
-        except OSError:
-            pass
-        waybar_rtmin("nightlight")
-
-    def on_brightness_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        brightness_script = os.path.join(waybar_scripts_dir(), "system", "brightness-status.sh")
-        if os.path.exists(brightness_script):
-            subprocess.run([brightness_script, "--refresh"], stderr=subprocess.DEVNULL)
-            waybar_rtmin("brightness")
-
-    # NetworkManager fires rapid bursts of StateChanged/PropertiesChanged signals
-    # during interface state shifts. Debounce by 500ms to avoid launching concurrent
-    # updates that cause write conflicts or trigger Broken Pipe failures in Waybar.
-    def on_network_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        if self.network_timeout_id != 0:
-            GLib.source_remove(self.network_timeout_id)
-        self.network_timeout_id = GLib.timeout_add(500, self.debounce_network_refresh)
-
-    def debounce_network_refresh(self):
-        self.network_timeout_id = 0
-        with self.network_lock:
-            if self.network_refreshing:
-                self.network_pending = True
-                return False
-            self.network_refreshing = True
-        self.trigger_network_refresh()
-        return False
-
-    # Executes refreshes asynchronously in a background thread to prevent blocking
-    # the main GLib mainloop during slower network status (NM/VPN/Tailscale) requests.
-    def trigger_network_refresh(self):
-        vpn_script = os.path.join(waybar_scripts_dir(), "network", "vpn-status.sh")
-        ts_script = os.path.join(waybar_scripts_dir(), "network", "tailscale-status.sh")
-        
-        def run_refresh():
-            try:
-                if os.path.exists(vpn_script):
-                    subprocess.run([vpn_script, "--refresh"], stderr=subprocess.DEVNULL)
-                    waybar_rtmin("vpn")
-                if os.path.exists(ts_script):
-                    subprocess.run([ts_script, "--refresh"], stderr=subprocess.DEVNULL)
-                    waybar_rtmin("tailscale")
-            finally:
-                with self.network_lock:
-                    self.network_refreshing = False
-                    if self.network_pending:
-                        self.network_pending = False
-                        GLib.idle_add(self.trigger_network_refresh)
-                
-        threading.Thread(target=run_refresh, daemon=True).start()
-
-
-    def on_kdeconnect_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        with self.kdeconnect_lock:
-            if self.kdeconnect_refreshing:
-                self.kdeconnect_pending = True
-                return
-            self.kdeconnect_refreshing = True
-        
-        self.trigger_kdeconnect_refresh()
-
-    def trigger_kdeconnect_refresh(self):
-        kdeconnect_script = os.path.join(waybar_scripts_dir(), "services", "devices", "kdeconnect-status.sh")
-        if not os.path.exists(kdeconnect_script):
-            with self.kdeconnect_lock:
-                self.kdeconnect_refreshing = False
-            return
-            
-        def run_refresh():
-            try:
-                subprocess.run([kdeconnect_script, "--refresh"], stderr=subprocess.DEVNULL)
-                waybar_rtmin("kdeconnect")
-            finally:
-                with self.kdeconnect_lock:
-                    self.kdeconnect_refreshing = False
-                    if self.kdeconnect_pending:
-                        self.kdeconnect_pending = False
-                        GLib.idle_add(self.trigger_kdeconnect_refresh)
-                        
-        threading.Thread(target=run_refresh, daemon=True).start()
-
-    def on_virtual_desktops_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        if signal_name in ("currentChanged", "desktopCreated", "desktopRemoved", "desktopDataChanged"):
-            self.clear_workspace_cache()
-            waybar_rtmin("workspaces")
-
-    def on_upower_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        with self.upower_lock:
-            if self.upower_refreshing:
-                self.upower_pending = True
-                return
-            self.upower_refreshing = True
-        
-        self.trigger_upower_refresh()
-
-    def trigger_upower_refresh(self):
-        battery_script = os.path.join(waybar_scripts_dir(), "services", "devices", "device-battery-status.sh")
-        if not os.path.exists(battery_script):
-            with self.upower_lock:
-                self.upower_refreshing = False
-            return
-            
-        def run_refresh():
-            try:
-                subprocess.run([battery_script, "--refresh"], stderr=subprocess.DEVNULL)
-                waybar_rtmin("device_battery")
-            finally:
-                with self.upower_lock:
-                    self.upower_refreshing = False
-                    if self.upower_pending:
-                        self.upower_pending = False
-                        GLib.idle_add(self.trigger_upower_refresh)
-                        
-        threading.Thread(target=run_refresh, daemon=True).start()
-
-    def on_powerprofiles_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        waybar_rtmin("powerprofiles")
 
     def cleanup(self):
         if self.script_id:
@@ -1037,48 +248,9 @@ class ActiveWindowServer:
         finally:
             self.cleanup()
 
-def detect_compositor() -> str:
-    env = os.environ.get("WAYBAR_COMPOSITOR", "").strip()
-    if env in ("hyprland", "kde", "unknown"):
-        return env
-    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-        return "hyprland"
-    desktop = "".join(
-        os.environ.get(key, "")
-        for key in ("XDG_CURRENT_DESKTOP", "XDG_SESSION_DESKTOP", "DESKTOP_SESSION")
-    )
-    if any(token in desktop for token in ("Hyprland", "hyprland")):
-        return "hyprland"
-    if any(token in desktop for token in ("KDE", "Plasma", "plasma")):
-        return "kde"
-    if os.environ.get("KDE_SESSION_VERSION"):
-        return "kde"
-    try:
-        subprocess.run(
-            ["pgrep", "-x", "kwin_wayland"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        return "kde"
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-    try:
-        subprocess.run(
-            ["pgrep", "-x", "kwin_x11"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        return "kde"
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-    return "unknown"
-
 
 if __name__ == "__main__":
     if detect_compositor() != "kde":
         sys.exit(0)
     acquire_lock("kde-activewindow")
-    server = ActiveWindowServer()
-    server.run()
+    ActiveWindowServer().run()

@@ -4,11 +4,7 @@ set -eu
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 script_dir="${0%/*}"
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
 config_override=$(waybar_settings_get '.hypr_tools.keybinds_config' '')
 if [ -n "$config_override" ] && [ "$config_override" != "null" ]; then

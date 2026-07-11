@@ -76,6 +76,8 @@ waybar_test_secrets_copy_polish_scripts() {
     "$TEST_DIR/scripts/services/devices/"
   cp "$root/scripts/lib/notifications-lib.sh" \
     "$root/scripts/lib/waybar-cache-helpers.sh" \
+    "$root/scripts/lib/waybar-locale-lib.sh" \
+    "$root/scripts/lib/waybar-systemd-scan-lib.sh" \
     "$root/scripts/lib/unicode-animations-lib.sh" \
     "$root/scripts/lib/compositor-session.sh" \
     "$root/scripts/lib/app-open-lib.sh" \

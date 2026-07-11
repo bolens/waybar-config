@@ -12,6 +12,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/liquidctl-status.json"
 lock_dir="$cache_dir/liquidctl-status.lock.d"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
+. "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
 ttl="$(waybar_module_interval liquidctl 10)"
 stale_lock_ttl=15
 

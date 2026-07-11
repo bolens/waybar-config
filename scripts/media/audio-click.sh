@@ -11,11 +11,7 @@ if [ -f "$WAYBAR_SCRIPTS/lib/compositor-session.sh" ]; then
   . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 fi
 
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
 open_sound_settings() {
   compositor=$(detect_compositor)

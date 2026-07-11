@@ -10,11 +10,7 @@ script_dir="${0%/*}"
 # shellcheck source=notifications-lib.sh
 . "$WAYBAR_SCRIPTS/lib/notifications-lib.sh"
 
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
 action="${1:-open}"
 compositor="$(detect_compositor)"

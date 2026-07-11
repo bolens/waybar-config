@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Weather status for Waybar (wttr.in). Temps via waybar-locale-lib.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -6,41 +7,21 @@ set -eu
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/weather-status.json"
 lock_dir="$cache_dir/weather-status.lock.d"
-script_dir="${0%/*}"
+
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-ttl="$(waybar_module_interval weather 1800)"
-stale_lock_ttl=30
-
-mkdir -p "$cache_dir"
-
-script_dir="${0%/*}"
+. "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
-weather_unit=$(waybar_settings_get '.weather.unit' '')
-if [ -z "$weather_unit" ] || [ "$weather_unit" = "auto" ] || [ "$weather_unit" = "null" ]; then
-  weather_unit=$(detect_weather_unit)
-fi
-weather_unit=$(echo "$weather_unit" | tr '[:lower:]' '[:upper:]')
-case "$weather_unit" in
-  C*) weather_unit="C" ;;
-  *) weather_unit="F" ;;
-esac
+ttl="$(waybar_module_interval weather 1800)"
+stale_lock_ttl=30
+mkdir -p "$cache_dir"
 
+weather_unit=$(detect_weather_unit)
 weather_location=$(waybar_settings_get '.weather.location' '')
 
-map_code_to_icon() {
-  case "$1" in
-    113) printf '󰖙' ;;                                                                                     # Sunny/Clear
-    116) printf '󰖕' ;;                                                                                     # Partly Cloudy
-    119 | 122) printf '󰖐' ;;                                                                               # Cloudy / Overcast
-    143 | 248 | 260) printf '󰖑' ;;                                                                         # Fog / Mist
-    176 | 263 | 266 | 293 | 296) printf '󰖗' ;;                                                             # Patchy light rain / Drizzle
-    299 | 302 | 305 | 308 | 353 | 356) printf '󰖖' ;;                                                       # Rain / Showers
-    179 | 182 | 185 | 227 | 230 | 323 | 326 | 329 | 332 | 335 | 338 | 350 | 368 | 371 | 395) printf '󰼶' ;; # Snow / Sleet
-    200 | 386 | 389 | 392) printf '󰖓' ;;                                                                   # Thunder / Storm
-    *) printf '󰖐' ;;
-  esac
-}
+# Prefer metric (km/h, mm) when Celsius is preferred; imperial otherwise.
+use_metric=1
+[ "$weather_unit" = "F" ] && use_metric=0
 
 if [ "${1:-}" != "--refresh" ]; then
   if [ -f "$cache_file" ] && [ "$(cache_file_age "$cache_file")" -le "$ttl" ] 2>/dev/null; then
@@ -82,7 +63,6 @@ raw_weather=$(cat "$tmp_weather" 2>/dev/null || echo "")
 rm -f "$tmp_weather"
 
 if [ -z "$raw_weather" ]; then
-  # If curl failed, keep the stale cache if available, else show error
   if [ -f "$cache_file" ]; then
     exit 0
   fi
@@ -90,8 +70,8 @@ if [ -z "$raw_weather" ]; then
   exit 0
 fi
 
-# Run single jq invocation to build the entire JSON output
-json=$(printf '%s' "$raw_weather" | jq -c --arg unit "$weather_unit" '
+# jq extracts structured fields only; shell owns locale-aware temp strings.
+parsed=$(printf '%s' "$raw_weather" | jq -c '
   def map_icon($code):
     if $code == "113" then "󰖙"
     elif $code == "116" then "󰖕"
@@ -104,51 +84,35 @@ json=$(printf '%s' "$raw_weather" | jq -c --arg unit "$weather_unit" '
     else "󰖐"
     end;
 
+  def as_int($v):
+    ($v // "0" | tonumber? // 0) | round;
+
   . as $root |
-  ($unit == "C") as $use_c |
-
   .current_condition[0] as $cc |
-  ($cc.temp_C // "0") as $temp_c |
-  ($cc.temp_F // "0") as $temp_f |
-  (if $use_c then $temp_c else $temp_f end) as $temp |
-  ($cc.weatherDesc[0].value // "" | sub("^\\s+"; "") | sub("\\s+$"; "")) as $desc |
-  ($cc.weatherCode // "119") as $code |
-  ($cc.humidity // "0") as $humidity |
-  ($cc.windspeedKmph // "0") as $wind_kmph |
-  ($cc.windspeedMiles // "0") as $wind_miles |
-  ($cc.precipMM // "0.0") as $precip_mm |
-  ($cc.precipInches // "0.0") as $precip_in |
-  map_icon($code) as $icon |
-
-  [
-    range(0; 3) |
-    $root.weather[.] as $w |
-    if $w != null then
-      (if . == 0 then "Today:    " elif . == 1 then "Tomorrow: " else "Day After:" end) as $day_label |
-      ($w.maxtempC // "0") as $max_c |
-      ($w.mintempC // "0") as $min_c |
-      ($w.maxtempF // "0") as $max_f |
-      ($w.mintempF // "0") as $min_f |
-      (if $use_c then "\($min_c)°C - \($max_c)°C" else "\($min_f)°F - \($max_f)°F" end) as $temp_range |
-      ($w.hourly[4].weatherDesc[0].value // "" | sub("^\\s+"; "") | sub("\\s+$"; "")) as $day_desc |
-      "\($day_label) \($day_desc) (\($temp_range))"
-    else
-      empty
-    end
-  ] | join("\n") as $forecast |
-
-  (if $use_c then "\($temp_c)°C (\($temp_f)°F)" else "\($temp_f)°F (\($temp_c)°C)" end) as $temp_tooltip |
-  (if $use_c then "\($wind_kmph) km/h (\($wind_miles) mph)" else "\($wind_miles) mph (\($wind_kmph) km/h)" end) as $wind_tooltip |
-  (if $use_c then "\($precip_mm) mm (\($precip_in) in)" else "\($precip_in) in (\($precip_mm) mm)" end) as $precip_tooltip |
-
-  "\($icon) \($temp)°\($unit)" as $text |
-  "Current Weather\nTemperature: \($temp_tooltip)\nConditions: \($desc)\nWind: \($wind_tooltip)\nHumidity: \($humidity)%\nPrecipitation: \($precip_tooltip)\n\n\($forecast)\n\nLeft: wttr.in · Right: weather.com · Middle: refresh" as $tooltip |
-
-  {text: $text, tooltip: $tooltip, class: "normal"}
+  {
+    icon: map_icon($cc.weatherCode // "119"),
+    temp_c: as_int($cc.temp_C),
+    desc: ($cc.weatherDesc[0].value // "" | sub("^\\s+"; "") | sub("\\s+$"; "")),
+    humidity: ($cc.humidity // "0"),
+    wind_kmph: ($cc.windspeedKmph // "0"),
+    wind_miles: ($cc.windspeedMiles // "0"),
+    precip_mm: ($cc.precipMM // "0.0"),
+    precip_in: ($cc.precipInches // "0.0"),
+    forecast: [
+      range(0; 3) |
+      $root.weather[.] as $w |
+      select($w != null) |
+      {
+        label: (if . == 0 then "Today:    " elif . == 1 then "Tomorrow: " else "Day After:" end),
+        desc: ($w.hourly[4].weatherDesc[0].value // "" | sub("^\\s+"; "") | sub("\\s+$"; "")),
+        min_c: as_int($w.mintempC),
+        max_c: as_int($w.maxtempC)
+      }
+    ]
+  }
 ' 2>/dev/null || echo "")
 
-if [ -z "$json" ]; then
-  # Fallback if jq parsing failed
+if [ -z "$parsed" ] || [ "$parsed" = "null" ]; then
   if [ -f "$cache_file" ]; then
     exit 0
   fi
@@ -156,8 +120,47 @@ if [ -z "$json" ]; then
   exit 0
 fi
 
-printf '%s\n' "$json"
+icon=$(printf '%s' "$parsed" | jq -r '.icon')
+temp_c=$(printf '%s' "$parsed" | jq -r '.temp_c')
+desc=$(printf '%s' "$parsed" | jq -r '.desc')
+humidity=$(printf '%s' "$parsed" | jq -r '.humidity')
+wind_kmph=$(printf '%s' "$parsed" | jq -r '.wind_kmph')
+wind_miles=$(printf '%s' "$parsed" | jq -r '.wind_miles')
+precip_mm=$(printf '%s' "$parsed" | jq -r '.precip_mm')
+precip_in=$(printf '%s' "$parsed" | jq -r '.precip_in')
 
+temp_short=$(format_locale_temp "$temp_c" short | tr -d '\n')
+temp_tooltip=$(format_locale_temp "$temp_c" both | tr -d '\n')
+
+if [ "$use_metric" -eq 1 ]; then
+  wind_tooltip="${wind_kmph} km/h (${wind_miles} mph)"
+  precip_tooltip="${precip_mm} mm (${precip_in} in)"
+else
+  wind_tooltip="${wind_miles} mph (${wind_kmph} km/h)"
+  precip_tooltip="${precip_in} in (${precip_mm} mm)"
+fi
+
+forecast_lines=""
+while IFS="$(printf '\t')" read -r label day_desc min_c max_c; do
+  [ -n "${label:-}" ] || continue
+  min_fmt=$(format_locale_temp "$min_c" short | tr -d '\n')
+  max_fmt=$(format_locale_temp "$max_c" short | tr -d '\n')
+  line="${label} ${day_desc} (${min_fmt} - ${max_fmt})"
+  if [ -z "$forecast_lines" ]; then
+    forecast_lines="$line"
+  else
+    forecast_lines=$(printf '%s\n%s' "$forecast_lines" "$line")
+  fi
+done <<EOF
+$(printf '%s' "$parsed" | jq -r '.forecast[] | [.label, .desc, (.min_c|tostring), (.max_c|tostring)] | @tsv')
+EOF
+
+text="${icon} ${temp_short}"
+tooltip=$(printf 'Current Weather\nTemperature: %s\nConditions: %s\nWind: %s\nHumidity: %s%%\nPrecipitation: %s\n\n%s\n\nLeft: wttr.in · Right: weather.com · Middle: refresh' \
+  "$temp_tooltip" "$desc" "$wind_tooltip" "$humidity" "$precip_tooltip" "$forecast_lines")
+
+json=$(emit_waybar_json "$text" "$tooltip" "normal")
+printf '%s\n' "$json"
 tmp_cache="$cache_file.tmp.$$"
 printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"

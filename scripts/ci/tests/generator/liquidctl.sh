@@ -7,6 +7,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "liquidctl"
 waybar_test_gen_sandbox
+export WAYBAR_WEATHER_UNIT=C
 
 # liquidctl module: generator wiring + status script behavior (fixture CLI)
 echo "Testing liquidctl module wiring and status script..."

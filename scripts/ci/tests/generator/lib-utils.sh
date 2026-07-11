@@ -200,5 +200,47 @@ if ! grep -Fxq 'cmd *' "$APP_OPEN_LOG"; then
   fail=1
 fi
 
+echo "Testing waybar-locale-lib + locale_temp.py..."
+locale_c=$(
+  WAYBAR_WEATHER_UNIT=C bash -c '
+    . "'"$TEST_DIR"'/scripts/lib/waybar-locale-lib.sh"
+    format_locale_temp 21 short | tr -d "\n"; printf "|"
+    format_locale_temp 21 both | tr -d "\n"
+  '
+)
+if [ "$locale_c" != "21°C|21°C (69°F)" ]; then
+  echo "FAIL: format_locale_temp C expected '21°C|21°C (69°F)', got: $locale_c" >&2
+  fail=1
+fi
+locale_f=$(
+  WAYBAR_WEATHER_UNIT=F bash -c '
+    . "'"$TEST_DIR"'/scripts/lib/waybar-locale-lib.sh"
+    format_locale_temp 21 short | tr -d "\n"
+  '
+)
+if [ "$locale_f" != "69°F" ]; then
+  echo "FAIL: format_locale_temp F expected 69°F, got: $locale_f" >&2
+  fail=1
+fi
+locale_py=$(
+  PYTHONPATH="$TEST_DIR/scripts/lib" python3 -c \
+    'from locale_temp import format_locale_temp; print(format_locale_temp(21, unit="C", mode="short"), end="")'
+)
+if [ "$locale_py" != "21°C" ]; then
+  echo "FAIL: locale_temp.py expected 21°C, got: $locale_py" >&2
+  fail=1
+fi
+
+rofi_row=$(
+  bash -c '
+    . "'"$TEST_DIR"'/scripts/lib/rofi-popup-lib.sh"
+    format_header_row "Label:" "value"
+  '
+)
+if ! printf '%s' "$rofi_row" | grep -q 'Label:'; then
+  echo "FAIL: format_header_row missing label: $rofi_row" >&2
+  fail=1
+fi
+
 # Verify behavior when waybar-settings.jsonc is missing
 waybar_test_end

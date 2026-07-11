@@ -5,6 +5,7 @@ set -eu
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
+. "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
 if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
   . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 fi

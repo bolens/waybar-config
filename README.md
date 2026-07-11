@@ -155,7 +155,7 @@ To regenerate configurations after modifying settings:
 ```bash
 make generate
 # equivalent:
-#   scripts/generate/generate-settings.sh          # also runs network/dock/module generators
+#   scripts/generate/generate-settings.sh          # also runs network/dock/domain module generators
 #   scripts/generate/generate-compositor-modules.sh
 #   scripts/generate/generate-workspaces-css.sh
 ```
@@ -165,7 +165,7 @@ Launch skips regeneration when inputs are unchanged (stamp: `~/.cache/waybar/gen
 ### Adding new status modules
 If you are developing a new status script (e.g. `scripts/system/my-status.sh`):
 1. Place it in the matching domain folder (see [scripts/README.md](scripts/README.md)).
-2. Import the cache helpers at the top of your script:
+2. Import the cache helpers at the top of your script (add `waybar-locale-lib.sh` if you call `detect_*` / `format_locale_*`):
    ```bash
    : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
    : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

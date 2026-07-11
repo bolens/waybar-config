@@ -72,7 +72,18 @@ config_inputs_newer_than() {
     "$WAYBAR_HOME/data/workspace-glyphs.json" \
     "$WAYBAR_HOME/data/workspace-bar.json" \
     "$WAYBAR_SCRIPTS/generate/generate-settings.sh" \
-    "$WAYBAR_SCRIPTS/generate/generate-module-configs.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-utilities-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-audio-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-clock-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-drawers-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-network-custom-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-privacy-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-active-window-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-center-extras-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-dock-windows-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-tray-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-hypr-tools-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-theme-tokens.sh" \
     "$WAYBAR_SCRIPTS/generate/generate-compositor-modules.sh" \
     "$WAYBAR_SCRIPTS/generate/generate-dock-modules.sh" \
     "$WAYBAR_SCRIPTS/generate/generate-network-modules.sh" \
@@ -123,7 +134,7 @@ if [ "$need_regen" -eq 1 ]; then
     "$WAYBAR_SCRIPTS/generate/generate-workspaces-css.sh"
   fi
 
-  # generate-settings already invokes dock/network/module generators; only
+  # generate-settings already invokes dock/network/domain module generators; only
   # re-run them here when generate-settings is absent.
   if [ ! -x "$WAYBAR_SCRIPTS/generate/generate-settings.sh" ]; then
     if [ -x "$WAYBAR_SCRIPTS/generate/generate-dock-modules.sh" ]; then
@@ -132,6 +143,23 @@ if [ "$need_regen" -eq 1 ]; then
     if [ -x "$WAYBAR_SCRIPTS/generate/generate-network-modules.sh" ]; then
       "$WAYBAR_SCRIPTS/generate/generate-network-modules.sh"
     fi
+    for _gen in \
+      generate-utilities-modules.sh \
+      generate-audio-modules.sh \
+      generate-clock-modules.sh \
+      generate-drawers-modules.sh \
+      generate-network-custom-modules.sh \
+      generate-privacy-modules.sh \
+      generate-active-window-modules.sh \
+      generate-center-extras-modules.sh \
+      generate-dock-windows-modules.sh \
+      generate-tray-modules.sh \
+      generate-hypr-tools-modules.sh \
+      generate-theme-tokens.sh; do
+      if [ -x "$WAYBAR_SCRIPTS/generate/$_gen" ]; then
+        "$WAYBAR_SCRIPTS/generate/$_gen"
+      fi
+    done
   fi
 
   touch "$regen_stamp"

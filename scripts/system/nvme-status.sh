@@ -9,6 +9,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/nvme-status.json"
 lock_dir="$cache_dir/nvme-status.lock.d"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
+. "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
 ttl="$(waybar_module_interval nvme 10)"
 stale_lock_ttl=15
 
@@ -68,7 +69,7 @@ for d in "$scan_root"/hwmon*; do
     if [ -f "$lab_file" ]; then
       lab=$(tr -d '\n' <"$lab_file" 2>/dev/null || echo temp)
     fi
-    sensors+=("${lab}:${c}°")
+    sensors+=("${lab}:$(format_locale_temp "$c" short | tr -d '\n')")
     lab_lc=$(printf '%s' "$lab" | tr '[:upper:]' '[:lower:]')
     if [ "$lab_lc" = "composite" ]; then
       drive_c=$c
@@ -97,7 +98,8 @@ for d in "$scan_root"/hwmon*; do
     IFS=', '
     echo "${sensors[*]}"
   )
-  tooltip_lines+=("$title: ${drive_c}°C ($sensor_txt)")
+  line_fmt=$(format_locale_temp "$drive_c" short | tr -d '\n')
+  tooltip_lines+=("$title: ${line_fmt} ($sensor_txt)")
 
   if [ "$drive_c" -gt "$hottest_c" ]; then
     hottest_c=$drive_c
@@ -116,8 +118,9 @@ elif [ "$hottest_c" -ge "$temp_warn" ] 2>/dev/null; then
   class="warning"
 fi
 
-text=$(printf '󰋊 %d°' "$hottest_c")
-tooltip=$(printf 'NVMe temperatures\n\nHottest: %s (%d°C)\n\n%s\n\nMiddle: refresh' \
-  "$hottest_name" "$hottest_c" "$(printf '%s\n' "${tooltip_lines[@]}")")
+hottest_fmt=$(format_locale_temp "$hottest_c" short | tr -d '\n')
+text=$(printf '󰋊 %s' "$hottest_fmt")
+tooltip=$(printf 'NVMe temperatures\n\nHottest: %s (%s)\n\n%s\n\nMiddle: refresh' \
+  "$hottest_name" "$hottest_fmt" "$(printf '%s\n' "${tooltip_lines[@]}")")
 
 write_cache_and_exit "$(emit_waybar_json "$text" "$tooltip" "$class")"

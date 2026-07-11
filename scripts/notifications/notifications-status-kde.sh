@@ -10,8 +10,6 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/notifications-status.json"
 cache_ttl="$(waybar_module_interval notifications 120)"
 
-# shellcheck source=waybar-cache-helpers.sh
-. "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 # shellcheck source=notifications-lib.sh
 . "$WAYBAR_SCRIPTS/lib/notifications-lib.sh"
 

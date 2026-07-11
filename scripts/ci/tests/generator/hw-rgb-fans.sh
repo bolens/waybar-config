@@ -7,6 +7,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "hw-rgb-fans"
 waybar_test_gen_sandbox
+export WAYBAR_WEATHER_UNIT=C
 
 echo "Testing rgb, amdgpu fallback, solaar, and fans..."
 waybar_test_gen_restore_sot

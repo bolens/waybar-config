@@ -97,25 +97,25 @@ else
 fi
 
 # Verify locale helpers respect overrides
-test_hour_fmt=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/lib/waybar-settings.sh; . $TEST_DIR/scripts/lib/waybar-cache-helpers.sh; detect_clock_format")
+test_hour_fmt=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/lib/waybar-settings.sh; . $TEST_DIR/scripts/lib/waybar-locale-lib.sh; detect_clock_format")
 if [ "$test_hour_fmt" != "12" ]; then
   echo "FAIL: detect_clock_format failed to respect clocks.hour_format override! Resolved: $test_hour_fmt" >&2
   fail=1
 fi
 
-test_date_fmt=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/lib/waybar-settings.sh; . $TEST_DIR/scripts/lib/waybar-cache-helpers.sh; detect_date_format")
+test_date_fmt=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/lib/waybar-settings.sh; . $TEST_DIR/scripts/lib/waybar-locale-lib.sh; detect_date_format")
 if [ "$test_date_fmt" != "month-first" ]; then
   echo "FAIL: detect_date_format failed to respect clocks.date_format override! Resolved: $test_date_fmt" >&2
   fail=1
 fi
 
-test_first_day=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/lib/waybar-settings.sh; . $TEST_DIR/scripts/lib/waybar-cache-helpers.sh; detect_first_weekday")
+test_first_day=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/lib/waybar-settings.sh; . $TEST_DIR/scripts/lib/waybar-locale-lib.sh; detect_first_weekday")
 if [ "$test_first_day" != "0" ]; then
   echo "FAIL: detect_first_weekday failed to respect clocks.calendar.first_day override! Resolved: $test_first_day" >&2
   fail=1
 fi
 
-test_weather_unit=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/lib/waybar-settings.sh; . $TEST_DIR/scripts/lib/waybar-cache-helpers.sh; detect_weather_unit")
+test_weather_unit=$(WAYBAR_HOME="$TEST_DIR" bash -c ". $TEST_DIR/scripts/lib/waybar-settings.sh; . $TEST_DIR/scripts/lib/waybar-locale-lib.sh; detect_weather_unit")
 if [ "$test_weather_unit" != "F" ]; then
   echo "FAIL: detect_weather_unit failed to respect weather.unit override! Resolved: $test_weather_unit" >&2
   fail=1

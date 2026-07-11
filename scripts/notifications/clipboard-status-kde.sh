@@ -10,8 +10,6 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/clipboard-status.json"
 cache_ttl="$(waybar_module_interval clipboard 120)"
 
-# shellcheck source=waybar-cache-helpers.sh
-. "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 # shellcheck source=clipboard-lib.sh
 . "$WAYBAR_SCRIPTS/lib/clipboard-lib.sh"
 

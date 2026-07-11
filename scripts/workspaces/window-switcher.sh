@@ -9,20 +9,12 @@ script_dir="$(CDPATH='' cd -- "$(dirname "$0")" && pwd)"
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 
 # shellcheck source=waybar-cache-helpers.sh
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-fi
-# shellcheck source=xdg-applications.sh
-# Walks XDG_DATA_HOME / XDG_DATA_DIRS / Flatpak exports (not only /usr/share).
-. "$WAYBAR_SCRIPTS/lib/xdg-applications.sh"
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+# shellcheck source=xdg-icons-lib.sh
+# Desktop-file icon maps + guess_icon (shared with kde-notifications-rofi).
+. "$WAYBAR_SCRIPTS/lib/xdg-icons-lib.sh"
 
 session="$(detect_compositor)"
 tab=$'\t'
@@ -145,176 +137,8 @@ theme="${theme_window}"'
   }
 '
 
-# Dynamic desktop file mappings cache system
-CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}"
-CACHE_FILE="$CACHE_DIR/window-switcher-icons.cache"
-mkdir -p "$CACHE_DIR"
-
-declare -A class_to_icon
-declare -A name_to_icon
-declare -A exec_to_icon
-
-rebuild_cache=false
-if [ ! -s "$CACHE_FILE" ]; then
-  rebuild_cache=true
-else
-  max_mtime=0
-  while IFS= read -r d; do
-    [ -d "$d" ] || continue
-    mtime=$(stat -c %Y "$d" 2>/dev/null || echo 0)
-    if [ "$mtime" -gt "$max_mtime" ]; then
-      max_mtime="$mtime"
-    fi
-  done < <(xdg_application_dirs)
-
-  cache_mtime=$(stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0)
-  if [ "$max_mtime" -gt "$cache_mtime" ]; then
-    rebuild_cache=true
-  fi
-fi
-
-if [ "$rebuild_cache" = true ]; then
-  shopt -s nullglob
-  files=()
-  while IFS= read -r d; do
-    [ -d "$d" ] || continue
-    files+=("$d"/*.desktop)
-  done < <(xdg_application_dirs)
-  shopt -u nullglob
-
-  declare -A tmp_class=()
-  declare -A tmp_name=()
-  declare -A tmp_exec=()
-
-  tab=$'\t'
-  if [ "${#files[@]}" -gt 0 ]; then
-    while IFS="$tab" read -r type key val; do
-      case "$type" in
-        class) tmp_class["$key"]="$val" ;;
-        name) tmp_name["$key"]="$val" ;;
-        exec) tmp_exec["$key"]="$val" ;;
-      esac
-    done < <(awk -F= '
-      BEGINFILE {
-        name=""; icon=""; wmclass=""; exec=""; in_entry=0;
-      }
-      /^\[Desktop Entry\]/ {
-        in_entry=1;
-        next;
-      }
-      /^\[/ {
-        in_entry=0;
-      }
-      in_entry {
-        sub(/\r$/, "");
-        if ($1 == "Name" && name == "") {
-          name=$2;
-        } else if ($1 == "Icon" && icon == "") {
-          icon=$2;
-        } else if ($1 == "StartupWMClass" && wmclass == "") {
-          wmclass=$2;
-        } else if ($1 == "Exec" && exec == "") {
-          split($2, parts, " ");
-          exec=parts[1];
-          sub(/.*\//, "", exec);
-        }
-      }
-      ENDFILE {
-        if (icon != "") {
-          if (wmclass != "") print "class\t" tolower(wmclass) "\t" icon;
-          if (name != "") print "name\t" tolower(name) "\t" icon;
-          if (exec != "") print "exec\t" tolower(exec) "\t" icon;
-          
-          split(FILENAME, fn_parts, "/");
-          fn = fn_parts[length(fn_parts)];
-          sub(/\.desktop$/, "", fn);
-          print "exec\t" tolower(fn) "\t" icon;
-        }
-      }
-    ' "${files[@]}" 2>/dev/null || true)
-  fi
-
-  for k in "${!tmp_class[@]}"; do class_to_icon["$k"]="${tmp_class[$k]}"; done
-  for k in "${!tmp_name[@]}"; do name_to_icon["$k"]="${tmp_name[$k]}"; done
-  for k in "${!tmp_exec[@]}"; do exec_to_icon["$k"]="${tmp_exec[$k]}"; done
-
-  tmp_cache="$CACHE_FILE.tmp.$$"
-  declare -p class_to_icon name_to_icon exec_to_icon >"$tmp_cache" 2>/dev/null || true
-  mv -f "$tmp_cache" "$CACHE_FILE" 2>/dev/null || true
-  cleanup_stale_tmp_files "$CACHE_DIR"
-else
-  # shellcheck source=/dev/null
-  . "$CACHE_FILE"
-fi
-
-guess_icon() {
-  local title="$1"
-  local app="$2"
-
-  local app_lower
-  app_lower=$(echo "${app:-}" | tr 'A-Z' 'a-z')
-  local title_lower
-  title_lower=$(echo "${title:-}" | tr 'A-Z' 'a-z')
-
-  # 1. Direct app name mapping
-  if [ -n "$app_lower" ] && [ "$app_lower" != "null" ]; then
-    if [ -n "${class_to_icon[$app_lower]:-}" ]; then
-      printf '%s' "${class_to_icon[$app_lower]}"
-      return
-    elif [ -n "${exec_to_icon[$app_lower]:-}" ]; then
-      printf '%s' "${exec_to_icon[$app_lower]}"
-      return
-    elif [ -n "${name_to_icon[$app_lower]:-}" ]; then
-      printf '%s' "${name_to_icon[$app_lower]}"
-      return
-    fi
-  fi
-
-  # 2. Window title matches desktop name or class exactly
-  if [ -n "${name_to_icon[$title_lower]:-}" ]; then
-    printf '%s' "${name_to_icon[$title_lower]}"
-    return
-  fi
-  if [ -n "${class_to_icon[$title_lower]:-}" ]; then
-    printf '%s' "${class_to_icon[$title_lower]}"
-    return
-  fi
-
-  # 3. Substring search in window title for matching names/classes
-  for class_key in "${!class_to_icon[@]}"; do
-    if [[ "$title_lower" == *"$class_key"* ]]; then
-      printf '%s' "${class_to_icon[$class_key]}"
-      return
-    fi
-  done
-  for name_key in "${!name_to_icon[@]}"; do
-    if [ "${#name_key}" -gt 2 ] && [[ "$title_lower" == *"$name_key"* ]]; then
-      printf '%s' "${name_to_icon[$name_key]}"
-      return
-    fi
-  done
-  for exec_key in "${!exec_to_icon[@]}"; do
-    if [ "${#exec_key}" -gt 2 ] && [[ "$title_lower" == *"$exec_key"* ]]; then
-      printf '%s' "${exec_to_icon[$exec_key]}"
-      return
-    fi
-  done
-
-  # 4. Fallback for shell prompts & terminal processes (maps to default terminal emulator Ghostty)
-  if [[ "$title" =~ ^[~/] || "$title_lower" == *"bash"* || "$title_lower" == *"sh"* || "$title_lower" == *"agy"* ]]; then
-    if [ -n "${exec_to_icon["ghostty"]:-}" ]; then
-      printf '%s' "${exec_to_icon["ghostty"]}"
-      return
-    fi
-  fi
-
-  # 5. Generic fallback
-  if [ -n "$app_lower" ] && [ "$app_lower" != "null" ]; then
-    printf '%s' "$app_lower"
-  else
-    printf 'applications-other'
-  fi
-}
+# Desktop icon maps (shared lib)
+xdg_icons_load_maps "${XDG_CACHE_HOME:-$HOME/.cache}/window-switcher-icons.cache"
 
 if [ "$session" = "hyprland" ]; then
   if ! command -v hyprctl >/dev/null 2>&1; then
@@ -339,10 +163,10 @@ if [ "$session" = "hyprland" ]; then
   declare -a icons=()
 
   for line in "${client_data[@]}"; do
-    addr="${line%%$tab*}"
-    rest="${line#*$tab}"
-    class="${rest%%$tab*}"
-    disp="${rest#*$tab}"
+    addr="${line%%"$tab"*}"
+    rest="${line#*"$tab"}"
+    class="${rest%%"$tab"*}"
+    disp="${rest#*"$tab"}"
 
     # Lookup icon using our dynamic guesser (class acts as the app name hint)
     icon_name="$(guess_icon "$disp" "$class")"
@@ -390,10 +214,10 @@ elif [ "$session" = "kde" ]; then
   declare -a icons=()
 
   for line in "${parsed[@]}"; do
-    id="${line%%$tab*}"
-    rest="${line#*$tab}"
-    title="${rest%%$tab*}"
-    app="${rest#*$tab}"
+    id="${line%%"$tab"*}"
+    rest="${line#*"$tab"}"
+    title="${rest%%"$tab"*}"
+    app="${rest#*"$tab"}"
 
     # Filter out empty title and empty app
     if [ -z "$title" ] && [ -z "$app" ]; then

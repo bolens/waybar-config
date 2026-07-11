@@ -168,6 +168,8 @@ cp "$ROOT/scripts/services/i2pd/i2pd-status.sh" "$tmpdir/scripts/services/i2pd/"
 cp "$ROOT/scripts/services/sync/updates-status.sh" "$tmpdir/scripts/services/sync/" 2>/dev/null || true
 cp "$ROOT/scripts/services/apps/github-status.sh" "$tmpdir/scripts/services/apps/" 2>/dev/null || true
 cp "$ROOT/scripts/lib/waybar-cache-helpers.sh" \
+  "$ROOT/scripts/lib/waybar-locale-lib.sh" \
+  "$ROOT/scripts/lib/waybar-systemd-scan-lib.sh" \
   "$ROOT/scripts/lib/waybar-settings.sh" \
   "$ROOT/scripts/lib/unicode-animations-lib.sh" \
   "$tmpdir/scripts/lib/" 2>/dev/null || true

@@ -7,6 +7,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "coolercontrol-module-wiring"
 waybar_test_gen_sandbox
+export WAYBAR_WEATHER_UNIT=C
 
 # coolercontrol module: generator wiring + status/click (fixtures)
 echo "Testing coolercontrol module wiring and status/click scripts..."

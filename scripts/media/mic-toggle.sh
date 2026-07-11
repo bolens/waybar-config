@@ -5,11 +5,7 @@ set -eu
 
 script_dir="${0%/*}"
 # shellcheck source=compositor-session.sh
-if [ -f "$WAYBAR_SCRIPTS/lib/compositor-session.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 
 signal_waybar() {
   rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/waybar/mic-status.json" 2>/dev/null || true

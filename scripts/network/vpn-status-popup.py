@@ -37,9 +37,9 @@ import gi
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 DEBUG = os.environ.get("WAYBAR_DEBUG", "").strip().lower() in ("1", "true", "yes")
 
@@ -68,109 +68,25 @@ except (ValueError, ImportError):
 
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
+_scripts = os.environ.get("WAYBAR_SCRIPTS") or str(Path(__file__).resolve().parents[1])
+_lib = str(Path(_scripts) / "lib")
+if _lib not in sys.path:
+    sys.path.insert(0, _lib)
+from gtk_popup_helpers import (  # noqa: E402
+    get_real_and_vpn_ip as _shared_get_real_and_vpn_ip,
+    have_cmd as _shared_have_cmd,
+)
+
+
 def have_cmd(cmd):
-    result = shutil.which(cmd) is not None
+    result = _shared_have_cmd(cmd)
     debug(f"Checking for command '{cmd}': {result}")
     return result
 
-def get_mouse_position():
-    import os
-    # Prefer shared launch export, then Hyprland signature.
-    comp = (os.environ.get("WAYBAR_COMPOSITOR") or "").strip().lower()
-    if comp == "hyprland" or os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-        try:
-            out = subprocess.check_output(["hyprctl", "cursorpos"], text=True).strip()
-            x, y = map(int, out.split(","))
-            return x, y
-        except Exception:
-            pass
-    # Try X11
-    try:
-        import Xlib.display
-        display = Xlib.display.Display()
-        root = display.screen().root
-        pointer = root.query_pointer()
-        return pointer.root_x, pointer.root_y
-    except Exception:
-        pass
-    # Try xdotool (X11)
-    try:
-        out = subprocess.check_output(["xdotool", "getmouselocation", "--shell"], text=True)
-        vals = dict(line.split("=") for line in out.strip().splitlines() if "=" in line)
-        return int(vals["X"]), int(vals["Y"])
-    except Exception:
-        pass
-    # Try swaymsg (Wayland, sway)
-    try:
-        out = subprocess.check_output(["swaymsg", "-t", "get_seats"], text=True)
-        import json
-        seats = json.loads(out)
-        for seat in seats:
-            if "devices" in seat:
-                for dev in seat["devices"]:
-                    if dev.get("type") == "pointer" and "xy" in dev:
-                        return dev["xy"]
-    except Exception:
-        pass
-    # GTK seat pointer (works on Plasma Wayland once display is up)
-    try:
-        display = Gdk.Display.get_default()
-        if display is not None:
-            seat = display.get_default_seat()
-            if seat is not None:
-                pointer = seat.get_pointer()
-                if pointer is not None and hasattr(pointer, "get_position"):
-                    _screen, x, y = pointer.get_position()
-                    return int(x), int(y)
-            monitor = display.get_primary_monitor() if hasattr(display, "get_primary_monitor") else None
-            if monitor is None and hasattr(display, "get_monitor"):
-                monitor = display.get_monitor(0)
-            if monitor is not None:
-                geo = monitor.get_geometry()
-                return geo.x + geo.width // 2, geo.y + geo.height // 2
-    except Exception:
-        pass
-    return 960, 540  # Fallback to 1080p center
-
-def get_public_ip():
-    if not have_cmd('curl'):
-        debug('curl not installed')
-        return 'curl not installed'
-    try:
-        ip = subprocess.check_output("curl -s --max-time 1 https://checkip.amazonaws.com", shell=True, text=True, timeout=1).strip()
-        debug(f"Public IP fetched: {ip}")
-        if re.match(r"^\d+\.\d+\.\d+\.\d+$", ip):
-            return ip
-    except Exception as e:
-        debug(f"Error fetching public IP: {e}")
-    return 'n/a'
 
 def get_real_and_vpn_ip():
-    if not have_cmd('curl'):
-        debug('curl not installed')
-        return ('curl not installed', 'curl not installed')
-    try:
-        vpn_ip = subprocess.check_output("curl -s --max-time 1 https://checkip.amazonaws.com", shell=True, text=True, timeout=1).strip()
-        debug(f"VPN IP fetched: {vpn_ip}")
-        if not re.match(r"^\d+\.\d+\.\d+\.\d+$", vpn_ip):
-            vpn_ip = 'n/a'
-    except Exception as e:
-        debug(f"Error fetching VPN IP: {e}")
-        vpn_ip = 'n/a'
-    try:
-        if not have_cmd('ip'):
-            debug('ip not installed')
-            raise Exception('ip not installed')
-        default_iface = subprocess.check_output("ip route get 1 | awk '{print $5; exit}'", shell=True, text=True, timeout=2).strip()
-        debug(f"Default iface: {default_iface}")
-        real_ip = subprocess.check_output(f"curl --interface {default_iface} -s --max-time 1 https://checkip.amazonaws.com", shell=True, text=True, timeout=1).strip()
-        debug(f"Real IP fetched: {real_ip}")
-        if not re.match(r"^\d+\.\d+\.\d+\.\d+$", real_ip):
-            real_ip = 'n/a'
-    except Exception as e:
-        debug(f"Error fetching real IP: {e}")
-        real_ip = vpn_ip
-    return real_ip, vpn_ip
+    return _shared_get_real_and_vpn_ip(debug=debug)
+
 
 def get_tailscale_status():
     if not have_cmd('tailscale'):

@@ -4,22 +4,16 @@ set -eu
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 script_dir="${0%/*}"
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 
 # shellcheck source=compositor-session.sh
 if [ -f "$WAYBAR_SCRIPTS/lib/compositor-session.sh" ]; then
   . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 fi
 
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+# shellcheck source=rofi-popup-lib.sh
+. "$WAYBAR_SCRIPTS/lib/rofi-popup-lib.sh"
 
 mode="${1:-list}"
 iface="${2:-wlan0}"
@@ -147,32 +141,6 @@ show_wifi_popup() {
 
   rm -rf "$tmpdir"
 }
-
-# ---------------------------------------------------------------------------
-format_header_row() {
-  label="$1"
-  value="$2"
-  width="${3:-52}"
-  awk -v l="$label" -v v="$value" -v w="$width" 'BEGIN {
-    pad = w - length(l) - length(v)
-    if (pad < 1) pad = 1
-    printf "%s%*s%s", l, pad, "", v
-  }'
-}
-
-# ---------------------------------------------------------------------------
-format_hints_row() {
-  hint1="$1"
-  hint2="$2"
-  width="${3:-52}"
-  awk -v h1="$hint1" -v h2="$hint2" -v w="$width" 'BEGIN {
-    pad = w - length(h1) - length(h2)
-    if (pad < 1) pad = 1
-    printf "%s%*s%s", h1, pad, "", h2
-  }'
-}
-
-# ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
 wifi_popup_rofi() {
@@ -368,45 +336,9 @@ open_settings() {
 }
 
 # ---------------------------------------------------------------------------
-get_external_ip() {
-  ip=""
+# shellcheck source=network-ip-lib.sh
+. "$WAYBAR_SCRIPTS/lib/network-ip-lib.sh"
 
-  if command -v curl >/dev/null 2>&1; then
-    for url in \
-      "https://api64.ipify.org?format=text" \
-      "https://ifconfig.me/ip" \
-      "https://icanhazip.com" \
-      "https://checkip.amazonaws.com"; do
-      ip=$(curl -fsS --connect-timeout 2 --max-time 4 "$url" 2>/dev/null \
-        | tr -d '\r' \
-        | awk 'NR==1 {gsub(/[[:space:]]/, ""); print; exit}')
-      [ -n "$ip" ] && {
-        printf '%s' "$ip"
-        return 0
-      }
-    done
-  fi
-
-  if command -v wget >/dev/null 2>&1; then
-    for url in \
-      "https://api64.ipify.org?format=text" \
-      "https://ifconfig.me/ip" \
-      "https://icanhazip.com" \
-      "https://checkip.amazonaws.com"; do
-      ip=$(wget -qO- --timeout=4 "$url" 2>/dev/null \
-        | tr -d '\r' \
-        | awk 'NR==1 {gsub(/[[:space:]]/, ""); print; exit}')
-      [ -n "$ip" ] && {
-        printf '%s' "$ip"
-        return 0
-      }
-    done
-  fi
-
-  return 1
-}
-
-# ---------------------------------------------------------------------------
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 mkdir -p "$cache_dir"
 
@@ -431,7 +363,7 @@ get_external_ip_fast() {
   fi
 
   (
-    ip=$(get_external_ip || true)
+    ip=$(get_public_ip || true)
     if [ -n "$ip" ]; then
       tmp_ip="$ip_cache.tmp.$$"
       printf '%s' "$ip" >"$tmp_ip"
@@ -520,6 +452,7 @@ if [ -z "$wifi_meta" ]; then
 fi
 old_ifs=$IFS
 IFS='|'
+# shellcheck disable=SC2086 # intentional split of pipe-separated wifi meta
 set -- $wifi_meta
 IFS=$old_ifs
 chan="${1:-}"
@@ -549,6 +482,7 @@ fi
 lat_pair=$(get_latency_fast "$gateway" || true)
 old_ifs=$IFS
 IFS='|'
+# shellcheck disable=SC2086 # intentional split of pipe-separated latency pair
 set -- $lat_pair
 IFS=$old_ifs
 lan_rtt="${1:-}"

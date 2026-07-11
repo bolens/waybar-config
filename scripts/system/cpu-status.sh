@@ -7,6 +7,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
 
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
+. "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
 
 cached_file="$cache_dir/cpu-icon.json"
 

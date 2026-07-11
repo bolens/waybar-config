@@ -11,6 +11,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/openlinkhub-status.json"
 lock_dir="$cache_dir/openlinkhub-status.lock.d"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
+. "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
 ttl="$(waybar_module_interval openlinkhub 10)"
 stale_lock_ttl=20
 
@@ -177,7 +178,8 @@ class="normal"
 text="󰈐 ${devices}"
 if [ "$use_presence" -eq 0 ] && [ -n "$hot" ] && [ "$hot" != "null" ]; then
   hot_i=${hot%.*}
-  text=$(printf '󰈐 %s°' "$hot_i")
+  hot_fmt=$(format_locale_temp "$hot_i" short | tr -d '\n')
+  text=$(printf '󰈐 %s' "$hot_fmt")
   if [ "$hot_i" -ge "$temp_crit" ] 2>/dev/null; then
     class="critical"
   elif [ "$hot_i" -ge "$temp_warn" ] 2>/dev/null; then
@@ -190,7 +192,9 @@ tooltip=$(printf 'OpenLinkHub\nDevices: %s' "$devices")
 if [ "$corsairpsu" -eq 1 ] && [ "$psu_only" = "true" ]; then
   tooltip=$(printf '%s\nPSU sensors: see PSU module (corsairpsu hwmon)' "$tooltip")
 elif [ -n "$hot" ] && [ "$hot" != "null" ]; then
-  tooltip=$(printf '%s\nHottest sensor: %s°C' "$tooltip" "$hot")
+  hot_i=${hot%.*}
+  hot_fmt=$(format_locale_temp "$hot_i" short | tr -d '\n')
+  tooltip=$(printf '%s\nHottest sensor: %s' "$tooltip" "$hot_fmt")
 fi
 [ -n "$cpu_t" ] && [ "$cpu_t" != "null" ] && [ "$cpu_t" != "0" ] && tooltip=$(printf '%s\nCPU: %s' "$tooltip" "$cpu_t")
 [ -n "$gpu_t" ] && [ "$gpu_t" != "null" ] && [ "$gpu_t" != "0" ] && tooltip=$(printf '%s\nGPU: %s' "$tooltip" "$gpu_t")

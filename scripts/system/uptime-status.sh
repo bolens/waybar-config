@@ -8,6 +8,7 @@ cache_file="$cache_dir/uptime-status.json"
 lock_dir="$cache_dir/uptime-status.lock.d"
 script_dir="${0%/*}"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
+. "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
 ttl="$(waybar_module_interval uptime 60)"
 stale_lock_ttl=15
 

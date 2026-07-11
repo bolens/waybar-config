@@ -15,11 +15,7 @@ mkdir -p "$cache_dir"
 
 script_dir="${0%/*}"
 # Handle sourcing when run directly or by Waybar
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0

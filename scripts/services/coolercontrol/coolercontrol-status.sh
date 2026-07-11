@@ -11,6 +11,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/coolercontrol-status.json"
 lock_dir="$cache_dir/coolercontrol-status.lock.d"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
+. "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
 ttl="$(waybar_module_interval coolercontrol 10)"
 stale_lock_ttl=20
 api_py="$WAYBAR_SCRIPTS/services/coolercontrol/coolercontrol-api.py"
@@ -112,12 +113,24 @@ if [ -z "$bundle" ] || ! printf '%s' "$bundle" | jq -e '.ok == true' >/dev/null 
 fi
 
 parsed=$(
-  BUNDLE_JSON="$bundle" TEMP_WARN="$temp_warn" TEMP_CRIT="$temp_crit" python3 <<'PY'
+  BUNDLE_JSON="$bundle" TEMP_WARN="$temp_warn" TEMP_CRIT="$temp_crit" \
+    TEMP_UNIT="$(detect_weather_unit)" WAYBAR_SCRIPTS="$WAYBAR_SCRIPTS" python3 <<'PY'
 import json, os, sys
+from pathlib import Path
+
+_scripts = os.environ.get("WAYBAR_SCRIPTS") or ""
+_lib = str(Path(_scripts) / "lib") if _scripts else ""
+if _lib and _lib not in sys.path:
+    sys.path.insert(0, _lib)
+from locale_temp import format_locale_temp  # noqa: E402
 
 bundle = json.loads(os.environ["BUNDLE_JSON"])
 warn = float(os.environ.get("TEMP_WARN", "75"))
 crit = float(os.environ.get("TEMP_CRIT", "90"))
+unit = (os.environ.get("TEMP_UNIT") or "C").strip().upper()
+
+def fmt_temp(celsius: float, short: bool = False) -> str:
+    return format_locale_temp(celsius, unit=unit, mode="short" if short else "both")
 
 status = bundle.get("status") or {}
 devices = bundle.get("devices") or {}
@@ -176,7 +189,7 @@ if hot is not None:
         primary = "warning"
 
 if hot is not None:
-    text = f"󰔏 {hot:.0f}°"
+    text = f"󰔏 {fmt_temp(hot, short=True)}"
 elif rpms:
     text = f"󰔏 {max(r for _, r in rpms):.0f}"
 elif watts:
@@ -207,7 +220,7 @@ else:
 if temps:
     lines += ["", "Temperatures"]
     for n, t in sorted(temps, key=lambda x: -x[1])[:12]:
-        lines.append(f"  {n}: {t:.1f}°C")
+        lines.append(f"  {n}: {fmt_temp(t)}")
 if rpms:
     lines += ["", "Fans / pumps"]
     for n, r in sorted(rpms, key=lambda x: -x[1])[:10]:

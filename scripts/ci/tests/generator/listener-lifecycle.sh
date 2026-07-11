@@ -92,20 +92,20 @@ fi
 
 # KDE listener loads signals from settings (not only hardcoded RTMIN offsets)
 
-if ! grep -q 'def load_waybar_signals' "$TEST_DIR/scripts/listeners/active-window-listener-kde.py"; then
-
-  echo "FAIL: active-window-listener-kde.py missing load_waybar_signals" >&2
+signals_py="$TEST_DIR/scripts/lib/kde_listener/signals.py"
+if ! grep -q 'def load_waybar_signals' "$signals_py"; then
+  echo "FAIL: kde_listener/signals.py missing load_waybar_signals" >&2
   fail=1
 fi
 
 # Active-window title uses file cache + zscroll; listener must not RTMIN-poke Waybar for it.
-if grep -q 'waybar_rtmin("active_window")' "$TEST_DIR/scripts/listeners/active-window-listener-kde.py"; then
-  echo "FAIL: active-window-listener-kde.py should not emit waybar_rtmin(\"active_window\")" >&2
+if grep -rq 'waybar_rtmin("active_window")' "$TEST_DIR/scripts/lib/kde_listener/" "$TEST_DIR/scripts/listeners/active-window-listener-kde.py"; then
+  echo "FAIL: KDE listener should not emit waybar_rtmin(\"active_window\")" >&2
   fail=1
 fi
 
 python3 - "$TEST_DIR" <<'PY' || fail=1
-import json, os, subprocess, sys
+import json, os, sys
 from pathlib import Path
 test_dir = Path(sys.argv[1])
 settings = {
@@ -120,16 +120,11 @@ settings = {
 cfg = test_dir / "data" / "waybar-settings.json"
 cfg.write_text(json.dumps(settings))
 
-# Extract and exec helper functions from the listener without starting the server
-
-src = (test_dir / "scripts" / "listeners" / "active-window-listener-kde.py").read_text()
-start = src.index("def load_waybar_signals")
-end = src.index("# Single-instance locking")
-chunk = src[start:end]
-ns = {"os": os, "json": json, "subprocess": subprocess}
-exec(chunk, ns)
+sys.path.insert(0, str(test_dir / "scripts" / "lib"))
 os.environ["WAYBAR_HOME"] = str(test_dir)
-signals = ns["load_waybar_signals"]()
+from kde_listener.signals import load_waybar_signals, waybar_rtmin
+
+signals = load_waybar_signals()
 assert signals["workspaces"] == 43, signals
 assert signals["notifications"] == 44, signals
 assert signals["dock_windows"] == 45, signals
@@ -140,9 +135,10 @@ assert "active_window" not in signals, signals
 assert "clipboard" in signals and isinstance(signals["clipboard"], int)
 
 # waybar_rtmin should not raise with DEVNULL-only kwargs
-
-ns["SIGNALS"] = signals
-ns["waybar_rtmin"]("workspaces")
+# Rebind SIGNALS so waybar_rtmin uses the tested map
+import kde_listener.signals as sigmod
+sigmod.SIGNALS = signals
+waybar_rtmin("workspaces")
 print("PASS: KDE signal map loader unit test")
 PY
 

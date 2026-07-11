@@ -39,7 +39,6 @@ waybar_test_gen_default() {
 
 waybar_test_gen_modules() {
   "$TEST_DIR/scripts/generate/generate-settings.sh"
-  "$TEST_DIR/scripts/generate/generate-module-configs.sh"
   "$TEST_DIR/scripts/generate/generate-compositor-modules.sh"
 }
 

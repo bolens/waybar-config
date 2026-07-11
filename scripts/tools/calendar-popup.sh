@@ -11,17 +11,12 @@ case "$offset" in
 esac
 
 script_dir="${0%/*}"
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
+. "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
+# shellcheck source=rofi-popup-lib.sh
+. "$WAYBAR_SCRIPTS/lib/rofi-popup-lib.sh"
 
 first_day=$(detect_first_weekday)
 
@@ -39,27 +34,6 @@ month_date() {
 
 month_label() {
   month_date "$1" +"%B %Y"
-}
-
-center_text() {
-  text="$1"
-  width="${2:-38}"
-  awk -v text="$text" -v width="$width" 'BEGIN {
-    pad = int((width - length(text)) / 2)
-    if (pad < 0) pad = 0
-    printf "%*s%s", pad, "", text
-  }'
-}
-
-format_hints_row() {
-  hint1="$1"
-  hint2="$2"
-  width="${3:-38}"
-  awk -v h1="$hint1" -v h2="$hint2" -v w="$width" 'BEGIN {
-    pad = w - length(h1) - length(h2)
-    if (pad < 1) pad = 1
-    printf "%s%*s%s", h1, pad, "", h2
-  }'
 }
 
 centered_month_label() {

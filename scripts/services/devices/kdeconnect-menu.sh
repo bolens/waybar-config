@@ -5,11 +5,7 @@ set -euo pipefail
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 script_dir="$(dirname "$0")"
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-else
-  . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
-fi
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
 # Query available devices
 devices=()

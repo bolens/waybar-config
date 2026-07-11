@@ -19,6 +19,14 @@ if ! waybar_test_gen_modules; then
   echo "FAIL: generate failed before nvme/olh checks" >&2
   fail=1
 fi
+# Pin Celsius: prefer env (settings .json is recompiled from .jsonc on load).
+export WAYBAR_WEATHER_UNIT=C
+if [[ -f "$TEST_DIR/data/waybar-settings.jsonc" ]]; then
+  jq '.weather.unit = "C"' "$TEST_DIR/data/waybar-settings.jsonc" >"$TEST_DIR/data/waybar-settings.jsonc.tmp" \
+    && mv "$TEST_DIR/data/waybar-settings.jsonc.tmp" "$TEST_DIR/data/waybar-settings.jsonc"
+fi
+jq '.weather.unit = "C"' "$TEST_DIR/data/waybar-settings.json" >"$TEST_DIR/data/waybar-settings.json.tmp" \
+  && mv "$TEST_DIR/data/waybar-settings.json.tmp" "$TEST_DIR/data/waybar-settings.json"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."custom/nvme".exec | test("system/nvme-status\\.sh$")' "custom/nvme exec missing"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" '.["group/hardware"].modules | index("custom/nvme") and index("custom/openlinkhub")' "hardware group missing nvme/openlinkhub"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."custom/openlinkhub".exec | test("openlinkhub-status\\.sh$")' "custom/openlinkhub exec missing"
@@ -88,10 +96,11 @@ OLH_SETTINGS="$OLH_CACHE/settings-home"
 mkdir -p "$OLH_SETTINGS/data" "$OLH_SETTINGS/scripts/lib"
 cp "$TEST_DIR/data/waybar-settings.json" "$OLH_SETTINGS/data/"
 cp "$TEST_DIR/scripts/lib/"*.sh "$OLH_SETTINGS/scripts/lib/" 2>/dev/null || true
-jq '.services.openlinkhub.prefer_presence = false' "$OLH_SETTINGS/data/waybar-settings.json" >"$OLH_SETTINGS/data/waybar-settings.json.tmp" \
+jq '.services.openlinkhub.prefer_presence = false | .weather.unit = "C"' "$OLH_SETTINGS/data/waybar-settings.json" >"$OLH_SETTINGS/data/waybar-settings.json.tmp" \
   && mv "$OLH_SETTINGS/data/waybar-settings.json.tmp" "$OLH_SETTINGS/data/waybar-settings.json"
 olh_temp=$(
   WAYBAR_HOME="$OLH_SETTINGS" WAYBAR_SCRIPTS="$OLH_SETTINGS/scripts" XDG_CACHE_HOME="$OLH_CACHE" \
+    WAYBAR_WEATHER_UNIT=C \
     WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
     WAYBAR_CORSAIRPSU_PRESENT=0 \
     "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh

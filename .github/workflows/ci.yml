@@ -100,9 +100,20 @@ jobs:
               - 'scripts/lib/compositor-gate.sh'
               - 'scripts/lib/compositor-session.sh'
               - 'scripts/lib/waybar-cache-helpers.sh'
+              - 'scripts/lib/waybar-locale-lib.sh'
+              - 'scripts/lib/waybar-systemd-scan-lib.sh'
               - 'scripts/lib/unicode-animations-lib.sh'
               - 'scripts/lib/notifications-lib.sh'
               - 'scripts/lib/app-open-lib.sh'
+              - 'scripts/lib/rofi-popup-lib.sh'
+              - 'scripts/lib/network-ip-lib.sh'
+              - 'scripts/lib/xdg-icons-lib.sh'
+              - 'scripts/lib/xdg-applications.sh'
+              - 'scripts/lib/gtk_popup_helpers.py'
+              - 'scripts/lib/locale_temp.py'
+              - 'scripts/lib/kde_listener/**'
+              - 'scripts/lib/system-metrics-*.sh'
+              - 'scripts/listeners/active-window-listener-kde.py'
               - 'scripts/services/i2pd/i2pd-set-console-pass.sh'
               - 'scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh'
               - 'scripts/services/sync/updates-status.sh'
@@ -136,6 +147,8 @@ jobs:
               - 'scripts/infra/listener-ctl.sh'
               - 'scripts/infra/waybar-healthcheck.sh'
               - 'scripts/infra/waybar-journal-drop.rg'
+              - 'scripts/listeners/active-window-listener-kde.py'
+              - 'scripts/lib/kde_listener/**'
       - name: Resolve suite flags
         id: flags
         env:
@@ -259,6 +272,7 @@ jobs:
           - asusctl
           - hw-nvme-olh
           - hw-rgb-fans
+          - weather-status
           - portability
     steps:
       - uses: actions/checkout@v7

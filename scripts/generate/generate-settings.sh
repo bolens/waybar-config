@@ -351,6 +351,22 @@ if [ -x "$WAYBAR_SCRIPTS/generate/generate-dock-modules.sh" ]; then
   "$WAYBAR_SCRIPTS/generate/generate-dock-modules.sh"
 fi
 
-if [ -x "$WAYBAR_SCRIPTS/generate/generate-module-configs.sh" ]; then
-  "$WAYBAR_SCRIPTS/generate/generate-module-configs.sh"
-fi
+for _gen in \
+  generate-utilities-modules.sh \
+  generate-audio-modules.sh \
+  generate-clock-modules.sh \
+  generate-drawers-modules.sh \
+  generate-network-custom-modules.sh \
+  generate-privacy-modules.sh \
+  generate-active-window-modules.sh \
+  generate-center-extras-modules.sh \
+  generate-dock-windows-modules.sh \
+  generate-tray-modules.sh \
+  generate-hypr-tools-modules.sh \
+  generate-theme-tokens.sh; do
+  if [ -x "$WAYBAR_SCRIPTS/generate/$_gen" ]; then
+    "$WAYBAR_SCRIPTS/generate/$_gen"
+  elif [ -f "$WAYBAR_SCRIPTS/generate/$_gen" ]; then
+    bash "$WAYBAR_SCRIPTS/generate/$_gen"
+  fi
+done
