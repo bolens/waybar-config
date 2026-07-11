@@ -4,7 +4,7 @@ set -euo pipefail
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
-script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
+script_dir="$(CDPATH='' cd -- "$(dirname "$0")" && pwd)"
 # shellcheck source=compositor-session.sh
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 
@@ -242,6 +242,7 @@ if [ "$rebuild_cache" = true ]; then
   mv -f "$tmp_cache" "$CACHE_FILE" 2>/dev/null || true
   cleanup_stale_tmp_files "$CACHE_DIR"
 else
+  # shellcheck source=/dev/null
   . "$CACHE_FILE"
 fi
 

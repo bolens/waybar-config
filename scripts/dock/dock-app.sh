@@ -9,7 +9,7 @@ set -euo pipefail
 APP_ID="${1:-}"
 ACTION="${2:-}"
 
-script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
+script_dir="$(CDPATH='' cd -- "$(dirname "$0")" && pwd)"
 manifest="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/data/dock-apps.json"
 # shellcheck source=compositor-session.sh
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"

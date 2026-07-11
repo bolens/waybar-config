@@ -1,0 +1,8 @@
+# Default dialect for this tree (scripts use bash features / local).
+shell=bash
+
+# Allow following sourced libs so SC2154 sees their variables.
+external-sources=true
+
+# Sourced libs and status scripts often set vars for callers or future use.
+disable=SC2034

@@ -150,8 +150,9 @@ emit_module_json() {
   if [ -f "$target_file" ]; then
     cat "$target_file"
   else
-    local icon="$(icons "$module_kind")"
-    local label="$(labels "$module_kind")"
+    local icon label
+    icon="$(icons "$module_kind")"
+    label="$(labels "$module_kind")"
     printf '{"text":"%s","tooltip":"%s idle","class":"idle"}\n' "$icon" "$label"
   fi
 }

@@ -1,16 +1,28 @@
-# Python files
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 
-# Temporary & Lock files
+# Editors / OS
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Temporary & lock files
 *.tmp
 *.tmp.*
+*.bak
+*.orig
 *.lock.d/
 
-# Waybar specific cached states & logs
-vpn-status-debug.log
+# Local env / credentials (belt-and-suspenders; secrets live under data/)
+.env
+.env.*
+!.env.example
+
+# Logs (runtime cache is under ~/.cache/waybar; keep any in-repo logs out)
 *.log
 
 # Exclude the dry-run folder with large tarballs
@@ -20,3 +32,6 @@ dry-run/
 data/waybar-secrets.json
 data/waybar-secrets.jsonc
 !data/waybar-secrets.example.jsonc
+
+# Note: data/waybar-settings.json and *.generated.{jsonc,css} are compiled
+# artifacts that ARE tracked so clones work before the first generate.

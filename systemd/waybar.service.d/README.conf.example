@@ -1,0 +1,7 @@
+[Service]
+# Optional local drop-in notes (copy to ~/.config/systemd/user/waybar.service.d/).
+# LogFilterPatterns= only applies to system services; Discord/Electron stderr is
+# filtered in scripts/infra/waybar-launch.sh instead.
+#
+# Do not override ExecStart with absolute /home/... paths — use the %h forms from
+# systemd/waybar.service (or Environment= overrides only).

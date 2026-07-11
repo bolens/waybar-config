@@ -176,7 +176,7 @@ fi
 drop_patterns="$WAYBAR_SCRIPTS/infra/waybar-journal-drop.rg"
 log_file="$XDG_CACHE_HOME/waybar/waybar.log"
 mkdir -p "$XDG_CACHE_HOME/waybar"
-> "$log_file"
+: >"$log_file"
 
 if [[ -f "$drop_patterns" ]] && command -v rg >/dev/null 2>&1; then
 	exec /usr/bin/waybar "$@" \

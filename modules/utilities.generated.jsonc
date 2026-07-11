@@ -5,7 +5,7 @@
     "signal": 10,
     "interval": "once",
     "escape": true,
-    "exec": "/home/panda/.config/waybar/scripts/notifications/notifications-status.sh",
+    "exec": "$WAYBAR_HOME/scripts/notifications/notifications-status.sh",
     "format-icons": {
       "notification": "󰂚",
       "none": "󰂜",
@@ -17,38 +17,38 @@
       "dnd-inhibited-none": "󰂛",
       "unknown": "󰂚"
     },
-    "on-click": "/home/panda/.config/waybar/scripts/notifications/notifications-click.sh open",
-    "on-click-right": "/home/panda/.config/waybar/scripts/notifications/notifications-click.sh dnd",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/notifications/notifications-click.sh settings"
+    "on-click": "$WAYBAR_HOME/scripts/notifications/notifications-click.sh open",
+    "on-click-right": "$WAYBAR_HOME/scripts/notifications/notifications-click.sh dnd",
+    "on-click-middle": "$WAYBAR_HOME/scripts/notifications/notifications-click.sh settings"
   },
   "custom/screenshot": {
     "format": "{}",
     "return-type": "json",
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/capture/screenshot-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/capture/screenshot-click.sh select",
-    "on-click-right": "/home/panda/.config/waybar/scripts/capture/screenshot-click.sh full",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/capture/screenshot-click.sh window"
+    "exec": "$WAYBAR_HOME/scripts/capture/screenshot-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/capture/screenshot-click.sh select",
+    "on-click-right": "$WAYBAR_HOME/scripts/capture/screenshot-click.sh full",
+    "on-click-middle": "$WAYBAR_HOME/scripts/capture/screenshot-click.sh window"
   },
   "custom/screenrecord": {
     "format": "{}",
     "return-type": "json",
     "signal": 6,
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/capture/screenrecord-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/capture/screenrecord-click.sh select",
-    "on-click-right": "/home/panda/.config/waybar/scripts/capture/screenrecord-click.sh full",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/capture/screenrecord-click.sh window"
+    "exec": "$WAYBAR_HOME/scripts/capture/screenrecord-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/capture/screenrecord-click.sh select",
+    "on-click-right": "$WAYBAR_HOME/scripts/capture/screenrecord-click.sh full",
+    "on-click-middle": "$WAYBAR_HOME/scripts/capture/screenrecord-click.sh window"
   },
   "custom/nightlight": {
     "format": "{}",
     "return-type": "json",
     "signal": 14,
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/services/desktop/nightlight-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/services/desktop/nightlight-toggle.sh toggle",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/services/desktop/nightlight-toggle.sh force_toggle",
-    "on-click-right": "/home/panda/.config/waybar/scripts/services/desktop/nightlight-toggle.sh settings"
+    "exec": "$WAYBAR_HOME/scripts/services/desktop/nightlight-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/services/desktop/nightlight-toggle.sh toggle",
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/desktop/nightlight-toggle.sh force_toggle",
+    "on-click-right": "$WAYBAR_HOME/scripts/services/desktop/nightlight-toggle.sh settings"
   },
   "custom/clipboard": {
     "format": "{0}{icon}",
@@ -56,151 +56,151 @@
     "signal": 9,
     "interval": 60,
     "escape": true,
-    "exec": "/home/panda/.config/waybar/scripts/notifications/clipboard-status.sh",
+    "exec": "$WAYBAR_HOME/scripts/notifications/clipboard-status.sh",
     "format-icons": {
       "normal": "󰅌",
       "empty": "󰅍",
       "disabled": "󰅌",
       "unknown": "󰅌"
     },
-    "on-click": "/home/panda/.config/waybar/scripts/notifications/clipboard-click.sh open",
-    "on-click-right": "/home/panda/.config/waybar/scripts/notifications/clipboard-click.sh clear",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/notifications/clipboard-click.sh edit"
+    "on-click": "$WAYBAR_HOME/scripts/notifications/clipboard-click.sh open",
+    "on-click-right": "$WAYBAR_HOME/scripts/notifications/clipboard-click.sh clear",
+    "on-click-middle": "$WAYBAR_HOME/scripts/notifications/clipboard-click.sh edit"
   },
   "custom/brightness": {
     "format": "{}",
     "return-type": "json",
     "signal": 8,
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/lib/compositor-gate.sh --hide hyprland -- /home/panda/.config/waybar/scripts/system/brightness-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/system/brightness-control.sh adjust -5",
-    "on-click-right": "/home/panda/.config/waybar/scripts/system/brightness-control.sh adjust +5",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/system/brightness-control.sh set 80",
-    "on-scroll-up": "/home/panda/.config/waybar/scripts/system/brightness-control.sh adjust +5",
-    "on-scroll-down": "/home/panda/.config/waybar/scripts/system/brightness-control.sh adjust -5"
+    "exec": "$WAYBAR_HOME/scripts/lib/compositor-gate.sh --hide hyprland -- $WAYBAR_HOME/scripts/system/brightness-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust -5",
+    "on-click-right": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust +5",
+    "on-click-middle": "$WAYBAR_HOME/scripts/system/brightness-control.sh set 80",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust +5",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust -5"
   },
   "custom/powerprofiles": {
     "format": "{}",
     "return-type": "json",
     "signal": 3,
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/system/powerprofiles-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/system/powerprofiles-click.sh menu",
-    "on-click-right": "/home/panda/.config/waybar/scripts/system/powerprofiles-click.sh power-saver",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/system/powerprofiles-click.sh balanced",
-    "on-scroll-up": "/home/panda/.config/waybar/scripts/system/powerprofiles-click.sh next",
-    "on-scroll-down": "/home/panda/.config/waybar/scripts/system/powerprofiles-click.sh next"
+    "exec": "$WAYBAR_HOME/scripts/system/powerprofiles-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/system/powerprofiles-click.sh menu",
+    "on-click-right": "$WAYBAR_HOME/scripts/system/powerprofiles-click.sh power-saver",
+    "on-click-middle": "$WAYBAR_HOME/scripts/system/powerprofiles-click.sh balanced",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/system/powerprofiles-click.sh next",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/system/powerprofiles-click.sh next"
   },
   "custom/discord": {
     "format": "{}",
     "return-type": "json",
     "interval": 120,
-    "exec": "/home/panda/.config/waybar/scripts/services/apps/discord-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/tools/app-open.sh discord",
-    "on-click-right": "/home/panda/.config/waybar/scripts/services/apps/discord-click.sh mute",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/services/apps/discord-click.sh deafen"
+    "exec": "$WAYBAR_HOME/scripts/services/apps/discord-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh discord",
+    "on-click-right": "$WAYBAR_HOME/scripts/services/apps/discord-click.sh mute",
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/apps/discord-click.sh deafen"
   },
   "custom/lock": {
     "format": "",
     "tooltip": "Lock screen",
-    "on-click": "/home/panda/.config/waybar/scripts/system/power-click.sh lock"
+    "on-click": "$WAYBAR_HOME/scripts/system/power-click.sh lock"
   },
   "custom/logout": {
     "format": "󰍃",
     "tooltip": "Logout session",
-    "on-click": "/home/panda/.config/waybar/scripts/system/power-click.sh logout"
+    "on-click": "$WAYBAR_HOME/scripts/system/power-click.sh logout"
   },
   "custom/suspend": {
     "format": "󰤄",
     "tooltip": "Suspend system",
-    "on-click": "/home/panda/.config/waybar/scripts/system/power-click.sh suspend"
+    "on-click": "$WAYBAR_HOME/scripts/system/power-click.sh suspend"
   },
   "custom/reboot": {
     "format": "󰜉",
     "tooltip": "Reboot system",
-    "on-click": "/home/panda/.config/waybar/scripts/system/power-click.sh reboot"
+    "on-click": "$WAYBAR_HOME/scripts/system/power-click.sh reboot"
   },
   "custom/shutdown": {
     "format": "󰐥",
     "tooltip": "Shutdown system",
-    "on-click": "/home/panda/.config/waybar/scripts/system/power-click.sh shutdown"
+    "on-click": "$WAYBAR_HOME/scripts/system/power-click.sh shutdown"
   },
   "custom/kdeconnect": {
     "format": "{}",
     "return-type": "json",
     "signal": 18,
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/services/devices/kdeconnect-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/services/devices/kdeconnect-status.sh --ring",
-    "on-click-right": "/home/panda/.config/waybar/scripts/services/devices/kdeconnect-menu.sh",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/services/devices/kdeconnect-status.sh --refresh && /home/panda/.config/waybar/scripts/lib/waybar-signal.sh 18"
+    "exec": "$WAYBAR_HOME/scripts/services/devices/kdeconnect-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/services/devices/kdeconnect-status.sh --ring",
+    "on-click-right": "$WAYBAR_HOME/scripts/services/devices/kdeconnect-menu.sh",
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/devices/kdeconnect-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh 18"
   },
   "custom/device-notifier": {
     "format": "{}",
     "return-type": "json",
     "signal": 19,
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/services/devices/device-notifier-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/services/devices/device-notifier.py --menu",
-    "on-click-right": "/home/panda/.config/waybar/scripts/services/devices/device-notifier-status.sh --refresh && /home/panda/.config/waybar/scripts/lib/waybar-signal.sh 19"
+    "exec": "$WAYBAR_HOME/scripts/services/devices/device-notifier-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/services/devices/device-notifier.py --menu",
+    "on-click-right": "$WAYBAR_HOME/scripts/services/devices/device-notifier-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh 19"
   },
   "custom/colorpicker": {
     "format": "󰏘",
     "tooltip": "Color Picker · Click to grab color",
-    "on-click": "/home/panda/.config/waybar/scripts/capture/color-picker.sh"
+    "on-click": "$WAYBAR_HOME/scripts/capture/color-picker.sh"
   },
   "custom/vaults": {
     "format": "{}",
     "return-type": "json",
     "signal": 21,
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/services/security/vaults-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/services/security/vaults.py --menu",
-    "on-click-right": "/home/panda/.config/waybar/scripts/services/security/vaults-status.sh --refresh && /home/panda/.config/waybar/scripts/lib/waybar-signal.sh 21"
+    "exec": "$WAYBAR_HOME/scripts/services/security/vaults-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/services/security/vaults.py --menu",
+    "on-click-right": "$WAYBAR_HOME/scripts/services/security/vaults-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh 21"
   },
   "custom/touchpad": {
     "format": "{}",
     "return-type": "json",
     "signal": 20,
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/system/touchpad-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/system/touchpad.py --toggle",
-    "on-click-right": "/home/panda/.config/waybar/scripts/system/touchpad-status.sh --refresh && /home/panda/.config/waybar/scripts/lib/waybar-signal.sh 20"
+    "exec": "$WAYBAR_HOME/scripts/system/touchpad-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/system/touchpad.py --toggle",
+    "on-click-right": "$WAYBAR_HOME/scripts/system/touchpad-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh 20"
   },
   "custom/weather": {
     "format": "{}",
     "return-type": "json",
     "interval": 1800,
-    "exec": "/home/panda/.config/waybar/scripts/services/apps/weather-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/tools/app-open.sh xdg-open https://wttr.in/",
-    "on-click-right": "/home/panda/.config/waybar/scripts/tools/app-open.sh xdg-open https://weather.com/",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/services/apps/weather-status.sh --refresh"
+    "exec": "$WAYBAR_HOME/scripts/services/apps/weather-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://wttr.in/",
+    "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://weather.com/",
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/apps/weather-status.sh --refresh"
   },
   "custom/systemd": {
     "format": "{}",
     "return-type": "json",
     "interval": 60,
-    "exec": "/home/panda/.config/waybar/scripts/system/systemd-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/tools/app-open.sh ghostty -e bash -c \"echo \\\"Failed System Services:\\\"; systemctl --failed; echo \\\"\\\"; echo \\\"Failed User Services:\\\"; systemctl --user --failed; echo \\\"\\\"; read -p \\\"Press Enter to close... \\\"\""
+    "exec": "$WAYBAR_HOME/scripts/system/systemd-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh ghostty -e bash -c \"echo \\\"Failed System Services:\\\"; systemctl --failed; echo \\\"\\\"; echo \\\"Failed User Services:\\\"; systemctl --user --failed; echo \\\"\\\"; read -p \\\"Press Enter to close... \\\"\""
   },
   "custom/github": {
     "format": "{}",
     "return-type": "json",
     "interval": 300,
-    "exec": "/home/panda/.config/waybar/scripts/services/apps/github-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/tools/app-open.sh xdg-open https://github.com/notifications",
-    "on-click-right": "/home/panda/.config/waybar/scripts/tools/app-open.sh xdg-open https://github.com",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/services/apps/github-status.sh --refresh"
+    "exec": "$WAYBAR_HOME/scripts/services/apps/github-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://github.com/notifications",
+    "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://github.com",
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/apps/github-status.sh --refresh"
   },
   "custom/device-battery": {
     "format": "{}",
     "return-type": "json",
     "signal": 4,
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/services/devices/device-battery-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/tools/app-open.sh solaar",
-    "on-click-right": "/home/panda/.config/waybar/scripts/tools/app-open.sh systemsettings",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/services/devices/device-battery-status.sh --refresh"
+    "exec": "$WAYBAR_HOME/scripts/services/devices/device-battery-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh solaar",
+    "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open.sh systemsettings",
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/devices/device-battery-status.sh --refresh"
   },
   "custom/streamdeck": {
     "format": "{}",
@@ -208,9 +208,9 @@
     "signal": 24,
     "interval": 30,
     "tooltip": true,
-    "exec": "/home/panda/.config/waybar/scripts/services/devices/streamdeck-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/tools/app-open.sh streamdeck",
-    "on-click-right": "/home/panda/.config/waybar/scripts/tools/app-open.sh systemctl --user restart app-streamdeck-ui@autostart.service",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/services/devices/streamdeck-status.sh --refresh"
+    "exec": "$WAYBAR_HOME/scripts/services/devices/streamdeck-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh streamdeck",
+    "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open.sh systemctl --user restart app-streamdeck-ui@autostart.service",
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/devices/streamdeck-status.sh --refresh"
   }
 }

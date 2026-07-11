@@ -14,6 +14,10 @@ on:
       - "config.jsonc"
       - "style.css"
       - "user-style.css"
+      - "Makefile"
+      - "systemd/**"
+      - ".shellcheckrc"
+      - ".gitignore"
       - ".github/workflows/ci.yml"
   pull_request:
     branches: [main]
@@ -28,6 +32,10 @@ on:
       - "config.jsonc"
       - "style.css"
       - "user-style.css"
+      - "Makefile"
+      - "systemd/**"
+      - ".shellcheckrc"
+      - ".gitignore"
       - ".github/workflows/ci.yml"
 
 concurrency:
@@ -40,6 +48,7 @@ permissions:
 
 jobs:
   # Decide which suites are relevant to the changed files.
+  # Keep top-level on.paths ⊇ union of all dorny filters (or CI never starts).
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
@@ -48,6 +57,7 @@ jobs:
       generator: ${{ steps.filter.outputs.generator }}
       secrets: ${{ steps.filter.outputs.secrets }}
       validate: ${{ steps.filter.outputs.validate }}
+      systemd: ${{ steps.filter.outputs.systemd }}
       workflow: ${{ steps.filter.outputs.workflow }}
     steps:
       - uses: actions/checkout@v7
@@ -57,13 +67,18 @@ jobs:
           filters: |
             workflow:
               - '.github/workflows/ci.yml'
+              - 'Makefile'
+              - '.shellcheckrc'
             scripts:
               - 'scripts/**'
             generator:
               - 'scripts/generate/**'
               - 'scripts/ci/run-generator-tests.sh'
               - 'scripts/ci/check-shell-contracts.sh'
+              - 'scripts/ci/validate-generated-config.sh'
               - 'scripts/lib/waybar-settings.sh'
+              - 'scripts/lib/waybar-cache-helpers.sh'
+              - 'scripts/lib/compositor-session.sh'
               - 'data/**'
               - 'layouts/**'
               - 'modules/**'
@@ -73,12 +88,15 @@ jobs:
               - 'config.jsonc'
             secrets:
               - 'scripts/ci/run-secrets-and-settings-tests.sh'
-              - 'scripts/lib/waybar-settings.sh'
-              - 'scripts/services/i2pd/i2pd-set-console-pass.sh'
-              - 'scripts/lib/capture-lib.sh'
+              - 'scripts/ci/pre-commit-check-secrets.sh'
               - 'scripts/ci/validate-generated-config.sh'
+              - 'scripts/lib/waybar-settings.sh'
+              - 'scripts/lib/capture-lib.sh'
+              - 'scripts/lib/compositor-gate.sh'
+              - 'scripts/services/i2pd/i2pd-set-console-pass.sh'
               - 'data/waybar-secrets*'
               - 'data/waybar-settings*'
+              - '.gitignore'
             validate:
               - 'scripts/ci/validate-generated-config.sh'
               - 'data/**'
@@ -90,6 +108,12 @@ jobs:
               - 'config.jsonc'
               - 'style.css'
               - 'user-style.css'
+            systemd:
+              - 'systemd/**'
+              - 'scripts/ci/check-systemd-units.sh'
+              - 'scripts/infra/waybar-launch.sh'
+              - 'scripts/infra/listener-ctl.sh'
+              - 'scripts/infra/waybar-healthcheck.sh'
 
   # Fast fail-early checks before the heavier suites.
   syntax:
@@ -108,6 +132,18 @@ jobs:
             bash -n "$f" || fail=1
           done
           exit "$fail"
+
+  python-syntax:
+    name: python -m py_compile
+    needs: changes
+    if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Syntax-check Python helpers
+        env:
+          WAYBAR_HOME: ${{ github.workspace }}
+        run: bash scripts/ci/check-python-syntax.sh
 
   contracts:
     name: Shell contracts (dash)
@@ -178,3 +214,18 @@ jobs:
         env:
           WAYBAR_HOME: ${{ github.workspace }}
         run: bash scripts/ci/validate-generated-config.sh
+
+  systemd-units:
+    name: Systemd unit path smoke
+    needs: [changes]
+    if: |
+      always()
+      && needs.changes.result == 'success'
+      && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.systemd == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check systemd unit templates
+        env:
+          WAYBAR_HOME: ${{ github.workspace }}
+        run: bash scripts/ci/check-systemd-units.sh

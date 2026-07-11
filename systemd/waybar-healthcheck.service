@@ -1,0 +1,9 @@
+[Unit]
+Description=Waybar healthcheck and self-heal
+After=waybar.service
+
+[Service]
+Type=oneshot
+Environment=WAYBAR_HOME=%h/.config/waybar
+Environment=WAYBAR_SCRIPTS=%h/.config/waybar/scripts
+ExecStart=%h/.config/waybar/scripts/infra/waybar-healthcheck.sh

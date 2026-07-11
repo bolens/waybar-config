@@ -672,13 +672,108 @@ fi
 
 echo "PASS: polish runtime settings wiring"
 
-# --- pre-commit helper dry checks (script exists + bash -n) ---
+# --- gitignore: secrets ignored, example kept trackable ---
+if ! git -C "$ROOT" check-ignore -q data/waybar-secrets.jsonc; then
+  echo "FAIL: data/waybar-secrets.jsonc must be gitignored" >&2
+  fail=1
+fi
+if ! git -C "$ROOT" check-ignore -q data/waybar-secrets.json; then
+  echo "FAIL: data/waybar-secrets.json must be gitignored" >&2
+  fail=1
+fi
+if git -C "$ROOT" check-ignore -q data/waybar-secrets.example.jsonc; then
+  echo "FAIL: data/waybar-secrets.example.jsonc must NOT be gitignored" >&2
+  fail=1
+else
+  echo "PASS: gitignore secrets vs example"
+fi
+
+# --- secrets file mode 600 (CI has no real secrets file; assert here) ---
+chmod 644 "$TEST_DIR/data/waybar-secrets.jsonc"
+mkdir -p "$TEST_DIR/modules" "$TEST_DIR/includes" "$TEST_DIR/layouts"
+printf '{}\n' >"$TEST_DIR/modules/workspaces.generated.jsonc"
+printf '{}\n' >"$TEST_DIR/data/waybar-settings.json"
+if WAYBAR_HOME="$TEST_DIR" "$TEST_DIR/scripts/ci/validate-generated-config.sh" >/dev/null 2>&1; then
+  echo "FAIL: validate should reject secrets mode 644" >&2
+  fail=1
+else
+  echo "PASS: validate rejects secrets mode 644"
+fi
+chmod 600 "$TEST_DIR/data/waybar-secrets.jsonc"
+mode=$(stat -c '%a' "$TEST_DIR/data/waybar-secrets.jsonc")
+if [[ "$mode" != "600" ]]; then
+  echo "FAIL: expected secrets mode 600 after chmod, got $mode" >&2
+  fail=1
+else
+  echo "PASS: secrets mode 600 asserted"
+fi
+
+# --- compositor-gate real behavior (not the polish stub) ---
+GATE="$ROOT/scripts/lib/compositor-gate.sh"
+gate_out=$(HYPRLAND_INSTANCE_SIGNATURE=test-sig "$GATE" --show kde -- echo RAN 2>/dev/null || true)
+if ! printf '%s' "$gate_out" | grep -q '"class":"hidden"'; then
+  echo "FAIL: compositor-gate --show kde on Hyprland should emit hidden JSON (got: $gate_out)" >&2
+  fail=1
+fi
+gate_run=$(HYPRLAND_INSTANCE_SIGNATURE=test-sig "$GATE" --show hyprland -- echo RAN 2>/dev/null || true)
+if [[ "$gate_run" != "RAN" ]]; then
+  echo "FAIL: compositor-gate --show hyprland on Hyprland should exec command (got: $gate_run)" >&2
+  fail=1
+fi
+gate_hide=$(HYPRLAND_INSTANCE_SIGNATURE=test-sig "$GATE" --hide hyprland -- echo RAN 2>/dev/null || true)
+if ! printf '%s' "$gate_hide" | grep -q '"class":"hidden"'; then
+  echo "FAIL: compositor-gate --hide hyprland on Hyprland should emit hidden JSON (got: $gate_hide)" >&2
+  fail=1
+fi
+echo "PASS: compositor-gate show/hide"
+
+# --- pre-commit helper: syntax + behavioral blocks ---
 if ! bash -n "$ROOT/scripts/ci/pre-commit-check-secrets.sh"; then
   echo "FAIL: pre-commit-check-secrets.sh syntax error" >&2
   fail=1
 else
   echo "PASS: pre-commit-check-secrets.sh syntax"
 fi
+
+HOOK_REPO=$(mktemp -d)
+(
+  set -e
+  cd "$HOOK_REPO"
+  git init -q
+  git config user.email "ci@waybar.test"
+  git config user.name "waybar-ci"
+  mkdir -p data scripts/ci
+  cp "$ROOT/scripts/ci/pre-commit-check-secrets.sh" scripts/ci/
+  chmod +x scripts/ci/pre-commit-check-secrets.sh
+  printf '{}\n' >data/waybar-settings.jsonc
+  git add data/waybar-settings.jsonc
+  git commit -q -m init
+  # Block secrets filename
+  printf '{}\n' >data/waybar-secrets.jsonc
+  git add -f data/waybar-secrets.jsonc
+  if scripts/ci/pre-commit-check-secrets.sh; then
+    echo "FAIL: pre-commit should block staged waybar-secrets.jsonc" >&2
+    exit 1
+  fi
+  git reset -q HEAD -- data/waybar-secrets.jsonc
+  rm -f data/waybar-secrets.jsonc
+  # Block console_pass in settings
+  printf '{\n  "services": { "i2pd": { "console_pass": "leak" } }\n}\n' >data/waybar-settings.jsonc
+  git add data/waybar-settings.jsonc
+  if scripts/ci/pre-commit-check-secrets.sh; then
+    echo "FAIL: pre-commit should block console_pass in settings" >&2
+    exit 1
+  fi
+  # Clean stage OK
+  printf '{ "bars": { "layer": "overlay" } }\n' >data/waybar-settings.jsonc
+  git add data/waybar-settings.jsonc
+  if ! scripts/ci/pre-commit-check-secrets.sh; then
+    echo "FAIL: pre-commit should allow clean settings" >&2
+    exit 1
+  fi
+  echo "PASS: pre-commit behavioral blocks"
+) || fail=1
+rm -rf "$HOOK_REPO"
 
 if [[ "$fail" -ne 0 ]]; then
   echo "FAIL: secrets/settings tests had failures" >&2

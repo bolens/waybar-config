@@ -32,7 +32,8 @@ kde_notifications_running() {
 }
 
 kde_open_notifications() {
-  local script_dir="$(dirname "${BASH_SOURCE[0]:-$0}")"
+  local script_dir
+  script_dir="$(dirname "${BASH_SOURCE[0]:-$0}")"
   # Send SIGUSR1 to python listener to reset unread count badge in waybar
   pkill -USR1 -f "active-window-listener-kde.py" >/dev/null 2>&1 || true
   # Launch the Rofi notification center helper

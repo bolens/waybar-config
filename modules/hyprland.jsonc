@@ -1,0 +1,5 @@
+{
+  // Optional Hyprland-native module defs merged into hyprland.native.generated.jsonc.
+  // Desk workspace slots + hypr_tail (submap / hyprlight / hyprwhspr) come from
+  // generate-compositor-modules.sh even when this file is empty.
+}

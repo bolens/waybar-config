@@ -1,0 +1,28 @@
+[Unit]
+Description=Waybar status bar
+Documentation=https://github.com/Alexays/Waybar
+# Stop when the compositor/session stops
+PartOf=graphical-session.target
+After=graphical-session.target
+StartLimitIntervalSec=60
+StartLimitBurst=30
+
+[Service]
+Type=simple
+# %h = user home; override with drop-ins if WAYBAR_HOME is not ~/.config/waybar
+Environment=WAYBAR_HOME=%h/.config/waybar
+Environment=WAYBAR_SCRIPTS=%h/.config/waybar/scripts
+SyslogIdentifier=waybar
+KillMode=control-group
+ExecStartPre=/usr/bin/bash -n %h/.config/waybar/scripts/infra/waybar-launch.sh
+ExecStartPre=%h/.config/waybar/scripts/infra/listener-ctl.sh stop-all
+ExecStart=%h/.config/waybar/scripts/infra/waybar-launch.sh
+# Stop orphaned setsid listeners that outlive the main process
+ExecStop=%h/.config/waybar/scripts/infra/listener-ctl.sh stop-all
+# USR2 reloads waybar config/css for the service MainPID only
+ExecReload=/bin/kill -USR2 $MAINPID
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

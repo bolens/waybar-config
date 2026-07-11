@@ -4,7 +4,6 @@ set -euo pipefail
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
-WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 manifest="$WAYBAR_HOME/data/dock-apps.json"
 settings="$WAYBAR_HOME/data/waybar-settings.json"

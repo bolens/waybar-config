@@ -2,6 +2,8 @@
 
 A modern, highly modular, and performance-optimized Waybar configuration tailored for KDE Plasma 6 and Hyprland compositors under Wayland.
 
+License: [MIT](LICENSE).
+
 ## Features
 
 - **Independent Active Workspace Indicators per Monitor**: Tracks and maps virtual desktops per output using a custom KWin DBus listener script, solving the global workspace tracking limitation in KDE Plasma.
@@ -18,6 +20,7 @@ A modern, highly modular, and performance-optimized Waybar configuration tailore
 * `modules/`: Widget configs — almost all are `.generated.jsonc` from settings; do not edit those by hand.
 * `includes/`: Include stack wiring modules into the bar.
 * `scripts/`: Status/click handlers, listeners, generators, and CI — domain folders plus `lib/`, `generate/`, `ci/`, `infra/`. See [scripts/README.md](scripts/README.md).
+* `systemd/`: Portable user units (`waybar.service`, healthcheck service + timer) using `%h/.config/waybar`.
 * `theme/`: CSS tokens/modules plus Rofi themes under `theme/rofi/`.
 * `style.css` / `user-style.css` / `theme.css`: Bar stylesheet entry points (`style.css` also imports hyprwhspr styles when installed).
 
@@ -28,16 +31,36 @@ A modern, highly modular, and performance-optimized Waybar configuration tailore
 1. Clone this repository directly to your Waybar home directory:
    ```bash
    git clone https://github.com/bolens/waybar-config.git ~/.config/waybar
+   cd ~/.config/waybar
    ```
 
-2. Prefer the systemd user unit (recommended):
+2. Post-clone checklist:
+   ```bash
+   # Optional secrets overlay (i2pd console, etc.)
+   cp -n data/waybar-secrets.example.jsonc data/waybar-secrets.jsonc
+   chmod 600 data/waybar-secrets.jsonc   # required: secrets must not be world-readable
+
+   # Regenerate modules/layouts from settings
+   make generate
+
+   # Install systemd user units (portable %h paths)
+   mkdir -p ~/.config/systemd/user
+   ln -sfn ~/.config/waybar/systemd/waybar.service ~/.config/systemd/user/waybar.service
+   ln -sfn ~/.config/waybar/systemd/waybar-healthcheck.service ~/.config/systemd/user/waybar-healthcheck.service
+   ln -sfn ~/.config/waybar/systemd/waybar-healthcheck.timer ~/.config/systemd/user/waybar-healthcheck.timer
+
+   # Block accidental secret commits
+   ln -sfn ../../scripts/ci/pre-commit-check-secrets.sh .git/hooks/pre-commit
+   ```
+
+3. Enable the systemd user units (recommended):
    ```bash
    systemctl --user daemon-reload
    systemctl --user enable --now waybar
    systemctl --user enable --now waybar-healthcheck.timer
    ```
 
-   Or start via the launcher (which builds settings, configures session paths, and listens to session state):
+   Or start via the launcher (builds settings, configures session paths, listens to session state):
    ```bash
    ~/.config/waybar/scripts/infra/waybar-launch.sh
    ```
@@ -49,9 +72,11 @@ A modern, highly modular, and performance-optimized Waybar configuration tailore
 | `waybar.service` | Runs `scripts/infra/waybar-launch.sh`; `ExecStop`/`ExecStartPre` call `scripts/infra/listener-ctl.sh stop-all`; reload uses `kill -USR2 $MAINPID` |
 | `waybar-healthcheck.timer` | Every ~10s: restart dead waybar, heal privacy / device-notifier / compositor listeners |
 
-Do **not** start a second waybar alongside the user service (duplicates bars and listeners).
+Templates live in [`systemd/`](systemd/) and use `%h/.config/waybar`. Do **not** start a second waybar alongside the user service (duplicates bars and listeners).
 
-Point units at `scripts/infra/waybar-launch.sh`, `scripts/infra/listener-ctl.sh`, and `scripts/infra/waybar-healthcheck.sh`. Keep `WAYBAR_HOME` / `WAYBAR_SCRIPTS` set (scripts root is still `$WAYBAR_HOME/scripts`).
+Keep `WAYBAR_HOME` / `WAYBAR_SCRIPTS` set (scripts root is still `$WAYBAR_HOME/scripts`). Generated module `exec` paths use `$WAYBAR_HOME/scripts/…` so the bar stays portable across users/machines.
+
+Avoid drop-ins that override `ExecStart=` with an absolute `/home/…` path (that caused post-reorg `No such file` storms when templates used `%h` but the drop-in pinned an old layout). Prefer the repo unit as-is; see `systemd/waybar.service.d/README.conf.example`.
 
 ### Layer / tooltips (Plasma)
 
@@ -65,11 +90,13 @@ On Hyprland, `custom/hyprwhspr` comes from generated `modules/hypr-tools.generat
 
 ### Central Configuration
 Avoid editing `.generated.jsonc` or `.generated.css` files directly. Customize thresholds, poll intervals, application bindings, signals, and colors in:
-👉 **[data/waybar-settings.jsonc](file:///home/panda/.config/waybar/data/waybar-settings.jsonc)**
+👉 **[data/waybar-settings.jsonc](data/waybar-settings.jsonc)**
 
 `data/waybar-settings.json` is a compiled artifact and will be overwritten.
 
 Interval / cache TTLs live in a single map: `module_intervals` (there is no separate `poll_intervals`). Status scripts read TTLs via `waybar_module_interval`.
+
+**Personalization:** click targets, app IDs, and URLs under `apps` / service blocks (e.g. Portainer, Syncthing GUI) are machine-specific. Forks should edit those in `data/waybar-settings.jsonc` (or overlay locally) rather than expecting upstream defaults to match your hosts.
 
 ### Secrets (i2pd console)
 
@@ -92,18 +119,13 @@ Credentials that must not be committed live in **`data/waybar-secrets.jsonc`** (
 sudo ~/.config/waybar/scripts/services/i2pd/i2pd-set-console-pass.sh
 ```
 
-Install the repo pre-commit hook (blocks committing secrets / `console_pass` in settings):
-
-```bash
-ln -sfn ../../scripts/ci/pre-commit-check-secrets.sh ~/.config/waybar/.git/hooks/pre-commit
-```
-
 To regenerate configurations after modifying settings:
 ```bash
 make generate
-# or:
-~/.config/waybar/scripts/generate/generate-settings.sh
-~/.config/waybar/scripts/generate/generate-compositor-modules.sh
+# equivalent:
+#   scripts/generate/generate-settings.sh          # also runs network/dock/module generators
+#   scripts/generate/generate-compositor-modules.sh
+#   scripts/generate/generate-workspaces-css.sh
 ```
 
 Launch skips regeneration when inputs are unchanged (stamp: `~/.cache/waybar/generated.stamp`).
@@ -134,8 +156,11 @@ If you are developing a new status script (e.g. `scripts/system/my-status.sh`):
 ### Testing & Validation
 
 ```bash
-make check          # contracts + generator + secrets + validate
+make check          # syntax + contracts + generator (incl. secrets) + validate + systemd + python
 make check-syntax   # bash -n over all scripts
+make check-python   # python3 -m py_compile on scripts/**/*.py
+make check-systemd  # systemd unit templates → real scripts
+make check-secrets  # secrets/settings suite only (also covered by check-generator)
 ```
 
 Or individually:
@@ -144,6 +169,8 @@ Or individually:
 ~/.config/waybar/scripts/ci/run-generator-tests.sh
 ~/.config/waybar/scripts/ci/run-secrets-and-settings-tests.sh
 ```
+
+ShellCheck runs in CI at **warning** severity (see `.shellcheckrc`).
 
 ## Dependencies
 A list of optional integration packages:

@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - "**.sh"
+      - ".shellcheckrc"
       - ".github/workflows/shellcheck.yml"
   pull_request:
     branches: [main]
     paths:
       - "**.sh"
+      - ".shellcheckrc"
       - ".github/workflows/shellcheck.yml"
 
 concurrency:
@@ -27,8 +29,7 @@ jobs:
       - uses: actions/checkout@v7
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@2.0.0
-        env:
-          # Start at error severity so CI stays green while style warnings are cleaned up.
-          SHELLCHECK_OPTS: --severity=error
         with:
           scandir: scripts
+          # Enforce warnings (repo .shellcheckrc sets shell=bash + external-sources).
+          severity: warning

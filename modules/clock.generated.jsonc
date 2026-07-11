@@ -3,8 +3,8 @@
     "interval": 60,
     "format": "{:%a, %b %d %I:%M %p}",
     "tooltip-format": "<big>{:%Y-%m-%d}</big>\n<tt>{calendar}</tt>",
-    "on-click": "/home/panda/.config/waybar/scripts/tools/calendar-popup.sh",
-    "on-click-right": "/home/panda/.config/waybar/scripts/tools/app-open.sh kclock",
+    "on-click": "$WAYBAR_HOME/scripts/tools/calendar-popup.sh",
+    "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open.sh kclock",
     "calendar": {
       "mode": "month",
       "on-scroll": 1,

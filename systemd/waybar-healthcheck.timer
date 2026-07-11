@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Waybar healthcheck periodically
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=10s
+AccuracySec=5s
+Unit=waybar-healthcheck.service
+
+[Install]
+WantedBy=timers.target

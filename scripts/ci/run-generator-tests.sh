@@ -236,6 +236,14 @@ validate_all_generated_files() {
       grep -n -E "/home/|~/\.config/waybar" "$file" >&2
       check_fail=1
     fi
+    if grep -E 'scripts/' "$file" >/dev/null 2>&1 && ! grep -F '$WAYBAR_HOME' "$file" >/dev/null 2>&1; then
+      echo "FAIL [$stage]: scripts/ path without \$WAYBAR_HOME in $file" >&2
+      check_fail=1
+    fi
+    if grep -E '"(/tmp/|/var/tmp/)' "$file" >/dev/null 2>&1; then
+      echo "FAIL [$stage]: absolute /tmp path in $file" >&2
+      check_fail=1
+    fi
   done
 
   return $check_fail
@@ -243,6 +251,35 @@ validate_all_generated_files() {
 
 echo "Validating generated JSONC and CSS files for default settings..."
 validate_all_generated_files "default settings" || fail=1
+
+# Positive portability: module configs must keep literal $WAYBAR_HOME (not expanded abs paths)
+for port_file in \
+  "$TEST_DIR/modules/system.generated.jsonc" \
+  "$TEST_DIR/modules/utilities.generated.jsonc" \
+  "$TEST_DIR/modules/audio.generated.jsonc"; do
+  if [ ! -f "$port_file" ]; then
+    echo "FAIL: missing $port_file after default generate" >&2
+    fail=1
+    continue
+  fi
+  if ! grep -Fq '$WAYBAR_HOME/scripts' "$port_file"; then
+    echo "FAIL: $port_file missing literal \$WAYBAR_HOME/scripts" >&2
+    fail=1
+  fi
+done
+echo "PASS: generated modules keep literal \$WAYBAR_HOME/scripts"
+
+# Makefile generate contract (dry-run must include the three entry scripts)
+make_n=$(make -C "$ROOT_DIR" -n generate 2>/dev/null || true)
+case "$make_n" in
+  *generate-settings.sh*generate-compositor-modules.sh*generate-workspaces-css.sh*)
+    echo "PASS: make generate dry-run lists settings+compositor+workspaces-css"
+    ;;
+  *)
+    echo "FAIL: make -n generate missing expected scripts: $make_n" >&2
+    fail=1
+    ;;
+esac
 
 # ---------------------------------------------------------------------------
 # Contracts for recent reliability / tooltip / SoT work (default real settings)
@@ -1343,7 +1380,9 @@ if [ "$age_fresh" -lt 0 ] || [ "$age_fresh" -gt 5 ]; then
 fi
 
 # Change file modification time to 150 seconds in the past
-touch -d "150 seconds ago" "$cache_test_file" 2>/dev/null || touch -m -t $(date -d "150 seconds ago" +%Y%m%d%H%M.%S) "$cache_test_file" 2>/dev/null || true
+touch -d "150 seconds ago" "$cache_test_file" 2>/dev/null \
+  || touch -m -t "$(date -d "150 seconds ago" +%Y%m%d%H%M.%S)" "$cache_test_file" 2>/dev/null \
+  || true
 
 # Recheck age
 age_stale=$(WAYBAR_HOME="$TEST_DIR" bash -c "
@@ -1354,6 +1393,9 @@ age_stale=$(WAYBAR_HOME="$TEST_DIR" bash -c "
 # If touch command succeeded, verify value
 if [ "$age_stale" -ge 140 ] 2>/dev/null; then
   : # Pass
+elif [ "$age_stale" -ge 0 ] 2>/dev/null && [ "$age_stale" -lt 140 ] 2>/dev/null; then
+  echo "FAIL: cache_file_age for stale file expected >=140, got $age_stale" >&2
+  fail=1
 fi
 
 age_missing=$(WAYBAR_HOME="$TEST_DIR" bash -c "
@@ -1506,6 +1548,83 @@ fi
 
 # Clean up space test directory
 rm -rf "$SPACE_DIR_PARENT"
+
+# Hyprland without optional modules/hyprland.jsonc must still emit desk slots + hypr_tail
+echo "Verifying Hyprland generate without modules/hyprland.jsonc..."
+HYPR_DIR=$(mktemp -d)
+mkdir -p "$HYPR_DIR/data" "$HYPR_DIR/layouts" "$HYPR_DIR/includes" "$HYPR_DIR/modules" "$HYPR_DIR/theme"
+cp -r "$ROOT_DIR/data/"* "$HYPR_DIR/data/"
+rm -f "$HYPR_DIR/data/waybar-secrets.jsonc" "$HYPR_DIR/data/waybar-secrets.json"
+cp "$ROOT_DIR"/layouts/*.jsonc "$HYPR_DIR/layouts/" 2>/dev/null || true
+cp "$ROOT_DIR"/includes/*.jsonc "$HYPR_DIR/includes/" 2>/dev/null || true
+cp -r "$ROOT_DIR/scripts" "$HYPR_DIR/scripts"
+find "$HYPR_DIR/scripts" \( -name '*.sh' -o -name '*.py' \) -exec chmod +x {} +
+# Ensure settings compile exists for compositor generator
+WAYBAR_HOME="$HYPR_DIR" WAYBAR_SCRIPTS="$HYPR_DIR/scripts" \
+  "$HYPR_DIR/scripts/generate/generate-settings.sh" >/dev/null 2>&1 || true
+rm -f "$HYPR_DIR/modules/hyprland.jsonc"
+if ! HYPRLAND_INSTANCE_SIGNATURE=test-sig \
+  WAYBAR_HOME="$HYPR_DIR" WAYBAR_SCRIPTS="$HYPR_DIR/scripts" \
+  "$HYPR_DIR/scripts/generate/generate-compositor-modules.sh" >/dev/null 2>&1; then
+  echo "FAIL: generate-compositor-modules.sh failed on Hyprland without hyprland.jsonc" >&2
+  fail=1
+else
+  hypr_mods=$(python3 -c "
+import json, re
+t=open('$HYPR_DIR/modules/groups-desk-hypr.generated.jsonc').read()
+t=re.sub(r'/\*.*?\*/', '', t, flags=re.S)
+t=re.sub(r'^\s*//.*$', '', t, flags=re.M)
+print(','.join(json.loads(t)['group/desk-hypr']['modules']))
+")
+  case "$hypr_mods" in
+    *custom/ws-0*hyprland/submap*custom/hyprlight*custom/hyprwhspr*)
+      echo "PASS: Hyprland desk group keeps slots + hypr_tail without hyprland.jsonc"
+      ;;
+    *)
+      echo "FAIL: Hyprland desk group missing slots/tail without hyprland.jsonc: $hypr_mods" >&2
+      fail=1
+      ;;
+  esac
+fi
+rm -rf "$HYPR_DIR"
+
+# Validate must reject flat scripts/<file>.sh paths (journal: No such file after domain move)
+echo "Verifying validate rejects flat script paths..."
+FLAT_DIR=$(mktemp -d)
+mkdir -p "$FLAT_DIR/modules" "$FLAT_DIR/includes" "$FLAT_DIR/layouts" "$FLAT_DIR/data" "$FLAT_DIR/scripts/ci"
+cp "$ROOT_DIR/scripts/ci/validate-generated-config.sh" "$FLAT_DIR/scripts/ci/"
+printf '{}\n' >"$FLAT_DIR/data/waybar-settings.json"
+printf '{}\n' >"$FLAT_DIR/modules/workspaces.generated.jsonc"
+cat >"$FLAT_DIR/modules/system.generated.jsonc" <<'JSON'
+{
+  "custom/cpu": {
+    "exec": "$WAYBAR_HOME/scripts/cpu-status.sh"
+  }
+}
+JSON
+if WAYBAR_HOME="$FLAT_DIR" "$FLAT_DIR/scripts/ci/validate-generated-config.sh" >/dev/null 2>&1; then
+  echo "FAIL: validate should reject flat \$WAYBAR_HOME/scripts/cpu-status.sh" >&2
+  fail=1
+else
+  echo "PASS: validate rejects flat scripts/<file> paths"
+fi
+# Missing domain script should also fail existence check
+mkdir -p "$FLAT_DIR/scripts/system"
+cat >"$FLAT_DIR/modules/system.generated.jsonc" <<'JSON'
+{
+  "custom/cpu": {
+    "exec": "$WAYBAR_HOME/scripts/system/cpu-status.sh"
+  }
+}
+JSON
+# path is domain-shaped but file missing
+if WAYBAR_HOME="$FLAT_DIR" "$FLAT_DIR/scripts/ci/validate-generated-config.sh" >/dev/null 2>&1; then
+  echo "FAIL: validate should reject missing scripts/system/cpu-status.sh" >&2
+  fail=1
+else
+  echo "PASS: validate rejects missing resolved script paths"
+fi
+rm -rf "$FLAT_DIR"
 
 # Secrets overlay, i2pd sync helper, capture settings, validate guard
 if ! "$ROOT_DIR/scripts/ci/run-secrets-and-settings-tests.sh"; then

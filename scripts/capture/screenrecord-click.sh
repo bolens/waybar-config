@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2154 # cache_dir / screenrecord_* from capture-lib.sh
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 script_dir="${0%/*}"
-# shellcheck source=compositor-session.sh
+# shellcheck source=../lib/compositor-session.sh
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
-# shellcheck source=capture-lib.sh
+# shellcheck source=../lib/capture-lib.sh
 . "$WAYBAR_SCRIPTS/lib/capture-lib.sh"
 
 mode="$(normalize_capture_mode "${1:-select}")"

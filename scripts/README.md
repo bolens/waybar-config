@@ -59,5 +59,8 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 From the repo root:
 
 ```bash
-make check
+make check          # syntax + contracts + generator (incl. secrets) + validate + systemd + python
+make check-syntax   # bash -n
+make check-python   # py_compile
+make check-systemd  # unit path smoke
 ```

@@ -5,7 +5,6 @@ set -euo pipefail
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
-WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 script_dir="$WAYBAR_HOME/scripts"
 native_out="$WAYBAR_HOME/modules/hyprland.native.generated.jsonc"
 group_out="$WAYBAR_HOME/modules/groups-desk-hypr.generated.jsonc"
@@ -109,8 +108,13 @@ hypr_tail='[
       "custom/hyprwhspr"
     ]'
 
-if [ "$comp" = "hyprland" ] && [ -f "$source_modules" ]; then
-  cp "$source_modules" "$native_out"
+if [ "$comp" = "hyprland" ]; then
+  # Optional native overlay (hyprland/* modules). Missing file must not wipe desk slots.
+  if [ -f "$source_modules" ]; then
+    cp "$source_modules" "$native_out"
+  else
+    printf '{}\n' >"$native_out"
+  fi
   modules_json="$(
     jq -cn \
       --argjson slots "$workspace_modules" \

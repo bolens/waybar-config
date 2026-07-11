@@ -6,7 +6,7 @@ set -euo pipefail
 
 kind="${1:-}"
 action="${2:-click}"
-script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
+script_dir="$(CDPATH='' cd -- "$(dirname "$0")" && pwd)"
 cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/waybar/privacy-status.json"
 if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
   # shellcheck disable=SC1091

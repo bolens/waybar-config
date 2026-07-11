@@ -54,6 +54,8 @@ read_cpu_counters() {
 # compute_cpu_usage_percent: Calculates CPU load over time by comparing current 
 # counters with a previously saved state in stat_prev.
 compute_cpu_usage_percent() {
+  # Intentional word-splitting of space-separated /proc/stat counters.
+  # shellcheck disable=SC2046
   set -- $(read_cpu_counters)
   user="$1"
   nice="$2"
@@ -70,6 +72,7 @@ compute_cpu_usage_percent() {
   if [ ! -f "$stat_prev" ]; then
     printf '%s %s\n' "$total_now" "$idle_now" >"$stat_prev"
     sleep 0.15
+    # shellcheck disable=SC2046
     set -- $(read_cpu_counters)
     user="$1"
     nice="$2"
@@ -83,6 +86,7 @@ compute_cpu_usage_percent() {
     idle_now=$((idle + iowait))
   fi
 
+  # shellcheck disable=SC2046
   set -- $(cat "$stat_prev")
   total_prev="$1"
   idle_prev="$2"

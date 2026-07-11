@@ -4,7 +4,7 @@ set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
-script_dir="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
+script_dir="$(CDPATH='' cd -- "$(dirname "$0")" && pwd)"
 # shellcheck source=waybar-cache-helpers.sh
 if [ -f "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh" ]; then
   . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"

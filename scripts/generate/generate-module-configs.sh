@@ -4,11 +4,11 @@ set -euo pipefail
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
-WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
-scripts="$WAYBAR_HOME/scripts"
+# Keep literal $WAYBAR_HOME so generated modules stay portable (match other generators).
+scripts='$WAYBAR_HOME/scripts'
 
 hour_format=$(detect_clock_format)
 date_format=$(detect_date_format)

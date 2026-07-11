@@ -283,6 +283,7 @@ if [ "$rebuild_cache" = true ]; then
   mv -f "$tmp_cache" "$ICONS_CACHE_FILE" 2>/dev/null || true
   cleanup_stale_tmp_files "$cache_dir"
 else
+  # shellcheck source=/dev/null
   . "$ICONS_CACHE_FILE"
 fi
 

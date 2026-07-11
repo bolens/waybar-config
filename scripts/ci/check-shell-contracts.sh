@@ -244,6 +244,70 @@ else
   echo "PASS: forced-sh i2pd-status fails under dash (documents bash shebang requirement)"
 fi
 
+# --- listener-ctl: missing script must not leave a lock / must exit cleanly ---
+miss_rt=$(mktemp -d)
+miss_out=$(
+  XDG_RUNTIME_DIR="$miss_rt" \
+    "$WAYBAR_SCRIPTS/infra/listener-ctl.sh" start "$miss_rt/no-such-listener.sh" missing-test 2>&1 || true
+)
+if [ -d "$miss_rt/waybar-dock-listener-missing-test.lock.d" ]; then
+  echo "FAIL: listener-ctl start of missing script left a lock dir" >&2
+  fail=1
+else
+  echo "PASS: listener-ctl start missing script is a no-op"
+fi
+rm -rf "$miss_rt"
+
+# --- healthcheck: heal dead privacy listener (stub systemctl/logger + mock listener) ---
+hc_rt=$(mktemp -d)
+hc_bin=$(mktemp -d)
+hc_home=$(mktemp -d)
+mkdir -p "$hc_home/scripts/infra" "$hc_home/scripts/listeners" "$hc_home/scripts/lib"
+cp "$WAYBAR_SCRIPTS/infra/listener-ctl.sh" "$WAYBAR_SCRIPTS/infra/waybar-healthcheck.sh" "$hc_home/scripts/infra/"
+cp "$WAYBAR_SCRIPTS/listeners/dock-windows-listener-lock.sh" "$hc_home/scripts/listeners/"
+cp "$WAYBAR_SCRIPTS/lib/compositor-session.sh" "$hc_home/scripts/lib/"
+chmod +x "$hc_home/scripts/infra/"*.sh
+cat >"$hc_home/scripts/listeners/privacy-listener.sh" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+: "${WAYBAR_SCRIPTS:=}"
+WAYBAR_LISTENER_LOCK_NAME=privacy
+. "$WAYBAR_SCRIPTS/listeners/dock-windows-listener-lock.sh"
+sleep 30
+EOF
+chmod +x "$hc_home/scripts/listeners/privacy-listener.sh"
+# Long-lived fake waybar MainPID (systemctl stub exits immediately, so $$ would be gone)
+sleep 300 &
+hc_waybar_pid=$!
+printf '%s\n' "$hc_waybar_pid" >"$hc_bin/waybar.pid"
+cat >"$hc_bin/systemctl" <<EOF
+#!/usr/bin/env sh
+case "\$*" in
+  *is-active*waybar*) exit 0 ;;
+  *show*MainPID*) cat "$hc_bin/waybar.pid" ;;
+  *) exit 0 ;;
+esac
+EOF
+chmod +x "$hc_bin/systemctl"
+cat >"$hc_bin/logger" <<'EOF'
+#!/usr/bin/env sh
+exit 0
+EOF
+chmod +x "$hc_bin/logger"
+PATH="$hc_bin:/usr/bin:/bin" XDG_RUNTIME_DIR="$hc_rt" \
+  WAYBAR_HOME="$hc_home" WAYBAR_SCRIPTS="$hc_home/scripts" \
+  "$hc_home/scripts/infra/waybar-healthcheck.sh" >/dev/null 2>&1 || true
+sleep 0.4
+if [ ! -f "$hc_rt/waybar-dock-listener-privacy.lock.d/pid" ]; then
+  echo "FAIL: healthcheck should start privacy listener when lock is dead" >&2
+  fail=1
+else
+  XDG_RUNTIME_DIR="$hc_rt" "$hc_home/scripts/infra/listener-ctl.sh" stop privacy >/dev/null 2>&1 || true
+  echo "PASS: healthcheck heals dead privacy listener"
+fi
+kill "$hc_waybar_pid" 2>/dev/null || true
+rm -rf "$hc_rt" "$hc_bin" "$hc_home"
+
 if [ "$fail" -ne 0 ]; then
   echo "FAIL: shell contract checks failed" >&2
   exit 1
