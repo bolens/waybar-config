@@ -1,3 +1,4 @@
+#!/usr/bin/env sh
 # Shared library of Unicode animations for Waybar scripts.
 # Sourced by modules to render high-fidelity loading spin frames.
 

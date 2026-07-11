@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  syntax:
+    name: bash -n
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax-check all shell scripts
+        run: |
+          set -euo pipefail
+          fail=0
+          for f in scripts/*.sh; do
+            echo "Checking $f"
+            bash -n "$f" || fail=1
+          done
+          exit "$fail"
+
+  test:
+    name: Generator + secrets tests
+    runs-on: ubuntu-latest
+    needs: [syntax]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install jq
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+      - name: Generator tests
+        run: bash scripts/run-generator-tests.sh
+      - name: Secrets / settings tests
+        run: bash scripts/run-secrets-and-settings-tests.sh
+      - name: Validate generated config
+        env:
+          WAYBAR_HOME: ${{ github.workspace }}
+        run: bash scripts/validate-generated-config.sh
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        env:
+          # Start at error severity so CI stays green while style warnings are cleaned up.
+          SHELLCHECK_OPTS: --severity=error
+        with:
+          scandir: scripts

@@ -1,3 +1,6 @@
+#!/usr/bin/env sh
+# Shared helpers for side-info Waybar modules.
+
 # normalize_token: Normalize token for display
 normalize_token() {
   token="$1"

@@ -11,6 +11,7 @@ if [ -f "$script_dir/waybar-cache-helpers.sh" ]; then
   . "$script_dir/waybar-cache-helpers.sh"
 else
   . "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts/waybar-cache-helpers.sh"
+fi
 if [ -f "$script_dir/waybar-settings.sh" ]; then
   . "$script_dir/waybar-settings.sh"
 else

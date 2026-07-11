@@ -1,4 +1,3 @@
-
 #!/usr/bin/env sh
 # Standalone updates tab script for Waybar custom module (now uses updates-status.sh cache)
 set -eu
