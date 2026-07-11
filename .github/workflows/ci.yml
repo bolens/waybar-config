@@ -178,6 +178,8 @@ jobs:
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
       - name: Run shell contract checks
+        env:
+          WAYBAR_HOME: ${{ github.workspace }}
         run: bash scripts/ci/check-shell-contracts.sh
 
   # Modular generator suites — matrix shards run in parallel (no nested secrets).

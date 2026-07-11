@@ -26,7 +26,8 @@ waybar_test_file_mode() {
 }
 
 waybar_test_assert_mode() {
-  local path="$1" expected="$2" msg="${3:-$path mode}"
+  local path="$1" expected="$2"
+  local msg="${3:-$path mode}"
   local got
   got=$(waybar_test_file_mode "$path")
   if [[ "$got" != "$expected" && "$got" != "0$expected" ]]; then

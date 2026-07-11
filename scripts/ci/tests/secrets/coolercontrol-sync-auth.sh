@@ -22,7 +22,7 @@ chmod +x "$SUDO_FAKE/.config/waybar/scripts/services/coolercontrol/"*.sh
 out_sudo=$(
   CC_TEST_MODE=1 \
   HOME=/root \
-  WAYBAR_HOME= \
+  WAYBAR_HOME='' \
   SUDO_USER=fake-cc-user \
   CC_TEST_SUDO_HOME="$SUDO_FAKE" \
   WAYBAR_SCRIPTS=/root/.config/waybar/scripts \

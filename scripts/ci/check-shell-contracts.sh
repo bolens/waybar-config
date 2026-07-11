@@ -6,10 +6,12 @@
 # 2. Listener lock acquisition that relies on `. file arg` (dash ignores args)
 # 3. listener-ctl + status scripts failing silently under dash/minimal PATH
 set -euo pipefail
-: "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
-: "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+# Prefer repo checkout (CI sets WAYBAR_HOME; local defaults to this tree).
+: "${WAYBAR_HOME:=$ROOT}"
+: "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
+
 fail=0
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT

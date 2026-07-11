@@ -68,7 +68,7 @@ chmod +x "$CC_AUTH_BIN/curl"
 auth_both=$(
   PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
   CC_AUTH_LOG="$CC_AUTH_LOG" \
-  WAYBAR_CC_FIXTURE_DIR= \
+  WAYBAR_CC_FIXTURE_DIR='' \
   WAYBAR_CC_WRITE_PROBE_TTL=0 \
   WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
   WAYBAR_CC_TOKEN="cc_good_token_aaaaaaaaaaaaaaaa" \
@@ -92,7 +92,7 @@ poison_auth=$(
   export WAYBAR_CC_FIXTURE_DIR=/nonexistent-poison-cc-fixture
   PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
   CC_AUTH_LOG="$CC_AUTH_LOG" \
-  WAYBAR_CC_FIXTURE_DIR= \
+  WAYBAR_CC_FIXTURE_DIR='' \
   WAYBAR_CC_WRITE_PROBE_TTL=0 \
   WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
   WAYBAR_CC_TOKEN="cc_good_token_aaaaaaaaaaaaaaaa" \
@@ -113,7 +113,7 @@ unset WAYBAR_CC_FIXTURE_DIR || true
 auth_fb=$(
   PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
   CC_AUTH_LOG="$CC_AUTH_LOG" \
-  WAYBAR_CC_FIXTURE_DIR= \
+  WAYBAR_CC_FIXTURE_DIR='' \
   WAYBAR_CC_WRITE_PROBE_TTL=0 \
   WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
   WAYBAR_CC_TOKEN="cc_bad_token_bbbbbbbbbbbbbbbb" \
@@ -137,7 +137,7 @@ fi
 auth_fail=$(
   PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
   CC_AUTH_LOG="$CC_AUTH_LOG" \
-  WAYBAR_CC_FIXTURE_DIR= \
+  WAYBAR_CC_FIXTURE_DIR='' \
   WAYBAR_CC_WRITE_PROBE_TTL=0 \
   WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
   WAYBAR_CC_TOKEN="cc_bad_token_bbbbbbbbbbbbbbbb" \
