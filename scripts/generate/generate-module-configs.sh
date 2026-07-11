@@ -457,8 +457,6 @@ jq -n --slurpfile s "$settings" \
       "custom/docker": "Docker",
       "custom/syncthing": "Syncthing",
       "custom/sunshine": "Sunshine",
-      "custom/system": "System",
-      "custom/network": "Network summary",
       "custom/runtimes": "Runtimes",
       "custom/updates": "Updates",
       "custom/ups": "UPS",

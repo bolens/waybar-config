@@ -49,7 +49,6 @@
     "vpn": "once",
     "tailscale": "once",
     "privacy": "once",
-    "active_window": 1800,
     "keyboard_layout": "once",
     "gamemode": "once",
     "dock_windows": "once",
@@ -60,8 +59,6 @@
     "memory": 12,
     "docker": 30,
     "ups": 30,
-    "system_tab": 60,
-    "network_tab": 60,
     "runtimes": 600,
     "updates": 1800,
     "disk": 300,
@@ -89,8 +86,7 @@
     "syncthing": "once",
     "sunshine": 30,
     "streamdeck": "once",
-    "i2pd": "once",
-    "updates_tab": 1800
+    "i2pd": "once"
   },
   "signals": {
     "notifications": 10,
@@ -99,7 +95,6 @@
     "clipboard": 9,
     "brightness": 8,
     "mic": 7,
-    "active_window": 13,
     "gamemode": 15,
     "dock_windows": 11,
     "dock_apps": 26,
@@ -226,8 +221,6 @@
         "custom/docker",
         "custom/syncthing",
         "custom/sunshine",
-        "custom/system",
-        "custom/network",
         "custom/runtimes",
         "custom/updates",
         "custom/ups",

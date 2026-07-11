@@ -145,11 +145,9 @@ fi
 # Prime a smaller critical set asynchronously; remaining modules refresh on interval/signal.
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 cleanup_stale_tmp_files "$XDG_CACHE_HOME/waybar"
-cleanup_side_info_refresh_locks
 
 for script in \
   "$WAYBAR_SCRIPTS/infra/system-metrics-collector.sh" \
-  "$WAYBAR_SCRIPTS/workspaces/active-window-status.sh" \
   "$WAYBAR_SCRIPTS/network/vpn-status.sh" \
   "$WAYBAR_SCRIPTS/media/mic-status.sh" \
   "$WAYBAR_SCRIPTS/services/desktop/nightlight-status.sh" \

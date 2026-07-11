@@ -149,8 +149,6 @@
       "custom/docker",
       "custom/syncthing",
       "custom/sunshine",
-      "custom/system",
-      "custom/network",
       "custom/runtimes",
       "custom/updates",
       "custom/ups",

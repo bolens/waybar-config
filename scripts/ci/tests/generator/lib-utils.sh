@@ -110,28 +110,6 @@ if [ "$age_missing" -ne 999999 ]; then
   fail=1
 fi
 
-# Assert fit_text trims whitespace correctly
-echo "Testing fit_text utility..."
-trimmed=$(WAYBAR_HOME="$TEST_DIR" bash -c "
-  . $TEST_DIR/scripts/lib/side-info-helpers.sh
-  fit_text '  hello world  '
-")
-if [ "$trimmed" != "hello world" ]; then
-  echo "FAIL: fit_text did not trim whitespace correctly: '$trimmed'" >&2
-  fail=1
-fi
-
-# Assert format_lr formats correctly
-echo "Testing format_lr utility..."
-formatted=$(WAYBAR_HOME="$TEST_DIR" bash -c "
-  . $TEST_DIR/scripts/lib/side-info-helpers.sh
-  format_lr 'CPU' '50%'
-")
-if [ "${#formatted}" -ne 24 ]; then
-  echo "FAIL: format_lr returned output of incorrect length: ${#formatted} (expected 24), value: '$formatted'" >&2
-  fail=1
-fi
-
 # Assert serve_cache_or_refresh works correctly
 echo "Testing serve_cache_or_refresh utility..."
 echo '{"text":"fresh"}' >"$cache_test_file"

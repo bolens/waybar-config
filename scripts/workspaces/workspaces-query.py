@@ -116,22 +116,6 @@ def kde_current_desktop_id(output: str | None = None) -> str:
         except Exception:
             pass
 
-        try:
-            # Forward-compatible placeholder check for KWin per-monitor active desktops
-            return subprocess.check_output(
-                [
-                    "qdbus6",
-                    "org.kde.KWin",
-                    "/VirtualDesktopManager",
-                    "org.kde.KWin.VirtualDesktopManager.currentForOutput",
-                    output,
-                ],
-                text=True,
-                stderr=subprocess.DEVNULL,
-            ).strip()
-        except Exception:
-            pass
-
     try:
         return subprocess.check_output(
             [

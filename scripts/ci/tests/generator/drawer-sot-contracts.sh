@@ -62,6 +62,30 @@ if ! printf '%s' "$desk_tip" | grep -q 'Notifications'; then
   fail=1
 fi
 
+# Side-info retirement: summary tabs must stay off the infra drawer / system modules.
+waybar_test_assert_json_file_jq \
+  "$TEST_DIR/modules/groups.generated.jsonc" \
+  '(."group/infra".modules | index("custom/system") == null) and (."group/infra".modules | index("custom/network") == null)' \
+  "retired side-info modules custom/system or custom/network still on group/infra"
+infra_tip=$(echo "$clean_drawers" | jq -r '."custom/infra-drawer"."tooltip-format"')
+if printf '%s' "$infra_tip" | grep -qE 'Network summary|(^|·) System( ·|$)'; then
+  echo "FAIL: infra-drawer tooltip still mentions retired side-info labels: $infra_tip" >&2
+  fail=1
+fi
+waybar_test_assert_json_file_jq \
+  "$TEST_DIR/modules/system.generated.jsonc" \
+  '(has("custom/system") | not) and (has("custom/network") | not)' \
+  "system.generated.jsonc still defines retired custom/system or custom/network"
+waybar_test_assert_json_file_jq \
+  "$TEST_DIR/data/waybar-settings.json" \
+  '(.module_intervals | has("system_tab") or has("network_tab") or has("updates_tab") | not)
+   and (.signals | has("active_window") | not)' \
+  "settings still have retired side-info intervals or active_window signal"
+if [ -d "$TEST_DIR/scripts/side-info" ] || [ -f "$TEST_DIR/scripts/lib/side-info-helpers.sh" ]; then
+  echo "FAIL: side-info scripts still present in sandbox tree" >&2
+  fail=1
+fi
+
 # Explicit negative cases: these shapes must be rejected by validate_custom_module_configs
 drawer_bad_dir=$(mktemp -d)
 printf '%s\n' '{"custom/desk-drawer":{"format":"X","tooltip":true,"return-type":"json","interval":"once","exec":"printf hi"}}' >"$drawer_bad_dir/exec.jsonc"

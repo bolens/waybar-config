@@ -26,7 +26,6 @@ sig() {
   fi
 }
 SIG_WORKSPACES="$(sig workspaces 16)"
-SIG_ACTIVE_WINDOW="$(sig active_window 13)"
 SIG_KEYBOARD="$(sig keyboard_layout 2)"
 SIG_DOCK_WINDOWS="$(sig dock_windows 11)"
 
@@ -80,8 +79,8 @@ socat -u "UNIX-CONNECT:${socket}" - 2>/dev/null | while IFS= read -r line; do
       "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$SIG_WORKSPACES"
       ;;
     activewindow | windowtitle)
+      # Title cache is watched by active-window-scroll (zscroll); no Waybar signal.
       update_active_window_cache
-      "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$SIG_ACTIVE_WINDOW"
       ;;
     activelayout)
       "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$SIG_KEYBOARD"
@@ -92,7 +91,6 @@ socat -u "UNIX-CONNECT:${socket}" - 2>/dev/null | while IFS= read -r line; do
         "$WAYBAR_SCRIPTS/dock/dock-windows-signal.sh"
       else
         "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$SIG_DOCK_WINDOWS"
-        "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$SIG_ACTIVE_WINDOW"
       fi
       ;;
   esac

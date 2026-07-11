@@ -9,7 +9,6 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `ci/` | Contract checks, unit tests, validate, pre-commit hook |
 | `infra/` | Launch, healthcheck, listener-ctl, metrics collector |
 | `listeners/` | Long-running watchers |
-| `side-info/` | Side drawer tabs/summaries |
 | `dock/` | Dock launcher + dock-windows |
 | `workspaces/` | Workspaces, active window, keybind hints |
 | `system/` | CPU/mem/disk/gpu/nvme/fans/liquidctl/asusctl/rgb/power/brightness/… |
@@ -96,6 +95,8 @@ make install-hooks   # secrets pre-commit symlink
 Generator shards: `generate-smoke`, `drawer-sot-contracts`, `listener-lifecycle`, `settings-overrides-modules`, `settings-overrides-polish`, `settings-overrides-layout-theme`, `lib-utils`, `generator-resilience`, `path-edge-cases`, `liquidctl`, `coolercontrol-module-wiring`, `coolercontrol-module-auth`, `asusctl`, `hw-nvme-olh`, `hw-rgb-fans`, `portability`.
 
 Secrets shards: `overlay-getters`, `capture-lib`, `credential-guards`, `i2pd-sync`, `coolercontrol-sync-bootstrap`, `coolercontrol-sync-auth`, `polish-runtime`, `compositor-gate`, `precommit-secrets`.
+
+CI `secrets:` path filter in `.github/workflows/ci.yml` must stay aligned with `waybar_test_secrets_sandbox` / `waybar_test_secrets_copy_polish_scripts` / `waybar_test_install_script_stubs` (fixture `app-open.sh` stub — not real `scripts/tools/**`).
 
 Suites source the harness entrypoint only. Run one suite directly:
 

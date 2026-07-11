@@ -28,7 +28,6 @@ def waybar_scripts_dir():
 def load_waybar_signals():
     """Load RTMIN offsets from waybar-settings.json (signals.*)."""
     defaults = {
-        "active_window": 13,
         "workspaces": 16,
         "clipboard": 9,
         "notifications": 10,
@@ -415,8 +414,7 @@ class ActiveWindowServer:
             os.replace(raw_title_file + ".tmp", raw_title_file)
         except Exception:
             pass
-        
-        waybar_rtmin("active_window")
+
         return False
 
     def flush_windows_changed(self):

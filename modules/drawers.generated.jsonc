@@ -32,7 +32,7 @@
   "custom/infra-drawer": {
     "format": "󰒍",
     "tooltip": true,
-    "tooltip-format": "Infrastructure\nContains: Docker · Syncthing · Sunshine · System · Network summary · Runtimes · Updates · UPS · Systemd · GitHub · Uptime\nClick to toggle"
+    "tooltip-format": "Infrastructure\nContains: Docker · Syncthing · Sunshine · Runtimes · Updates · UPS · Systemd · GitHub · Uptime\nClick to toggle"
   },
   "custom/hardware-drawer": {
     "format": "󰻠",

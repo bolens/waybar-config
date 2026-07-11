@@ -9,7 +9,7 @@ Features:
     - Shows all interfaces, bonds, slaves, public IP, VPN, and more.
     - Sensitive info (all IPs, MACs, etc.) can be masked/unmasked with [S].
     - Details can be toggled with [M].
-    - Debug output available if DEBUG = True.
+    - Debug output available when WAYBAR_DEBUG=1.
     - Robust error handling for missing tools.
 
 Usage:
@@ -39,7 +39,7 @@ import subprocess
 import sys
 import time
 
-DEBUG = True  # Set to True for debug output
+DEBUG = os.environ.get("WAYBAR_DEBUG", "").strip().lower() in ("1", "true", "yes")
 
 gi.require_version("Gtk", "3.0")
 try:

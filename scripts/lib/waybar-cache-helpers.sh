@@ -81,14 +81,6 @@ cleanup_stale_lock_dir() {
   rmdir "$lock_dir" 2>/dev/null || true
 }
 
-cleanup_side_info_refresh_locks() {
-  cache_dir="${XDG_RUNTIME_DIR:-/tmp}/waybar-side-graphs/cache"
-  stale_lock_ttl=30
-
-  cleanup_stale_lock_dir "$cache_dir/system-refresh.lock.d" "$stale_lock_ttl"
-  cleanup_stale_lock_dir "$cache_dir/network-refresh.lock.d" "$stale_lock_ttl"
-}
-
 escape_markup() {
   printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
 }

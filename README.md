@@ -265,6 +265,8 @@ sudo dnf install jq socat qt6-qttools wireplumber rofi cliphist
 | Fan curves note (`custom/fans` tooltip) | `fanctl` (community/AUR) | install from upstream if packaged | same | Optional note only — does not replace hwmon fans |
 | Hyprland voice (`hyprwhspr`) | project install | project install | project install | Optional CSS import in `style.css` |
 | Sensors / lm-sensors | `lm_sensors` | `lm-sensors` | `lm_sensors` | Helps hwmon labels; not required for every module |
+| LibreDefender (`custom/libredefender`) | `libredefender` (+ `clamav` / `clamav-freshclam`) | build from [upstream](https://github.com/kpcyrd/libredefender) or ClamAV packages | same | Wire `services.libredefender.service_name` to your scan unit (default `libredefender-scan.service`) |
+| chkrootkit (`custom/chkrootkit`) | AUR `chkrootkit` | `chkrootkit` | `chkrootkit` | Wire `services.chkrootkit.service_name` to your scan unit (default `chkrootkit-scan.service`) |
 | System updates (`custom/updates`) | `pacman-contrib` (`checkupdates`); optional `paru` for AUR | `apt` (base) | `dnf` (base) | Auto-detects backend; Flatpak optional additive |
 
 **Kernel / sysfs (no package)** — used when present:

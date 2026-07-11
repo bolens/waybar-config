@@ -12,6 +12,14 @@ signal_dock() {
   "$WAYBAR_SCRIPTS/dock/dock-windows-signal.sh" >/dev/null 2>&1 || true
 }
 
+dock_debug() {
+  case "${WAYBAR_DEBUG:-}" in
+    1 | true | TRUE | yes | YES) ;;
+    *) return 0 ;;
+  esac
+  printf '%s\n' "$*" >>"${XDG_RUNTIME_DIR:-/tmp}/waybar-dock-debug.log"
+}
+
 notify() {
   command -v notify-send >/dev/null 2>&1 && notify-send "Dock" "$1" || true
 }
@@ -91,7 +99,7 @@ if [ "$session" = "hyprland" ] && command -v hyprctl >/dev/null 2>&1 && command 
   # If only one window, select it immediately on click
   if [ "${#entries[@]}" -eq 1 ]; then
     addr="${entries[0]%%|*}"
-    echo "[DEBUG] Only one window, focusing $addr" >>/tmp/waybar-dock-debug.log
+    dock_debug "Only one window, focusing $addr"
     [ -n "$addr" ] && hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1 || true
     signal_dock
     exit 0
@@ -108,7 +116,7 @@ if [ "$session" = "hyprland" ] && command -v hyprctl >/dev/null 2>&1 && command 
       break
     fi
   done
-  echo "[DEBUG] Selected window: $addr ($selected)" >>/tmp/waybar-dock-debug.log
+  dock_debug "Selected window: $addr ($selected)"
   [ -n "$addr" ] && hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1 || true
   signal_dock
   exit 0

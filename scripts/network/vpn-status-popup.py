@@ -9,7 +9,7 @@ Features:
     - Shows Tailscale, Netbird, VPN (NetworkManager), and public IP info.
     - Sensitive info (all IPs, user IDs, login/display names) can be masked/unmasked with [S].
     - Details can be toggled with [M].
-    - Debug output available if DEBUG = True.
+    - Debug output available when WAYBAR_DEBUG=1.
     - Robust error handling for missing tools.
 
 Usage:
@@ -41,7 +41,7 @@ import shutil
 import subprocess
 import sys
 
-DEBUG = True  # Set to True for debug output
+DEBUG = os.environ.get("WAYBAR_DEBUG", "").strip().lower() in ("1", "true", "yes")
 
 # Robustly suppress all non-debug output (including C-level and subprocess output)
 if not DEBUG:

@@ -101,10 +101,6 @@ build_groups_json() {
 
 build_system_json() {
   local app_open="${scripts}/tools/app-open.sh"
-  local bond_iface="bond0"
-  if [[ -f "$network_manifest" ]]; then
-    bond_iface="$(jq -r '.bond.interface // "bond0"' "$network_manifest")"
-  fi
 
   local libredefender_service
   libredefender_service=$(waybar_settings_get '.services.libredefender.service_name' 'libredefender-scan.service')
@@ -119,8 +115,6 @@ build_system_json() {
     --slurpfile settings "$settings" \
     --arg app_open "$app_open" \
     --arg scripts "$scripts" \
-    --arg bond_iface "$bond_iface" \
-    --arg eth_popup "python3 ${scripts}/network/ethernet-popup.py" \
     --arg libredefender_service "$libredefender_service" \
     --arg chkrootkit_service "$chkrootkit_service" \
     --arg syncthing_service "$syncthing_service" \
@@ -171,26 +165,6 @@ build_system_json() {
         "on-click": click_app("lazydocker"),
         "on-click-right": ($app_open + " xdg-open " + app("portainer_url")),
         "on-click-middle": click_app("docker_ps")
-      },
-      "custom/system": {
-        format: "{}",
-        "return-type": "json",
-        tooltip: true,
-        interval: interval("system_tab"),
-        exec: ($scripts + "/side-info/side-info-system-tab.sh"),
-        "on-click": click_app("system_monitor"),
-        "on-click-right": click_app("btop"),
-        "on-click-middle": click_app("plasma_system_monitor")
-      },
-      "custom/network": {
-        format: "{}",
-        "return-type": "json",
-        tooltip: true,
-        interval: interval("network_tab"),
-        exec: ($scripts + "/side-info/side-info-network-tab.sh"),
-        "on-click": ($eth_popup + " " + $bond_iface),
-        "on-click-right": click_app("network_editor"),
-        "on-click-middle": click_app("ip_addr")
       },
       "custom/runtimes": {
         format: "{}",

@@ -98,21 +98,21 @@ if ! grep -q 'def load_waybar_signals' "$TEST_DIR/scripts/listeners/active-windo
   fail=1
 fi
 
-if ! grep -q 'waybar_rtmin("active_window")' "$TEST_DIR/scripts/listeners/active-window-listener-kde.py"; then
-
-  echo "FAIL: active-window-listener-kde.py missing waybar_rtmin(\"active_window\") usage" >&2
+# Active-window title uses file cache + zscroll; listener must not RTMIN-poke Waybar for it.
+if grep -q 'waybar_rtmin("active_window")' "$TEST_DIR/scripts/listeners/active-window-listener-kde.py"; then
+  echo "FAIL: active-window-listener-kde.py should not emit waybar_rtmin(\"active_window\")" >&2
   fail=1
 fi
 
 python3 - "$TEST_DIR" <<'PY' || fail=1
-import json, os, subprocess, sys, tempfile, textwrap
+import json, os, subprocess, sys
 from pathlib import Path
 test_dir = Path(sys.argv[1])
 settings = {
     "signals": {
-        "active_window": 42,
         "workspaces": 43,
         "notifications": 44,
+        "dock_windows": 45,
     }
 
 }
@@ -130,9 +130,10 @@ ns = {"os": os, "json": json, "subprocess": subprocess}
 exec(chunk, ns)
 os.environ["WAYBAR_HOME"] = str(test_dir)
 signals = ns["load_waybar_signals"]()
-assert signals["active_window"] == 42, signals
 assert signals["workspaces"] == 43, signals
 assert signals["notifications"] == 44, signals
+assert signals["dock_windows"] == 45, signals
+assert "active_window" not in signals, signals
 
 # defaults still present for unspecified keys
 
@@ -141,7 +142,7 @@ assert "clipboard" in signals and isinstance(signals["clipboard"], int)
 # waybar_rtmin should not raise with DEVNULL-only kwargs
 
 ns["SIGNALS"] = signals
-ns["waybar_rtmin"]("active_window")
+ns["waybar_rtmin"]("workspaces")
 print("PASS: KDE signal map loader unit test")
 PY
 
