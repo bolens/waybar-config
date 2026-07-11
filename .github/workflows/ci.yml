@@ -3,8 +3,32 @@ name: CI
 on:
   push:
     branches: [main]
+    paths:
+      - "scripts/**"
+      - "data/**"
+      - "layouts/**"
+      - "modules/**"
+      - "includes/**"
+      - "theme/**"
+      - "theme.css"
+      - "config.jsonc"
+      - "style.css"
+      - "user-style.css"
+      - ".github/workflows/ci.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "scripts/**"
+      - "data/**"
+      - "layouts/**"
+      - "modules/**"
+      - "includes/**"
+      - "theme/**"
+      - "theme.css"
+      - "config.jsonc"
+      - "style.css"
+      - "user-style.css"
+      - ".github/workflows/ci.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,10 +36,66 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  # Decide which suites are relevant to the changed files.
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      scripts: ${{ steps.filter.outputs.scripts }}
+      generator: ${{ steps.filter.outputs.generator }}
+      secrets: ${{ steps.filter.outputs.secrets }}
+      validate: ${{ steps.filter.outputs.validate }}
+      workflow: ${{ steps.filter.outputs.workflow }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            workflow:
+              - '.github/workflows/ci.yml'
+            scripts:
+              - 'scripts/**'
+            generator:
+              - 'scripts/generate-*.sh'
+              - 'scripts/run-generator-tests.sh'
+              - 'scripts/check-shell-contracts.sh'
+              - 'scripts/waybar-settings.sh'
+              - 'data/**'
+              - 'layouts/**'
+              - 'modules/**'
+              - 'includes/**'
+              - 'theme/**'
+              - 'theme.css'
+              - 'config.jsonc'
+            secrets:
+              - 'scripts/run-secrets-and-settings-tests.sh'
+              - 'scripts/waybar-settings.sh'
+              - 'scripts/i2pd-set-console-pass.sh'
+              - 'scripts/capture-lib.sh'
+              - 'scripts/validate-generated-config.sh'
+              - 'data/waybar-secrets*'
+              - 'data/waybar-settings*'
+            validate:
+              - 'scripts/validate-generated-config.sh'
+              - 'data/**'
+              - 'layouts/**'
+              - 'modules/**'
+              - 'includes/**'
+              - 'theme/**'
+              - 'theme.css'
+              - 'config.jsonc'
+              - 'style.css'
+              - 'user-style.css'
+
+  # Fast fail-early checks before the heavier suites.
   syntax:
     name: bash -n
+    needs: changes
+    if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -31,6 +111,8 @@ jobs:
 
   contracts:
     name: Shell contracts (dash)
+    needs: changes
+    if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -39,32 +121,60 @@ jobs:
       - name: Run shell contract checks
         run: bash scripts/check-shell-contracts.sh
 
-  test:
-    name: Generator + secrets tests
+  # Suites run in parallel; each skips when its paths did not change.
+  generator-tests:
+    name: Generator tests
+    needs: [changes, syntax, contracts]
+    if: |
+      always()
+      && needs.changes.result == 'success'
+      && (needs.syntax.result == 'success' || needs.syntax.result == 'skipped')
+      && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
+      && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.generator == 'true')
     runs-on: ubuntu-latest
-    needs: [syntax, contracts]
     steps:
       - uses: actions/checkout@v7
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
-      - name: Generator tests
+      - name: Run generator tests
+        env:
+          WAYBAR_HOME: ${{ github.workspace }}
         run: bash scripts/run-generator-tests.sh
-      - name: Secrets / settings tests
+
+  secrets-tests:
+    name: Secrets / settings tests
+    needs: [changes, syntax, contracts]
+    if: |
+      always()
+      && needs.changes.result == 'success'
+      && (needs.syntax.result == 'success' || needs.syntax.result == 'skipped')
+      && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
+      && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.secrets == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install jq + dash
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
+      - name: Run secrets / settings tests
+        env:
+          WAYBAR_HOME: ${{ github.workspace }}
         run: bash scripts/run-secrets-and-settings-tests.sh
+
+  validate-config:
+    name: Validate generated config
+    needs: [changes, syntax, contracts]
+    if: |
+      always()
+      && needs.changes.result == 'success'
+      && (needs.syntax.result == 'success' || needs.syntax.result == 'skipped')
+      && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
+      && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.validate == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install jq + dash
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
       - name: Validate generated config
         env:
           WAYBAR_HOME: ${{ github.workspace }}
         run: bash scripts/validate-generated-config.sh
-
-  shellcheck:
-    name: ShellCheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@2.0.0
-        env:
-          # Start at error severity so CI stays green while style warnings are cleaned up.
-          SHELLCHECK_OPTS: --severity=error
-        with:
-          scandir: scripts

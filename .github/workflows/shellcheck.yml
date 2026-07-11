@@ -1,0 +1,34 @@
+name: "CI: ShellCheck"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.sh"
+      - ".github/workflows/shellcheck.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.sh"
+      - ".github/workflows/shellcheck.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        env:
+          # Start at error severity so CI stays green while style warnings are cleaned up.
+          SHELLCHECK_OPTS: --severity=error
+        with:
+          scandir: scripts
