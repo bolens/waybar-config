@@ -61,8 +61,36 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 From the repo root:
 
 ```bash
-make check          # syntax + contracts + generator (incl. secrets) + validate + systemd + python
-make check-syntax   # bash -n
-make check-python   # py_compile
-make check-systemd  # unit path smoke
+make check           # syntax + contracts + generator + secrets + validate + systemd + python
+make check-syntax    # bash -n
+make check-python    # py_compile
+make check-systemd   # unit path smoke
+make check-generator # scripts/ci/tests/generator/*.sh (CI matrix shards these)
+make check-secrets   # scripts/ci/tests/secrets/*.sh
+```
+
+### CI test layout
+
+| Path | Role |
+|------|------|
+| `ci/lib/waybar-test-harness.sh` | Entrypoint — sources the focused modules below |
+| `ci/lib/waybar-test-core.sh` | `begin` / `end` / `fail` / root / chmod |
+| `ci/lib/waybar-test-sandbox.sh` | Tree populate, generator + secrets sandboxes |
+| `ci/lib/waybar-test-assert.sh` | JSONC read, secrets write, jq/mode asserts |
+| `ci/lib/waybar-test-stubs.sh` | PATH/script stubs + tracked `mktemp` |
+| `ci/lib/waybar-test-validate.sh` | Generated-config validators (drawer/module contracts) |
+| `ci/lib/fixtures/` | Shared fixtures (settings JSONC, bin/script stubs) |
+| `ci/waybar-test-sanitize-env.sh` | Clears fixture/override env bleed between suites |
+| `ci/tests/generator/*.sh` | Generator suites (CI matrix shards each file) |
+| `ci/tests/secrets/*.sh` | Secrets/settings suites (CI matrix shards each file) |
+
+Generator shards: `generate-smoke`, `drawer-sot-contracts`, `listener-lifecycle`, `settings-overrides-modules`, `settings-overrides-polish`, `settings-overrides-layout-theme`, `lib-utils`, `generator-resilience`, `path-edge-cases`, `liquidctl`, `coolercontrol-module-wiring`, `coolercontrol-module-auth`, `asusctl`, `hw-nvme-olh`, `hw-rgb-fans`, `portability`.
+
+Secrets shards: `overlay-getters`, `capture-lib`, `credential-guards`, `i2pd-sync`, `coolercontrol-sync-bootstrap`, `coolercontrol-sync-auth`, `polish-runtime`, `compositor-gate`, `precommit-secrets`.
+
+Suites source the harness entrypoint only. Run one suite directly:
+
+```bash
+bash scripts/ci/tests/generator/liquidctl.sh
+bash scripts/ci/tests/secrets/i2pd-sync.sh
 ```

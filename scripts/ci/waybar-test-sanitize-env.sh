@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Shared CI env sanitizer — clear fixture/override vars that poison hermetic tests.
 #
-# Call at the top of run-generator-tests.sh and run-secrets-and-settings-tests.sh
-# so a polluted parent shell (or nested suite invocation) cannot leak:
+# Invoked via waybar_test_begin in scripts/ci/lib/waybar-test-core.sh so each
+# modular suite under scripts/ci/tests/ starts clean (no fixture/override bleed):
 #   - CoolerControl fixture dirs pointing at deleted mktemps
 #   - Fake sysfs roots / host API URLs from a previous case
 #   - Compositor overrides that make detect_compositor lie

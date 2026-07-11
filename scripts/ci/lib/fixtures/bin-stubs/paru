@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+printf 'paru\n' >>"${WAYBAR_HOME}/bin/calls.log"
+printf 'aur/pkg 1-1 -> 1-2\n'

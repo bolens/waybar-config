@@ -188,19 +188,23 @@ If you are developing a new status script (e.g. `scripts/system/my-status.sh`):
 ### Testing & Validation
 
 ```bash
-make check          # syntax + contracts + generator (incl. secrets) + validate + systemd + python
-make check-syntax   # bash -n over all scripts
-make check-python   # python3 -m py_compile on scripts/**/*.py
-make check-systemd  # systemd unit templates → real scripts
-make check-secrets  # secrets/settings suite only (also covered by check-generator)
+make check           # syntax + contracts + generator suites + secrets suites + validate + systemd + python
+make check-syntax    # bash -n over all scripts
+make check-python    # python3 -m py_compile on scripts/**/*.py
+make check-systemd   # systemd unit templates → real scripts
+make check-generator # scripts/ci/tests/generator/*.sh (CI runs these as a matrix)
+make check-secrets   # scripts/ci/tests/secrets/*.sh (CI runs these as a matrix)
 ```
 
-Or individually:
+Or run a single suite / validator:
+
 ```bash
 ~/.config/waybar/scripts/ci/validate-generated-config.sh
-~/.config/waybar/scripts/ci/run-generator-tests.sh
-~/.config/waybar/scripts/ci/run-secrets-and-settings-tests.sh
+~/.config/waybar/scripts/ci/tests/generator/liquidctl.sh
+~/.config/waybar/scripts/ci/tests/secrets/i2pd-sync.sh
 ```
+
+Shared helpers live under `scripts/ci/lib/` (`waybar-test-harness.sh` entrypoint + focused `core` / `sandbox` / `assert` / `stubs` / `validate` modules + `fixtures/`). Suite inventory and CI path filters are documented in [scripts/README.md](scripts/README.md#ci-test-layout).
 
 ShellCheck runs in CI at **warning** severity (see `.shellcheckrc`).
 

@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+printf 'rofi %s\n' "$*" >>"${WAYBAR_HOME}/bin/calls.log"
+# echo first menu line for click scripts that expect a selection
+if printf '%s' "$*" | grep -q 'Power Profile'; then
+  printf '⚡ performance\n'
+elif printf '%s' "$*" | grep -q 'System Updates'; then
+  printf '❌ Close\n'
+elif printf '%s' "$*" | grep -q 'Select Device'; then
+  printf 'Phone\n'
+elif printf '%s' "$*" | grep -q 'Action'; then
+  printf 'Ping\n'
+elif printf '%s' "$*" | grep -q 'Device Notifier'; then
+  printf '󰑐 Rescan Devices\n'
+elif printf '%s' "$*" | grep -q 'KDE Vaults'; then
+  exit 0
+else
+  cat >/dev/null
+  exit 0
+fi

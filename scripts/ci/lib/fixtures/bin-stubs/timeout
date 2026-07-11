@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# ignore duration arg and run the rest
+shift
+exec "$@"

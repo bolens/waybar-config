@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+printf 'foo.x86_64 1-1\n'
+exit 100

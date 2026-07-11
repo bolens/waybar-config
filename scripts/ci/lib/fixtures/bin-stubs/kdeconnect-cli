@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+printf 'kdeconnect-cli %s\n' "$*" >>"${WAYBAR_HOME}/bin/calls.log"
+if printf '%s' "$*" | grep -q -- '-a'; then
+  printf 'dev1 Phone\n'
+fi

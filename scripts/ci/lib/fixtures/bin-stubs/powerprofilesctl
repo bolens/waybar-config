@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+printf 'powerprofilesctl %s\n' "$*" >>"${WAYBAR_HOME}/bin/calls.log"
+case "${1:-}" in
+  get) printf 'balanced\n' ;;
+  set) ;;
+esac

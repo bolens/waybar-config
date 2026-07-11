@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+printf 'flatpak\n' >>"${WAYBAR_HOME}/bin/calls.log"
+exit 0

@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+printf 'bind = SUPER, Q, killactive\n'

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+if [ "${1:-}" = "list" ]; then
+  printf 'Listing...\npkg/stable 1.0 [upgradable from: 0.9]\n'
+fi

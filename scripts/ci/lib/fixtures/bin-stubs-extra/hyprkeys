@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+printf 'hyprkeys %s\n' "$*" >>"${WAYBAR_HOME}/bin/calls.log"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -c)
+      printf 'config=%s\n' "$2" >>"${WAYBAR_HOME}/bin/calls.log"
+      shift 2
+      ;;
+    *) shift ;;
+  esac
+done
+printf 'SUPER+Q killactive\n'

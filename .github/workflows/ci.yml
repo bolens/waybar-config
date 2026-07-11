@@ -65,17 +65,23 @@ jobs:
         id: filter
         with:
           filters: |
+            # Harness/workflow only — suite file edits belong under generator/secrets
+            # so they do not force validate + systemd via workflow=true.
             workflow:
               - '.github/workflows/ci.yml'
               - 'Makefile'
               - '.shellcheckrc'
+              - 'scripts/ci/lib/**'
+              - 'scripts/ci/waybar-test-sanitize-env.sh'
             scripts:
               - 'scripts/**'
-            # Generator suite copies/exercises almost every script domain + generated
+            # Generator suites copy/exercise almost every script domain + generated
             # configs — keep this aligned with scripts/** so status/module changes
             # actually re-run the integration harness (not only generate/*.sh).
             generator:
               - 'scripts/**'
+              - 'scripts/ci/tests/generator/**'
+              - 'scripts/ci/lib/**'
               - 'data/**'
               - 'layouts/**'
               - 'modules/**'
@@ -83,12 +89,14 @@ jobs:
               - 'theme/**'
               - 'theme.css'
               - 'config.jsonc'
-            # Secrets suite is narrower: helpers it copies + polish scripts it stubs.
+            # Secrets suites are narrower: helpers they copy + polish scripts they stub.
+            # Keep in sync with waybar_test_secrets_sandbox / waybar_test_stub_polish.
             secrets:
-              - 'scripts/ci/run-secrets-and-settings-tests.sh'
+              - 'scripts/ci/tests/secrets/**'
+              - 'scripts/ci/lib/**'
+              - 'scripts/ci/waybar-test-sanitize-env.sh'
               - 'scripts/ci/pre-commit-check-secrets.sh'
               - 'scripts/ci/validate-generated-config.sh'
-              - 'scripts/ci/waybar-test-sanitize-env.sh'
               - 'scripts/lib/waybar-settings.sh'
               - 'scripts/lib/capture-lib.sh'
               - 'scripts/lib/compositor-gate.sh'
@@ -172,9 +180,9 @@ jobs:
       - name: Run shell contract checks
         run: bash scripts/ci/check-shell-contracts.sh
 
-  # Suites run in parallel; each skips when its paths did not change.
+  # Modular generator suites — matrix shards run in parallel (no nested secrets).
   generator-tests:
-    name: Generator tests
+    name: Generator / ${{ matrix.suite }}
     needs: [changes, syntax, contracts]
     if: |
       always()
@@ -183,17 +191,38 @@ jobs:
       && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.generator == 'true')
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          - generate-smoke
+          - drawer-sot-contracts
+          - listener-lifecycle
+          - settings-overrides-modules
+          - settings-overrides-polish
+          - settings-overrides-layout-theme
+          - lib-utils
+          - generator-resilience
+          - path-edge-cases
+          - liquidctl
+          - coolercontrol-module-wiring
+          - coolercontrol-module-auth
+          - asusctl
+          - hw-nvme-olh
+          - hw-rgb-fans
+          - portability
     steps:
       - uses: actions/checkout@v7
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
-      - name: Run generator tests
+      - name: Run generator suite ${{ matrix.suite }}
         env:
           WAYBAR_HOME: ${{ github.workspace }}
-        run: bash scripts/ci/run-generator-tests.sh
+        run: bash "scripts/ci/tests/generator/${{ matrix.suite }}.sh"
 
+  # Modular secrets suites — sibling to generator (not nested).
   secrets-tests:
-    name: Secrets / settings tests
+    name: Secrets / ${{ matrix.suite }}
     needs: [changes, syntax, contracts]
     if: |
       always()
@@ -202,14 +231,27 @@ jobs:
       && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.secrets == 'true')
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          - overlay-getters
+          - capture-lib
+          - credential-guards
+          - i2pd-sync
+          - coolercontrol-sync-bootstrap
+          - coolercontrol-sync-auth
+          - polish-runtime
+          - compositor-gate
+          - precommit-secrets
     steps:
       - uses: actions/checkout@v7
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
-      - name: Run secrets / settings tests
+      - name: Run secrets suite ${{ matrix.suite }}
         env:
           WAYBAR_HOME: ${{ github.workspace }}
-        run: bash scripts/ci/run-secrets-and-settings-tests.sh
+        run: bash "scripts/ci/tests/secrets/${{ matrix.suite }}.sh"
 
   validate-config:
     name: Validate generated config

@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+printf 'gh\n' >>"${WAYBAR_HOME}/bin/calls.log"
+# five fake notifications
+python3 -c 'import json; print(json.dumps([
+  {"repository":{"full_name":"o/r1"},"subject":{"title":"t1"},"reason":"mention"},
+  {"repository":{"full_name":"o/r2"},"subject":{"title":"t2"},"reason":"mention"},
+  {"repository":{"full_name":"o/r3"},"subject":{"title":"t3"},"reason":"mention"},
+  {"repository":{"full_name":"o/r4"},"subject":{"title":"t4"},"reason":"mention"},
+  {"repository":{"full_name":"o/r5"},"subject":{"title":"t5"},"reason":"mention"}
+]))'

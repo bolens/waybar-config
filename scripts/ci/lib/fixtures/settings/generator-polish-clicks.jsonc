@@ -1,0 +1,47 @@
+{
+  "bars": { "height": 30, "layer": "overlay", "tooltip": true },
+  "module_intervals": {
+    "github": 10,
+    "streamdeck": 10,
+    "syncthing": 10,
+    "device_battery": 10,
+    "chkrootkit": 10,
+    "libredefender": 10
+  },
+  "signals": { "streamdeck": 24, "syncthing": 22, "device_battery": 20 },
+  "layouts": {
+    "top": { "position": "top", "modules_left": [], "modules_center": [], "modules_right": [] },
+    "bottom": { "position": "bottom" }
+  },
+  "groups": {},
+  "drawers": {},
+  "services": {
+    "syncthing": { "service_name": "POLISH_SYNCTHING", "gui_url": "https://st.polish/" },
+    "libredefender": { "service_name": "polish-ld.service" },
+    "chkrootkit": { "service_name": "polish-ck.service" },
+    "sunshine": {},
+    "i2pd": {}
+  },
+  "apps": {
+    "github_notifications": "https://github.polish/notifications",
+    "github_home": "https://github.polish/home",
+    "terminal": "POLISH_TERM",
+    "file_manager": "fm",
+    "solaar": "solaar",
+    "input_settings": "input",
+    "power_settings": "power",
+    "systemd_failed": "sysfail",
+    "audio_mixer": "mixer"
+  },
+  "streamdeck": { "service_name": "POLISH_STREAMDECK.service" },
+  "audio": { "seek_back_sec": 41, "seek_forward_sec": 42, "volume_step": 5, "max_volume": 1.5 },
+  "github": {},
+  "theme": {
+    "font_family": "x",
+    "tooltip_font_size": 12,
+    "border_radius": 4,
+    "colors": { "background": "#000", "foreground": "#fff", "border": "#111" }
+  },
+  "clocks": { "format": "{:%H:%M}" },
+  "workspaces": { "slot_count": 5 }
+}

@@ -35,7 +35,7 @@ fan_cpu_crit=$(waybar_settings_get '.thresholds.fans.cpu.critical' '2000')
 fan_gpu_warn=$(waybar_settings_get '.thresholds.fans.gpu.warning' '70')
 fan_gpu_crit=$(waybar_settings_get '.thresholds.fans.gpu.critical' '85')
 
-# Test hook: point at a fake hwmon tree (see run-generator-tests.sh).
+# Test hook: point at a fake hwmon tree (see scripts/ci/tests/generator/).
 hwmon_root="${WAYBAR_HWMON_ROOT:-/sys/class/hwmon}"
 
 # 1. Discover asusec (Motherboard fan controller via ASUS Embedded Controller driver):

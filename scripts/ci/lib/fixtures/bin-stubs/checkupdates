@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+printf 'checkupdates\n' >>"${WAYBAR_HOME}/bin/calls.log"
+exit 0

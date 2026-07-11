@@ -1,0 +1,159 @@
+{
+  "bars": {
+    "height": 99,
+    "spacing": 99
+  },
+  "module_intervals": {
+    "clock": 42,
+    "syncthing": 77,
+    "sunshine": 76,
+    "streamdeck": 75,
+    "i2pd": 74
+  },
+  "signals": {
+    "syncthing": 99,
+    "sunshine": 98,
+    "streamdeck": 97,
+    "i2pd": 96
+  },
+  "clocks": {
+    "locale": "fr_FR.UTF-8",
+    "hour_format": "12",
+    "date_format": "month-first",
+    "bottom": {
+      "format": "TEST_BOTTOM_CLOCK_FORMAT"
+    },
+    "calendar": {
+      "first_day": 0
+    }
+  },
+  "weather": {
+    "unit": "F",
+    "on_click": "TEST_WEATHER_ON_CLICK",
+    "on_click_right": "TEST_WEATHER_ON_CLICK_RIGHT",
+    "on_click_middle": "TEST_WEATHER_ON_CLICK_MIDDLE"
+  },
+  "active_window": {
+    "zscroll": false,
+    "max_length": 15
+  },
+  "audio": {
+    "mpris_zscroll": false,
+    "mpris_max_length": 20,
+    "volume_step": 2,
+    "max_volume": 1.2,
+    "on_click": "TEST_AUDIO_ON_CLICK",
+    "on_click_right": "TEST_AUDIO_ON_CLICK_RIGHT",
+    "seek_back_sec": 17,
+    "seek_forward_sec": 23
+  },
+  "bluetooth": {
+    "on_click": "TEST_BLUETOOTH_ON_CLICK",
+    "on_click_right": "TEST_BLUETOOTH_ON_CLICK_RIGHT",
+    "on_click_middle": "TEST_BLUETOOTH_ON_CLICK_MIDDLE"
+  },
+  "keyboard": {
+    "on_click": "TEST_KEYBOARD_ON_CLICK"
+  },
+  "gamemode": {
+    "on_click": "TEST_GAMEMODE_ON_CLICK"
+  },
+  "kdeconnect": {
+    "on_click": "TEST_KDECONNECT_ON_CLICK",
+    "on_click_right": "TEST_KDECONNECT_ON_CLICK_RIGHT",
+    "on_click_middle": "TEST_KDECONNECT_ON_CLICK_MIDDLE"
+  },
+  "device_notifier": {
+    "on_click": "TEST_DEVICE_NOTIFIER_ON_CLICK",
+    "on_click_right": "TEST_DEVICE_NOTIFIER_ON_CLICK_RIGHT"
+  },
+  "colorpicker": {
+    "on_click": "TEST_COLORPICKER_ON_CLICK"
+  },
+  "vaults": {
+    "on_click": "TEST_VAULTS_ON_CLICK",
+    "on_click_right": "TEST_VAULTS_ON_CLICK_RIGHT"
+  },
+  "touchpad": {
+    "on_click": "TEST_TOUCHPAD_ON_CLICK",
+    "on_click_right": "TEST_TOUCHPAD_ON_CLICK_RIGHT"
+  },
+  "streamdeck": {
+    "service_name": "MOCK_STREAMDECK.service",
+    "on_click": "TEST_STREAMDECK_ON_CLICK",
+    "on_click_right": "TEST_STREAMDECK_ON_CLICK_RIGHT",
+    "on_click_middle": "TEST_STREAMDECK_ON_CLICK_MIDDLE"
+  },
+  "github": {
+    "on_click_right": "TEST_GITHUB_ON_CLICK_RIGHT",
+    "on_click_middle": "TEST_GITHUB_ON_CLICK_MIDDLE"
+  },
+  "workspaces": {
+    "slot_count": 8
+  },
+  "layouts": {
+    "top": {
+      "position": "top",
+      "modules_left": ["group/desk-controls", "group/media"],
+      "modules_center": ["group/desk-hypr", "custom/keybindhint", "custom/gamemode"],
+      "modules_right": ["group/top-status", "group/power"]
+    }
+  },
+  "services": {
+    "chkrootkit": {
+      "service_name": "MOCK_CHKROOTKIT_SERVICE",
+      "on_click": "TEST_CHKROOTKIT_ON_CLICK"
+    },
+    "libredefender": {
+      "service_name": "MOCK_LIBREDEFENDER_SERVICE",
+      "on_click": "TEST_LIBREDEFENDER_ON_CLICK"
+    },
+    "syncthing": {
+      "gui_url": "https://syncthing.test/",
+      "service_name": "MOCK_SYNCTHING",
+      "on_click": "TEST_SYNCTHING_ON_CLICK"
+    },
+    "sunshine": {
+      "gui_url": "https://sunshine.test/",
+      "service_name": "MOCK_SUNSHINE.service",
+      "on_click_right": "TEST_SUNSHINE_ON_CLICK_RIGHT"
+    },
+    "i2pd": {
+      "console_url": "http://i2pd.test:7070/",
+      "service_name": "MOCK_I2PD.service",
+      "on_click": "TEST_I2PD_ON_CLICK"
+    }
+  },
+  "apps": {
+    "file_manager": "TEST_FILE_MANAGER",
+    "github_notifications": "https://github.test/notifications",
+    "github_home": "https://github.test/home",
+    "terminal": "MOCK_TERM",
+    "solaar": "TEST_SOLAAR",
+    "input_settings": "TEST_INPUT_SETTINGS",
+    "power_settings": "TEST_POWER_SETTINGS",
+    "systemd_failed": "TEST_SYSTEMD_FAILED"
+  },
+  "theme": {
+    "font_family": "MOCK_FONT_FAMILY",
+    "tooltip_font_size": 44,
+    "border_radius": 12,
+    "tooltip_padding": "9px 11px",
+    "colors": {
+      "background": "rgba(9, 9, 9, 0.99)",
+      "tooltip_background": "#010203",
+      "tooltip_border": "#040506"
+    }
+  },
+  "rofi": {
+    "wifi": {
+      "width": 888,
+      "lines": 33,
+      "x_offset": -111,
+      "y_offset": 11
+    },
+    "switcher": {
+      "width": 999
+    }
+  }
+}
