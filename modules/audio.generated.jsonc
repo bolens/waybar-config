@@ -16,7 +16,7 @@
   },
   "custom/mpris": {
     "format": "{}",
-    "exec": "/home/panda/.config/waybar/scripts/mpris-scroll.sh",
+    "exec": "/home/panda/.config/waybar/scripts/media/mpris-scroll.sh",
     "on-click": "playerctl play-pause",
     "on-click-right": "playerctl next",
     "on-click-middle": "playerctl previous"
@@ -25,7 +25,7 @@
     "format": "{}",
     "return-type": "json",
     "interval": 2,
-    "exec": "/home/panda/.config/waybar/scripts/media-prev.sh",
+    "exec": "/home/panda/.config/waybar/scripts/media/media-prev.sh",
     "on-click": "playerctl previous",
     "on-click-right": "playerctl position 30-"
   },
@@ -33,7 +33,7 @@
     "format": "{}",
     "return-type": "json",
     "interval": 2,
-    "exec": "/home/panda/.config/waybar/scripts/media-next.sh",
+    "exec": "/home/panda/.config/waybar/scripts/media/media-next.sh",
     "on-click": "playerctl next",
     "on-click-right": "playerctl position 10+"
   },
@@ -54,8 +54,8 @@
         "󰕾"
       ]
     },
-    "on-click": "/home/panda/.config/waybar/scripts/app-open.sh goxlr-launcher",
-    "on-click-right": "/home/panda/.config/waybar/scripts/audio-click.sh select",
+    "on-click": "/home/panda/.config/waybar/scripts/tools/app-open.sh goxlr-launcher",
+    "on-click-right": "/home/panda/.config/waybar/scripts/media/audio-click.sh select",
     "on-click-middle": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
     "on-scroll-up": "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+",
     "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
@@ -65,10 +65,10 @@
     "return-type": "json",
     "signal": 7,
     "interval": "once",
-    "exec": "/home/panda/.config/waybar/scripts/mic-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/app-open.sh goxlr-launcher",
-    "on-click-right": "/home/panda/.config/waybar/scripts/audio-click.sh manage",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/mic-toggle.sh"
+    "exec": "/home/panda/.config/waybar/scripts/media/mic-status.sh",
+    "on-click": "/home/panda/.config/waybar/scripts/tools/app-open.sh goxlr-launcher",
+    "on-click-right": "/home/panda/.config/waybar/scripts/media/audio-click.sh manage",
+    "on-click-middle": "/home/panda/.config/waybar/scripts/media/mic-toggle.sh"
   },
   "bluetooth": {
     "format": "󰂯",
@@ -78,8 +78,8 @@
     "tooltip-format": "{status}\n{controller_alias}: {controller_address}",
     "tooltip-format-connected": "{device_alias}\n{controller_alias}: {num_connections} connected",
     "tooltip-format-connected-battery": "{device_alias} {device_battery_percentage}%\n{controller_alias}: {num_connections} connected",
-    "on-click": "/home/panda/.config/waybar/scripts/bluetooth-click.sh list",
-    "on-click-right": "/home/panda/.config/waybar/scripts/bluetooth-click.sh manage",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/bluetooth-click.sh toggle"
+    "on-click": "/home/panda/.config/waybar/scripts/network/bluetooth-click.sh list",
+    "on-click-right": "/home/panda/.config/waybar/scripts/network/bluetooth-click.sh manage",
+    "on-click-middle": "/home/panda/.config/waybar/scripts/network/bluetooth-click.sh toggle"
   }
 }

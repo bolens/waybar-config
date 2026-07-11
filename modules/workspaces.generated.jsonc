@@ -6,9 +6,9 @@
     "interval": "once",
     "hide-empty-text": true,
     "exec-on-event": true,
-    "exec": "$WAYBAR_HOME/scripts/workspaces-status.sh \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
+    "exec": "$WAYBAR_HOME/scripts/workspaces/workspaces-status.sh \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
     "tooltip": true
   },
   "custom/ws-0": {
@@ -18,10 +18,10 @@
     "interval": "once",
     "hide-empty-text": true,
     "exec-on-event": true,
-    "exec": "$WAYBAR_HOME/scripts/workspaces-slot-status.sh 0 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/workspaces-click.sh 0 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
+    "exec": "$WAYBAR_HOME/scripts/workspaces/workspaces-slot-status.sh 0 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh 0 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
     "tooltip": true
   },
   "custom/ws-1": {
@@ -31,10 +31,10 @@
     "interval": "once",
     "hide-empty-text": true,
     "exec-on-event": true,
-    "exec": "$WAYBAR_HOME/scripts/workspaces-slot-status.sh 1 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/workspaces-click.sh 1 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
+    "exec": "$WAYBAR_HOME/scripts/workspaces/workspaces-slot-status.sh 1 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh 1 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
     "tooltip": true
   },
   "custom/ws-2": {
@@ -44,10 +44,10 @@
     "interval": "once",
     "hide-empty-text": true,
     "exec-on-event": true,
-    "exec": "$WAYBAR_HOME/scripts/workspaces-slot-status.sh 2 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/workspaces-click.sh 2 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
+    "exec": "$WAYBAR_HOME/scripts/workspaces/workspaces-slot-status.sh 2 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh 2 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
     "tooltip": true
   },
   "custom/ws-3": {
@@ -57,10 +57,10 @@
     "interval": "once",
     "hide-empty-text": true,
     "exec-on-event": true,
-    "exec": "$WAYBAR_HOME/scripts/workspaces-slot-status.sh 3 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/workspaces-click.sh 3 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
+    "exec": "$WAYBAR_HOME/scripts/workspaces/workspaces-slot-status.sh 3 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh 3 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
     "tooltip": true
   },
   "custom/ws-4": {
@@ -70,10 +70,10 @@
     "interval": "once",
     "hide-empty-text": true,
     "exec-on-event": true,
-    "exec": "$WAYBAR_HOME/scripts/workspaces-slot-status.sh 4 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/workspaces-click.sh 4 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
-    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
+    "exec": "$WAYBAR_HOME/scripts/workspaces/workspaces-slot-status.sh 4 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh 4 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-up \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/workspaces/workspaces-click.sh scroll-down \"$WAYBAR_OUTPUT_NAME\"",
     "tooltip": true
   }
 }

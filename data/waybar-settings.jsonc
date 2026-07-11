@@ -305,7 +305,7 @@
       "console_url": "http://127.0.0.1:7070/",
       "console_user": "i2pd",
       // console_pass: data/waybar-secrets.jsonc only (gitignored).
-      // Sync: sudo scripts/i2pd-set-console-pass.sh (secrets ↔ i2pd.conf; see README)
+      // Sync: sudo scripts/services/i2pd/i2pd-set-console-pass.sh (secrets ↔ i2pd.conf; see README)
       "service_name": "i2pd.service",
       "on_click": null,
       "on_click_right": null
@@ -473,7 +473,7 @@
     "temperature": 4200 // Target color temperature in Kelvin (e.g. 3500, 4000, 4500)
   },
   "rofi": {
-    "theme": "$WAYBAR_HOME/themes/dock-rofi.rasi",
+    "theme": "$WAYBAR_HOME/theme/rofi/dock-rofi.rasi",
     "clipboard": {
       "width": 780,
       "lines": 18
@@ -539,7 +539,7 @@
     "podman_ps": "ghostty -e podman ps -a",
     "virsh_list": "ghostty -e virsh list --all",
     "paru_update": "ghostty -e paru -Syu",
-    "updates_review": "$WAYBAR_HOME/scripts/updates-review.sh",
+    "updates_review": "$WAYBAR_HOME/scripts/services/sync/updates-review.sh",
     "audio_mixer": "goxlr-launcher",
     "discord": "discord",
     "file_manager": "xdg-open $HOME",

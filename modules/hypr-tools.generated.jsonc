@@ -3,7 +3,7 @@
     "format": "{}",
     "return-type": "json",
     "interval": 60,
-    "exec": "/home/panda/.config/waybar/scripts/hypr-bar-module-status.sh notify",
+    "exec": "/home/panda/.config/waybar/scripts/services/hypr/hypr-bar-module-status.sh notify",
     "tooltip": false,
     "on-click": "hyprnotify show"
   },
@@ -11,13 +11,13 @@
     "format": "{}",
     "return-type": "json",
     "interval": 60,
-    "exec": "/home/panda/.config/waybar/scripts/hypr-bar-module-status.sh light",
+    "exec": "/home/panda/.config/waybar/scripts/services/hypr/hypr-bar-module-status.sh light",
     "tooltip": false,
     "on-click": "hyprlight osd"
   },
   "custom/hyprwhspr": {
     "format": "{}",
-    "exec": "sh /home/panda/.config/waybar/scripts/hyprwhspr-status-wrapper.sh",
+    "exec": "sh /home/panda/.config/waybar/scripts/services/hypr/hyprwhspr-status-wrapper.sh",
     "interval": 30,
     "return-type": "json",
     "exec-on-event": false,

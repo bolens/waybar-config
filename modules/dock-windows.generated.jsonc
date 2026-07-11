@@ -8,10 +8,10 @@
     "align": 0.5,
     "signal": 11,
     "interval": 120,
-    "exec": "/home/panda/.config/waybar/scripts/dock-windows-status.sh",
-    "on-click": "/home/panda/.config/waybar/scripts/dock-windows-click.sh activate",
-    "on-click-right": "/home/panda/.config/waybar/scripts/dock-windows-click.sh close-focused",
-    "on-click-middle": "/home/panda/.config/waybar/scripts/dock-windows-click.sh cycle",
+    "exec": "/home/panda/.config/waybar/scripts/dock/dock-windows-status.sh",
+    "on-click": "/home/panda/.config/waybar/scripts/dock/dock-windows-click.sh activate",
+    "on-click-right": "/home/panda/.config/waybar/scripts/dock/dock-windows-click.sh close-focused",
+    "on-click-middle": "/home/panda/.config/waybar/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   }
 }
