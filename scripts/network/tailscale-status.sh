@@ -12,7 +12,6 @@ stale_lock_ttl=25
 
 mkdir -p "$cache_dir"
 
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -71,7 +70,7 @@ label=""
 case "$backend" in
   Running)
     ;;
-  NeedsLogin|NeedsMachineAuth|Stopped)
+  NeedsLogin | NeedsMachineAuth | Stopped)
     class="offline"
     label="OFF"
     ;;
@@ -117,5 +116,5 @@ json=$(jq -cn \
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"

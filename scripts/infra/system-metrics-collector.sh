@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Shared CPU / memory / GPU metrics for Waybar (one refresh serves all monitors).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
@@ -17,7 +17,7 @@ stale_lock_ttl=30
 
 mkdir -p "$cache_dir"
 
-# ensure_topology_file: Discovers CPU core/thread count. Topology changes are rare, 
+# ensure_topology_file: Discovers CPU core/thread count. Topology changes are rare,
 # so we cache this discovery for 24 hours (86400s) to avoid running lscpu on every poll.
 ensure_topology_file() {
   age=$(cache_file_age "$topology_file")
@@ -45,52 +45,31 @@ ensure_topology_file() {
   mv -f "$tmp" "$topology_file"
 }
 
-# read_cpu_counters: Reads aggregate CPU ticks from /proc/stat. 
+# read_cpu_counters: Reads aggregate CPU ticks from /proc/stat.
 # Returns ticks for: user, nice, system, idle, iowait, irq, softirq, steal.
 read_cpu_counters() {
   awk '/^cpu / {print $2, $3, $4, $5, $6, $7, $8, $9; exit}' /proc/stat
 }
 
-# compute_cpu_usage_percent: Calculates CPU load over time by comparing current 
+# compute_cpu_usage_percent: Calculates CPU load over time by comparing current
 # counters with a previously saved state in stat_prev.
 compute_cpu_usage_percent() {
-  # Intentional word-splitting of space-separated /proc/stat counters.
-  # shellcheck disable=SC2046
-  set -- $(read_cpu_counters)
-  user="$1"
-  nice="$2"
-  system="$3"
-  idle="$4"
-  iowait="$5"
-  irq="$6"
-  softirq="$7"
-  steal="$8"
+  local user nice system idle iowait irq softirq steal
+  local total_now idle_now total_prev idle_prev delta_total delta_idle usage
 
+  IFS=' ' read -r user nice system idle iowait irq softirq steal < <(read_cpu_counters)
   total_now=$((user + nice + system + idle + iowait + irq + softirq + steal))
   idle_now=$((idle + iowait))
 
   if [ ! -f "$stat_prev" ]; then
     printf '%s %s\n' "$total_now" "$idle_now" >"$stat_prev"
     sleep 0.15
-    # shellcheck disable=SC2046
-    set -- $(read_cpu_counters)
-    user="$1"
-    nice="$2"
-    system="$3"
-    idle="$4"
-    iowait="$5"
-    irq="$6"
-    softirq="$7"
-    steal="$8"
+    IFS=' ' read -r user nice system idle iowait irq softirq steal < <(read_cpu_counters)
     total_now=$((user + nice + system + idle + iowait + irq + softirq + steal))
     idle_now=$((idle + iowait))
   fi
 
-  # shellcheck disable=SC2046
-  set -- $(cat "$stat_prev")
-  total_prev="$1"
-  idle_prev="$2"
-
+  IFS=' ' read -r total_prev idle_prev <"$stat_prev"
   printf '%s %s\n' "$total_now" "$idle_now" >"$stat_prev"
 
   delta_total=$((total_now - total_prev))
@@ -102,7 +81,6 @@ compute_cpu_usage_percent() {
   fi
   printf '%s' "$usage"
 }
-
 
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
@@ -195,11 +173,11 @@ read_cpu_temperature() {
     path=$(find_temp_path || true)
     if [ -n "$path" ]; then
       tmp_temp_path="$temp_path_file.tmp.$$"
-      printf '%s' "$path" > "$tmp_temp_path"
+      printf '%s' "$path" >"$tmp_temp_path"
       mv -f "$tmp_temp_path" "$temp_path_file"
     else
       tmp_temp_path="$temp_path_file.tmp.$$"
-      printf '' > "$tmp_temp_path"
+      printf '' >"$tmp_temp_path"
       mv -f "$tmp_temp_path" "$temp_path_file"
     fi
   fi
@@ -221,7 +199,7 @@ usage="$(compute_cpu_usage_percent)"
 cpu_temp="$(read_cpu_temperature)"
 
 # Read load average directly using shell builtin
-read -r load_1 load_5 load_15 runnable _ < /proc/loadavg
+read -r load_1 load_5 load_15 runnable _ </proc/loadavg
 
 # Consolidate 3 separate load percentage calculations into a single awk process
 read -r load_pct_1 load_pct_5 load_pct_15 <<EOF
@@ -365,16 +343,16 @@ if command -v nvidia-smi >/dev/null 2>&1; then
     if [ -n "$dev" ]; then
       gpu_dev="$dev"
       tmp_gpu_path="$gpu_path_file.tmp.$$"
-      printf '%s' "$gpu_dev" > "$tmp_gpu_path"
+      printf '%s' "$gpu_dev" >"$tmp_gpu_path"
       mv -f "$tmp_gpu_path" "$gpu_path_file"
     else
       tmp_gpu_path="$gpu_path_file.tmp.$$"
-      printf '' > "$tmp_gpu_path"
+      printf '' >"$tmp_gpu_path"
       mv -f "$tmp_gpu_path" "$gpu_path_file"
     fi
   fi
 
-  # Check if NVIDIA GPU is runtime-suspended. Calling nvidia-smi while the device 
+  # Check if NVIDIA GPU is runtime-suspended. Calling nvidia-smi while the device
   # is suspended will wake it up (causing lag spikes and increasing power consumption).
   # Instead, if suspended, we return cached/suspended state without waking the GPU.
   if [ -n "$gpu_dev" ] && [ -f "$gpu_dev/power/runtime_status" ]; then
@@ -406,19 +384,19 @@ if command -v nvidia-smi >/dev/null 2>&1; then
         gsub(/^ +| +$/,"", $1);
         print $1, int($2), int($3), int($4), int($5), int($6)
       }')
-      
+
       old_ifs=$IFS
       IFS=$tab
       set -- $gpu_fields
       IFS=$old_ifs
-      
+
       gpu_name="${1:-}"
       gpu_util="${2:-0}"
       gpu_temp="${3:-0}"
       gpu_mem_used="${4:-0}"
       gpu_mem_total="${5:-0}"
       gpu_fan="${6:-0}"
-      
+
       if [ "${gpu_mem_total:-0}" -gt 0 ] 2>/dev/null; then
         gpu_vram_pct=$((gpu_mem_used * 100 / gpu_mem_total))
       fi
@@ -448,7 +426,7 @@ if [ "$(cache_file_age "$cpu_top_file")" -ge 24 ] 2>/dev/null || [ ! -f "$cpu_to
   ')
   [ -z "$cpu_top" ] || [ "$cpu_top" = "null" ] && cpu_top="[]"
   tmp_cpu_top="$cpu_top_file.tmp.$$"
-  printf '%s\n' "$cpu_top" > "$tmp_cpu_top"
+  printf '%s\n' "$cpu_top" >"$tmp_cpu_top"
   mv -f "$tmp_cpu_top" "$cpu_top_file"
 else
   cpu_top=$(cat "$cpu_top_file" 2>/dev/null || echo "[]")
@@ -475,7 +453,7 @@ if [ "$(cache_file_age "$mem_top_file")" -ge 24 ] 2>/dev/null || [ ! -f "$mem_to
   ')
   [ -z "$mem_top" ] || [ "$mem_top" = "null" ] && mem_top="[]"
   tmp_mem_top="$mem_top_file.tmp.$$"
-  printf '%s\n' "$mem_top" > "$tmp_mem_top"
+  printf '%s\n' "$mem_top" >"$tmp_mem_top"
   mv -f "$tmp_mem_top" "$mem_top_file"
 else
   mem_top=$(cat "$mem_top_file" 2>/dev/null || echo "[]")
@@ -558,7 +536,7 @@ json=$(
         )
       }
     '
-  )
+)
 
 printf '%s\n' "$json"
 

@@ -17,7 +17,7 @@ graphical_env() {
   if [ -z "${WAYLAND_DISPLAY:-}" ] || [ -z "${DISPLAY:-}" ] || [ -z "${XAUTHORITY:-}" ]; then
     xwayland_pid=$(pgrep -x Xwayland 2>/dev/null | head -1 || true)
     if [ -n "$xwayland_pid" ] && [ -r "/proc/$xwayland_pid/environ" ]; then
-      env_block=$(tr '\0' '\n' < "/proc/$xwayland_pid/environ" 2>/dev/null || echo "")
+      env_block=$(tr '\0' '\n' <"/proc/$xwayland_pid/environ" 2>/dev/null || echo "")
       if [ -z "${WAYLAND_DISPLAY:-}" ]; then
         WAYLAND_DISPLAY=$(printf '%s\n' "$env_block" | sed -n 's/^WAYLAND_DISPLAY=//p' | head -1)
       fi
@@ -46,24 +46,25 @@ graphical_env() {
   export GTK2_RC_FILES="${GTK2_RC_FILES:-/usr/share/themes/Adwaita/gtk-2.0/gtkrc}"
 }
 
-systemd_graphical_args() {
-  graphical_env
-  set -- \
+app_launch_log() {
+  mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
+  printf '%s\n' "${XDG_CACHE_HOME:-$HOME/.cache}/waybar/app-launch.log"
+}
+
+# Run "$@" inside a transient user scope with compositor env forwarded.
+_waybar_systemd_scope() {
+  systemd-run --user --scope --collect --no-block \
     --setenv=WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
     --setenv=DISPLAY="$DISPLAY" \
     --setenv=XDG_DATA_HOME="$XDG_DATA_HOME" \
     --setenv=XDG_CONFIG_HOME="$XDG_CONFIG_HOME" \
     --setenv=XDG_CACHE_HOME="$XDG_CACHE_HOME" \
-    --setenv=XDG_STATE_HOME="$XDG_STATE_HOME"
-  [ -n "${XAUTHORITY:-}" ] && set -- "$@" --setenv=XAUTHORITY="$XAUTHORITY"
-  [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ] && set -- "$@" --setenv=DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS"
-  set -- "$@" --setenv=STEAM_ZENITY="$STEAM_ZENITY" --setenv=GTK2_RC_FILES="$GTK2_RC_FILES"
-  printf '%s\n' "$@"
-}
-
-app_launch_log() {
-  mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-  printf '%s\n' "${XDG_CACHE_HOME:-$HOME/.cache}/waybar/app-launch.log"
+    --setenv=XDG_STATE_HOME="$XDG_STATE_HOME" \
+    --setenv=XAUTHORITY="${XAUTHORITY:-}" \
+    --setenv=DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-}" \
+    --setenv=STEAM_ZENITY="$STEAM_ZENITY" \
+    --setenv=GTK2_RC_FILES="$GTK2_RC_FILES" \
+    "$@"
 }
 
 launch_detached() {
@@ -71,8 +72,7 @@ launch_detached() {
   log_file="$(app_launch_log)"
 
   if command -v systemd-run >/dev/null 2>&1; then
-    # shellcheck disable=SC2046
-    if systemd-run --user --scope --collect --no-block $(systemd_graphical_args) \
+    if _waybar_systemd_scope \
       sh -c 'log_file="$1"; shift; exec "$@" >>"$log_file" 2>&1' _ "$log_file" "$@" >/dev/null 2>&1; then
       return 0
     fi

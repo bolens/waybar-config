@@ -48,7 +48,7 @@ start_listener() {
     if command -v setsid >/dev/null 2>&1; then
       # setsid is retained so listeners survive launch.sh's final `exec waybar`,
       # but stop-all + healthcheck are the lifecycle owners.
-      setsid -f "$script" >/dev/null 2>&1 < /dev/null || true
+      setsid -f "$script" >/dev/null 2>&1 </dev/null || true
     else
       nohup "$script" >/dev/null 2>&1 &
     fi

@@ -110,9 +110,9 @@ runtimes_summary() {
   waydroid_session="$(normalize_token "$waydroid_session")"
   waydroid_container="$(normalize_token "$waydroid_container")"
 
-# Ensure helpers are sourced
-script_dir="$(dirname "$0")"
-. "$WAYBAR_SCRIPTS/lib/side-info-helpers.sh"
+  # Ensure helpers are sourced
+  script_dir="$(dirname "$0")"
+  . "$WAYBAR_SCRIPTS/lib/side-info-helpers.sh"
 
   if [ -z "$waydroid_health" ]; then
     if [ "$waydroid_state" = "online" ]; then
@@ -278,7 +278,7 @@ script_dir="$(dirname "$0")"
   engines_ready=0
   for state in "$docker_state" "$podman_state" "$vm_state" "$waydroid_state"; do
     case "$state" in
-      online|ready) engines_ready=$((engines_ready + 1)) ;;
+      online | ready) engines_ready=$((engines_ready + 1)) ;;
     esac
   done
 

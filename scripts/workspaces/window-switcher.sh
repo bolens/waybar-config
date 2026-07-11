@@ -166,7 +166,7 @@ else
       max_mtime="$mtime"
     fi
   done < <(xdg_application_dirs)
-  
+
   cache_mtime=$(stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0)
   if [ "$max_mtime" -gt "$cache_mtime" ]; then
     rebuild_cache=true
@@ -181,11 +181,11 @@ if [ "$rebuild_cache" = true ]; then
     files+=("$d"/*.desktop)
   done < <(xdg_application_dirs)
   shopt -u nullglob
-  
+
   declare -A tmp_class=()
   declare -A tmp_name=()
   declare -A tmp_exec=()
-  
+
   tab=$'\t'
   if [ "${#files[@]}" -gt 0 ]; then
     while IFS="$tab" read -r type key val; do
@@ -233,13 +233,13 @@ if [ "$rebuild_cache" = true ]; then
       }
     ' "${files[@]}" 2>/dev/null || true)
   fi
-  
+
   for k in "${!tmp_class[@]}"; do class_to_icon["$k"]="${tmp_class[$k]}"; done
   for k in "${!tmp_name[@]}"; do name_to_icon["$k"]="${tmp_name[$k]}"; done
   for k in "${!tmp_exec[@]}"; do exec_to_icon["$k"]="${tmp_exec[$k]}"; done
-  
+
   tmp_cache="$CACHE_FILE.tmp.$$"
-  declare -p class_to_icon name_to_icon exec_to_icon > "$tmp_cache" 2>/dev/null || true
+  declare -p class_to_icon name_to_icon exec_to_icon >"$tmp_cache" 2>/dev/null || true
   mv -f "$tmp_cache" "$CACHE_FILE" 2>/dev/null || true
   cleanup_stale_tmp_files "$CACHE_DIR"
 else
@@ -250,12 +250,12 @@ fi
 guess_icon() {
   local title="$1"
   local app="$2"
-  
+
   local app_lower
   app_lower=$(echo "${app:-}" | tr 'A-Z' 'a-z')
   local title_lower
   title_lower=$(echo "${title:-}" | tr 'A-Z' 'a-z')
-  
+
   # 1. Direct app name mapping
   if [ -n "$app_lower" ] && [ "$app_lower" != "null" ]; then
     if [ -n "${class_to_icon[$app_lower]:-}" ]; then
@@ -269,7 +269,7 @@ guess_icon() {
       return
     fi
   fi
-  
+
   # 2. Window title matches desktop name or class exactly
   if [ -n "${name_to_icon[$title_lower]:-}" ]; then
     printf '%s' "${name_to_icon[$title_lower]}"
@@ -279,7 +279,7 @@ guess_icon() {
     printf '%s' "${class_to_icon[$title_lower]}"
     return
   fi
-  
+
   # 3. Substring search in window title for matching names/classes
   for class_key in "${!class_to_icon[@]}"; do
     if [[ "$title_lower" == *"$class_key"* ]]; then
@@ -299,7 +299,7 @@ guess_icon() {
       return
     fi
   done
-  
+
   # 4. Fallback for shell prompts & terminal processes (maps to default terminal emulator Ghostty)
   if [[ "$title" =~ ^[~/] || "$title_lower" == *"bash"* || "$title_lower" == *"sh"* || "$title_lower" == *"agy"* ]]; then
     if [ -n "${exec_to_icon["ghostty"]:-}" ]; then
@@ -307,7 +307,7 @@ guess_icon() {
       return
     fi
   fi
-  
+
   # 5. Generic fallback
   if [ -n "$app_lower" ] && [ "$app_lower" != "null" ]; then
     printf '%s' "$app_lower"
@@ -329,7 +329,7 @@ if [ "$session" = "hyprland" ]; then
 
   # Format: "address<tab>class<tab>title (workspace)"
   mapfile -t client_data < <(echo "$clients" | jq -r --arg t "$tab" '.[] | "\(.address)\($t)\(.class)\($t)[\(.class)] \(.title) (WS: \(.workspace.name))"')
-  
+
   if [ "${#client_data[@]}" -eq 0 ]; then
     exit 0
   fi
@@ -343,13 +343,13 @@ if [ "$session" = "hyprland" ]; then
     rest="${line#*$tab}"
     class="${rest%%$tab*}"
     disp="${rest#*$tab}"
-    
+
     # Lookup icon using our dynamic guesser (class acts as the app name hint)
     icon_name="$(guess_icon "$disp" "$class")"
-    
-    ids+=( "$addr" )
-    displays+=( "$disp" )
-    icons+=( "$icon_name" )
+
+    ids+=("$addr")
+    displays+=("$disp")
+    icons+=("$icon_name")
   done
 
   rofi_args=(-dmenu -i -p "Switch to:" -show-icons)
@@ -359,7 +359,7 @@ if [ "$session" = "hyprland" ]; then
   selected=$(for i in "${!displays[@]}"; do
     printf "%s\0icon\x1f%s\n" "${displays[i]}" "${icons[i]}"
   done | rofi "${rofi_args[@]}")
-  
+
   if [ -n "$selected" ]; then
     for i in "${!displays[@]}"; do
       if [ "${displays[i]}" = "$selected" ]; then
@@ -378,13 +378,13 @@ elif [ "$session" = "kde" ]; then
   # We query the "windows" search target to get a list of all active windows.
   # --literal prints raw DBus structures (lists of arrays containing properties).
   raw="$(timeout 2 qdbus6 --literal org.kde.KWin /WindowsRunner org.kde.krunner1.Match windows 2>/dev/null || true)"
-  
+
   # Parse entries: ID | Title | AppName
   # We split the raw return string into individual window lines and extract fields natively via sed.
-  mapfile -t parsed < <(printf "%s\n" "$raw" | \
-    sed -E 's/\[Argument: \(sssida\{sv\}\) /\n/g' | \
-    sed -n -E 's/^"(0_\{[^"]+\})",[[:space:]]*"([^"]*)",[[:space:]]*"([^"]*)",[[:space:]]*100,[[:space:]]*1.*/\1\t\2\t\3/p')
-  
+  mapfile -t parsed < <(printf "%s\n" "$raw" \
+    | sed -E 's/\[Argument: \(sssida\{sv\}\) /\n/g' \
+    | sed -n -E 's/^"(0_\{[^"]+\})",[[:space:]]*"([^"]*)",[[:space:]]*"([^"]*)",[[:space:]]*100,[[:space:]]*1.*/\1\t\2\t\3/p')
+
   declare -a ids=()
   declare -a displays=()
   declare -a icons=()
@@ -394,27 +394,27 @@ elif [ "$session" = "kde" ]; then
     rest="${line#*$tab}"
     title="${rest%%$tab*}"
     app="${rest#*$tab}"
-    
+
     # Filter out empty title and empty app
     if [ -z "$title" ] && [ -z "$app" ]; then
       continue
     fi
-    
+
     if [ -z "$title" ]; then
       title="$app"
     fi
-    
+
     if [ -n "$app" ] && [ "$app" != "null" ]; then
       display_name="[$app] $title"
     else
       display_name="$title"
     fi
-    
+
     icon_name="$(guess_icon "$title" "$app")"
-    
-    ids+=( "$id" )
-    displays+=( "$display_name" )
-    icons+=( "$icon_name" )
+
+    ids+=("$id")
+    displays+=("$display_name")
+    icons+=("$icon_name")
   done
 
   if [ "${#displays[@]}" -eq 0 ]; then
@@ -429,7 +429,7 @@ elif [ "$session" = "kde" ]; then
   selected=$(for i in "${!displays[@]}"; do
     printf "%s\0icon\x1f%s\n" "${displays[i]}" "${icons[i]}"
   done | rofi "${rofi_args[@]}")
-  
+
   if [ -n "$selected" ]; then
     for i in "${!displays[@]}"; do
       if [ "${displays[i]}" = "$selected" ]; then

@@ -1,0 +1,52 @@
+name: "CI: Stylelint"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.css"
+      - "stylelint.config.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/stylelint.yml"
+      - "scripts/ci/check-stylelint.sh"
+      - "scripts/ci/ensure-pnpm.sh"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.css"
+      - "stylelint.config.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/stylelint.yml"
+      - "scripts/ci/check-stylelint.sh"
+      - "scripts/ci/ensure-pnpm.sh"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  stylelint:
+    name: Stylelint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Enable Corepack
+        run: corepack enable
+      - uses: pnpm/action-setup@v6.0.9
+        with:
+          # Reads packageManager from package.json (pnpm@11.11.0).
+          package_json_file: package.json
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Lint CSS
+        run: bash scripts/ci/check-stylelint.sh

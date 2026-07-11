@@ -34,5 +34,5 @@ json=$("$script_dir/device-notifier.py" --status)
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"

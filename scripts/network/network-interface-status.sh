@@ -35,8 +35,8 @@ bond_is_active() {
     nm_state="$(timeout 2 nmcli -t -f DEVICE,STATE device status 2>/dev/null \
       | awk -F: '$1=="bond0"{print $2; exit}' || true)"
     case "$nm_state" in
-      connected|connecting) return 0 ;;
-      disconnected|unavailable|unmanaged) return 1 ;;
+      connected | connecting) return 0 ;;
+      disconnected | unavailable | unmanaged) return 1 ;;
     esac
   fi
 
@@ -45,7 +45,7 @@ bond_is_active() {
 
 iface_kind() {
   case "$1" in
-    wlan*|wlp*|wl*) printf 'wifi' ;;
+    wlan* | wlp* | wl*) printf 'wifi' ;;
     *) printf 'ethernet' ;;
   esac
 }
@@ -58,7 +58,10 @@ ipv4_for_iface() {
 
 operstate_for_iface() {
   dev="$1"
-  [ -f "/sys/class/net/$dev/operstate" ] || { printf 'down'; return; }
+  [ -f "/sys/class/net/$dev/operstate" ] || {
+    printf 'down'
+    return
+  }
   cat "/sys/class/net/$dev/operstate" 2>/dev/null || printf 'down'
 }
 
@@ -78,7 +81,10 @@ wifi_essid() {
 
 wifi_signal_pct() {
   dev="$1"
-  [ -r /proc/net/wireless ] || { printf ''; return; }
+  [ -r /proc/net/wireless ] || {
+    printf ''
+    return
+  }
   awk -v iface="$dev" '
     $1 ~ iface":" {
       gsub(/\./, "", $4)
@@ -177,12 +183,11 @@ refresh_cache() {
     '{bond_active:$bond_active, eno1:$eno1, enp5s0:$enp5s0, wlan0:$wlan0, updated:$updated}'
 }
 
-
 if [ "${_refresh_only:-0}" = "1" ]; then
   json="$(refresh_cache)"
   printf '%s\n' "$json"
   tmp_cache="$cache_file.tmp.$$"
-  printf '%s\n' "$json" > "$tmp_cache"
+  printf '%s\n' "$json" >"$tmp_cache"
   mv -f "$tmp_cache" "$cache_file"
   exit 0
 fi

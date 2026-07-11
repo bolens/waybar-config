@@ -77,7 +77,7 @@ system_summary() {
       gpu_mem_total="${15:-0}"
       gpu_vram_pct="${16:-0}"
       gpu_util="${gpu_util_raw}%"
-      
+
       gpu_temp="N/A"
       gpu_temp_formatted="N/A"
       if [ "$gpu_temp_raw" -gt 0 ]; then
@@ -102,8 +102,7 @@ system_summary() {
   ups_json=""
   for ups_cache in \
     "$waybar_cache_dir/ups-status.ups_127.0.0.1_3493.json" \
-    "$waybar_cache_dir/ups-status.auto.json"
-  do
+    "$waybar_cache_dir/ups-status.auto.json"; do
     ups_json="$(read_fresh_cache_file "$ups_cache" 30 2>/dev/null || true)"
     [ -n "$ups_json" ] && break
   done

@@ -12,7 +12,6 @@ stale_lock_ttl=45
 
 mkdir -p "$cache_dir"
 
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -171,7 +170,7 @@ fi
 
 tooltip=$(printf 'Docker: %s (running %s / total %s / unhealthy %s)\nPodman: %s (running %s / total %s)%s\nLibvirt: %s (running %s / total %s)\nWaydroid: %s (health %s / session %s / container %s)' \
   "$docker_state" "$docker_running" "$docker_total" "$docker_unhealthy" \
-  "$podman_state" "$podman_running" "$podman_total" "$( [ "$podman_state" = "ready" ] && printf ' - engine reachable, no containers tracked' || printf '' )" \
+  "$podman_state" "$podman_running" "$podman_total" "$([ "$podman_state" = "ready" ] && printf ' - engine reachable, no containers tracked' || printf '')" \
   "$vm_state" "$vm_running" "$vm_total" \
   "$waydroid_state" "$waydroid_health" "$waydroid_session" "$waydroid_container")
 tooltip=$(printf '%b' "$tooltip" | escape_markup)
@@ -199,5 +198,5 @@ json=$(jq -cn \
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"

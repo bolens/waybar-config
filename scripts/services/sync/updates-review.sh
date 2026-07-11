@@ -5,9 +5,11 @@ set -eu
 
 script_dir="${0%/*}"
 if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  # shellcheck disable=SC1091
+  # shellcheck source=../../lib/waybar-settings.sh
   . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 fi
+# shellcheck source=../../lib/app-open-lib.sh
+. "$WAYBAR_SCRIPTS/lib/app-open-lib.sh"
 
 rofi_width=$(waybar_settings_get '.rofi.updates.width' '650')
 rofi_height=$(waybar_settings_get '.rofi.updates.height' '500')
@@ -98,28 +100,25 @@ if [ "$choice" = "🚀 Upgrade System Now" ]; then
   case "$backend" in
     arch)
       if [ -n "$paru_update" ]; then
-        # shellcheck disable=SC2086
-        "$WAYBAR_SCRIPTS/tools/app-open.sh" $paru_update
+        waybar_app_open "$paru_update"
         exit 0
       fi
       ;;
     apt)
       if [ -n "$apt_update" ]; then
-        # shellcheck disable=SC2086
-        "$WAYBAR_SCRIPTS/tools/app-open.sh" $apt_update
+        waybar_app_open "$apt_update"
         exit 0
       fi
       ;;
     dnf)
       if [ -n "$dnf_update" ]; then
-        # shellcheck disable=SC2086
-        "$WAYBAR_SCRIPTS/tools/app-open.sh" $dnf_update
+        waybar_app_open "$dnf_update"
         exit 0
       fi
       ;;
   esac
 
-  # shellcheck source=compositor-session.sh
+  # shellcheck source=../../lib/compositor-session.sh
   . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 
   comp=$(detect_compositor)

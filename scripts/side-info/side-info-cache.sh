@@ -47,6 +47,6 @@ write_cached_summary() {
   summary="$3"
   file="$(cache_file_for "$cache_dir" "$tab")"
   tmp="$file.tmp.$$"
-  printf '%s\n' "$summary" > "$tmp"
+  printf '%s\n' "$summary" >"$tmp"
   mv -f "$tmp" "$file"
 }

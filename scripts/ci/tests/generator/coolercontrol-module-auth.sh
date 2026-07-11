@@ -67,14 +67,14 @@ chmod +x "$CC_AUTH_BIN/curl"
 : >"$CC_AUTH_LOG"
 auth_both=$(
   PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
-  CC_AUTH_LOG="$CC_AUTH_LOG" \
-  WAYBAR_CC_FIXTURE_DIR='' \
-  WAYBAR_CC_WRITE_PROBE_TTL=0 \
-  WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
-  WAYBAR_CC_TOKEN="cc_good_token_aaaaaaaaaaaaaaaa" \
-  WAYBAR_CC_UI_PASS="fallback-pass" \
-  WAYBAR_CC_UI_USER="CCAdmin" \
-  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+    CC_AUTH_LOG="$CC_AUTH_LOG" \
+    WAYBAR_CC_FIXTURE_DIR='' \
+    WAYBAR_CC_WRITE_PROBE_TTL=0 \
+    WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
+    WAYBAR_CC_TOKEN="cc_good_token_aaaaaaaaaaaaaaaa" \
+    WAYBAR_CC_UI_PASS="fallback-pass" \
+    WAYBAR_CC_UI_USER="CCAdmin" \
+    python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
 ) || true
 waybar_test_assert_jq "$auth_both" '.ok == true and .auth == "bearer"' "both creds should prefer bearer auth: $auth_both"
 if grep -q '/login' "$CC_AUTH_LOG"; then
@@ -91,14 +91,14 @@ echo "Verifying CoolerControl fixture isolation meta-guard..."
 poison_auth=$(
   export WAYBAR_CC_FIXTURE_DIR=/nonexistent-poison-cc-fixture
   PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
-  CC_AUTH_LOG="$CC_AUTH_LOG" \
-  WAYBAR_CC_FIXTURE_DIR='' \
-  WAYBAR_CC_WRITE_PROBE_TTL=0 \
-  WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
-  WAYBAR_CC_TOKEN="cc_good_token_aaaaaaaaaaaaaaaa" \
-  WAYBAR_CC_UI_PASS="fallback-pass" \
-  WAYBAR_CC_UI_USER="CCAdmin" \
-  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+    CC_AUTH_LOG="$CC_AUTH_LOG" \
+    WAYBAR_CC_FIXTURE_DIR='' \
+    WAYBAR_CC_WRITE_PROBE_TTL=0 \
+    WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
+    WAYBAR_CC_TOKEN="cc_good_token_aaaaaaaaaaaaaaaa" \
+    WAYBAR_CC_UI_PASS="fallback-pass" \
+    WAYBAR_CC_UI_USER="CCAdmin" \
+    python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
 ) || true
 if ! echo "$poison_auth" | jq -e '.ok == true and .auth == "bearer"' >/dev/null 2>&1; then
   echo "FAIL: isolation meta-guard — poisoned WAYBAR_CC_FIXTURE_DIR must not break bearer auth: $poison_auth" >&2
@@ -112,14 +112,14 @@ unset WAYBAR_CC_FIXTURE_DIR || true
 : >"$CC_AUTH_LOG"
 auth_fb=$(
   PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
-  CC_AUTH_LOG="$CC_AUTH_LOG" \
-  WAYBAR_CC_FIXTURE_DIR='' \
-  WAYBAR_CC_WRITE_PROBE_TTL=0 \
-  WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
-  WAYBAR_CC_TOKEN="cc_bad_token_bbbbbbbbbbbbbbbb" \
-  WAYBAR_CC_UI_PASS="fallback-pass" \
-  WAYBAR_CC_UI_USER="CCAdmin" \
-  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+    CC_AUTH_LOG="$CC_AUTH_LOG" \
+    WAYBAR_CC_FIXTURE_DIR='' \
+    WAYBAR_CC_WRITE_PROBE_TTL=0 \
+    WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
+    WAYBAR_CC_TOKEN="cc_bad_token_bbbbbbbbbbbbbbbb" \
+    WAYBAR_CC_UI_PASS="fallback-pass" \
+    WAYBAR_CC_UI_USER="CCAdmin" \
+    python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
 ) || true
 waybar_test_assert_jq "$auth_fb" '.ok == true and .auth == "basic"' "bad token should fall back to ui_pass (basic): $auth_fb"
 if ! grep -q 'Authorization: Bearer' "$CC_AUTH_LOG"; then
@@ -136,13 +136,13 @@ fi
 # Bad token, no password → auth_failed
 auth_fail=$(
   PATH="$CC_AUTH_BIN:/usr/bin:/bin" \
-  CC_AUTH_LOG="$CC_AUTH_LOG" \
-  WAYBAR_CC_FIXTURE_DIR='' \
-  WAYBAR_CC_WRITE_PROBE_TTL=0 \
-  WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
-  WAYBAR_CC_TOKEN="cc_bad_token_bbbbbbbbbbbbbbbb" \
-  WAYBAR_CC_UI_PASS="" \
-  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+    CC_AUTH_LOG="$CC_AUTH_LOG" \
+    WAYBAR_CC_FIXTURE_DIR='' \
+    WAYBAR_CC_WRITE_PROBE_TTL=0 \
+    WAYBAR_CC_API_URL="http://127.0.0.1:11987" \
+    WAYBAR_CC_TOKEN="cc_bad_token_bbbbbbbbbbbbbbbb" \
+    WAYBAR_CC_UI_PASS="" \
+    python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
 ) || true
 waybar_test_assert_jq "$auth_fail" '.ok == false and .error == "auth_failed"' "bad token without ui_pass should auth_failed: $auth_fail"
 
@@ -156,24 +156,24 @@ echo '{"modes":[{"uid":"m1","name":"Quiet"}]}' >"$CC_WC_FIX/modes.json"
 echo '{"current_mode_uid":"m1"}' >"$CC_WC_FIX/modes_active.json"
 cc_w1=$(
   XDG_CACHE_HOME="$CC_WC_CACHE" \
-  WAYBAR_CC_FIXTURE_DIR="$CC_WC_FIX" \
-  WAYBAR_CC_WRITE_PROBE_TTL=600 \
-  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+    WAYBAR_CC_FIXTURE_DIR="$CC_WC_FIX" \
+    WAYBAR_CC_WRITE_PROBE_TTL=600 \
+    python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
 ) || true
 waybar_test_assert_jq "$cc_w1" '.write_access == true' "write cache seed expected write_access true: $cc_w1"
 echo 403 >"$CC_WC_FIX/write_http.txt"
 cc_w2=$(
   XDG_CACHE_HOME="$CC_WC_CACHE" \
-  WAYBAR_CC_FIXTURE_DIR="$CC_WC_FIX" \
-  WAYBAR_CC_WRITE_PROBE_TTL=600 \
-  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+    WAYBAR_CC_FIXTURE_DIR="$CC_WC_FIX" \
+    WAYBAR_CC_WRITE_PROBE_TTL=600 \
+    python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
 ) || true
 waybar_test_assert_jq "$cc_w2" '.write_access == true' "cached write_access should stay true after fixture flips to 403: $cc_w2"
 cc_w3=$(
   XDG_CACHE_HOME="$CC_WC_CACHE" \
-  WAYBAR_CC_FIXTURE_DIR="$CC_WC_FIX" \
-  WAYBAR_CC_FORCE_WRITE_PROBE=1 \
-  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
+    WAYBAR_CC_FIXTURE_DIR="$CC_WC_FIX" \
+    WAYBAR_CC_FORCE_WRITE_PROBE=1 \
+    python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
 ) || true
 waybar_test_assert_jq "$cc_w3" '.write_access == false' "FORCE_WRITE_PROBE should refresh to false (403): $cc_w3"
 if [ ! -f "$CC_WC_CACHE/waybar/coolercontrol-write.json" ]; then

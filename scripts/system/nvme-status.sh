@@ -93,7 +93,10 @@ for d in "$scan_root"/hwmon*; do
   fi
   title="${model:-nvme}"
   found=1
-  sensor_txt=$(IFS=', '; echo "${sensors[*]}")
+  sensor_txt=$(
+    IFS=', '
+    echo "${sensors[*]}"
+  )
   tooltip_lines+=("$title: ${drive_c}°C ($sensor_txt)")
 
   if [ "$drive_c" -gt "$hottest_c" ]; then

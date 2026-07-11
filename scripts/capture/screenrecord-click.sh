@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2154 # cache_dir / screenrecord_* from capture-lib.sh
+# shellcheck disable=SC2154 # cache_dir / screenrecord_* assigned in capture-lib.sh (ShellCheck misses top-level assigns there)
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -128,14 +128,14 @@ start_wf_recording() {
   esac
 
   pid="$!"
-  
+
   # Write PID and metadata files atomically to avoid read races with screenrecord-status
   tmp_pid="$screenrecord_pid_file.tmp.$$"
-  printf '%s' "$pid" > "$tmp_pid"
+  printf '%s' "$pid" >"$tmp_pid"
   mv -f "$tmp_pid" "$screenrecord_pid_file"
 
   tmp_meta="$screenrecord_meta_file.tmp.$$"
-  printf '%s' "$outfile" > "$tmp_meta"
+  printf '%s' "$outfile" >"$tmp_meta"
   mv -f "$tmp_meta" "$screenrecord_meta_file"
 
   capture_notify "Recording" "Started: ${outfile##*/}"

@@ -62,11 +62,11 @@ chmod +x "$LIQUID_FAKE/liquidctl"
 LIQUID_CACHE=$(mktemp -d)
 liquid_out=$(
   XDG_CACHE_HOME="$LIQUID_CACHE" \
-  WAYBAR_HOME="$TEST_DIR" \
-  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
-  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
-  WAYBAR_CORSAIRPSU_PRESENT=0 \
-  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+    WAYBAR_HOME="$TEST_DIR" \
+    WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+    WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+    WAYBAR_CORSAIRPSU_PRESENT=0 \
+    "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
 ) || true
 waybar_test_assert_jq "$liquid_out" '.class == "warning"' "liquidctl-status expected warning class at 56.5°C (warn=55): $liquid_out"
 waybar_test_assert_jq "$liquid_out" '.text | test("󰖌")' "liquidctl-status text missing liquidctl icon: $liquid_out"
@@ -76,11 +76,11 @@ waybar_test_assert_jq "$liquid_out" '.tooltip | test("Skipped .*Aura")' "liquidc
 # Missing binary → disconnected (empty text)
 liquid_missing=$(
   XDG_CACHE_HOME="$LIQUID_CACHE" \
-  WAYBAR_HOME="$TEST_DIR" \
-  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
-  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/no-such-liquidctl" \
-  PATH="/usr/bin:/bin" \
-  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+    WAYBAR_HOME="$TEST_DIR" \
+    WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+    WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/no-such-liquidctl" \
+    PATH="/usr/bin:/bin" \
+    "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
 ) || true
 waybar_test_assert_jq "$liquid_missing" '.class == "disconnected" and .text == ""' "liquidctl missing binary should emit disconnected: $liquid_missing"
 # Empty status JSON → disconnected
@@ -91,10 +91,10 @@ EOF
 chmod +x "$LIQUID_FAKE/liquidctl"
 liquid_empty=$(
   XDG_CACHE_HOME="$LIQUID_CACHE" \
-  WAYBAR_HOME="$TEST_DIR" \
-  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
-  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
-  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+    WAYBAR_HOME="$TEST_DIR" \
+    WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+    WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+    "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
 ) || true
 waybar_test_assert_jq "$liquid_empty" '.class == "disconnected"' "liquidctl empty status should emit disconnected: $liquid_empty"
 rm -rf "$LIQUID_FAKE" "$LIQUID_CACHE"
@@ -123,11 +123,11 @@ EOF
 chmod +x "$LIQUID_FAKE/liquidctl"
 liquid_aura=$(
   XDG_CACHE_HOME="$LIQUID_CACHE" \
-  WAYBAR_HOME="$TEST_DIR" \
-  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
-  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
-  WAYBAR_CORSAIRPSU_PRESENT=0 \
-  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+    WAYBAR_HOME="$TEST_DIR" \
+    WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+    WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+    WAYBAR_CORSAIRPSU_PRESENT=0 \
+    "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
 ) || true
 waybar_test_assert_jq "$liquid_aura" '.class == "disconnected" and (.tooltip | test("Aura|OpenRGB"; "i"))' "liquidctl Aura-only should disconnect: $liquid_aura"
 if grep -q 'status' "$LIQUID_LOG" 2>/dev/null; then
@@ -195,11 +195,11 @@ EOF
 chmod +x "$LIQUID_FAKE/liquidctl"
 liquid_partial=$(
   XDG_CACHE_HOME="$LIQUID_CACHE" \
-  WAYBAR_HOME="$TEST_DIR" \
-  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
-  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
-  WAYBAR_CORSAIRPSU_PRESENT=0 \
-  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+    WAYBAR_HOME="$TEST_DIR" \
+    WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+    WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+    WAYBAR_CORSAIRPSU_PRESENT=0 \
+    "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
 ) || true
 waybar_test_assert_jq "$liquid_partial" '.class == "normal" and (.tooltip | test("HX1500i")) and (.text | test("󰖌"))' "liquidctl partial-failure fallback should show HX telemetry: $liquid_partial"
 # With skips present, must use --pick (not rely on bulk status succeeding)
@@ -212,11 +212,11 @@ fi
 : >"$LIQUID_LOG"
 liquid_skip_psu=$(
   XDG_CACHE_HOME="$LIQUID_CACHE" \
-  WAYBAR_HOME="$TEST_DIR" \
-  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
-  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
-  WAYBAR_CORSAIRPSU_PRESENT=1 \
-  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+    WAYBAR_HOME="$TEST_DIR" \
+    WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+    WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+    WAYBAR_CORSAIRPSU_PRESENT=1 \
+    "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
 ) || true
 waybar_test_assert_jq "$liquid_skip_psu" '.class == "disconnected" and (.tooltip | test("corsairpsu|PSU covered|hwmon"; "i"))' "liquidctl should disconnect when PSU covered by corsairpsu: $liquid_skip_psu"
 if grep -q 'status' "$LIQUID_LOG" 2>/dev/null; then
@@ -231,11 +231,11 @@ echo corsairpsu >"$HWMON_TREE/hwmon0/name"
 : >"$LIQUID_LOG"
 liquid_hwmon=$(
   XDG_CACHE_HOME="$LIQUID_CACHE" \
-  WAYBAR_HOME="$TEST_DIR" \
-  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
-  WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
-  WAYBAR_HWMON_ROOT="$HWMON_TREE" \
-  "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
+    WAYBAR_HOME="$TEST_DIR" \
+    WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+    WAYBAR_LIQUIDCTL_BIN="$LIQUID_FAKE/liquidctl" \
+    WAYBAR_HWMON_ROOT="$HWMON_TREE" \
+    "$TEST_DIR/scripts/system/liquidctl-status.sh" --refresh
 ) || true
 waybar_test_assert_jq "$liquid_hwmon" '.class == "disconnected"' "liquidctl should disconnect via WAYBAR_HWMON_ROOT corsairpsu: $liquid_hwmon"
 rm -rf "$LIQUID_FAKE" "$LIQUID_CACHE"

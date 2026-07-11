@@ -1,0 +1,6 @@
+# Ruff — Python helpers under scripts/
+target-version = "py311"
+src = ["scripts"]
+
+[lint]
+select = ["E4", "E7", "E9", "F"]

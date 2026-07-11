@@ -26,7 +26,7 @@ detect_compositor() {
   if [ -f "$_wb_comp_cache" ]; then
     _wb_cached="$(cat "$_wb_comp_cache" 2>/dev/null || true)"
     case "$_wb_cached" in
-      hyprland|kde|unknown)
+      hyprland | kde | unknown)
         printf '%s\n' "$_wb_cached"
         return 0
         ;;
@@ -36,8 +36,8 @@ detect_compositor() {
   _wb_comp="unknown"
   desktop="${XDG_CURRENT_DESKTOP:-}${XDG_SESSION_DESKTOP:-}${DESKTOP_SESSION:-}"
   case "$desktop" in
-    *Hyprland*|*hyprland*) _wb_comp="hyprland" ;;
-    *KDE*|*Plasma*|*plasma*) _wb_comp="kde" ;;
+    *Hyprland* | *hyprland*) _wb_comp="hyprland" ;;
+    *KDE* | *Plasma* | *plasma*) _wb_comp="kde" ;;
   esac
 
   if [ "$_wb_comp" = "unknown" ] && [ -n "${KDE_SESSION_VERSION:-}" ]; then
@@ -63,20 +63,23 @@ _pick_terminal() {
   compositor="$1"
   case "$compositor" in
     hyprland) order="foot kitty ghostty alacritty konsole xterm" ;;
-    kde)      order="konsole kitty ghostty foot alacritty xterm" ;;
-    *)        order="kitty foot ghostty konsole alacritty xterm" ;;
+    kde) order="konsole kitty ghostty foot alacritty xterm" ;;
+    *) order="kitty foot ghostty konsole alacritty xterm" ;;
   esac
   for term in $order; do
-    command -v "$term" >/dev/null 2>&1 && { printf '%s' "$term"; return 0; }
+    command -v "$term" >/dev/null 2>&1 && {
+      printf '%s' "$term"
+      return 0
+    }
   done
   return 1
 }
 
 _run_in_terminal() {
-  term="$1"; shift
+  term="$1"
+  shift
   case "$term" in
-    foot|alacritty|kitty|ghostty) "$term" -- "$@" & ;;
+    foot | alacritty | kitty | ghostty) "$term" -- "$@" & ;;
     *) "$term" -e "$@" & ;;
   esac
 }
-

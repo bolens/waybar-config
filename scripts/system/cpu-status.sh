@@ -77,4 +77,3 @@ elif [ "$usage" -ge "$cpu_warn" ] 2>/dev/null || [ "$temp" -ge "$cpu_temp_warn" 
 fi
 
 emit_waybar_json "$(printf '󰍛 %3d%%' "$usage")" "$tooltip" "$class"
-

@@ -45,7 +45,10 @@ trim_title() {
 
 case "$session" in
   hyprland)
-    command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || { desktop_json; exit 0; }
+    command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || {
+      desktop_json
+      exit 0
+    }
     title="$(hyprctl activewindow -j 2>/dev/null | jq -r '.title // empty' || true)"
     if [ -n "$title" ]; then
       trimmed="$(trim_title "$title")"

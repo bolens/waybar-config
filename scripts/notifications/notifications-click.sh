@@ -82,7 +82,7 @@ case "$compositor" in
   hyprland)
     case "$action" in
       open) hyprland_open ;;
-      dnd|toggle-dnd) hyprland_toggle_dnd ;;
+      dnd | toggle-dnd) hyprland_toggle_dnd ;;
       settings)
         if [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/swaync/config.json" ]; then
           notify-send "Notifications" "Edit ~/.config/swaync/config.json (no GUI settings on Hyprland)" 2>/dev/null || true
@@ -98,7 +98,7 @@ case "$compositor" in
   kde)
     case "$action" in
       open) kde_open_notifications ;;
-      dnd|toggle-dnd)
+      dnd | toggle-dnd)
         kde_toggle_dnd
         signal_refresh
         ;;
@@ -108,7 +108,7 @@ case "$compositor" in
     ;;
   *)
     case "$action" in
-      dnd|toggle-dnd)
+      dnd | toggle-dnd)
         if command -v dunstctl >/dev/null 2>&1; then
           dunstctl set-paused toggle
           signal_refresh

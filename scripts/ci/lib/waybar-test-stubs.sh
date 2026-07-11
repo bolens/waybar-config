@@ -78,6 +78,7 @@ waybar_test_secrets_copy_polish_scripts() {
     "$root/scripts/lib/waybar-cache-helpers.sh" \
     "$root/scripts/lib/unicode-animations-lib.sh" \
     "$root/scripts/lib/compositor-session.sh" \
+    "$root/scripts/lib/app-open-lib.sh" \
     "$TEST_DIR/scripts/lib/"
   cp "$root/scripts/workspaces/keybindhint-click.sh" "$TEST_DIR/scripts/workspaces/"
   cp "$root/scripts/system/powerprofiles-click.sh" "$TEST_DIR/scripts/system/"

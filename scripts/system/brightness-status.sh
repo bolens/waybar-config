@@ -1,6 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Brightness status for Waybar (one-shot; listener keeps cache warm on KDE).
-# shellcheck disable=SC2154 # brightness_* vars from brightness-lib.sh
+# shellcheck disable=SC2154 # brightness_* assigned in brightness-lib.sh (ShellCheck misses top-level assigns there)
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

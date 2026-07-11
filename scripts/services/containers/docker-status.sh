@@ -12,7 +12,6 @@ stale_lock_ttl=20
 
 mkdir -p "$cache_dir"
 
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -48,7 +47,7 @@ else
   engine_version=$(timeout 2 docker info --format '{{.ServerVersion}}' 2>/dev/null || echo "unknown")
   if [ "$engine_version" != "unknown" ]; then
     tmp_ver="$version_cache.tmp.$$"
-    printf '%s\n' "$engine_version" > "$tmp_ver"
+    printf '%s\n' "$engine_version" >"$tmp_ver"
     mv -f "$tmp_ver" "$version_cache"
   fi
 fi
@@ -93,7 +92,11 @@ fi
 # Swarm stacks are only queried if the Docker node is part of an active Swarm.
 stats_cache="$cache_dir/docker-stats-counts.txt"
 if [ -f "$stats_cache" ] && [ "$(cache_file_age "$stats_cache")" -lt 300 ] 2>/dev/null; then
-  read -r images volumes stacks < "$stats_cache" 2>/dev/null || { images="0"; volumes="0"; stacks="0"; }
+  read -r images volumes stacks <"$stats_cache" 2>/dev/null || {
+    images="0"
+    volumes="0"
+    stacks="0"
+  }
 else
   images=$(timeout 1 docker images -q 2>/dev/null | awk 'END {print NR + 0}' || printf '0')
   volumes=$(timeout 1 docker volume ls -q 2>/dev/null | awk 'END {print NR + 0}' || printf '0')
@@ -104,7 +107,7 @@ else
     stacks="0"
   fi
   tmp_stats="$stats_cache.tmp.$$"
-  printf '%s %s %s\n' "$images" "$volumes" "$stacks" > "$tmp_stats"
+  printf '%s %s %s\n' "$images" "$volumes" "$stacks" >"$tmp_stats"
   mv -f "$tmp_stats" "$stats_cache"
 fi
 
@@ -166,5 +169,5 @@ json=$(jq -cn \
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"

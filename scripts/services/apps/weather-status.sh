@@ -30,18 +30,17 @@ weather_location=$(waybar_settings_get '.weather.location' '')
 
 map_code_to_icon() {
   case "$1" in
-    113) printf '󰖙' ;; # Sunny/Clear
-    116) printf '󰖕' ;; # Partly Cloudy
-    119|122) printf '󰖐' ;; # Cloudy / Overcast
-    143|248|260) printf '󰖑' ;; # Fog / Mist
-    176|263|266|293|296) printf '󰖗' ;; # Patchy light rain / Drizzle
-    299|302|305|308|353|356) printf '󰖖' ;; # Rain / Showers
-    179|182|185|227|230|323|326|329|332|335|338|350|368|371|395) printf '󰼶' ;; # Snow / Sleet
-    200|386|389|392) printf '󰖓' ;; # Thunder / Storm
+    113) printf '󰖙' ;;                                                                                     # Sunny/Clear
+    116) printf '󰖕' ;;                                                                                     # Partly Cloudy
+    119 | 122) printf '󰖐' ;;                                                                               # Cloudy / Overcast
+    143 | 248 | 260) printf '󰖑' ;;                                                                         # Fog / Mist
+    176 | 263 | 266 | 293 | 296) printf '󰖗' ;;                                                             # Patchy light rain / Drizzle
+    299 | 302 | 305 | 308 | 353 | 356) printf '󰖖' ;;                                                       # Rain / Showers
+    179 | 182 | 185 | 227 | 230 | 323 | 326 | 329 | 332 | 335 | 338 | 350 | 368 | 371 | 395) printf '󰼶' ;; # Snow / Sleet
+    200 | 386 | 389 | 392) printf '󰖓' ;;                                                                   # Thunder / Storm
     *) printf '󰖐' ;;
   esac
 }
-
 
 if [ "${1:-}" != "--refresh" ]; then
   if [ -f "$cache_file" ] && [ "$(cache_file_age "$cache_file")" -le "$ttl" ] 2>/dev/null; then
@@ -50,17 +49,17 @@ if [ "${1:-}" != "--refresh" ]; then
       exit 0
     fi
   fi
-  
+
   cleanup_stale_lock_dir "$lock_dir" "$stale_lock_ttl"
   [ -d "$lock_dir" ] || refresh_in_background
-  
+
   if [ -f "$cache_file" ]; then
     if jq -e --arg unit "°$weather_unit" '.text | endswith($unit)' "$cache_file" >/dev/null 2>&1; then
       cat "$cache_file"
       exit 0
     fi
   fi
-  
+
   emit_waybar_json "󰖐 --°$weather_unit" "Loading weather forecast..." "normal"
   exit 0
 fi
@@ -74,7 +73,7 @@ fetch_weather_raw() {
   if [ -n "$weather_location" ] && [ "$weather_location" != "null" ] && [ "$weather_location" != "auto" ]; then
     loc="$weather_location"
   fi
-  curl -s --max-time 10 "https://wttr.in/$loc?format=j1" > "$1" || true
+  curl -s --max-time 10 "https://wttr.in/$loc?format=j1" >"$1" || true
 }
 
 tmp_weather=$(mktemp)
@@ -160,5 +159,5 @@ fi
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"

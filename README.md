@@ -52,7 +52,7 @@ See [Dependencies](#dependencies) for core packages and optional telemetry (Arch
    ln -sfn ~/.config/waybar/systemd/waybar-healthcheck.timer ~/.config/systemd/user/waybar-healthcheck.timer
 
    # Block accidental secret commits
-   ln -sfn ../../scripts/ci/pre-commit-check-secrets.sh .git/hooks/pre-commit
+   make install-hooks
    ```
 
 3. Enable the systemd user units (recommended):
@@ -188,12 +188,18 @@ If you are developing a new status script (e.g. `scripts/system/my-status.sh`):
 ### Testing & Validation
 
 ```bash
-make check           # syntax + contracts + generator suites + secrets suites + validate + systemd + python
+make check           # full gate: suites + drift + lint (shfmt/ruff/gitleaks/stylelint/markdownlint)
+make check-fast      # syntax + contracts + inventory + validate + systemd + python
 make check-syntax    # bash -n over all scripts
-make check-python    # python3 -m py_compile on scripts/**/*.py
+make check-python    # py_compile
+make check-ruff      # ruff check scripts/
 make check-systemd   # systemd unit templates → real scripts
 make check-generator # scripts/ci/tests/generator/*.sh (CI runs these as a matrix)
 make check-secrets   # scripts/ci/tests/secrets/*.sh (CI runs these as a matrix)
+make check-suite-inventory  # CI matrix ↔ on-disk suite files
+make check-drift     # make generate then fail on dirty generated artifacts
+make fmt-shell       # shfmt -w scripts/
+make install-hooks   # symlink secrets pre-commit hook
 ```
 
 Or run a single suite / validator:
@@ -206,7 +212,9 @@ Or run a single suite / validator:
 
 Shared helpers live under `scripts/ci/lib/` (`waybar-test-harness.sh` entrypoint + focused `core` / `sandbox` / `assert` / `stubs` / `validate` modules + `fixtures/`). Suite inventory and CI path filters are documented in [scripts/README.md](scripts/README.md#ci-test-layout).
 
-ShellCheck runs in CI at **warning** severity (see `.shellcheckrc`).
+CI workflows (as of 2026-07): main `CI` (path-filtered suites + generated drift + suite inventory + `CI result` aggregator; `workflow_dispatch` / weekly full run), plus ShellCheck, actionlint, shfmt, Ruff, Gitleaks, Stylelint, and Markdownlint. Pin notes: `actions/checkout@v7`, `actions/setup-node@v6`, `pnpm/action-setup@v6.0.9`, Corepack + `pnpm@11.11.0`, `dorny/paths-filter@v4`, `astral-sh/ruff-action@v4.1.0`, ShellCheck action `2.0.0`, actionlint `1.7.12`, shfmt `3.13.1`, gitleaks `8.30.1`.
+
+ShellCheck runs at **warning** severity (see `.shellcheckrc`).
 
 ## Dependencies
 

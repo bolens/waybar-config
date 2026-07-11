@@ -31,7 +31,7 @@ compile_jsonc_settings() {
   # Prefer jsonc as the only editable source; always compile it to json.
   # (mtime short-circuits break restore/replace flows where .json outlives .jsonc.)
   if [[ -f "$jsonc_file" ]]; then
-    strip_jsonc_comments "$jsonc_file" > "$json_file" 2>/dev/null || true
+    strip_jsonc_comments "$jsonc_file" >"$json_file" 2>/dev/null || true
   elif [[ -f "$json_file" ]]; then
     # One-time bootstrap: promote commented json to jsonc, then strip json.
     local original
@@ -40,7 +40,7 @@ compile_jsonc_settings() {
     stripped=$(strip_jsonc_comments "$json_file" 2>/dev/null || true)
     if [[ "$original" != "$stripped" && -n "$stripped" ]]; then
       cp "$json_file" "$jsonc_file" 2>/dev/null || true
-      printf '%s\n' "$stripped" > "$json_file" 2>/dev/null || true
+      printf '%s\n' "$stripped" >"$json_file" 2>/dev/null || true
     fi
   fi
 }

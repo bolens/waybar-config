@@ -47,7 +47,7 @@ run_api() {
 }
 
 case "$action" in
-  next|prev)
+  next | prev)
     result=$(run_api cycle "$action" 2>/dev/null || true)
     if [ -z "$result" ]; then
       notify "CoolerControl" "API unavailable"

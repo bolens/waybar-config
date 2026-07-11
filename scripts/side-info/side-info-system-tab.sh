@@ -19,16 +19,15 @@ ttl="$(cache_ttl_for system)"
 
 mkdir -p "$cache_dir"
 
-
 if [ "${1:-}" = "--refresh" ]; then
-	system_summary
-	exit 0
+  system_summary
+  exit 0
 fi
 
 age="$(cache_file_age "$cache_file")"
 if [ "$age" -le "$ttl" ] 2>/dev/null; then
-	bar_json_from_system_summary "$(cat "$cache_file")"
-	exit 0
+  bar_json_from_system_summary "$(cat "$cache_file")"
+  exit 0
 fi
 
 cleanup_stale_lock_dir "$lock_dir" "$stale_lock_ttl"
@@ -36,8 +35,8 @@ cleanup_stale_lock_dir "$lock_dir" "$stale_lock_ttl"
 [ -d "$lock_dir" ] || refresh_in_background
 
 if [ -f "$cache_file" ]; then
-	bar_json_from_system_summary "$(cat "$cache_file")"
-	exit 0
+  bar_json_from_system_summary "$(cat "$cache_file")"
+  exit 0
 fi
 
 emit_line "󰍛 ..." "Collecting system summary in background" "disabled"

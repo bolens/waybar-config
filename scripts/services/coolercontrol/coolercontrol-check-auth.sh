@@ -20,7 +20,10 @@ echo "unauth /status: $unauth"
 
 td=$(mktemp -d /tmp/cc-check.XXXXXX)
 chmod 700 "$td"
-cleanup() { rm -rf "$td"; unset pass token; }
+cleanup() {
+  rm -rf "$td"
+  unset pass token
+}
 trap cleanup EXIT
 
 bearer_status=skip
@@ -100,7 +103,7 @@ python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print("module:", d.get("
 
 ok=1
 [[ "$bearer_status" == 200 || "$cookie_status" == 200 ]] || ok=0
-[[ "$login" == skip || ( "$login" == 200 && "$login_reject" != 200 ) ]] || ok=0
+[[ "$login" == skip || ("$login" == 200 && "$login_reject" != 200) ]] || ok=0
 if [[ "$ok" -eq 1 ]]; then
   echo "RESULT: OK — credentials work for Waybar monitoring"
   exit 0

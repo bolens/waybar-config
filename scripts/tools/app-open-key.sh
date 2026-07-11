@@ -16,10 +16,12 @@ if [ -z "$key" ]; then
   exit 1
 fi
 
-# shellcheck source=compositor-session.sh
+# shellcheck source=../lib/compositor-session.sh
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
-# shellcheck source=waybar-settings.sh
+# shellcheck source=../lib/waybar-settings.sh
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+# shellcheck source=../lib/app-open-lib.sh
+. "$WAYBAR_SCRIPTS/lib/app-open-lib.sh"
 
 comp="$(detect_compositor)"
 cmd=""
@@ -42,7 +44,7 @@ if [ -z "$cmd" ] || [ "$cmd" = "null" ]; then
         solaar_cmd="$(waybar_settings_get '.apps.solaar' 'solaar')"
         solaar_bin="${solaar_cmd%% *}"
         if command -v "$solaar_bin" >/dev/null 2>&1; then
-          exec "$WAYBAR_SCRIPTS/tools/app-open.sh" $solaar_cmd
+          waybar_app_open_exec "$solaar_cmd"
         fi
         notify-send "Input" "Set .apps.input_settings_hyprland or install solaar" 2>/dev/null || true
         exit 0
@@ -67,5 +69,4 @@ if [ -z "$cmd" ] || [ "$cmd" = "null" ]; then
   exit 1
 fi
 
-# shellcheck disable=SC2086
-exec "$WAYBAR_SCRIPTS/tools/app-open.sh" $cmd
+waybar_app_open_exec "$cmd"

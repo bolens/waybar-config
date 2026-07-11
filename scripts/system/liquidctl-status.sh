@@ -72,8 +72,8 @@ resolve_liquidctl() {
 has_corsairpsu_hwmon() {
   # Test overrides: WAYBAR_CORSAIRPSU_PRESENT=0|1
   case "${WAYBAR_CORSAIRPSU_PRESENT:-}" in
-    0|false|no) return 1 ;;
-    1|true|yes) return 0 ;;
+    0 | false | no) return 1 ;;
+    1 | true | yes) return 0 ;;
   esac
   local psu_path_file="$cache_dir/corsairpsu-path.txt" d
   local hwmon_root="${WAYBAR_HWMON_ROOT:-/sys/class/hwmon}"
@@ -96,7 +96,7 @@ has_corsairpsu_hwmon() {
 is_rgb_only() {
   local driver="$1" desc="$2"
   case "$driver" in
-    AuraLed|AuraLedController) return 0 ;;
+    AuraLed | AuraLedController) return 0 ;;
   esac
   printf '%s' "$desc" | grep -qi 'Aura LED' && return 0
   return 1
@@ -105,7 +105,7 @@ is_rgb_only() {
 is_corsair_psu_driver() {
   local driver="$1" desc="$2"
   case "$driver" in
-    CorsairHidPsu|CorsairPsu) return 0 ;;
+    CorsairHidPsu | CorsairPsu) return 0 ;;
   esac
   printf '%s' "$desc" | grep -qiE 'HX[0-9]|RM[0-9]|HXi|RMi|Corsair.*(PSU|Power Supply)' && return 0
   return 1
@@ -315,7 +315,7 @@ fi
 
 text="󰖌 --"
 case "$punit" in
-  °C|C)
+  °C | C)
     temp_int="${pvalue%.*}"
     if [ -n "$temp_int" ]; then
       temp_fmt=$(format_locale_temp "$temp_int" short | tr -d '\n')

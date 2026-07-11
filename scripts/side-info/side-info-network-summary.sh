@@ -33,17 +33,17 @@ network_summary() {
     break
   done
 
-    wifi_ssid=''
-    wifi_signal=''
-    if [ -n "$wifi_iface" ] && command -v nmcli >/dev/null 2>&1; then
-      wifi_ssid="$(timeout 2 nmcli -t -f GENERAL.CONNECTION dev show "$wifi_iface" 2>/dev/null | awk -F: 'NR==1 {print $2; exit}' || true)"
-      [ "$wifi_ssid" = "--" ] && wifi_ssid=''
-    fi
-    if [ -z "$wifi_ssid" ] && command -v iwgetid >/dev/null 2>&1; then
-      wifi_ssid="$(iwgetid -r 2>/dev/null || true)"
-    fi
-    if [ -n "$wifi_iface" ] && [ -r /proc/net/wireless ]; then
-      wifi_signal="$(awk -v iface="$wifi_iface" '
+  wifi_ssid=''
+  wifi_signal=''
+  if [ -n "$wifi_iface" ] && command -v nmcli >/dev/null 2>&1; then
+    wifi_ssid="$(timeout 2 nmcli -t -f GENERAL.CONNECTION dev show "$wifi_iface" 2>/dev/null | awk -F: 'NR==1 {print $2; exit}' || true)"
+    [ "$wifi_ssid" = "--" ] && wifi_ssid=''
+  fi
+  if [ -z "$wifi_ssid" ] && command -v iwgetid >/dev/null 2>&1; then
+    wifi_ssid="$(iwgetid -r 2>/dev/null || true)"
+  fi
+  if [ -n "$wifi_iface" ] && [ -r /proc/net/wireless ]; then
+    wifi_signal="$(awk -v iface="$wifi_iface" '
         $1 ~ iface":" {
           gsub(/\./, "", $4)
           q = int($3)
@@ -53,7 +53,7 @@ network_summary() {
           exit
         }
       ' /proc/net/wireless 2>/dev/null || true)"
-    fi
+  fi
 
   ethernet_iface=''
   for path in /sys/class/net/*; do

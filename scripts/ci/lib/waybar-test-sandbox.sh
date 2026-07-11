@@ -77,4 +77,3 @@ waybar_test_secrets_sandbox() {
   ROOT="$root"
   ROOT_DIR="$root"
 }
-

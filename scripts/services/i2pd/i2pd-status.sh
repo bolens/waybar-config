@@ -46,7 +46,7 @@ fi
 if [ "$service_active" -eq 0 ]; then
   json=$(emit_waybar_json "󱚽 Off" "i2pd router daemon is offline" "offline")
   printf '%s\n' "$json"
-  printf '%s\n' "$json" > "$cache_file"
+  printf '%s\n' "$json" >"$cache_file"
   exit 0
 fi
 
@@ -65,7 +65,7 @@ fi
 if [ -z "$web_data" ]; then
   json=$(emit_waybar_json "󱚽 On" "i2pd running (Web Console unreachable)" "normal")
   printf '%s\n' "$json"
-  printf '%s\n' "$json" > "$cache_file"
+  printf '%s\n' "$json" >"$cache_file"
   exit 0
 fi
 
@@ -84,10 +84,10 @@ transit_tunnels=$(echo "$transit_tunnels" | xargs)
 # Class determination
 class="normal"
 case "$(echo "$net_status" | tr '[:upper:]' '[:lower:]')" in
-  *testing*|*clock*|*unknown*)
+  *testing* | *clock* | *unknown*)
     class="warning"
     ;;
-  *disconnected*|*error*)
+  *disconnected* | *error*)
     class="critical"
     ;;
 esac
@@ -100,9 +100,8 @@ json=$(emit_waybar_json "$text" "$tooltip" "$class")
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"
 
 # Signal Waybar to refresh the module UI
 pkill -x -RTMIN+25 waybar >/dev/null 2>&1 || true
-

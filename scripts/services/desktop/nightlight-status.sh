@@ -13,7 +13,6 @@ stale_lock_ttl=90
 
 mkdir -p "$cache_dir"
 
-
 # shellcheck source=compositor-session.sh
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"

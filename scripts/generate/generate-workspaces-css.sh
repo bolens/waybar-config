@@ -44,7 +44,7 @@ fi
 
 # Waybar inserts `spacing` px between every module in a group; cancel it in CSS.
 slot_margin=$((glyph_gap - bar_spacing))
-glyph_pad=$(( (glyph_width - font_size) / 2 ))
+glyph_pad=$(((glyph_width - font_size) / 2))
 if [[ "$glyph_pad" -lt 0 ]]; then
   glyph_pad=0
 fi

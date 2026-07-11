@@ -69,7 +69,7 @@ normalize_capture_mode() {
   case "${1:-select}" in
     select) printf 'selection' ;;
     full) printf 'screen' ;;
-    selection|screen|window) printf '%s' "$1" ;;
+    selection | screen | window) printf '%s' "$1" ;;
     *) printf 'selection' ;;
   esac
 }
@@ -218,7 +218,7 @@ capture_build_screenrecord_path() {
 capture_copy_image() {
   file="$1"
   if command -v wl-copy >/dev/null 2>&1; then
-    wl-copy < "$file" 2>/dev/null || true
+    wl-copy <"$file" 2>/dev/null || true
   fi
 }
 

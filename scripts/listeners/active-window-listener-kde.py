@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
+import atexit
+import json
+import os
+import re
+import shutil
+import signal
+import subprocess
+import sys
+import threading
+import time
+
 import gi
+
+gi.require_version("Gio", "2.0")
+gi.require_version("GLib", "2.0")
+from gi.repository import Gio, GLib  # noqa: E402
+
 
 def waybar_scripts_dir():
     """Return scripts/ root (parent of this file's domain folder)."""
@@ -7,20 +23,6 @@ def waybar_scripts_dir():
     if env:
         return env
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-gi.require_version('Gio', '2.0')
-gi.require_version('GLib', '2.0')
-from gi.repository import Gio, GLib
-import subprocess
-import sys
-import os
-import json
-import re
-import atexit
-import shutil
-import threading
-import signal
-import time
 
 
 def load_waybar_signals():
@@ -383,8 +385,7 @@ class ActiveWindowServer:
     def flush_active_window_update(self):
         self.active_window_timeout_id = 0
         title = self.pending_title
-        app = self.pending_app
-        
+
         trimmed = trim_title(title)
         if not title:
             data = {
@@ -420,7 +421,6 @@ class ActiveWindowServer:
 
     def flush_windows_changed(self):
         self.windows_changed_timeout_id = 0
-        script_dir = os.path.dirname(os.path.abspath(__file__))
         signal_script = os.path.join(waybar_scripts_dir(), "dock", "dock-windows-signal.sh")
         if os.path.exists(signal_script):
             subprocess.run([signal_script], stderr=subprocess.DEVNULL)
@@ -603,34 +603,6 @@ class ActiveWindowServer:
             return script_id
         return None
 
-    def cleanup(self):
-        if self.script_id:
-            subprocess.run([
-                "qdbus6", "org.kde.KWin", "/Scripting",
-                "org.kde.kwin.Scripting.unloadScript", "active_window_watcher"
-            ], capture_output=True)
-        try:
-            if hasattr(self, 'dbus_monitor_proc'):
-                self.dbus_monitor_proc.terminate()
-        except Exception:
-            pass
-
-    def start_dbus_monitor(self):
-        # We run dbus-monitor in a background pipe stream to track incoming desktop notifications
-        # directly from the session bus. We capture notification parameters and maintain unread counters.
-        monitor_cmd = [
-            "dbus-monitor",
-            "interface='org.freedesktop.Notifications'"
-        ]
-        self.dbus_monitor_proc = subprocess.Popen(
-            monitor_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            text=True,
-            bufsize=1
-        )
-        threading.Thread(target=self.read_dbus_monitor_stdout, daemon=True).start()
-
     def on_clipboard_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
         threading.Thread(target=self.check_and_write_clipboard, daemon=True).start()
 
@@ -748,13 +720,20 @@ class ActiveWindowServer:
 
     def start_dbus_monitor(self):
         def monitor_thread():
-            cmd = ["dbus-monitor", "interface='org.freedesktop.Notifications'", "sender='org.freedesktop.Notifications'"]
+            cmd = [
+                "dbus-monitor",
+                "interface='org.freedesktop.Notifications'",
+                "sender='org.freedesktop.Notifications'",
+            ]
             try:
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
-                for line in proc.stdout:
-                    GLib.idle_add(self.process_dbus_monitor_line, line.rstrip('\r\n'))
+                self.dbus_monitor_proc = subprocess.Popen(
+                    cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
+                )
+                for line in self.dbus_monitor_proc.stdout:
+                    GLib.idle_add(self.process_dbus_monitor_line, line.rstrip("\r\n"))
             except Exception as e:
                 print(f"Error running dbus-monitor: {e}", file=sys.stderr)
+
         threading.Thread(target=monitor_thread, daemon=True).start()
 
     def unescape_dbus_str(self, s):
@@ -922,7 +901,6 @@ class ActiveWindowServer:
         waybar_rtmin("nightlight")
 
     def on_brightness_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
-        script_dir = os.path.dirname(os.path.abspath(__file__))
         brightness_script = os.path.join(waybar_scripts_dir(), "system", "brightness-status.sh")
         if os.path.exists(brightness_script):
             subprocess.run([brightness_script, "--refresh"], stderr=subprocess.DEVNULL)
@@ -949,7 +927,6 @@ class ActiveWindowServer:
     # Executes refreshes asynchronously in a background thread to prevent blocking
     # the main GLib mainloop during slower network status (NM/VPN/Tailscale) requests.
     def trigger_network_refresh(self):
-        script_dir = os.path.dirname(os.path.abspath(__file__))
         vpn_script = os.path.join(waybar_scripts_dir(), "network", "vpn-status.sh")
         ts_script = os.path.join(waybar_scripts_dir(), "network", "tailscale-status.sh")
         
@@ -981,7 +958,6 @@ class ActiveWindowServer:
         self.trigger_kdeconnect_refresh()
 
     def trigger_kdeconnect_refresh(self):
-        script_dir = os.path.dirname(os.path.abspath(__file__))
         kdeconnect_script = os.path.join(waybar_scripts_dir(), "services", "devices", "kdeconnect-status.sh")
         if not os.path.exists(kdeconnect_script):
             with self.kdeconnect_lock:
@@ -1016,7 +992,6 @@ class ActiveWindowServer:
         self.trigger_upower_refresh()
 
     def trigger_upower_refresh(self):
-        script_dir = os.path.dirname(os.path.abspath(__file__))
         battery_script = os.path.join(waybar_scripts_dir(), "services", "devices", "device-battery-status.sh")
         if not os.path.exists(battery_script):
             with self.upower_lock:
@@ -1049,6 +1024,12 @@ class ActiveWindowServer:
             "qdbus6", "org.kde.KWin", "/Scripting",
             "org.kde.kwin.Scripting.unloadScript", "active_window_watcher"
         ], capture_output=True)
+        proc = getattr(self, "dbus_monitor_proc", None)
+        if proc is not None:
+            try:
+                proc.terminate()
+            except Exception:
+                pass
 
     def run(self):
         try:

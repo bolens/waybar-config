@@ -178,7 +178,7 @@ case "$mode" in
           # changing the permanent system settings configuration.
           if kde_preview_start; then
             tmp_force="$force_state_file.tmp.$$"
-            printf '%s\n' "$temp" > "$tmp_force"
+            printf '%s\n' "$temp" >"$tmp_force"
             mv -f "$tmp_force" "$force_state_file"
             notify-send "Night light" "Force on at ${temp}K (KDE backend)" 2>/dev/null || true
           else

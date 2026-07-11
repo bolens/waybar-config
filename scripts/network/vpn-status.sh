@@ -12,7 +12,6 @@ stale_lock_ttl=20
 
 mkdir -p "$cache_dir"
 
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -116,6 +115,5 @@ json=$(emit_waybar_json "$text" "$tooltip" "$class")
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"
-

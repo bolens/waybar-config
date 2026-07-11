@@ -14,7 +14,7 @@ current_tab() {
   if [ -f "$state_file" ]; then
     tab="$(cat "$state_file" 2>/dev/null || true)"
     case "$tab" in
-      docker|updates|stats|network|runtimes)
+      docker | updates | stats | network | runtimes)
         printf '%s' "$tab"
         return
         ;;

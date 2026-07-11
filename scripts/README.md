@@ -4,7 +4,7 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 
 | Folder | Purpose |
 |--------|---------|
-| `lib/` | Shared helpers (`waybar-settings`, cache helpers, `*-lib`, compositor helpers, signals) |
+| `lib/` | Shared helpers (`waybar-settings`, cache helpers, `app-open-lib`, `*-lib`, compositor helpers, signals) |
 | `generate/` | Config generators (`generate-*.sh`) |
 | `ci/` | Contract checks, unit tests, validate, pre-commit hook |
 | `infra/` | Launch, healthcheck, listener-ctl, metrics collector |
@@ -61,12 +61,18 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 From the repo root:
 
 ```bash
-make check           # syntax + contracts + generator + secrets + validate + systemd + python
+make check           # full gate (suites + drift + lint)
+make check-fast      # syntax + contracts + inventory + validate + systemd + python
 make check-syntax    # bash -n
 make check-python    # py_compile
+make check-ruff      # ruff
 make check-systemd   # unit path smoke
 make check-generator # scripts/ci/tests/generator/*.sh (CI matrix shards these)
 make check-secrets   # scripts/ci/tests/secrets/*.sh
+make check-suite-inventory
+make check-drift     # regenerate + git diff
+make fmt-shell       # shfmt -w
+make install-hooks   # secrets pre-commit symlink
 ```
 
 ### CI test layout
@@ -83,6 +89,9 @@ make check-secrets   # scripts/ci/tests/secrets/*.sh
 | `ci/waybar-test-sanitize-env.sh` | Clears fixture/override env bleed between suites |
 | `ci/tests/generator/*.sh` | Generator suites (CI matrix shards each file) |
 | `ci/tests/secrets/*.sh` | Secrets/settings suites (CI matrix shards each file) |
+| `ci/check-suite-inventory.sh` | Fails if CI matrix names ≠ on-disk suite stems |
+| `ci/check-generated-drift.sh` | `make generate` then `git diff` on committed artifacts |
+| `ci/install-hooks.sh` | Symlink secrets pre-commit (`make install-hooks`) |
 
 Generator shards: `generate-smoke`, `drawer-sot-contracts`, `listener-lifecycle`, `settings-overrides-modules`, `settings-overrides-polish`, `settings-overrides-layout-theme`, `lib-utils`, `generator-resilience`, `path-edge-cases`, `liquidctl`, `coolercontrol-module-wiring`, `coolercontrol-module-auth`, `asusctl`, `hw-nvme-olh`, `hw-rgb-fans`, `portability`.
 

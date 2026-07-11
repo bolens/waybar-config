@@ -5,9 +5,9 @@ set -euo pipefail
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 script_dir="$(CDPATH="" cd -- "$(dirname "$0")" && pwd)"
-# shellcheck disable=SC1091
+# shellcheck source=../lib/compositor-session.sh
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
-# shellcheck disable=SC1091
+# shellcheck source=../lib/waybar-settings.sh
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
@@ -24,9 +24,9 @@ if [ "$session" = "hyprland" ]; then
     title="${title//$'\t'/ }"
     title="$(printf '%s' "$title" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
     title="$(printf '%s' "$title" | sed -E 's/(.*) - Mozilla Firefox/\1/; s/(.*) - Zen Browser/\1/; s/(.*) - Google Chrome/\1/; s/(.*) - Floorp/\1/; s/(.*) - Chromium/\1/; s/(.*) - Brave/\1/; s/(.*) - Vivaldi/\1/')"
-    echo "$title" > "$cache_file"
+    echo "$title" >"$cache_file"
   else
-    echo "" > "$cache_file"
+    echo "" >"$cache_file"
   fi
 elif [ "$session" = "kde" ]; then
   # For KDE, if the raw file doesn't exist yet, try to initialize it from the json cache
@@ -34,13 +34,13 @@ elif [ "$session" = "kde" ]; then
     json_cache="$cache_dir/active-window.json"
     if [ -f "$json_cache" ] && command -v jq >/dev/null 2>&1; then
       title="$(jq -r '.tooltip // empty' "$json_cache" 2>/dev/null || true)"
-      echo "$title" > "$cache_file"
+      echo "$title" >"$cache_file"
     else
-      echo "" > "$cache_file"
+      echo "" >"$cache_file"
     fi
   fi
 else
-  echo "" > "$cache_file"
+  echo "" >"$cache_file"
 fi
 
 # Load settings configuration
@@ -82,11 +82,11 @@ output_title() {
 # If zscroll is enabled and available, run it
 if [ "$enable_scroll" = "true" ] && command -v zscroll >/dev/null 2>&1; then
   zscroll -l "$scroll_len" \
-          --delay "$scroll_delay" \
-          --update-check true \
-          --update-interval 0.5 \
-          --eval-in-shell true \
-          "cat '$cache_file' 2>/dev/null" | while IFS= read -r scrolled; do
+    --delay "$scroll_delay" \
+    --update-check true \
+    --update-interval 0.5 \
+    --eval-in-shell true \
+    "cat '$cache_file' 2>/dev/null" | while IFS= read -r scrolled; do
     if [ -f "$cache_file" ]; then
       original=$(cat "$cache_file" 2>/dev/null || echo "")
     else
@@ -103,7 +103,7 @@ else
     else
       original=""
     fi
-    
+
     if [ "$original" != "$last_title" ]; then
       if [ ${#original} -gt "$scroll_len" ]; then
         trunc_len=$((scroll_len - 3))

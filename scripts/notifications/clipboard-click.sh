@@ -28,7 +28,7 @@ hyprland_sync_primary() {
 case "$compositor" in
   kde)
     case "$action" in
-      pick|open)
+      pick | open)
         kde_open_clipboard
         ;;
       clear)
@@ -36,7 +36,7 @@ case "$compositor" in
         notify-send "Clipboard" "Clipboard history cleared" 2>/dev/null || true
         signal_refresh
         ;;
-      edit|sync)
+      edit | sync)
         kde_edit_clipboard
         ;;
       *)
@@ -46,7 +46,7 @@ case "$compositor" in
     ;;
   hyprland)
     case "$action" in
-      pick|open)
+      pick | open)
         if ! cliphist_available; then
           notify-send "Clipboard" "cliphist is not installed" 2>/dev/null || true
           exit 0
@@ -64,7 +64,7 @@ case "$compositor" in
           signal_refresh
         fi
         ;;
-      edit|sync)
+      edit | sync)
         hyprland_sync_primary
         ;;
       *)
@@ -84,7 +84,7 @@ case "$compositor" in
         fi
         signal_refresh
         ;;
-      edit|sync)
+      edit | sync)
         if kde_klipper_available; then
           kde_edit_clipboard
         else

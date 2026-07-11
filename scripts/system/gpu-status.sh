@@ -82,4 +82,3 @@ tooltip=$(printf '%s\nUtil: %s%%\nTemp: %s\nVRAM: %s/%s MiB (%s%%)' \
 [ -n "$vendor" ] && tooltip=$(printf '%s\nVendor: %s' "$tooltip" "$vendor")
 
 emit_waybar_json "$text" "$tooltip" "$class"
-

@@ -267,7 +267,10 @@ PY
 
   case "$rc" in
     0) return 0 ;;
-    10) CHANGED=1; return 0 ;;
+    10)
+      CHANGED=1
+      return 0
+      ;;
     *) return "$rc" ;;
   esac
 }
@@ -279,9 +282,9 @@ curl_http_code() {
   local netrc="$TMPDIR_AUTH/netrc"
 
   I2PD_NETRC_PATH="$netrc" \
-  I2PD_CONSOLE_USER="$login" \
-  I2PD_CONSOLE_PASS="$password" \
-  python3 <<'PY'
+    I2PD_CONSOLE_USER="$login" \
+    I2PD_CONSOLE_PASS="$password" \
+    python3 <<'PY'
 import os
 from pathlib import Path
 path = Path(os.environ["I2PD_NETRC_PATH"])

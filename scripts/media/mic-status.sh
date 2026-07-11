@@ -14,8 +14,6 @@ stale_lock_ttl=90
 
 mkdir -p "$cache_dir"
 
-
-
 collect_json() {
   v=$(timeout 2 wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null || true)
   if [ -z "$v" ]; then

@@ -1,6 +1,6 @@
 # Waybar config — local developer tasks
 #
-# Usage: make check | make generate | make check-syntax
+# Usage: make check | make generate | make check-syntax | make install-hooks
 
 WAYBAR_HOME ?= $(CURDIR)
 WAYBAR_SCRIPTS ?= $(WAYBAR_HOME)/scripts
@@ -9,21 +9,39 @@ export WAYBAR_HOME WAYBAR_SCRIPTS
 GENERATOR_TESTS := $(sort $(wildcard scripts/ci/tests/generator/*.sh))
 SECRETS_TESTS := $(sort $(wildcard scripts/ci/tests/secrets/*.sh))
 
-.PHONY: check check-syntax check-python check-contracts check-generator check-secrets check-systemd validate generate help
+.PHONY: check check-fast check-syntax check-python check-ruff check-contracts \
+	check-generator check-secrets check-systemd check-suite-inventory \
+	check-drift check-shfmt check-gitleaks check-stylelint check-markdownlint \
+	validate generate fmt-shell install-hooks help
 
 help:
 	@printf '%s\n' \
-		'make check          - syntax + contracts + generator suites + secrets suites + validate + systemd + python' \
-		'make check-syntax   - bash -n on all scripts/**/*.sh' \
-		'make check-python   - python3 -m py_compile on scripts/**/*.py' \
+		'make check              - full local gate (suites + lint + drift)' \
+		'make check-fast         - syntax + contracts + validate + systemd + inventory' \
+		'make check-syntax       - bash -n on all scripts/**/*.sh' \
+		'make check-python       - python3 -m py_compile on scripts/**/*.py' \
+		'make check-ruff         - ruff check scripts/' \
 		'make check-contracts' \
-		'make check-generator - scripts/ci/tests/generator/*.sh' \
-		'make check-secrets   - scripts/ci/tests/secrets/*.sh' \
-		'make check-systemd  - systemd unit templates point at real scripts' \
+		'make check-generator    - scripts/ci/tests/generator/*.sh' \
+		'make check-secrets      - scripts/ci/tests/secrets/*.sh' \
+		'make check-suite-inventory - CI matrix ↔ on-disk suites' \
+		'make check-drift        - make generate then git diff artifacts' \
+		'make check-systemd      - systemd unit templates point at real scripts' \
+		'make check-shfmt        - shfmt -d on scripts/' \
+		'make check-gitleaks     - secret scan (git-aware)' \
+		'make check-stylelint    - CSS lint' \
+		'make check-markdownlint - Markdown lint' \
 		'make validate' \
-		'make generate       - regenerate settings/modules/css from data/'
+		'make fmt-shell          - shfmt -w scripts/' \
+		'make generate           - regenerate settings/modules/css from data/' \
+		'make install-hooks      - symlink secrets pre-commit hook'
 
-check: check-syntax check-contracts check-generator check-secrets validate check-systemd check-python
+check: check-syntax check-contracts check-suite-inventory check-generator \
+	check-secrets validate check-drift check-systemd check-python check-ruff \
+	check-shfmt check-gitleaks check-stylelint check-markdownlint
+
+check-fast: check-syntax check-contracts check-suite-inventory validate \
+	check-systemd check-python
 
 check-syntax:
 	@set -euo pipefail; \
@@ -37,8 +55,14 @@ check-syntax:
 check-python:
 	bash scripts/ci/check-python-syntax.sh
 
+check-ruff:
+	bash scripts/ci/check-ruff.sh
+
 check-contracts:
 	bash scripts/ci/check-shell-contracts.sh
+
+check-suite-inventory:
+	bash scripts/ci/check-suite-inventory.sh
 
 check-generator:
 	@set -euo pipefail; \
@@ -61,10 +85,31 @@ check-secrets:
 check-systemd:
 	bash scripts/ci/check-systemd-units.sh
 
+check-drift:
+	bash scripts/ci/check-generated-drift.sh
+
+check-shfmt:
+	bash scripts/ci/check-shfmt.sh
+
+check-gitleaks:
+	bash scripts/ci/check-gitleaks.sh
+
+check-stylelint:
+	bash scripts/ci/check-stylelint.sh
+
+check-markdownlint:
+	bash scripts/ci/check-markdownlint.sh
+
 validate:
 	bash scripts/ci/validate-generated-config.sh
+
+fmt-shell:
+	bash scripts/ci/check-shfmt.sh --write
 
 generate:
 	bash scripts/generate/generate-settings.sh
 	bash scripts/generate/generate-compositor-modules.sh
 	bash scripts/generate/generate-workspaces-css.sh
+
+install-hooks:
+	bash scripts/ci/install-hooks.sh

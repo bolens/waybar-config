@@ -21,7 +21,7 @@ mkdir -p "$runtime_stub"
 mock_shebang='#!/usr/bin/env sh'
 command -v dash >/dev/null 2>&1 && mock_shebang='#!/usr/bin/env dash'
 
-cat > "$TEST_DIR/scripts/mock-listener.sh" <<MOCK
+cat >"$TEST_DIR/scripts/mock-listener.sh" <<MOCK
 ${mock_shebang}
 set -eu
 script_dir="\${0%/*}"

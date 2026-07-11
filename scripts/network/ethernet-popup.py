@@ -37,20 +37,20 @@ import os
 import re
 import subprocess
 import sys
-import concurrent.futures
 import time
 
 DEBUG = True  # Set to True for debug output
 
-gi.require_version('Gtk', '3.0')
+gi.require_version("Gtk", "3.0")
 try:
-    gi.require_version('GtkLayerShell', '0.1')
-    from gi.repository import GtkLayerShell
+    gi.require_version("GtkLayerShell", "0.1")
+    from gi.repository import GtkLayerShell  # noqa: E402
+
     LAYER_SHELL_AVAILABLE = True
 except (ValueError, ImportError):
     LAYER_SHELL_AVAILABLE = False
 
-from gi.repository import GLib, Gtk, Gdk
+from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
 # Cache public IP for the session
 _PUBLIC_IP = None
@@ -368,16 +368,7 @@ class EthPopup(Gtk.Window):
     def set_layer_shell_anchor(self):
         if getattr(self, '_layer_shell_anchor_set', False):
             return
-        display = Gdk.Display.get_default()
-        seat = display.get_default_seat()
-        pointer = seat.get_pointer()
-        _, x, y = pointer.get_position()
-        monitor = display.get_monitor_at_point(x, y)
-        geo = monitor.get_geometry()
-        alloc = self.get_allocation()
-        win_width = alloc.width or 400
-        win_height = alloc.height or 200
-        # Force top-right anchor
+        # Force top-right anchor (pointer geometry unused for layer-shell layout)
         for edge in [GtkLayerShell.Edge.TOP, GtkLayerShell.Edge.BOTTOM, GtkLayerShell.Edge.LEFT, GtkLayerShell.Edge.RIGHT]:
             GtkLayerShell.set_anchor(self, edge, False)
         GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.TOP, True)

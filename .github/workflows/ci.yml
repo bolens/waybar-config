@@ -19,24 +19,13 @@ on:
       - ".shellcheckrc"
       - ".gitignore"
       - ".github/workflows/ci.yml"
+  # No path filters on PRs so branch protection / ci-result always receive a status.
   pull_request:
     branches: [main]
-    paths:
-      - "scripts/**"
-      - "data/**"
-      - "layouts/**"
-      - "modules/**"
-      - "includes/**"
-      - "theme/**"
-      - "theme.css"
-      - "config.jsonc"
-      - "style.css"
-      - "user-style.css"
-      - "Makefile"
-      - "systemd/**"
-      - ".shellcheckrc"
-      - ".gitignore"
-      - ".github/workflows/ci.yml"
+  workflow_dispatch:
+  # Weekly full run (no path filters) catches filter blind spots.
+  schedule:
+    - cron: "17 6 * * 1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -46,23 +35,28 @@ permissions:
   contents: read
   pull-requests: read
 
+env:
+  # Mirrored into job if: via github.event_name (env context is not allowed there).
+  FORCE_ALL: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+
 jobs:
   # Decide which suites are relevant to the changed files.
-  # Keep top-level on.paths ⊇ union of all dorny filters (or CI never starts).
+  # Keep push on.paths ⊇ union of all dorny filters (or push CI never starts).
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
     outputs:
-      scripts: ${{ steps.filter.outputs.scripts }}
-      generator: ${{ steps.filter.outputs.generator }}
-      secrets: ${{ steps.filter.outputs.secrets }}
-      validate: ${{ steps.filter.outputs.validate }}
-      systemd: ${{ steps.filter.outputs.systemd }}
-      workflow: ${{ steps.filter.outputs.workflow }}
+      scripts: ${{ steps.flags.outputs.scripts }}
+      generator: ${{ steps.flags.outputs.generator }}
+      secrets: ${{ steps.flags.outputs.secrets }}
+      validate: ${{ steps.flags.outputs.validate }}
+      systemd: ${{ steps.flags.outputs.systemd }}
+      workflow: ${{ steps.flags.outputs.workflow }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
         id: filter
+        if: env.FORCE_ALL != 'true'
         with:
           filters: |
             # Harness/workflow only — suite file edits belong under generator/secrets
@@ -73,6 +67,8 @@ jobs:
               - '.shellcheckrc'
               - 'scripts/ci/lib/**'
               - 'scripts/ci/waybar-test-sanitize-env.sh'
+              - 'scripts/ci/check-*.sh'
+              - 'scripts/ci/install-hooks.sh'
             scripts:
               - 'scripts/**'
             # Generator suites copy/exercise almost every script domain + generated
@@ -104,6 +100,7 @@ jobs:
               - 'scripts/lib/waybar-cache-helpers.sh'
               - 'scripts/lib/unicode-animations-lib.sh'
               - 'scripts/lib/notifications-lib.sh'
+              - 'scripts/lib/app-open-lib.sh'
               - 'scripts/services/i2pd/i2pd-set-console-pass.sh'
               - 'scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh'
               - 'scripts/services/sync/updates-status.sh'
@@ -119,6 +116,7 @@ jobs:
               - '.gitignore'
             validate:
               - 'scripts/ci/validate-generated-config.sh'
+              - 'scripts/ci/check-generated-drift.sh'
               - 'scripts/generate/**'
               - 'scripts/lib/waybar-settings.sh'
               - 'data/**'
@@ -137,6 +135,53 @@ jobs:
               - 'scripts/infra/listener-ctl.sh'
               - 'scripts/infra/waybar-healthcheck.sh'
               - 'scripts/infra/waybar-journal-drop.rg'
+      - name: Resolve suite flags
+        id: flags
+        env:
+          F_SCRIPTS: ${{ steps.filter.outputs.scripts }}
+          F_GENERATOR: ${{ steps.filter.outputs.generator }}
+          F_SECRETS: ${{ steps.filter.outputs.secrets }}
+          F_VALIDATE: ${{ steps.filter.outputs.validate }}
+          F_SYSTEMD: ${{ steps.filter.outputs.systemd }}
+          F_WORKFLOW: ${{ steps.filter.outputs.workflow }}
+        run: |
+          set -euo pipefail
+          if [ "${FORCE_ALL}" = "true" ]; then
+            {
+              echo "scripts=true"
+              echo "generator=true"
+              echo "secrets=true"
+              echo "validate=true"
+              echo "systemd=true"
+              echo "workflow=true"
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "scripts=${F_SCRIPTS:-false}"
+              echo "generator=${F_GENERATOR:-false}"
+              echo "secrets=${F_SECRETS:-false}"
+              echo "validate=${F_VALIDATE:-false}"
+              echo "systemd=${F_SYSTEMD:-false}"
+              echo "workflow=${F_WORKFLOW:-false}"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+  suite-inventory:
+    name: Suite inventory sync
+    needs: changes
+    if: |
+      always()
+      && needs.changes.result == 'success'
+      && (needs.changes.outputs.workflow == 'true'
+          || needs.changes.outputs.generator == 'true'
+          || needs.changes.outputs.secrets == 'true'
+          || github.event_name == 'schedule'
+          || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compare CI matrix to on-disk suites
+        run: bash scripts/ci/check-suite-inventory.sh
 
   # Fast fail-early checks before the heavier suites.
   syntax:
@@ -185,12 +230,13 @@ jobs:
   # Modular generator suites — matrix shards run in parallel (no nested secrets).
   generator-tests:
     name: Generator / ${{ matrix.suite }}
-    needs: [changes, syntax, contracts]
+    needs: [changes, syntax, contracts, suite-inventory]
     if: |
       always()
       && needs.changes.result == 'success'
       && (needs.syntax.result == 'success' || needs.syntax.result == 'skipped')
       && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
+      && (needs.suite-inventory.result == 'success' || needs.suite-inventory.result == 'skipped')
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.generator == 'true')
     runs-on: ubuntu-latest
     strategy:
@@ -225,12 +271,13 @@ jobs:
   # Modular secrets suites — sibling to generator (not nested).
   secrets-tests:
     name: Secrets / ${{ matrix.suite }}
-    needs: [changes, syntax, contracts]
+    needs: [changes, syntax, contracts, suite-inventory]
     if: |
       always()
       && needs.changes.result == 'success'
       && (needs.syntax.result == 'success' || needs.syntax.result == 'skipped')
       && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
+      && (needs.suite-inventory.result == 'success' || needs.suite-inventory.result == 'skipped')
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.secrets == 'true')
     runs-on: ubuntu-latest
     strategy:
@@ -274,6 +321,28 @@ jobs:
           WAYBAR_HOME: ${{ github.workspace }}
         run: bash scripts/ci/validate-generated-config.sh
 
+  generated-drift:
+    name: Generated artifact drift
+    needs: [changes, syntax, contracts]
+    if: |
+      always()
+      && needs.changes.result == 'success'
+      && (needs.syntax.result == 'success' || needs.syntax.result == 'skipped')
+      && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
+      && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.validate == 'true'
+          || needs.changes.outputs.generator == 'true'
+          || github.event_name == 'schedule'
+          || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install jq
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+      - name: Regenerate and diff committed artifacts
+        env:
+          WAYBAR_HOME: ${{ github.workspace }}
+        run: bash scripts/ci/check-generated-drift.sh
+
   systemd-units:
     name: Systemd unit path smoke
     needs: [changes]
@@ -288,3 +357,36 @@ jobs:
         env:
           WAYBAR_HOME: ${{ github.workspace }}
         run: bash scripts/ci/check-systemd-units.sh
+
+  # Single required status for branch protection (skipped jobs are OK).
+  ci-result:
+    name: CI result
+    if: always()
+    needs:
+      - changes
+      - suite-inventory
+      - syntax
+      - python-syntax
+      - contracts
+      - generator-tests
+      - secrets-tests
+      - validate-config
+      - generated-drift
+      - systemd-units
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aggregate job results
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, sys
+          needs = json.loads(os.environ["NEEDS_JSON"])
+          bad = {k: v.get("result") for k, v in needs.items()
+                 if v.get("result") in ("failure", "cancelled")}
+          if bad:
+              print("FAIL: required jobs did not succeed:", bad, file=sys.stderr)
+              sys.exit(1)
+          print("ok: all jobs succeeded or were skipped")
+          PY

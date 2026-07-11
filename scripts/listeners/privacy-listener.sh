@@ -59,22 +59,22 @@ trap cleanup EXIT INT TERM
 
 # Start PulseAudio listener writing to FIFO
 if command -v pactl >/dev/null 2>&1; then
-  ( pactl subscribe 2>/dev/null | grep --line-buffered -E "source|source-output|sink|sink-input" > "$fifo" 2>/dev/null || true ) &
+  (pactl subscribe 2>/dev/null | grep --line-buffered -E "source|source-output|sink|sink-input" >"$fifo" 2>/dev/null || true) &
 fi
 
 # Start fallback periodic timer writing to FIFO
 (
   while true; do
     sleep "$poll_seconds"
-    echo "tick" > "$fifo" 2>/dev/null || true
+    echo "tick" >"$fifo" 2>/dev/null || true
   done
 ) &
 
 # Read and process triggers
-exec 3< "$fifo"
+exec 3<"$fifo"
 while read -r line <&3; do
   case "$line" in
-    *source*|*tick*)
+    *source* | *tick*)
       update_mic &
       ;;
   esac

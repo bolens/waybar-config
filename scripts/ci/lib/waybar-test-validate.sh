@@ -143,7 +143,7 @@ validate_all_generated_files() {
 
   local gen_files=()
   while IFS= read -r -d $'\0'; do
-      gen_files+=("$REPLY")
+    gen_files+=("$REPLY")
   done < <(find "$TEST_DIR" -name "*.generated.jsonc" -print0)
 
   if [ ${#gen_files[@]} -eq 0 ]; then

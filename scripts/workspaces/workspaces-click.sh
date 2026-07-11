@@ -36,7 +36,7 @@ case "$action" in
         ;;
     esac
     ;;
-  [0-9]|[1-9][0-9])
+  [0-9] | [1-9][0-9])
     python3 "$script_dir/workspaces-click.py" "$action" "${2:-}" || true
     ;;
   *)

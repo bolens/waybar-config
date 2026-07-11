@@ -152,19 +152,19 @@ theme="${theme_window}"'
 
 empty_state=false
 if [ ! -f "$history_file" ]; then
-    empty_state=true
+  empty_state=true
 else
-    notifs="$(cat "$history_file")"
-    count="$(echo "$notifs" | jq 'length')"
-    if [ "$count" -eq 0 ]; then
-        empty_state=true
-    fi
+  notifs="$(cat "$history_file")"
+  count="$(echo "$notifs" | jq 'length')"
+  if [ "$count" -eq 0 ]; then
+    empty_state=true
+  fi
 fi
 
 if [ "$empty_state" = true ]; then
-    printf "No notification history.\0icon\x1fnotifications-disabled-symbolic\n" | \
-        rofi -dmenu -i -p "Notifications:" -show-icons -theme-str "$theme" 2>/dev/null || true
-    exit 0
+  printf "No notification history.\0icon\x1fnotifications-disabled-symbolic\n" \
+    | rofi -dmenu -i -p "Notifications:" -show-icons -theme-str "$theme" 2>/dev/null || true
+  exit 0
 fi
 
 # Dynamic desktop file mappings cache system
@@ -194,7 +194,7 @@ else
       max_mtime="$mtime"
     fi
   done < <(xdg_application_dirs)
-  
+
   cache_mtime=$(stat -c %Y "$ICONS_CACHE_FILE" 2>/dev/null || echo 0)
   if [ "$max_mtime" -gt "$cache_mtime" ]; then
     rebuild_cache=true
@@ -211,11 +211,11 @@ if [ "$rebuild_cache" = true ]; then
     files+=("$d"/*.desktop)
   done < <(xdg_application_dirs)
   shopt -u nullglob
-  
+
   declare -A tmp_class=()
   declare -A tmp_name=()
   declare -A tmp_exec=()
-  
+
   tab=$'\t'
   if [ "${#files[@]}" -gt 0 ]; then
     while IFS="$tab" read -r type key val; do
@@ -274,13 +274,13 @@ if [ "$rebuild_cache" = true ]; then
       }
     ' "${files[@]}" 2>/dev/null || true)
   fi
-  
+
   for k in "${!tmp_class[@]}"; do class_to_icon["$k"]="${tmp_class[$k]}"; done
   for k in "${!tmp_name[@]}"; do name_to_icon["$k"]="${tmp_name[$k]}"; done
   for k in "${!tmp_exec[@]}"; do exec_to_icon["$k"]="${tmp_exec[$k]}"; done
-  
+
   tmp_cache="$ICONS_CACHE_FILE.tmp.$$"
-  declare -p class_to_icon name_to_icon exec_to_icon > "$tmp_cache" 2>/dev/null || true
+  declare -p class_to_icon name_to_icon exec_to_icon >"$tmp_cache" 2>/dev/null || true
   mv -f "$tmp_cache" "$ICONS_CACHE_FILE" 2>/dev/null || true
   cleanup_stale_tmp_files "$cache_dir"
 else
@@ -294,12 +294,12 @@ fi
 guess_icon() {
   local title="$1"
   local app="$2"
-  
+
   local app_lower
   app_lower=$(echo "${app:-}" | tr 'A-Z' 'a-z')
   local title_lower
   title_lower=$(echo "${title:-}" | tr 'A-Z' 'a-z')
-  
+
   # 1. Direct app name mapping
   if [ -n "$app_lower" ] && [ "$app_lower" != "null" ]; then
     if [ -n "${class_to_icon[$app_lower]:-}" ]; then
@@ -313,7 +313,7 @@ guess_icon() {
       return
     fi
   fi
-  
+
   # 2. Window title matches desktop name or class exactly
   if [ -n "${name_to_icon[$title_lower]:-}" ]; then
     printf '%s' "${name_to_icon[$title_lower]}"
@@ -323,7 +323,7 @@ guess_icon() {
     printf '%s' "${class_to_icon[$title_lower]}"
     return
   fi
-  
+
   # 3. Substring search in window title
   for class_key in "${!class_to_icon[@]}"; do
     if [[ "$title_lower" == *"$class_key"* ]]; then
@@ -343,7 +343,7 @@ guess_icon() {
       return
     fi
   done
-  
+
   # Generic fallbacks
   if [ -n "$app_lower" ] && [ "$app_lower" != "null" ]; then
     printf '%s' "$app_lower"
@@ -353,149 +353,149 @@ guess_icon() {
 }
 
 show_menu() {
-    local tab=$'\t'
-    mapfile -t parsed_items < <(echo "$notifs" | jq -r --arg t "$tab" '
+  local tab=$'\t'
+  mapfile -t parsed_items < <(echo "$notifs" | jq -r --arg t "$tab" '
       to_entries | reverse | .[] | 
       "\((.key + 1))\($t)\(.value.id)\($t)\(.value.app_name)\($t)\(.value.summary)\($t)\(.value.body | gsub("\n"; " ") | .[0:60])"
     ')
-    
-    if [ "${#parsed_items[@]}" -eq 0 ]; then
-        printf "No notification history.\0icon\x1fnotifications-disabled-symbolic\n" | \
-            rofi -dmenu -i -p "Notifications:" -show-icons -theme-str "$theme" 2>/dev/null || true
-        exit 0
-    fi
-    
-    declare -a item_keys=()
-    declare -a item_ids=()
-    declare -a item_displays=()
-    declare -a item_icons=()
-    
-    for line in "${parsed_items[@]}"; do
-        idx="${line%%$tab*}"
-        rest="${line#*$tab}"
-        id="${rest%%$tab*}"
-        rest="${rest#*$tab}"
-        app_name="${rest%%$tab*}"
-        rest="${rest#*$tab}"
-        summary="${rest%%$tab*}"
-        body_preview="${rest#*$tab}"
-        
-        display_name="${idx}) [${app_name}] ${summary} - ${body_preview}"
-        icon_name="$(guess_icon "${app_name} ${summary}" "${app_name}")"
-        
-        item_keys+=( "$idx" )
-        item_ids+=( "$id" )
-        item_displays+=( "$display_name" )
-        item_icons+=( "$icon_name" )
+
+  if [ "${#parsed_items[@]}" -eq 0 ]; then
+    printf "No notification history.\0icon\x1fnotifications-disabled-symbolic\n" \
+      | rofi -dmenu -i -p "Notifications:" -show-icons -theme-str "$theme" 2>/dev/null || true
+    exit 0
+  fi
+
+  declare -a item_keys=()
+  declare -a item_ids=()
+  declare -a item_displays=()
+  declare -a item_icons=()
+
+  for line in "${parsed_items[@]}"; do
+    idx="${line%%$tab*}"
+    rest="${line#*$tab}"
+    id="${rest%%$tab*}"
+    rest="${rest#*$tab}"
+    app_name="${rest%%$tab*}"
+    rest="${rest#*$tab}"
+    summary="${rest%%$tab*}"
+    body_preview="${rest#*$tab}"
+
+    display_name="${idx}) [${app_name}] ${summary} - ${body_preview}"
+    icon_name="$(guess_icon "${app_name} ${summary}" "${app_name}")"
+
+    item_keys+=("$idx")
+    item_ids+=("$id")
+    item_displays+=("$display_name")
+    item_icons+=("$icon_name")
+  done
+
+  local clear_display="󰎟  [Clear All History]"
+  local clear_icon="edit-clear-symbolic"
+
+  selected_val=$(
+    {
+      for i in "${!item_displays[@]}"; do
+        printf "%s\0icon\x1f%s\n" "${item_displays[i]}" "${item_icons[i]}"
+      done
+      printf "%s\0icon\x1f%s\n" "$clear_display" "$clear_icon"
+    } | rofi -dmenu -i -p "Notifications:" -show-icons -theme-str "$theme" 2>/dev/null || true
+  )
+
+  if [ -z "$selected_val" ]; then
+    exit 0
+  fi
+
+  # Clear All History:
+  # We query the KDE notification manager over DBus to close every active notification ID.
+  # We then trigger a SIGUSR2 signal to active-window-listener-kde.py so it refreshes its lists.
+  if [ "$selected_val" = "$clear_display" ]; then
+    for id in "${item_ids[@]}"; do
+      timeout 2 qdbus6 org.kde.plasmashell /org/freedesktop/Notifications \
+        org.freedesktop.Notifications.CloseNotification "$id" >/dev/null 2>&1 || true
     done
-    
-    local clear_display="󰎟  [Clear All History]"
-    local clear_icon="edit-clear-symbolic"
-    
-    selected_val=$(
-        {
-            for i in "${!item_displays[@]}"; do
-                printf "%s\0icon\x1f%s\n" "${item_displays[i]}" "${item_icons[i]}"
-            done
-            printf "%s\0icon\x1f%s\n" "$clear_display" "$clear_icon"
-        } | rofi -dmenu -i -p "Notifications:" -show-icons -theme-str "$theme" 2>/dev/null || true
-    )
-    
-    if [ -z "$selected_val" ]; then
-        exit 0
+    pkill -USR2 -f "[a]ctive-window-listener-kde.py" >/dev/null 2>&1 || true
+    sleep 0.15
+    exit 0
+  fi
+
+  local matched_idx=""
+  for i in "${!item_displays[@]}"; do
+    if [ "${item_displays[i]}" = "$selected_val" ]; then
+      matched_idx="${item_keys[i]}"
+      break
     fi
-    
-    # Clear All History:
-    # We query the KDE notification manager over DBus to close every active notification ID.
-    # We then trigger a SIGUSR2 signal to active-window-listener-kde.py so it refreshes its lists.
-    if [ "$selected_val" = "$clear_display" ]; then
-        for id in "${item_ids[@]}"; do
-            timeout 2 qdbus6 org.kde.plasmashell /org/freedesktop/Notifications \
-                org.freedesktop.Notifications.CloseNotification "$id" >/dev/null 2>&1 || true
-        done
-        pkill -USR2 -f "[a]ctive-window-listener-kde.py" >/dev/null 2>&1 || true
-        sleep 0.15
-        exit 0
-    fi
-    
-    local matched_idx=""
-    for i in "${!item_displays[@]}"; do
-        if [ "${item_displays[i]}" = "$selected_val" ]; then
-            matched_idx="${item_keys[i]}"
-            break
-        fi
-    done
-    
-    if [ -z "$matched_idx" ]; then
-        exit 0
-    fi
-    
-    local json_idx=$((matched_idx - 1))
-    
-    local item
-    item=$(echo "$notifs" | jq -c ".[$json_idx]")
-    local id
-    id=$(echo "$item" | jq -r '.id')
-    local app_name
-    app_name=$(echo "$item" | jq -r '.app_name')
-    local summary
-    summary=$(echo "$item" | jq -r '.summary')
-    local body
-    body=$(echo "$item" | jq -r '.body')
-    local timestamp
-    timestamp=$(echo "$item" | jq -r '.timestamp')
-    local time_str
-    time_str=$(format_locale_datetime "$timestamp")
-    
-    local actions
-    actions=$(printf "Open App/Details\nDismiss Notification\nView Full Message\nBack")
-    
-    local act
-    act=$(printf "%s" "$actions" | rofi -dmenu -i -p "$app_name" -theme-str "$theme" -mesg "<b>$summary</b>\n\n$body\n\nReceived: $time_str" -no-fixed-num-lines 2>/dev/null || true)
-    
-    case "$act" in
-        "Open App/Details")
-            # 1. Extract and open URL if present in the notification body
-            local url
-            url=$(echo "$body" | grep -o -E 'https?://[^"'\''>[:space:]<]+' | head -n 1 || true)
-            if [ -n "$url" ]; then
-                xdg-open "$url" >/dev/null 2>&1 &
-            fi
-            
-            # 2. Emit DBus ActionInvoked signal to notify the sending application of interaction
-            dbus-send --session --type=signal /org/freedesktop/Notifications \
-                org.freedesktop.Notifications.ActionInvoked uint32:"$id" string:"default" >/dev/null 2>&1 || true
-            
-            # 3. Dismiss/Close the notification in plasmashell
-            timeout 2 qdbus6 org.kde.plasmashell /org/freedesktop/Notifications \
-                org.freedesktop.Notifications.CloseNotification "$id" >/dev/null 2>&1 || true
-            sleep 0.15
-            ;;
-        "Dismiss Notification")
-            # Close the notification over DBus and refresh the menu history view
-            timeout 2 qdbus6 org.kde.plasmashell /org/freedesktop/Notifications \
-                org.freedesktop.Notifications.CloseNotification "$id" >/dev/null 2>&1 || true
-            sleep 0.15
-            notifs="$(cat "$history_file")"
-            count="$(echo "$notifs" | jq 'length')"
-            if [ "$count" -gt 0 ]; then
-                show_menu
-            fi
-            ;;
-        "View Full Message")
-            rofi -e "App: $app_name
+  done
+
+  if [ -z "$matched_idx" ]; then
+    exit 0
+  fi
+
+  local json_idx=$((matched_idx - 1))
+
+  local item
+  item=$(echo "$notifs" | jq -c ".[$json_idx]")
+  local id
+  id=$(echo "$item" | jq -r '.id')
+  local app_name
+  app_name=$(echo "$item" | jq -r '.app_name')
+  local summary
+  summary=$(echo "$item" | jq -r '.summary')
+  local body
+  body=$(echo "$item" | jq -r '.body')
+  local timestamp
+  timestamp=$(echo "$item" | jq -r '.timestamp')
+  local time_str
+  time_str=$(format_locale_datetime "$timestamp")
+
+  local actions
+  actions=$(printf "Open App/Details\nDismiss Notification\nView Full Message\nBack")
+
+  local act
+  act=$(printf "%s" "$actions" | rofi -dmenu -i -p "$app_name" -theme-str "$theme" -mesg "<b>$summary</b>\n\n$body\n\nReceived: $time_str" -no-fixed-num-lines 2>/dev/null || true)
+
+  case "$act" in
+    "Open App/Details")
+      # 1. Extract and open URL if present in the notification body
+      local url
+      url=$(echo "$body" | grep -o -E 'https?://[^"'\''>[:space:]<]+' | head -n 1 || true)
+      if [ -n "$url" ]; then
+        xdg-open "$url" >/dev/null 2>&1 &
+      fi
+
+      # 2. Emit DBus ActionInvoked signal to notify the sending application of interaction
+      dbus-send --session --type=signal /org/freedesktop/Notifications \
+        org.freedesktop.Notifications.ActionInvoked uint32:"$id" string:"default" >/dev/null 2>&1 || true
+
+      # 3. Dismiss/Close the notification in plasmashell
+      timeout 2 qdbus6 org.kde.plasmashell /org/freedesktop/Notifications \
+        org.freedesktop.Notifications.CloseNotification "$id" >/dev/null 2>&1 || true
+      sleep 0.15
+      ;;
+    "Dismiss Notification")
+      # Close the notification over DBus and refresh the menu history view
+      timeout 2 qdbus6 org.kde.plasmashell /org/freedesktop/Notifications \
+        org.freedesktop.Notifications.CloseNotification "$id" >/dev/null 2>&1 || true
+      sleep 0.15
+      notifs="$(cat "$history_file")"
+      count="$(echo "$notifs" | jq 'length')"
+      if [ "$count" -gt 0 ]; then
+        show_menu
+      fi
+      ;;
+    "View Full Message")
+      rofi -e "App: $app_name
 Title: $summary
 Message: $body
 Time: $time_str" -theme-str "$theme" 2>/dev/null || true
-            show_menu
-            ;;
-        "Back")
-            show_menu
-            ;;
-        *)
-            exit 0
-            ;;
-    esac
+      show_menu
+      ;;
+    "Back")
+      show_menu
+      ;;
+    *)
+      exit 0
+      ;;
+  esac
 }
 
 show_menu

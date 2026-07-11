@@ -20,4 +20,3 @@ emit_cliphist_status() {
 }
 
 emit_cliphist_status
-

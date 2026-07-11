@@ -83,10 +83,10 @@ chmod +x "$ASUS_FAKE/asusctl"
 
 asus_out=$(
   WAYBAR_HOME="$TEST_DIR" \
-  XDG_CACHE_HOME="$ASUS_CACHE" \
-  WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
-  ASUS_STATE_FILE="$ASUS_STATE" \
-  "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
+    XDG_CACHE_HOME="$ASUS_CACHE" \
+    WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
+    ASUS_STATE_FILE="$ASUS_STATE" \
+    "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
 )
 waybar_test_assert_jq "$asus_out" '.class == "balanced" and (.text | test("Bal")) and (.tooltip | test("Charge limit: 80%"))' "asusctl-status expected balanced + charge limit: $asus_out"
 
@@ -97,10 +97,10 @@ exit 0
 EOF
 chmod +x "$TEST_DIR/fakebin/notify-send"
 PATH="$TEST_DIR/fakebin:/usr/bin:/bin" \
-WAYBAR_HOME="$TEST_DIR" \
-XDG_CACHE_HOME="$ASUS_CACHE" \
-WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
-ASUS_STATE_FILE="$ASUS_STATE" \
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$ASUS_CACHE" \
+  WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
+  ASUS_STATE_FILE="$ASUS_STATE" \
   "$TEST_DIR/scripts/system/asusctl-click.sh" next
 if [[ "$(cat "$ASUS_STATE")" != "Performance" ]]; then
   echo "FAIL: asusctl-click next from Balanced should set Performance (got $(cat "$ASUS_STATE"))" >&2
@@ -108,18 +108,18 @@ if [[ "$(cat "$ASUS_STATE")" != "Performance" ]]; then
 fi
 asus_perf=$(
   WAYBAR_HOME="$TEST_DIR" \
-  XDG_CACHE_HOME="$ASUS_CACHE" \
-  WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
-  ASUS_STATE_FILE="$ASUS_STATE" \
-  "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
+    XDG_CACHE_HOME="$ASUS_CACHE" \
+    WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
+    ASUS_STATE_FILE="$ASUS_STATE" \
+    "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
 )
 waybar_test_assert_jq "$asus_perf" '.class == "performance"' "status after next should be performance: $asus_perf"
 
 PATH="$TEST_DIR/fakebin:/usr/bin:/bin" \
-WAYBAR_HOME="$TEST_DIR" \
-XDG_CACHE_HOME="$ASUS_CACHE" \
-WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
-ASUS_STATE_FILE="$ASUS_STATE" \
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$ASUS_CACHE" \
+  WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl" \
+  ASUS_STATE_FILE="$ASUS_STATE" \
   "$TEST_DIR/scripts/system/asusctl-click.sh" prev
 if [[ "$(cat "$ASUS_STATE")" != "Balanced" ]]; then
   echo "FAIL: asusctl-click prev from Performance should set Balanced" >&2
@@ -128,9 +128,9 @@ fi
 
 asus_miss=$(
   WAYBAR_HOME="$TEST_DIR" \
-  XDG_CACHE_HOME="$ASUS_CACHE" \
-  WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/missing-asusctl" \
-  "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
+    XDG_CACHE_HOME="$ASUS_CACHE" \
+    WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/missing-asusctl" \
+    "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
 )
 waybar_test_assert_jq "$asus_miss" '.class == "disconnected" or (.class|tostring|test("disconnected"))' "missing asusctl should emit disconnected: $asus_miss"
 
@@ -142,9 +142,9 @@ EOF
 chmod +x "$ASUS_FAKE/asusctl-down2"
 asus_down=$(
   WAYBAR_HOME="$TEST_DIR" \
-  XDG_CACHE_HOME="$ASUS_CACHE" \
-  WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl-down2" \
-  "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
+    XDG_CACHE_HOME="$ASUS_CACHE" \
+    WAYBAR_ASUSCTL_BIN="$ASUS_FAKE/asusctl-down2" \
+    "$TEST_DIR/scripts/system/asusctl-status.sh" --refresh
 )
 waybar_test_assert_jq "$asus_down" '.class == "disconnected" or (.class|tostring|test("disconnected"))' "asusd-down message should emit disconnected: $asus_down"
 echo "PASS: asusctl module wiring and status/click behavior"

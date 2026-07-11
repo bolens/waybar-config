@@ -6,7 +6,7 @@ set -eu
 target="${1:-next}"
 script_dir="${0%/*}"
 if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  # shellcheck disable=SC1091
+  # shellcheck source=../lib/waybar-settings.sh
   . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 fi
 
@@ -44,7 +44,7 @@ case "$target" in
       *) target="performance" ;;
     esac
     ;;
-  balanced|performance|power-saver)
+  balanced | performance | power-saver)
     ;;
   *)
     exit 1

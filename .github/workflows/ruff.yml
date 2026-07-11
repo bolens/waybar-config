@@ -1,0 +1,36 @@
+name: "CI: Ruff"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.py"
+      - "ruff.toml"
+      - ".github/workflows/ruff.yml"
+      - "scripts/ci/check-ruff.sh"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.py"
+      - "ruff.toml"
+      - ".github/workflows/ruff.yml"
+      - "scripts/ci/check-ruff.sh"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ruff:
+    name: Ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/ruff-action@v4.1.0
+        with:
+          version: "0.15.20"
+          src: scripts

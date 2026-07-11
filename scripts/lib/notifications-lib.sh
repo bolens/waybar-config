@@ -23,7 +23,7 @@ kde_toggle_dnd() {
 kde_notifications_running() {
   pid=""
   for pid in $(pgrep -x plasmawindowed 2>/dev/null || true); do
-    if tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | rg -Fq 'org.kde.plasma.notifications'; then
+    if tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null | rg -Fq 'org.kde.plasma.notifications'; then
       printf '%s' "$pid"
       return 0
     fi
@@ -44,14 +44,15 @@ kde_open_settings() {
   local script_dir
   script_dir="$(dirname "${BASH_SOURCE[0]:-$0}")"
   if [ -f "$script_dir/waybar-settings.sh" ]; then
-    # shellcheck disable=SC1091
+    # shellcheck source=waybar-settings.sh
     . "$script_dir/waybar-settings.sh"
   fi
+  # shellcheck source=app-open-lib.sh
+  . "$WAYBAR_SCRIPTS/lib/app-open-lib.sh"
   local cmd
   cmd=$(waybar_settings_get '.apps.notifications_settings' 'systemsettings6 kcm_notifications')
   if [ -n "$cmd" ] && [ -x "$WAYBAR_SCRIPTS/tools/app-open.sh" ]; then
-    # shellcheck disable=SC2086
-    "$WAYBAR_SCRIPTS/tools/app-open.sh" $cmd
+    waybar_app_open "$cmd"
     return 0
   fi
   if command -v systemsettings6 >/dev/null 2>&1; then

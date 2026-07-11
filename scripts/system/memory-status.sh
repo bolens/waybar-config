@@ -56,4 +56,3 @@ elif [ "$mem_pct" -ge "$mem_warn" ] 2>/dev/null; then
 fi
 
 emit_waybar_json "$(printf '󰘚 %3d%%' "$mem_pct")" "$tooltip" "$class"
-

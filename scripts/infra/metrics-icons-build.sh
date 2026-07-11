@@ -119,8 +119,8 @@ printf '%s\n' "$json" | jq -c '.cpu, .gpu, .memory' | {
   read -r cpu_line
   read -r gpu_line
   read -r memory_line
-  
-  [ -n "$cpu_line" ] && printf '%s\n' "$cpu_line" > "$cache_dir/cpu-icon.json.tmp.$$" && mv -f "$cache_dir/cpu-icon.json.tmp.$$" "$cache_dir/cpu-icon.json"
-  [ -n "$gpu_line" ] && printf '%s\n' "$gpu_line" > "$cache_dir/gpu-icon.json.tmp.$$" && mv -f "$cache_dir/gpu-icon.json.tmp.$$" "$cache_dir/gpu-icon.json"
-  [ -n "$memory_line" ] && printf '%s\n' "$memory_line" > "$cache_dir/memory-icon.json.tmp.$$" && mv -f "$cache_dir/memory-icon.json.tmp.$$" "$cache_dir/memory-icon.json"
+
+  [ -n "$cpu_line" ] && printf '%s\n' "$cpu_line" >"$cache_dir/cpu-icon.json.tmp.$$" && mv -f "$cache_dir/cpu-icon.json.tmp.$$" "$cache_dir/cpu-icon.json"
+  [ -n "$gpu_line" ] && printf '%s\n' "$gpu_line" >"$cache_dir/gpu-icon.json.tmp.$$" && mv -f "$cache_dir/gpu-icon.json.tmp.$$" "$cache_dir/gpu-icon.json"
+  [ -n "$memory_line" ] && printf '%s\n' "$memory_line" >"$cache_dir/memory-icon.json.tmp.$$" && mv -f "$cache_dir/memory-icon.json.tmp.$$" "$cache_dir/memory-icon.json"
 }

@@ -15,7 +15,6 @@ stale_lock_ttl=120
 
 mkdir -p "$cache_dir"
 
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -160,7 +159,7 @@ perform_checks_and_output() {
 
   # Save cache
   tmp="$cache_file.tmp.$$"
-  printf '%s\n' "$json" > "$tmp"
+  printf '%s\n' "$json" >"$tmp"
   mv -f "$tmp" "$cache_file"
 
   # Signal waybar if running in background

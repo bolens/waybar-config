@@ -60,7 +60,6 @@ if echo "$clean_bar" | jq -e 'has("layer")' >/dev/null 2>&1; then
   fi
 fi
 
-
 # Assert theme configurations CSS tokens generated correctly
 css_tokens="$TEST_DIR/theme/tokens.generated.css"
 if [ -f "$css_tokens" ]; then

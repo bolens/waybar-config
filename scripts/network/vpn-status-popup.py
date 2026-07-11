@@ -32,17 +32,14 @@ Example:
     See Waybar config for custom/vpnstatus button integration.
 """
 
+import concurrent.futures
 import gi
 import json
+import os
 import re
 import shutil
 import subprocess
-
 import sys
-import os
-import threading
-import concurrent.futures
-from gi.repository import GLib
 
 DEBUG = True  # Set to True for debug output
 
@@ -51,22 +48,25 @@ if not DEBUG:
     devnull = os.open(os.devnull, os.O_WRONLY)
     os.dup2(devnull, 1)  # stdout
     os.dup2(devnull, 2)  # stderr
-    sys.stdout = open(os.devnull, 'w')
-    sys.stderr = open(os.devnull, 'w')
+    sys.stdout = open(os.devnull, "w")
+    sys.stderr = open(os.devnull, "w")
+
 
 def debug(msg):
     if DEBUG:
         print(f"[DEBUG] {msg}", file=sys.stderr)
 
-gi.require_version('Gtk', '3.0')
+
+gi.require_version("Gtk", "3.0")
 try:
-    gi.require_version('GtkLayerShell', '0.1')
-    from gi.repository import GtkLayerShell
+    gi.require_version("GtkLayerShell", "0.1")
+    from gi.repository import GtkLayerShell  # noqa: E402
+
     LAYER_SHELL_AVAILABLE = True
 except (ValueError, ImportError):
     LAYER_SHELL_AVAILABLE = False
 
-from gi.repository import Gtk, Gdk
+from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
 def have_cmd(cmd):
     result = shutil.which(cmd) is not None
@@ -345,19 +345,6 @@ def get_zerotier_status():
             'assigned_ips': 'n/a',
             'net_status': 'n/a',
         }
-def on_position_event(*args):
-    display = Gdk.Display.get_default()
-    seat = display.get_default_seat()
-    pointer = seat.get_pointer()
-    _, x, y = pointer.get_position()
-    monitor = display.get_monitor_at_point(x, y)
-    geo = monitor.get_geometry()
-    alloc = win.get_allocation()
-    win_width = alloc.width or 400
-    win_height = alloc.height or 200
-    px = min(max(geo.x, x - win_width // 2), geo.x + geo.width - win_width)
-    py = min(max(geo.y, y + 10), geo.y + geo.height - win_height)
-    win.move(px, py)
 def set_layer_shell_anchor(win):
     if not LAYER_SHELL_AVAILABLE:
         return

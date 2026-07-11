@@ -1,0 +1,34 @@
+/** @type {import('stylelint').Config} */
+export default {
+  extends: ["stylelint-config-standard"],
+  ignoreFiles: [
+    "**/*.generated.css",
+    "theme/rofi/**",
+    "node_modules/**",
+  ],
+  rules: {
+    // Waybar / cyberpunk theme uses free-form class and custom-property names.
+    "selector-class-pattern": null,
+    "selector-id-pattern": null,
+    "custom-property-pattern": null,
+    // Cascading theme sheets intentionally override earlier rules.
+    "no-descending-specificity": null,
+    // Prefer existing authored notation over mass rewrites.
+    "color-function-notation": null,
+    "color-function-alias-notation": null,
+    "color-hex-length": null,
+    "alpha-value-notation": null,
+    "hue-degree-notation": null,
+    "lightness-notation": null,
+    "import-notation": null,
+    "media-feature-range-notation": null,
+    "declaration-block-no-redundant-longhand-properties": null,
+    "declaration-block-single-line-max-declarations": null,
+    "rule-empty-line-before": null,
+    "comment-empty-line-before": null,
+    "custom-property-empty-line-before": null,
+    "declaration-empty-line-before": null,
+    "at-rule-empty-line-before": null,
+    "number-max-precision": null,
+  },
+};

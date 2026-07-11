@@ -69,11 +69,11 @@ enqueue_request() {
       else
         pending=$((pending + amount))
       fi
-      printf '%s\n' "$pending" > "$pending_adjust_file"
+      printf '%s\n' "$pending" >"$pending_adjust_file"
       ;;
     set)
       target=$(clamp "$value")
-      printf '%s\n' "$target" > "$pending_set_file"
+      printf '%s\n' "$target" >"$pending_set_file"
       rm -f "$pending_adjust_file"
       ;;
   esac
@@ -111,7 +111,7 @@ apply_backlight() {
     adjust)
       delta="$value"
       case "$delta" in
-        -*|+*) ;;
+        -* | +*) ;;
         *) delta="+$delta" ;;
       esac
       brightnessctl --class=backlight set "${delta}%" >/dev/null 2>&1

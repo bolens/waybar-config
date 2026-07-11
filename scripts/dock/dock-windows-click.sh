@@ -25,7 +25,7 @@ trim_title() {
   if [ "${#s}" -le "$max" ]; then
     printf '%s' "$s"
   else
-    printf '%s…' "${s:0:$((max-1))}"
+    printf '%s…' "${s:0:$((max - 1))}"
   fi
 }
 
@@ -61,9 +61,9 @@ if [ "$session" = "hyprland" ] && command -v hyprctl >/dev/null 2>&1 && command 
     if [ -f "$state_file" ]; then
       idx="$(cat "$state_file" 2>/dev/null || echo 0)"
     fi
-    idx=$(( (idx + 1) % ${#entries[@]} ))
+    idx=$(((idx + 1) % ${#entries[@]}))
     tmp_state="$state_file.tmp.$$"
-    printf '%s' "$idx" > "$tmp_state"
+    printf '%s' "$idx" >"$tmp_state"
     mv -f "$tmp_state" "$state_file"
     addr="${entries[$idx]%%|*}"
     hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1 || true
@@ -76,7 +76,6 @@ if [ "$session" = "hyprland" ] && command -v hyprctl >/dev/null 2>&1 && command 
     signal_dock
     exit 0
   fi
-
 
   choices=""
   mapping=""
@@ -92,7 +91,7 @@ if [ "$session" = "hyprland" ] && command -v hyprctl >/dev/null 2>&1 && command 
   # If only one window, select it immediately on click
   if [ "${#entries[@]}" -eq 1 ]; then
     addr="${entries[0]%%|*}"
-    echo "[DEBUG] Only one window, focusing $addr" >> /tmp/waybar-dock-debug.log
+    echo "[DEBUG] Only one window, focusing $addr" >>/tmp/waybar-dock-debug.log
     [ -n "$addr" ] && hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1 || true
     signal_dock
     exit 0
@@ -102,14 +101,14 @@ if [ "$session" = "hyprland" ] && command -v hyprctl >/dev/null 2>&1 && command 
   [ -n "${selected:-}" ] || exit 0
   # Use null-delimited mapping to find address
   addr=""
-  IFS= read -r -d '' -a maparr <<< "$mapping"
-  for ((i=0; i<${#maparr[@]}; i+=2)); do
+  IFS= read -r -d '' -a maparr <<<"$mapping"
+  for ((i = 0; i < ${#maparr[@]}; i += 2)); do
     if [ "${maparr[$i]}" = "$selected" ]; then
-      addr="${maparr[$((i+1))]}"
+      addr="${maparr[$((i + 1))]}"
       break
     fi
   done
-  echo "[DEBUG] Selected window: $addr ($selected)" >> /tmp/waybar-dock-debug.log
+  echo "[DEBUG] Selected window: $addr ($selected)" >>/tmp/waybar-dock-debug.log
   [ -n "$addr" ] && hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1 || true
   signal_dock
   exit 0
@@ -117,9 +116,9 @@ fi
 
 if [ "$session" = "kde" ] && command -v qdbus6 >/dev/null 2>&1; then
   raw="$(timeout 2 qdbus6 --literal org.kde.KWin /WindowsRunner org.kde.krunner1.Match windows 2>/dev/null || true)"
-  mapfile -t entries < <(printf '%s\n' "$raw" | \
-    sed -E 's/\[Argument: \(sssida\{sv\}\) /\n/g' | \
-    sed -n -E 's/^"(0_\{[^"]+\})",[[:space:]]*"([^"]+)",[[:space:]]*"[^"]*",[[:space:]]*100,[[:space:]]*1.*/\1|\2/p')
+  mapfile -t entries < <(printf '%s\n' "$raw" \
+    | sed -E 's/\[Argument: \(sssida\{sv\}\) /\n/g' \
+    | sed -n -E 's/^"(0_\{[^"]+\})",[[:space:]]*"([^"]+)",[[:space:]]*"[^"]*",[[:space:]]*100,[[:space:]]*1.*/\1|\2/p')
 
   if [ "${#entries[@]}" -eq 0 ]; then
     notify "No open windows"
@@ -131,9 +130,9 @@ if [ "$session" = "kde" ] && command -v qdbus6 >/dev/null 2>&1; then
     if [ -f "$state_file" ]; then
       idx="$(cat "$state_file" 2>/dev/null || echo 0)"
     fi
-    idx=$(( (idx + 1) % ${#entries[@]} ))
+    idx=$(((idx + 1) % ${#entries[@]}))
     tmp_state="$state_file.tmp.$$"
-    printf '%s' "$idx" > "$tmp_state"
+    printf '%s' "$idx" >"$tmp_state"
     mv -f "$tmp_state" "$state_file"
     id="${entries[$idx]%%|*}"
     timeout 2 qdbus6 org.kde.KWin /WindowsRunner org.kde.krunner1.Run "$id" "" >/dev/null 2>&1 || true
@@ -161,10 +160,10 @@ if [ "$session" = "kde" ] && command -v qdbus6 >/dev/null 2>&1; then
   selected="$(printf '%s' "$choices" | pick_menu || true)"
   [ -n "${selected:-}" ] || exit 0
   id=""
-  IFS= read -r -d '' -a maparr <<< "$mapping"
-  for ((i=0; i<${#maparr[@]}; i+=2)); do
+  IFS= read -r -d '' -a maparr <<<"$mapping"
+  for ((i = 0; i < ${#maparr[@]}; i += 2)); do
     if [ "${maparr[$i]}" = "$selected" ]; then
-      id="${maparr[$((i+1))]}"
+      id="${maparr[$((i + 1))]}"
       break
     fi
   done

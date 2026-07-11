@@ -108,7 +108,7 @@ def main():
         )
         data = json.loads(res.stdout)
         devices = data.get("blockdevices", [])
-    except Exception as e:
+    except Exception:
         devices = []
 
     targets = parse_devices(devices)
@@ -196,9 +196,7 @@ def main():
             sys.exit(0)
 
         action = selected_item["action"]
-        
-        # Helper path for waybar-signal
-        script_dir = os.path.dirname(os.path.realpath(__file__))
+
         # Match shell: WAYBAR_HOME → $XDG_CONFIG_HOME/waybar → ~/.config/waybar
         waybar_home = os.environ.get("WAYBAR_HOME") or os.path.join(
             os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "waybar"

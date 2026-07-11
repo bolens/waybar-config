@@ -126,12 +126,12 @@ show_wifi_popup() {
   theme=$(printf '%s' "$theme" | sed "s/WIDTH_PLACEHOLDER/$popup_width/; s/LINES_PLACEHOLDER/$popup_lines/; s/XOFF_PLACEHOLDER/$xoff/; s/YOFF_PLACEHOLDER/$yoff/")
 
   tmpdir=$(mktemp -d)
-  printf '%s' "$header_compact_masked" > "$tmpdir/header_compact_masked"
-  printf '%s' "$header_full_masked" > "$tmpdir/header_full_masked"
-  printf '%s' "$header_compact_clear" > "$tmpdir/header_compact_clear"
-  printf '%s' "$header_full_clear" > "$tmpdir/header_full_clear"
-  printf '%s' "$items" > "$tmpdir/items"
-  printf '%s' "$theme" > "$tmpdir/theme"
+  printf '%s' "$header_compact_masked" >"$tmpdir/header_compact_masked"
+  printf '%s' "$header_full_masked" >"$tmpdir/header_full_masked"
+  printf '%s' "$header_compact_clear" >"$tmpdir/header_compact_clear"
+  printf '%s' "$header_full_clear" >"$tmpdir/header_full_clear"
+  printf '%s' "$items" >"$tmpdir/items"
+  printf '%s' "$theme" >"$tmpdir/theme"
 
   # Rofi Custom Script Mode (Script-Modi):
   # Rofi allows external scripts to act as dynamic interactive menus.
@@ -139,11 +139,11 @@ show_wifi_popup() {
   # On each interaction (keypress, selection, hotkey), Rofi runs this script,
   # passing the return code in ROFI_RETV and previous state strings in ROFI_DATA.
   rofi -show wifi-popup \
-       -modi "wifi-popup:$0 __wifi_rofi $tmpdir $iface" \
-      -me-select-entry '' -me-accept-entry MousePrimary \
-      -kb-custom-1 "Alt+m" -kb-custom-2 "Alt+s" -kb-custom-3 "Alt+c" -kb-custom-4 "Alt+d" \
-       -theme-str "$theme" \
-       >/dev/null 2>&1 || true
+    -modi "wifi-popup:$0 __wifi_rofi $tmpdir $iface" \
+    -me-select-entry '' -me-accept-entry MousePrimary \
+    -kb-custom-1 "Alt+m" -kb-custom-2 "Alt+s" -kb-custom-3 "Alt+c" -kb-custom-4 "Alt+d" \
+    -theme-str "$theme" \
+    >/dev/null 2>&1 || true
 
   rm -rf "$tmpdir"
 }
@@ -191,7 +191,7 @@ wifi_popup_rofi() {
   sensitive_shown=0
   sensitive_armed=0
   clear_requested=0
-  
+
   # Restore UI state between Rofi executions:
   # Rofi starts a new process on each keypress. We preserve state by reading
   # and deserializing the ROFI_DATA variable (which we printed in a previous iteration).
@@ -241,25 +241,25 @@ wifi_popup_rofi() {
       clear_requested=1
       ;;
     1)
-    action="${ROFI_INFO:-}"
-    case "$action" in
-      connect:*)
-        sel_ssid=${action#connect:}
-        if [ -n "$sel_ssid" ] && [ "$sel_ssid" != "<hidden>" ]; then
-          cur_ssid=$(nmcli -t -f GENERAL.CONNECTION device show "$ui_iface" 2>/dev/null \
-            | awk -F: 'NR==1 { sub(/^[^:]*:/, ""); print; exit }') || true
-          [ "$cur_ssid" = "--" ] && cur_ssid=""
-          if [ "$sel_ssid" != "$cur_ssid" ]; then
-            notify-send "Wi-Fi" "Connecting to $sel_ssid…" 2>/dev/null || true
-            # Launch connection in background so Rofi is not blocked while waiting for handshakes
-            nmcli dev wifi connect "$sel_ssid" ifname "$ui_iface" >/dev/null 2>&1 &
+      action="${ROFI_INFO:-}"
+      case "$action" in
+        connect:*)
+          sel_ssid=${action#connect:}
+          if [ -n "$sel_ssid" ] && [ "$sel_ssid" != "<hidden>" ]; then
+            cur_ssid=$(nmcli -t -f GENERAL.CONNECTION device show "$ui_iface" 2>/dev/null \
+              | awk -F: 'NR==1 { sub(/^[^:]*:/, ""); print; exit }') || true
+            [ "$cur_ssid" = "--" ] && cur_ssid=""
+            if [ "$sel_ssid" != "$cur_ssid" ]; then
+              notify-send "Wi-Fi" "Connecting to $sel_ssid…" 2>/dev/null || true
+              # Launch connection in background so Rofi is not blocked while waiting for handshakes
+              nmcli dev wifi connect "$sel_ssid" ifname "$ui_iface" >/dev/null 2>&1 &
+            fi
           fi
-        fi
-        printf '\0quit\x1ftrue\n'
-        exit 0
-        ;;
-    esac
-    ;;
+          printf '\0quit\x1ftrue\n'
+          exit 0
+          ;;
+      esac
+      ;;
   esac
 
   header="$header_compact_masked"
@@ -376,12 +376,14 @@ get_external_ip() {
       "https://api64.ipify.org?format=text" \
       "https://ifconfig.me/ip" \
       "https://icanhazip.com" \
-      "https://checkip.amazonaws.com"
-    do
+      "https://checkip.amazonaws.com"; do
       ip=$(curl -fsS --connect-timeout 2 --max-time 4 "$url" 2>/dev/null \
         | tr -d '\r' \
         | awk 'NR==1 {gsub(/[[:space:]]/, ""); print; exit}')
-      [ -n "$ip" ] && { printf '%s' "$ip"; return 0; }
+      [ -n "$ip" ] && {
+        printf '%s' "$ip"
+        return 0
+      }
     done
   fi
 
@@ -390,12 +392,14 @@ get_external_ip() {
       "https://api64.ipify.org?format=text" \
       "https://ifconfig.me/ip" \
       "https://icanhazip.com" \
-      "https://checkip.amazonaws.com"
-    do
+      "https://checkip.amazonaws.com"; do
       ip=$(wget -qO- --timeout=4 "$url" 2>/dev/null \
         | tr -d '\r' \
         | awk 'NR==1 {gsub(/[[:space:]]/, ""); print; exit}')
-      [ -n "$ip" ] && { printf '%s' "$ip"; return 0; }
+      [ -n "$ip" ] && {
+        printf '%s' "$ip"
+        return 0
+      }
     done
   fi
 
@@ -430,7 +434,7 @@ get_external_ip_fast() {
     ip=$(get_external_ip || true)
     if [ -n "$ip" ]; then
       tmp_ip="$ip_cache.tmp.$$"
-      printf '%s' "$ip" > "$tmp_ip"
+      printf '%s' "$ip" >"$tmp_ip"
       mv -f "$tmp_ip" "$ip_cache"
     fi
   ) >/dev/null 2>&1 &
@@ -463,7 +467,7 @@ get_latency_fast() {
         | sed -n 's/.*time=\([0-9.]*\).*/\1 ms/p') || true
     fi
     tmp_lat="$lat_cache.tmp.$$"
-    printf '%s|%s' "$l" "$w" > "$tmp_lat"
+    printf '%s|%s' "$l" "$w" >"$tmp_lat"
     mv -f "$tmp_lat" "$lat_cache"
   ) >/dev/null 2>&1 &
 
@@ -471,8 +475,14 @@ get_latency_fast() {
 }
 
 # ---------------------------------------------------------------------------
-[ "$mode" = "__wifi_rofi" ] && { wifi_popup_rofi "$2" "${3:-wlan0}"; exit 0; }
-[ "$mode" = "manage" ] && { open_settings; exit 0; }
+[ "$mode" = "__wifi_rofi" ] && {
+  wifi_popup_rofi "$2" "${3:-wlan0}"
+  exit 0
+}
+[ "$mode" = "manage" ] && {
+  open_settings
+  exit 0
+}
 [ "$mode" = "toggle" ] && {
   if nmcli radio wifi | rg -Fq enabled; then
     nmcli radio wifi off
@@ -519,7 +529,7 @@ signal="${3:-}"
 band=""
 if [ -n "$chan" ]; then
   case "$chan" in
-    ''|*[!0-9]*) band="" ;;
+    '' | *[!0-9]*) band="" ;;
     *)
       if [ "$chan" -le 14 ]; then
         band="2.4GHz"
@@ -532,8 +542,7 @@ fi
 
 vpn_status="Off"
 if nmcli -t -f TYPE,STATE connection show --active 2>/dev/null \
-  | awk -F: '$1=="vpn" && $2=="activated" {found=1} END{exit found?0:1}'
-then
+  | awk -F: '$1=="vpn" && $2=="activated" {found=1} END{exit found?0:1}'; then
   vpn_status="On"
 fi
 

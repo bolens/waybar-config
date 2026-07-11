@@ -38,7 +38,7 @@ fi
 
 # Assert strip_jsonc_comments correctly strips inline/block comments but preserves URLs
 echo "Testing strip_jsonc_comments utility..."
-cat <<'JSON' > "$TEST_DIR/data/comment-test.jsonc"
+cat <<'JSON' >"$TEST_DIR/data/comment-test.jsonc"
 /*
  * Block comment here
  */
@@ -69,7 +69,7 @@ fi
 # Assert cache_file_age works correctly for existing and missing files
 echo "Testing cache_file_age utility..."
 cache_test_file="$TEST_DIR/data/cache-age-test.json"
-echo "test" > "$cache_test_file"
+echo "test" >"$cache_test_file"
 
 age_fresh=$(WAYBAR_HOME="$TEST_DIR" bash -c "
   . $TEST_DIR/scripts/lib/waybar-cache-helpers.sh
@@ -134,7 +134,7 @@ fi
 
 # Assert serve_cache_or_refresh works correctly
 echo "Testing serve_cache_or_refresh utility..."
-echo '{"text":"fresh"}' > "$cache_test_file"
+echo '{"text":"fresh"}' >"$cache_test_file"
 mkdir -p "$TEST_DIR/data/cache-test.lock.d"
 serve_out_fresh=$(WAYBAR_HOME="$TEST_DIR" bash -c "
   . $TEST_DIR/scripts/lib/waybar-cache-helpers.sh
@@ -181,13 +181,46 @@ done
 for script in services/i2pd/i2pd-status.sh services/sync/updates-status.sh services/apps/github-status.sh; do
   sheb="$(head -1 "$TEST_DIR/scripts/$script" || true)"
   case "$sheb" in
-    '#!/usr/bin/env bash'|'#!/bin/bash') ;;
+    '#!/usr/bin/env bash' | '#!/bin/bash') ;;
     *)
       echo "FAIL: $script must use bash shebang after sandbox copy (got: $sheb)" >&2
       fail=1
       ;;
   esac
 done
+
+# app-open-lib: whitespace split + no glob expand (replaces SC2086 call-site pattern)
+echo "Testing waybar_app_open argv splitting..."
+APP_OPEN_LOG="$TEST_DIR/app-open-calls.log"
+: >"$APP_OPEN_LOG"
+cat >"$TEST_DIR/scripts/tools/app-open.sh" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >>"$APP_OPEN_LOG"
+EOF
+chmod +x "$TEST_DIR/scripts/tools/app-open.sh"
+
+WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" bash -c '
+  . "$WAYBAR_SCRIPTS/lib/app-open-lib.sh"
+  waybar_app_open "  foo bar  baz  " || exit 1
+  # Glob char must stay literal (set -f during split)
+  touch "$WAYBAR_HOME/star.txt"
+  waybar_app_open "cmd *" || exit 1
+  waybar_app_open "" && exit 1
+  waybar_app_open "   " && exit 1
+  exit 0
+' || {
+  echo "FAIL: waybar_app_open unit checks failed" >&2
+  fail=1
+}
+
+if ! grep -Fxq 'foo bar baz' "$APP_OPEN_LOG"; then
+  echo "FAIL: waybar_app_open should trim and split. log=$(cat "$APP_OPEN_LOG")" >&2
+  fail=1
+fi
+if ! grep -Fxq 'cmd *' "$APP_OPEN_LOG"; then
+  echo "FAIL: waybar_app_open should not glob-expand *. log=$(cat "$APP_OPEN_LOG")" >&2
+  fail=1
+fi
 
 # Verify behavior when waybar-settings.jsonc is missing
 waybar_test_end

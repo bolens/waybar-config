@@ -39,13 +39,13 @@ write_cache_and_exit() {
 
 pick_icon() {
   case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
-    *mouse*|*g502*|*g903*|*g305*|*g603*|*g703*|*g900*|*viper*|*deathadder*|*basilisk*|*trackball*)
+    *mouse* | *g502* | *g903* | *g305* | *g603* | *g703* | *g900* | *viper* | *deathadder* | *basilisk* | *trackball*)
       printf '󰍽'
       ;;
-    *keyboard*|*g915*|*g613*|*keychron*)
+    *keyboard* | *g915* | *g613* | *keychron*)
       printf '󰌌'
       ;;
-    *controller*|*gamepad*|*joystick*|*xbox*|*dualsense*|*dualshock*|*nintendo*|*sony*)
+    *controller* | *gamepad* | *joystick* | *xbox* | *dualsense* | *dualshock* | *nintendo* | *sony*)
       printf '󰖺'
       ;;
     *)
@@ -91,11 +91,11 @@ if { [ -z "$best_source" ] || [ "${WAYBAR_DEVICE_BATTERY_PREFER_SOLAAR:-0}" = "1
     # Parse blocks: device name line then Battery: NN% or "Battery: N/A, ..."
     while IFS= read -r line; do
       case "$line" in
-        [0-9]*:*|*:)
+        [0-9]*:* | *:)
           # "1: Device Name" or similar
           cur_name=$(printf '%s' "$line" | sed -E 's/^[0-9]+:[[:space:]]*//; s/[[:space:]]+$//')
           ;;
-        *Battery:*|*battery:*)
+        *Battery:* | *battery:*)
           pct=$(printf '%s' "$line" | sed -nE 's/.*[Bb]attery:[[:space:]]*([0-9]+)%.*/\1/p')
           st="Discharging"
           printf '%s' "$line" | grep -qiE '(^|[^a-z])charging([^a-z]|$)' && st="Charging"

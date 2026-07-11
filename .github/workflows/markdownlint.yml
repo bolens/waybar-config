@@ -1,0 +1,51 @@
+name: "CI: Markdownlint"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.md"
+      - ".markdownlint-cli2.jsonc"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/markdownlint.yml"
+      - "scripts/ci/check-markdownlint.sh"
+      - "scripts/ci/ensure-pnpm.sh"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.md"
+      - ".markdownlint-cli2.jsonc"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/markdownlint.yml"
+      - "scripts/ci/check-markdownlint.sh"
+      - "scripts/ci/ensure-pnpm.sh"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  markdownlint:
+    name: Markdownlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Enable Corepack
+        run: corepack enable
+      - uses: pnpm/action-setup@v6.0.9
+        with:
+          package_json_file: package.json
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Lint Markdown
+        run: bash scripts/ci/check-markdownlint.sh

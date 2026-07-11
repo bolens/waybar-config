@@ -97,7 +97,10 @@ fi
 parts=()
 [ "$openrgb_running" -eq 1 ] && parts+=("OpenRGB")
 [ "$ckb_running" -eq 1 ] && parts+=("ckb")
-label=$(IFS=/; echo "${parts[*]}")
+label=$(
+  IFS=/
+  echo "${parts[*]}"
+)
 if [ -n "$openrgb_devices" ]; then
   text=$(printf '󰃠 %s' "$openrgb_devices")
 else

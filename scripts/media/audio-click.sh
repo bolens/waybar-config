@@ -77,7 +77,7 @@ open_sound_selector() {
     id=$(echo "$clean_line" | sed -E 's/^([0-9]+)\..*/\1/')
     name=$(echo "$clean_line" | sed -E 's/^[0-9]+\.\s*(.*)/\1/')
     name=$(echo "$name" | sed -E -e 's/\[vol:[^]]+\]//g' -e 's/\[Audio\/Sink\]//g' -e 's/[[:space:]]+$//')
-    
+
     if [ "$is_active" -eq 1 ]; then
       list_items="${list_items}* ${name} (ID: ${id})\n"
     else
@@ -116,4 +116,3 @@ case "$mode" in
   wiremix) open_wiremix ;;
   *) open_sound_settings ;;
 esac
-

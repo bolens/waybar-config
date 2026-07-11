@@ -5,7 +5,7 @@ set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
-# shellcheck disable=SC1091
+# shellcheck source=../lib/waybar-settings.sh
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
 target="${1:-next}"
@@ -45,8 +45,8 @@ list_profiles() {
   fi
   printf '%s\n' "$raw" | sed '/^$/d' | grep -viE 'error|asusd|running|help|usage|available|profiles?:' \
     | while IFS= read -r line; do
-        printf '%s\n' "$(normalize_profile "$line")"
-      done | awk 'NF'
+      printf '%s\n' "$(normalize_profile "$line")"
+    done | awk 'NF'
 }
 
 get_current() {
@@ -114,7 +114,7 @@ case "$target" in
       target=next
     fi
     ;;
-  next|prev)
+  next | prev)
     ;;
   *)
     # Named profile (from rofi or binds)
@@ -136,7 +136,7 @@ if [ "$target" = "next" ] || [ "$target" = "prev" ]; then
     if [ "$idx" -lt 0 ]; then
       idx=0
     else
-      idx=$(( (idx + 1) % count ))
+      idx=$(((idx + 1) % count))
     fi
     # Prefer native next when direction is next and list matches asusctl order
     if [ "$target" = "next" ] && cycle_next; then
@@ -148,7 +148,7 @@ if [ "$target" = "next" ] || [ "$target" = "prev" ]; then
     if [ "$idx" -lt 0 ]; then
       idx=$((count - 1))
     else
-      idx=$(( (idx - 1 + count) % count ))
+      idx=$(((idx - 1 + count) % count))
     fi
   fi
   target="${profiles[$idx]}"

@@ -48,7 +48,7 @@ else
   # Show rofi menu to select device
   selected_dev=$(printf "%s\n" "${device_names[@]}" | rofi -dmenu -p "Select Device" -theme-str "window {width: ${kde_width}px;}")
   [ -z "$selected_dev" ] && exit 0
-  
+
   for i in "${!device_names[@]}"; do
     if [ "${device_names[$i]}" = "$selected_dev" ]; then
       target_device_id="${device_ids[$i]}"

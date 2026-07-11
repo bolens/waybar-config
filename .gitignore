@@ -17,6 +17,10 @@ Thumbs.db
 *.orig
 *.lock.d/
 
+# Node (stylelint / markdownlint)
+node_modules/
+.pnpm-store/
+
 # Local env / credentials (belt-and-suspenders; secrets live under data/)
 .env
 .env.*

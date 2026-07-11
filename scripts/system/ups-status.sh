@@ -21,7 +21,6 @@ mkdir -p "$cache_dir"
 ups_warn=25
 ups_crit=10
 
-
 format_runtime() {
   raw="$1"
 

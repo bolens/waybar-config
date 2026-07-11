@@ -1,0 +1,9 @@
+# Gitleaks — ignore local-only secret overlays (gitignored; never commit).
+title = "waybar"
+
+[allowlist]
+description = "Local secret overlays and documented examples"
+paths = [
+  '''(^|/)data/waybar-secrets\.jsonc?$''',
+  '''(^|/)data/waybar-secrets\.example\.jsonc$''',
+]

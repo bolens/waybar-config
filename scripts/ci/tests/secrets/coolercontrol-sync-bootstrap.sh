@@ -25,8 +25,8 @@ rm -f "$TEST_DIR/data/waybar-secrets.jsonc"
 set +e
 out_cc_fail=$(
   CC_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  "$CC_SYNC" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    "$CC_SYNC" 2>&1
 )
 rc_cc_fail=$?
 set -e
@@ -49,8 +49,8 @@ JSON
 set +e
 out_cc_chg=$(
   CC_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  "$CC_SYNC" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    "$CC_SYNC" 2>&1
 )
 rc_cc_chg=$?
 set -e
@@ -74,10 +74,10 @@ JSON
 export WAYBAR_SCRIPTS=/root/.config/waybar/scripts
 out_cc=$(
   CC_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  CC_UI_PASS_ENV="cc-test-ui-pass-BBBB" \
-  CC_TOKEN_ENV="cc_testtoken0000000000000000000000" \
-  "$CC_SYNC" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    CC_UI_PASS_ENV="cc-test-ui-pass-BBBB" \
+    CC_TOKEN_ENV="cc_testtoken0000000000000000000000" \
+    "$CC_SYNC" 2>&1
 ) || {
   echo "FAIL: coolercontrol-set-ui-pass exited non-zero: $out_cc" >&2
   fail=1
@@ -120,8 +120,8 @@ waybar_test_assert_mode "$TEST_DIR/data/waybar-secrets.jsonc" 600 "coolercontrol
 # Idempotent re-run with credentials already present
 out_cc2=$(
   CC_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  "$CC_SYNC" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    "$CC_SYNC" 2>&1
 )
 if ! grep -q 'credentials present\|unchanged\|Done' <<<"$out_cc2"; then
   echo "FAIL: coolercontrol re-run should be idempotent. Output: $out_cc2" >&2
@@ -136,9 +136,9 @@ fi
 printf '{}\n' >"$TEST_DIR/data/waybar-secrets.jsonc"
 out_tok=$(
   CC_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  CC_TOKEN_ENV="cc_onlytoken1111111111111111111111" \
-  "$CC_SYNC" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    CC_TOKEN_ENV="cc_onlytoken1111111111111111111111" \
+    "$CC_SYNC" 2>&1
 ) || {
   echo "FAIL: token-only bootstrap failed: $out_tok" >&2
   fail=1
@@ -162,9 +162,9 @@ out_tok=$(
 printf '{}\n' >"$TEST_DIR/data/waybar-secrets.jsonc"
 out_pass=$(
   CC_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  CC_UI_PASS_ENV="cc-pass-only-CCCC" \
-  "$CC_SYNC" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    CC_UI_PASS_ENV="cc-pass-only-CCCC" \
+    "$CC_SYNC" 2>&1
 ) || {
   echo "FAIL: pass-only bootstrap failed: $out_pass" >&2
   fail=1
@@ -187,9 +187,9 @@ out_pass=$(
 # Partial update: add token when pass already present
 out_partial=$(
   CC_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  CC_TOKEN_ENV="cc_partialtoken2222222222222222222" \
-  "$CC_SYNC" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    CC_TOKEN_ENV="cc_partialtoken2222222222222222222" \
+    "$CC_SYNC" 2>&1
 ) || {
   echo "FAIL: partial token update failed: $out_partial" >&2
   fail=1

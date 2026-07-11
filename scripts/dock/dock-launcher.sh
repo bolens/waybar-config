@@ -14,7 +14,7 @@ fi
 
 run_detached() {
   if command -v setsid >/dev/null 2>&1; then
-    setsid -f "$@" >/dev/null 2>&1 < /dev/null &
+    setsid -f "$@" >/dev/null 2>&1 </dev/null &
     return
   fi
   "$@" >/dev/null 2>&1 &
@@ -37,7 +37,7 @@ case "$action" in
     is_running="false"
     if [ -n "$proc_list" ] && [ "$proc_list" != "null" ]; then
       # Split comma-separated process names
-      IFS=',' read -ra proc_arr <<< "$proc_list"
+      IFS=',' read -ra proc_arr <<<"$proc_list"
       for name in "${proc_arr[@]}"; do
         if [ -n "$name" ] && pgrep -x "$name" >/dev/null 2>&1; then
           is_running="true"
@@ -63,7 +63,7 @@ case "$action" in
       on-click) click_action="left" ;;
       on-click-middle) click_action="middle" ;;
       on-click-right) click_action="right" ;;
-      left|middle|right) click_action="$field" ;;
+      left | middle | right) click_action="$field" ;;
       *)
         exit 1
         ;;

@@ -44,7 +44,7 @@ while IFS= read -r drawer_key; do
     echo "$clean_drawers" | jq --arg k "$drawer_key" '.[$k]' >&2
     fail=1
   fi
-done <<< "$drawer_keys"
+done <<<"$drawer_keys"
 if [ "$drawer_count" -lt 8 ]; then
   echo "FAIL: expected at least 8 drawer modules, found $drawer_count" >&2
   fail=1
@@ -64,22 +64,22 @@ fi
 
 # Explicit negative cases: these shapes must be rejected by validate_custom_module_configs
 drawer_bad_dir=$(mktemp -d)
-printf '%s\n' '{"custom/desk-drawer":{"format":"X","tooltip":true,"return-type":"json","interval":"once","exec":"printf hi"}}' > "$drawer_bad_dir/exec.jsonc"
+printf '%s\n' '{"custom/desk-drawer":{"format":"X","tooltip":true,"return-type":"json","interval":"once","exec":"printf hi"}}' >"$drawer_bad_dir/exec.jsonc"
 if validate_custom_module_configs "$drawer_bad_dir/exec.jsonc" >/dev/null 2>&1; then
   echo "FAIL: validate_custom_module_configs should reject drawer modules that use exec" >&2
   fail=1
 fi
-printf '%s\n' '{"custom/desk-drawer":{"format":"X","tooltip":"Session controls · click to expand"}}' > "$drawer_bad_dir/string-tip.jsonc"
+printf '%s\n' '{"custom/desk-drawer":{"format":"X","tooltip":"Session controls · click to expand"}}' >"$drawer_bad_dir/string-tip.jsonc"
 if validate_custom_module_configs "$drawer_bad_dir/string-tip.jsonc" >/dev/null 2>&1; then
   echo "FAIL: validate_custom_module_configs should reject drawer modules with string tooltip" >&2
   fail=1
 fi
-printf '%s\n' '{"custom/desk-drawer":{"format":"X","tooltip":true,"tooltip-format":"Hardware\nContains: CPU\nClick to expand"}}' > "$drawer_bad_dir/expand.jsonc"
+printf '%s\n' '{"custom/desk-drawer":{"format":"X","tooltip":true,"tooltip-format":"Hardware\nContains: CPU\nClick to expand"}}' >"$drawer_bad_dir/expand.jsonc"
 if validate_custom_module_configs "$drawer_bad_dir/expand.jsonc" >/dev/null 2>&1; then
   echo "FAIL: validate_custom_module_configs should reject 'Click to expand' on drawers" >&2
   fail=1
 fi
-printf '%s\n' '{"custom/desk-drawer":{"format":"X","tooltip":true,"tooltip-format":"Session controls\nContains: Notifications\nClick to toggle"}}' > "$drawer_bad_dir/ok.jsonc"
+printf '%s\n' '{"custom/desk-drawer":{"format":"X","tooltip":true,"tooltip-format":"Session controls\nContains: Notifications\nClick to toggle"}}' >"$drawer_bad_dir/ok.jsonc"
 if ! validate_custom_module_configs "$drawer_bad_dir/ok.jsonc" >/dev/null 2>&1; then
   echo "FAIL: validate_custom_module_configs rejected a valid static drawer tooltip config" >&2
   fail=1
@@ -92,10 +92,11 @@ waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '.bars.lay
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '.module_intervals.network_bandwidth == 5' "expected module_intervals.network_bandwidth == 5"
 
 # jsonc overwrites json (SoT)
-printf '%s\n' '{"bars":{"layer":"top","tooltip":false},"module_intervals":{"weather":123}}' > "$TEST_DIR/data/waybar-settings.json"
-printf '%s\n' '{"bars":{"layer":"overlay","tooltip":true},"module_intervals":{"weather":1800}}' > "$TEST_DIR/data/waybar-settings.jsonc"
+printf '%s\n' '{"bars":{"layer":"top","tooltip":false},"module_intervals":{"weather":123}}' >"$TEST_DIR/data/waybar-settings.json"
+printf '%s\n' '{"bars":{"layer":"overlay","tooltip":true},"module_intervals":{"weather":1800}}' >"$TEST_DIR/data/waybar-settings.jsonc"
 WAYBAR_HOME="$TEST_DIR" bash -c ". '$TEST_DIR/scripts/lib/waybar-settings.sh'; waybar_settings_get '.bars.layer' 'missing'" >/tmp/waybar-sot-layer.$$
-sot_layer=$(cat /tmp/waybar-sot-layer.$$); rm -f /tmp/waybar-sot-layer.$$
+sot_layer=$(cat /tmp/waybar-sot-layer.$$)
+rm -f /tmp/waybar-sot-layer.$$
 if [ "$sot_layer" != "overlay" ]; then
   echo "FAIL: jsonc SoT did not win over stale json (got layer=$sot_layer)" >&2
   fail=1

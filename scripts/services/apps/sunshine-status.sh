@@ -40,7 +40,7 @@ fi
 if [ "$service_active" -eq 0 ]; then
   json=$(emit_waybar_json "󰕧 Off" "Sunshine game streaming host is offline" "offline")
   printf '%s\n' "$json"
-  printf '%s\n' "$json" > "$cache_file"
+  printf '%s\n' "$json" >"$cache_file"
   exit 0
 fi
 
@@ -86,9 +86,8 @@ json=$(emit_waybar_json "$text" "$tooltip" "$class")
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"
 
 # Signal Waybar to refresh the module UI
 pkill -x -RTMIN+23 waybar >/dev/null 2>&1 || true
-

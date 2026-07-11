@@ -70,7 +70,7 @@ if [ "$process_active" -eq 0 ]; then
   text="󰓎 Off"
   class="offline"
   tooltip=$(printf 'Stream Deck UI\n\nDaemon: Offline\nConnected Hardware: %s\n\nLeft: start daemon · Right: open settings UI · Middle: refresh' \
-    "$( [ -n "$devices" ] && printf '%s' "$devices" || printf 'None' )")
+    "$([ -n "$devices" ] && printf '%s' "$devices" || printf 'None')")
 elif [ "$device_count" -eq 0 ]; then
   text="󰓎 No Dev"
   class="warning"
@@ -96,9 +96,8 @@ json=$(emit_waybar_json "$text" "$tooltip" "$class")
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"
 
 # Signal Waybar to refresh the module UI
 pkill -x -RTMIN+24 waybar >/dev/null 2>&1 || true
-

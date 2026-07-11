@@ -59,7 +59,7 @@ for file in "${files[@]}"; do
 done
 
 # Resolve $WAYBAR_HOME / $HOME script refs and ensure targets exist (catches migration misses).
-if ! python3 - "$WAYBAR_HOME" <<'PY'
+if ! python3 - "$WAYBAR_HOME" <<'PY'; then
 import os, re, sys
 from pathlib import Path
 
@@ -111,7 +111,6 @@ if missing:
 print(f"ok resolved {len(checked)} script path refs under {home}")
 sys.exit(0)
 PY
-then
   fail=1
 fi
 

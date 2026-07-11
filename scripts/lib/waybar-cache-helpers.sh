@@ -25,7 +25,10 @@ waybar_module_interval() {
 
 cache_file_age() {
   file="$1"
-  [ -f "$file" ] || { printf '%s' 999999; return; }
+  [ -f "$file" ] || {
+    printf '%s' 999999
+    return
+  }
   if [ -n "${BASH_VERSION:-}" ] && [ -n "${EPOCHSECONDS:-}" ]; then
     now="$EPOCHSECONDS"
   else
@@ -136,7 +139,7 @@ refresh_in_background() {
     trap cleanup_lock EXIT INT TERM
     WAYBAR_BACKGROUND=1 "$local_script_path" --refresh >/dev/null 2>&1 || true
   ) >/dev/null 2>&1 &
-  printf '%s\n' "$!" > "$local_lock_dir/pid"
+  printf '%s\n' "$!" >"$local_lock_dir/pid"
 }
 
 _get_config_override() {
@@ -170,7 +173,7 @@ detect_clock_format() {
   if command -v locale >/dev/null 2>&1; then
     t_fmt=$(locale t_fmt 2>/dev/null || true)
     case "$t_fmt" in
-      *%r*|*%I*|*%p*)
+      *%r* | *%I* | *%p*)
         printf '12\n'
         return
         ;;
@@ -188,11 +191,11 @@ detect_date_format() {
   if command -v locale >/dev/null 2>&1; then
     d_fmt=$(locale d_fmt 2>/dev/null || true)
     case "$d_fmt" in
-      *%d*%m*|*%d*%b*|*%d*%B*|*%e*%m*|*%e*%b*|*%e*%B*)
+      *%d*%m* | *%d*%b* | *%d*%B* | *%e*%m* | *%e*%b* | *%e*%B*)
         printf 'day-first\n'
         return
         ;;
-      *%m*%d*|*%b*%d*|*%B*%d*|*%m*%e*|*%b*%e*|*%B*%e*)
+      *%m*%d* | *%b*%d* | *%B*%d* | *%m*%e* | *%b*%e* | *%B*%e*)
         printf 'month-first\n'
         return
         ;;
@@ -219,7 +222,7 @@ detect_weather_unit() {
   fi
   for var in "${LC_MEASUREMENT:-}" "${LANG:-}"; do
     case "$var" in
-      *_US*|*_LR*|*_MM*)
+      *_US* | *_LR* | *_MM*)
         printf 'F\n'
         return
         ;;
@@ -231,13 +234,13 @@ detect_weather_unit() {
 format_locale_datetime() {
   timestamp="$1"
   mode="${2:-long}"
-  
+
   hr=$(detect_clock_format)
   dt=$(detect_date_format)
-  
+
   time_fmt="%H:%M"
   [ "$hr" = "12" ] && time_fmt="%I:%M %p"
-  
+
   if [ "$dt" = "day-first" ]; then
     date_long="%e %B %Y"
     date_short="%d/%m/%Y"
@@ -250,7 +253,7 @@ format_locale_datetime() {
     time-only)
       fmt="$time_fmt"
       ;;
-    date-only|date-only-long)
+    date-only | date-only-long)
       fmt="$date_long"
       ;;
     date-only-short)
@@ -263,17 +266,17 @@ format_locale_datetime() {
       fmt="$date_long $time_fmt"
       ;;
   esac
-  
+
   date -d "@$timestamp" "+$fmt" 2>/dev/null || date -r "$timestamp" "+$fmt" 2>/dev/null || printf "%s" "$timestamp"
 }
 
 format_locale_temp() {
   temp_c="$1"
   mode="${2:-both}"
-  
+
   unit=$(detect_weather_unit)
   temp_f=$((temp_c * 9 / 5 + 32))
-  
+
   if [ "$mode" = "short" ]; then
     if [ "$unit" = "F" ]; then
       printf '%s°F\n' "$temp_f"
@@ -298,7 +301,7 @@ detect_first_weekday() {
   if command -v locale >/dev/null 2>&1; then
     w1st=$(locale week-1stday 2>/dev/null || true)
     fwd=$(locale first_weekday 2>/dev/null || true)
-    
+
     if [ -n "$w1st" ] && [ -n "$fwd" ]; then
       if [ "$w1st" = "19971130" ]; then
         if [ "$fwd" = "1" ]; then
@@ -316,16 +319,16 @@ detect_first_weekday() {
       fi
     fi
   fi
-  
+
   for var in "${LC_TIME:-}" "${LANG:-}"; do
     case "$var" in
-      *_US*|*_CA*|*_IL*|*_IN*|*_JM*|*_JP*|*_KR*|*_MX*|*_PH*|*_SG*|*_TH*|*_TW*)
+      *_US* | *_CA* | *_IL* | *_IN* | *_JM* | *_JP* | *_KR* | *_MX* | *_PH* | *_SG* | *_TH* | *_TW*)
         printf '0\n'
         return
         ;;
     esac
   done
-  
+
   printf '1\n'
 }
 
@@ -499,8 +502,6 @@ EOF
   printf '%s\n' "$json"
 
   local tmp_cache="$cache_file.tmp.$$"
-  printf '%s\n' "$json" > "$tmp_cache"
+  printf '%s\n' "$json" >"$tmp_cache"
   mv -f "$tmp_cache" "$cache_file"
 }
-
-

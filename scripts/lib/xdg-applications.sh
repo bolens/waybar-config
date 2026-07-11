@@ -22,8 +22,7 @@ xdg_application_dirs() {
     "${data_dirs[@]/%//applications}" \
     "/var/lib/flatpak/exports/share/applications" \
     "${XDG_DATA_HOME:-$HOME/.local/share}/flatpak/exports/share/applications" \
-    "$HOME/.local/share/flatpak/exports/share/applications"
-  do
+    "$HOME/.local/share/flatpak/exports/share/applications"; do
     [ -n "$d" ] || continue
     # Empty XDG_DATA_DIRS segment becomes "/applications" — skip that junk path.
     [ "$d" = "/applications" ] && continue

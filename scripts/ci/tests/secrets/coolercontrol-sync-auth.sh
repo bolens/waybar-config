@@ -21,13 +21,13 @@ cp "$TEST_DIR/data/waybar-secrets.example.jsonc" "$SUDO_FAKE/.config/waybar/data
 chmod +x "$SUDO_FAKE/.config/waybar/scripts/services/coolercontrol/"*.sh
 out_sudo=$(
   CC_TEST_MODE=1 \
-  HOME=/root \
-  WAYBAR_HOME='' \
-  SUDO_USER=fake-cc-user \
-  CC_TEST_SUDO_HOME="$SUDO_FAKE" \
-  WAYBAR_SCRIPTS=/root/.config/waybar/scripts \
-  CC_UI_PASS_ENV="cc-sudo-pass-DDDD" \
-  "$SUDO_FAKE/.config/waybar/scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh" 2>&1
+    HOME=/root \
+    WAYBAR_HOME='' \
+    SUDO_USER=fake-cc-user \
+    CC_TEST_SUDO_HOME="$SUDO_FAKE" \
+    WAYBAR_SCRIPTS=/root/.config/waybar/scripts \
+    CC_UI_PASS_ENV="cc-sudo-pass-DDDD" \
+    "$SUDO_FAKE/.config/waybar/scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh" 2>&1
 ) || {
   echo "FAIL: sudo-home resolution bootstrap failed: $out_sudo" >&2
   fail=1
@@ -97,10 +97,10 @@ waybar_test_write_secrets <<'JSON'
 JSON
 out_auth=$(
   PATH="$CC_CURL_FAKE:/usr/bin:/bin" \
-  CC_TEST_MODE=1 \
-  CC_FORCE_AUTH_CHECK=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  "$CC_SYNC" 2>&1
+    CC_TEST_MODE=1 \
+    CC_FORCE_AUTH_CHECK=1 \
+    WAYBAR_HOME="$TEST_DIR" \
+    "$CC_SYNC" 2>&1
 ) || {
   echo "FAIL: forced auth check failed: $out_auth" >&2
   fail=1
@@ -132,10 +132,10 @@ waybar_test_write_secrets <<'JSON'
 JSON
 out_auth_tok=$(
   PATH="$CC_CURL_FAKE:/usr/bin:/bin" \
-  CC_TEST_MODE=1 \
-  CC_FORCE_AUTH_CHECK=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  "$CC_SYNC" 2>&1
+    CC_TEST_MODE=1 \
+    CC_FORCE_AUTH_CHECK=1 \
+    WAYBAR_HOME="$TEST_DIR" \
+    "$CC_SYNC" 2>&1
 ) || {
   echo "FAIL: bearer auth check failed: $out_auth_tok" >&2
   fail=1
@@ -163,10 +163,10 @@ waybar_test_write_secrets <<'JSON'
 JSON
 out_auth_basic=$(
   PATH="$CC_CURL_FAKE:/usr/bin:/bin" \
-  CC_TEST_MODE=1 \
-  CC_FORCE_AUTH_CHECK=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  "$CC_SYNC" 2>&1
+    CC_TEST_MODE=1 \
+    CC_FORCE_AUTH_CHECK=1 \
+    WAYBAR_HOME="$TEST_DIR" \
+    "$CC_SYNC" 2>&1
 ) || {
   echo "FAIL: basic auth check failed: $out_auth_basic" >&2
   fail=1
@@ -240,10 +240,10 @@ waybar_test_write_secrets <<'JSON'
 JSON
 out_auth_fb=$(
   PATH="$CC_CURL_FAKE:/usr/bin:/bin" \
-  CC_TEST_MODE=1 \
-  CC_FORCE_AUTH_CHECK=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  "$CC_SYNC" 2>&1
+    CC_TEST_MODE=1 \
+    CC_FORCE_AUTH_CHECK=1 \
+    WAYBAR_HOME="$TEST_DIR" \
+    "$CC_SYNC" 2>&1
 ) || {
   echo "FAIL: bearer→ui_pass fallback auth check failed: $out_auth_fb" >&2
   fail=1

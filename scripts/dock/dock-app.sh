@@ -11,8 +11,10 @@ ACTION="${2:-}"
 
 script_dir="$(CDPATH='' cd -- "$(dirname "$0")" && pwd)"
 manifest="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/data/dock-apps.json"
-# shellcheck source=compositor-session.sh
+# shellcheck source=../lib/compositor-session.sh
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
+# shellcheck source=../lib/app-open-lib.sh
+. "$WAYBAR_SCRIPTS/lib/app-open-lib.sh"
 
 notify() {
   command -v notify-send >/dev/null 2>&1 && notify-send "Dock" "$1" || true
@@ -45,8 +47,7 @@ run_launch() {
     return
   fi
   if [ -n "$cmd" ]; then
-    # shellcheck disable=SC2086
-    "$WAYBAR_SCRIPTS/tools/app-open.sh" $cmd
+    waybar_app_open "$cmd"
     return
   fi
   notify "No launch command configured for $APP_ID"
@@ -147,9 +148,9 @@ kde_window_entries() {
     if class_matches "$title" || class_matches "$app"; then
       printf '%s\t%s\t%s\n' "$id" "$title" "$app"
     fi
-  done < <(printf '%s\n' "$raw" | \
-    sed -E 's/\[Argument: \(sssida\{sv\}\) /\n/g' | \
-    sed -n -E 's/^"(0_\{[^"]+\})",[[:space:]]*"([^"]*)",[[:space:]]*"([^"]*)",[[:space:]]*100,[[:space:]]*1.*/\1\t\2\t\3/p')
+  done < <(printf '%s\n' "$raw" \
+    | sed -E 's/\[Argument: \(sssida\{sv\}\) /\n/g' \
+    | sed -n -E 's/^"(0_\{[^"]+\})",[[:space:]]*"([^"]*)",[[:space:]]*"([^"]*)",[[:space:]]*100,[[:space:]]*1.*/\1\t\2\t\3/p')
 }
 
 list_windows_kde() {
@@ -224,7 +225,7 @@ close_kde() {
   [ "$before" -gt 0 ] || return 1
 
   local id title app
-  IFS=$'\t' read -r id title app <<< "$(kde_window_entries | head -1)"
+  IFS=$'\t' read -r id title app <<<"$(kde_window_entries | head -1)"
 
   classes_json="$(kde_close_match_classes "$app")"
   kde_close_via_script "$classes_json" || true
@@ -273,7 +274,7 @@ close_window() {
 
 session="$(detect_compositor)"
 case "$session" in
-  hyprland|kde) ;;
+  hyprland | kde) ;;
   *)
     notify "Unsupported compositor session"
     exit 1

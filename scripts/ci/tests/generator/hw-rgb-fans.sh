@@ -32,10 +32,10 @@ mkdir -p "$RGB_CACHE" "$TEST_DIR/rgb-bin"
 # Ensure openrgb/ckb not found via empty bin first on PATH, no pgrep matches for our fake
 rgb_idle=$(
   PATH="/usr/bin:/bin" \
-  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$RGB_CACHE" \
-  WAYBAR_OPENRGB_BIN="$TEST_DIR/rgb-bin/missing" \
-  WAYBAR_RGB_FORCE_IDLE=1 \
-  "$TEST_DIR/scripts/system/rgb-status.sh" --refresh
+    WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$RGB_CACHE" \
+    WAYBAR_OPENRGB_BIN="$TEST_DIR/rgb-bin/missing" \
+    WAYBAR_RGB_FORCE_IDLE=1 \
+    "$TEST_DIR/scripts/system/rgb-status.sh" --refresh
 )
 waybar_test_assert_jq "$rgb_idle" '.class == "disconnected" or (.class|tostring|test("disconnected"))' "idle rgb should disconnect: $rgb_idle"
 cat >"$TEST_DIR/rgb-bin/openrgb" <<'EOF'
@@ -46,10 +46,10 @@ EOF
 chmod +x "$TEST_DIR/rgb-bin/openrgb"
 rgb_on=$(
   PATH="/usr/bin:/bin" \
-  WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$RGB_CACHE" \
-  WAYBAR_OPENRGB_BIN="$TEST_DIR/rgb-bin/openrgb" \
-  WAYBAR_RGB_FORCE_IDLE=0 \
-  "$TEST_DIR/scripts/system/rgb-status.sh" --refresh
+    WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$RGB_CACHE" \
+    WAYBAR_OPENRGB_BIN="$TEST_DIR/rgb-bin/openrgb" \
+    WAYBAR_RGB_FORCE_IDLE=0 \
+    "$TEST_DIR/scripts/system/rgb-status.sh" --refresh
 )
 waybar_test_assert_jq "$rgb_on" '(.text | test("2")) and (.tooltip | test("OpenRGB"))' "rgb with openrgb list should show 2 devices: $rgb_on"
 
@@ -68,7 +68,7 @@ JSON
 cp "$AMD_CACHE/waybar/system-metrics.json" "$AMD_CACHE/system-metrics.json"
 icons=$(
   XDG_CACHE_HOME="$AMD_CACHE" WAYBAR_HOME="$TEST_DIR" \
-  bash -c '
+    bash -c '
     cache_dir="$XDG_CACHE_HOME"
     metrics=$(cat "$cache_dir/system-metrics.json")
     export metrics
@@ -105,9 +105,9 @@ chmod +x "$SOL_BIN/solaar"
 # Prefer solaar even if sysfs exists:
 batt_out=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$SOL_CACHE" \
-  WAYBAR_SOLAAR_BIN="$SOL_BIN/solaar" \
-  WAYBAR_DEVICE_BATTERY_PREFER_SOLAAR=1 \
-  "$TEST_DIR/scripts/services/devices/device-battery-status.sh" --refresh
+    WAYBAR_SOLAAR_BIN="$SOL_BIN/solaar" \
+    WAYBAR_DEVICE_BATTERY_PREFER_SOLAAR=1 \
+    "$TEST_DIR/scripts/services/devices/device-battery-status.sh" --refresh
 )
 waybar_test_assert_jq "$batt_out" '(.text | test("18")) and (.tooltip | test("solaar")) and .class == "warning"' "solaar battery fallback expected 18% warning: $batt_out"
 
@@ -129,8 +129,8 @@ rm -f "$FAN_CACHE"/waybar/asusec-path.txt "$FAN_CACHE"/waybar/corsairpsu-path.tx
   "$FAN_CACHE"/waybar/nct6799-path.txt "$FAN_CACHE"/waybar/fans-status.json
 fan_dedupe=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$FAN_CACHE" \
-  WAYBAR_HWMON_ROOT="$FAN_HWMON" \
-  "$TEST_DIR/scripts/system/fans-status.sh" --refresh
+    WAYBAR_HWMON_ROOT="$FAN_HWMON" \
+    "$TEST_DIR/scripts/system/fans-status.sh" --refresh
 )
 waybar_test_assert_jq "$fan_dedupe" '(.text | test("1525")) and (.tooltip | test("CPU_Opt"))' "fans should show asusec CPU RPM: $fan_dedupe"
 waybar_test_assert_jq "$fan_dedupe" '.tooltip | test("Chassis \\(nct6799 max\\): 1410")' "fans should show nct6799 chassis max 1410: $fan_dedupe"
@@ -149,8 +149,8 @@ rm -f "$FAN_CACHE"/waybar/asusec-path.txt "$FAN_CACHE"/waybar/corsairpsu-path.tx
   "$FAN_CACHE"/waybar/nct6799-path.txt "$FAN_CACHE"/waybar/fans-status.json
 fan_nopasu=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$FAN_CACHE" \
-  WAYBAR_HWMON_ROOT="$FAN_HWMON2" \
-  "$TEST_DIR/scripts/system/fans-status.sh" --refresh
+    WAYBAR_HWMON_ROOT="$FAN_HWMON2" \
+    "$TEST_DIR/scripts/system/fans-status.sh" --refresh
 )
 waybar_test_assert_jq "$fan_nopasu" '(.text | test("1000")) and (.tooltip | test("PSU Fan: N/A"))' "fans without corsairpsu should show CPU 1000 + PSU Fan N/A: $fan_nopasu"
 
@@ -161,10 +161,10 @@ rm -f "$FAN_CACHE"/waybar/asusec-path.txt "$FAN_CACHE"/waybar/corsairpsu-path.tx
   "$FAN_CACHE"/waybar/nct6799-path.txt "$FAN_CACHE"/waybar/fans-status.json
 fan_out=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$FAN_CACHE" \
-  WAYBAR_HWMON_ROOT="$FAN_HWMON" \
-  WAYBAR_FANCTL_BIN=/usr/bin/true \
-  WAYBAR_FANCTL_CONFIG="$TEST_DIR/fanctl-cfg/fanctl.yml" \
-  "$TEST_DIR/scripts/system/fans-status.sh" --refresh 2>/dev/null || true
+    WAYBAR_HWMON_ROOT="$FAN_HWMON" \
+    WAYBAR_FANCTL_BIN=/usr/bin/true \
+    WAYBAR_FANCTL_CONFIG="$TEST_DIR/fanctl-cfg/fanctl.yml" \
+    "$TEST_DIR/scripts/system/fans-status.sh" --refresh 2>/dev/null || true
 )
 if [ -n "$fan_out" ] && ! echo "$fan_out" | jq -e '.tooltip | test("fanctl config")' >/dev/null 2>&1; then
   echo "FAIL: fans tooltip should mention fanctl config: $fan_out" >&2

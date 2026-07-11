@@ -20,7 +20,6 @@ disk_warn=$(waybar_settings_get '.thresholds.disk.warning' '75')
 disk_crit=$(waybar_settings_get '.thresholds.disk.critical' '90')
 disk_path=$(waybar_settings_get '.disk.path' '/')
 
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -53,5 +52,5 @@ json=$(emit_waybar_json "$text" "$tooltip" "$class")
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"

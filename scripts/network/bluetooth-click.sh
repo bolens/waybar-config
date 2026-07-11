@@ -60,8 +60,6 @@ open_bt_settings() {
   notify-send "Bluetooth" "No bluetooth manager found" 2>/dev/null || true
 }
 
-
-
 format_header_row() {
   label="$1"
   value="$2"
@@ -259,16 +257,16 @@ show_bt_popup() {
   theme=$(printf '%s' "$theme" | sed "s/WIDTH_PLACEHOLDER/$popup_width/; s/LINES_PLACEHOLDER/$popup_lines/; s/XOFF_PLACEHOLDER/$xoff/; s/YOFF_PLACEHOLDER/$yoff/")
 
   tmpdir=$(mktemp -d)
-  printf '%s' "$header_compact" > "$tmpdir/header_compact"
-  printf '%s' "$header_full" > "$tmpdir/header_full"
-  printf '%s' "$rows" > "$tmpdir/rows"
+  printf '%s' "$header_compact" >"$tmpdir/header_compact"
+  printf '%s' "$header_full" >"$tmpdir/header_full"
+  printf '%s' "$rows" >"$tmpdir/rows"
 
   rofi -show bt-popup \
-       -modi "bt-popup:$0 __bt_rofi $tmpdir" \
-       -me-select-entry '' -me-accept-entry MousePrimary \
-      -kb-custom-1 "Alt+m" -kb-custom-2 "Alt+p" -kb-custom-3 "Alt+d" -kb-custom-4 "Alt+c" \
-       -theme-str "$theme" \
-       >/dev/null 2>&1 || true
+    -modi "bt-popup:$0 __bt_rofi $tmpdir" \
+    -me-select-entry '' -me-accept-entry MousePrimary \
+    -kb-custom-1 "Alt+m" -kb-custom-2 "Alt+p" -kb-custom-3 "Alt+d" -kb-custom-4 "Alt+c" \
+    -theme-str "$theme" \
+    >/dev/null 2>&1 || true
 
   rm -rf "$tmpdir"
 }
@@ -391,7 +389,10 @@ $rows
 EOF
 }
 
-[ "$mode" = "manage" ] && { open_bt_settings; exit 0; }
+[ "$mode" = "manage" ] && {
+  open_bt_settings
+  exit 0
+}
 [ "$mode" = "toggle" ] && {
   if bluetoothctl show | rg -Fq "Powered: yes"; then
     bluetoothctl power off
@@ -400,7 +401,10 @@ EOF
   fi
   exit 0
 }
-[ "$mode" = "__bt_rofi" ] && { bt_popup_rofi "$2"; exit 0; }
+[ "$mode" = "__bt_rofi" ] && {
+  bt_popup_rofi "$2"
+  exit 0
+}
 
 if ! command -v bluetoothctl >/dev/null 2>&1; then
   notify-send "Bluetooth" "bluetoothctl not found" 2>/dev/null || true

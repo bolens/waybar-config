@@ -21,7 +21,7 @@ portainer_tooltip() {
 format_duration_short() {
   raw="$1"
   case "$raw" in
-    ''|*[!0-9]*)
+    '' | *[!0-9]*)
       printf '%s' "$raw"
       return
       ;;
@@ -123,7 +123,6 @@ format_lr() {
   fi
   printf "%s%${spaces}s%s" "$label" "" "$value"
 }
-
 
 short_value() {
   value="$1"

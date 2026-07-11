@@ -22,7 +22,7 @@ echo "=== Shell contract checks ==="
 while IFS= read -r -d '' file; do
   sheb="$(head -1 "$file" || true)"
   case "$sheb" in
-    '#!/usr/bin/env sh'|'#!/bin/sh')
+    '#!/usr/bin/env sh' | '#!/bin/sh')
       if grep -q 'waybar-settings\.sh' "$file"; then
         echo "FAIL: $file uses sh shebang but sources/references waybar-settings.sh (bash-only under dash)" >&2
         fail=1
@@ -36,11 +36,10 @@ for must_bash in \
   services/i2pd/i2pd-status.sh \
   services/sync/updates-status.sh \
   services/apps/github-status.sh \
-  lib/waybar-settings.sh
-do
+  lib/waybar-settings.sh; do
   sheb="$(head -1 "$ROOT/scripts/$must_bash" || true)"
   case "$sheb" in
-    '#!/usr/bin/env bash'|'#!/bin/bash')
+    '#!/usr/bin/env bash' | '#!/bin/bash')
       ;;
     *)
       echo "FAIL: scripts/$must_bash must use a bash shebang (got: $sheb)" >&2
@@ -69,8 +68,7 @@ fi
 for listener in \
   "$ROOT/scripts/listeners/device-notifier-listener.sh" \
   "$ROOT/scripts/listeners/privacy-listener.sh" \
-  "$ROOT/scripts/listeners/workspaces-hyprland-listener.sh"
-do
+  "$ROOT/scripts/listeners/workspaces-hyprland-listener.sh"; do
   if ! grep -q 'WAYBAR_LISTENER_LOCK_NAME=' "$listener"; then
     echo "FAIL: $listener must set WAYBAR_LISTENER_LOCK_NAME before sourcing lock helper" >&2
     fail=1
@@ -216,12 +214,12 @@ chmod +x "$tmpdir"/bin/* "$tmpdir/scripts/lib/waybar-signal.sh"
 for script in services/i2pd/i2pd-status.sh services/sync/updates-status.sh services/apps/github-status.sh; do
   out="$(
     PATH="$tmpdir/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
-    HOME="$tmpdir" \
-    WAYBAR_HOME="$tmpdir" \
-    WAYBAR_SCRIPTS="$tmpdir/scripts" \
-    XDG_CACHE_HOME="$tmpdir/cache" \
-    WAYBAR_BACKGROUND=1 \
-    "$tmpdir/scripts/$script" --refresh 2>/dev/null | tail -n 1 || true
+      HOME="$tmpdir" \
+      WAYBAR_HOME="$tmpdir" \
+      WAYBAR_SCRIPTS="$tmpdir/scripts" \
+      XDG_CACHE_HOME="$tmpdir/cache" \
+      WAYBAR_BACKGROUND=1 \
+      "$tmpdir/scripts/$script" --refresh 2>/dev/null | tail -n 1 || true
   )"
   if [ -z "$out" ] || ! printf '%s\n' "$out" | jq -e '.text != null and .tooltip != null and .class != null' >/dev/null 2>&1; then
     echo "FAIL: $script --refresh did not emit valid JSON under minimal PATH (shebang/settings regression). out=$out" >&2

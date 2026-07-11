@@ -5,7 +5,7 @@ set -eu
 
 offset="${1:-0}"
 case "$offset" in
-  ''|*[!0-9-]*)
+  '' | *[!0-9-]*)
     offset=0
     ;;
 esac

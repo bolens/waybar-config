@@ -17,7 +17,7 @@ fi
 
 # Verify behavior when waybar-settings.jsonc contains invalid JSON syntax
 echo "Verifying behavior with invalid JSON settings syntax..."
-cat <<'JSON' > "$TEST_DIR/data/waybar-settings.jsonc"
+cat <<'JSON' >"$TEST_DIR/data/waybar-settings.jsonc"
 {
   "bars": {
     "height": 99,

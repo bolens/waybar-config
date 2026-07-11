@@ -123,7 +123,7 @@ fi
 
 # Verify active-window-scroll.sh works correctly without zscroll (using zscroll=false, max_length=15 override)
 mkdir -p "$TEST_DIR/bin"
-cat <<'SH' > "$TEST_DIR/bin/hyprctl"
+cat <<'SH' >"$TEST_DIR/bin/hyprctl"
 #!/bin/sh
 if [ "$1" = "activewindow" ]; then
   echo '{"title":"Very Long Window Title That Exceeds Fifteen Characters"}'
@@ -132,13 +132,13 @@ SH
 chmod +x "$TEST_DIR/bin/hyprctl"
 
 out_file="$TEST_DIR/active-window-test.log"
-XDG_CACHE_HOME="$TEST_DIR/cache" PATH="$TEST_DIR/bin:$PATH" WAYBAR_HOME="$TEST_DIR" bash "$TEST_DIR/scripts/workspaces/active-window-scroll.sh" > "$out_file" 2>&1 &
+XDG_CACHE_HOME="$TEST_DIR/cache" PATH="$TEST_DIR/bin:$PATH" WAYBAR_HOME="$TEST_DIR" bash "$TEST_DIR/scripts/workspaces/active-window-scroll.sh" >"$out_file" 2>&1 &
 sub_pid=$!
 
 # Wait for directory creation and startup, then write test title to cache
 sleep 0.3
 mkdir -p "$TEST_DIR/cache/waybar"
-echo "Very Long Window Title That Exceeds Fifteen Characters" > "$TEST_DIR/cache/waybar/active-window-title.raw"
+echo "Very Long Window Title That Exceeds Fifteen Characters" >"$TEST_DIR/cache/waybar/active-window-title.raw"
 
 sleep 0.6
 kill "$sub_pid" 2>/dev/null || true
@@ -150,7 +150,7 @@ if ! grep -q '"text":"󰖲  Very Long Wi..."' "$out_file"; then
 fi
 
 # Verify mpris-scroll.sh works correctly without zscroll (using mpris_zscroll=false, mpris_max_length=20 override)
-cat <<'SH' > "$TEST_DIR/bin/playerctl"
+cat <<'SH' >"$TEST_DIR/bin/playerctl"
 #!/bin/sh
 if [ "$1" = "status" ]; then
   echo "Playing"
@@ -161,7 +161,7 @@ SH
 chmod +x "$TEST_DIR/bin/playerctl"
 
 out_mpris="$TEST_DIR/mpris-test.log"
-PATH="$TEST_DIR/bin:$PATH" WAYBAR_HOME="$TEST_DIR" bash "$TEST_DIR/scripts/media/mpris-scroll.sh" > "$out_mpris" 2>&1 &
+PATH="$TEST_DIR/bin:$PATH" WAYBAR_HOME="$TEST_DIR" bash "$TEST_DIR/scripts/media/mpris-scroll.sh" >"$out_mpris" 2>&1 &
 mpris_pid=$!
 
 sleep 0.8

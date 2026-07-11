@@ -28,7 +28,6 @@ if [ "${1:-}" = "--ring" ]; then
   exit 0
 fi
 
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -57,12 +56,12 @@ for dev in $devices; do
   name=$(timeout 2 qdbus6 org.kde.kdeconnect "/modules/kdeconnect/devices/$dev" org.kde.kdeconnect.device.name 2>/dev/null || echo "Unknown Device")
   reachable=$(timeout 2 qdbus6 org.kde.kdeconnect "/modules/kdeconnect/devices/$dev" org.kde.kdeconnect.device.isReachable 2>/dev/null || echo "false")
   dev_type=$(timeout 2 qdbus6 org.kde.kdeconnect "/modules/kdeconnect/devices/$dev" org.kde.kdeconnect.device.type 2>/dev/null || echo "phone")
-  
+
   if [ "$reachable" = "true" ]; then
     has_any_reachable=1
     battery=$(timeout 2 qdbus6 org.kde.kdeconnect "/modules/kdeconnect/devices/$dev/battery" org.kde.kdeconnect.device.battery.charge 2>/dev/null || echo "")
     charging=$(timeout 2 qdbus6 org.kde.kdeconnect "/modules/kdeconnect/devices/$dev/battery" org.kde.kdeconnect.device.battery.isCharging 2>/dev/null || echo "false")
-    
+
     if [ -z "$first_reachable_dev" ]; then
       first_reachable_dev="$dev"
       first_name="$name"
@@ -70,13 +69,13 @@ for dev in $devices; do
       first_battery="$battery"
       first_charging="$charging"
     fi
-    
+
     battery_status=""
     if [ -n "$battery" ]; then
       battery_status="($battery%)"
       [ "$charging" = "true" ] && battery_status="($battery% 󱐋)"
     fi
-    
+
     tooltip=$(printf '%s\n● %s (Connected) %s' "$tooltip" "$name" "$battery_status")
   else
     tooltip=$(printf '%s\n○ %s (Disconnected)' "$tooltip" "$name")
@@ -91,12 +90,12 @@ elif [ "$has_any_reachable" -eq 1 ] && [ -n "$first_reachable_dev" ]; then
   dev_type="$first_type"
   battery="$first_battery"
   charging="$first_charging"
-  
+
   icon="󰏲"
   if [ "$dev_type" = "tablet" ]; then
     icon="󰓏"
   fi
-  
+
   if [ -n "$battery" ]; then
     battery_level=$(printf '%3d' "$battery")
     if [ "$charging" = "true" ]; then
@@ -104,7 +103,7 @@ elif [ "$has_any_reachable" -eq 1 ] && [ -n "$first_reachable_dev" ]; then
     else
       primary_text=$(printf '%s %d%%' "$icon" "$battery")
     fi
-    
+
     if [ "$battery" -le 15 ] && [ "$charging" != "true" ]; then
       primary_class="critical"
     elif [ "$battery" -le 30 ] && [ "$charging" != "true" ]; then
@@ -113,7 +112,7 @@ elif [ "$has_any_reachable" -eq 1 ] && [ -n "$first_reachable_dev" ]; then
   else
     primary_text="$icon"
   fi
-  
+
   tooltip=$(printf '%s\n\nLeft: ring phone (%s) · Right: KDE Connect settings · Middle: refresh' "$tooltip" "$name")
 else
   primary_text="󰏲"
@@ -126,5 +125,5 @@ json=$(emit_waybar_json "$primary_text" "$tooltip" "$primary_class")
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"

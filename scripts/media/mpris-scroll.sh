@@ -5,7 +5,7 @@ set -euo pipefail
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 script_dir="$(CDPATH="" cd -- "$(dirname "$0")" && pwd)"
-# shellcheck disable=SC1091
+# shellcheck source=../lib/waybar-settings.sh
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
 # Ensure playerctl is available
@@ -26,12 +26,12 @@ if [ "$enable_scroll" = "true" ] && command -v zscroll >/dev/null 2>&1; then
       # Prefix each output line with the music icon.
       # zscroll scrolls the text after the formatting dynamically.
       zscroll -l "$mpris_max_length" \
-              --delay "$scroll_delay" \
-              --match-command "playerctl status 2>/dev/null" \
-              --match-text "Playing" "--scroll 1" \
-              --match-text "Paused" "--scroll 0" \
-              --update-check true \
-              'playerctl metadata --format "󰝚 {{title}} - {{artist}}" 2>/dev/null' 2>/dev/null || true
+        --delay "$scroll_delay" \
+        --match-command "playerctl status 2>/dev/null" \
+        --match-text "Playing" "--scroll 1" \
+        --match-text "Paused" "--scroll 0" \
+        --update-check true \
+        'playerctl metadata --format "󰝚 {{title}} - {{artist}}" 2>/dev/null' 2>/dev/null || true
     else
       # Output empty string so Waybar hides the module
       echo ""
@@ -45,7 +45,7 @@ else
     if playerctl status >/dev/null 2>&1; then
       meta=$(playerctl metadata --format "󰝚 {{title}} - {{artist}}" 2>/dev/null || echo "")
       meta=$(echo "$meta" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')
-      
+
       if [ "$meta" != "$last_metadata" ]; then
         if [ -n "$meta" ] && [ "$meta" != "󰝚  - " ]; then
           if [ ${#meta} -gt "$mpris_max_length" ]; then

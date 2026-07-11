@@ -100,11 +100,11 @@ fi
 
 bundle=$(
   WAYBAR_CC_API_URL="$api_url" \
-  WAYBAR_CC_UI_USER="$ui_user" \
-  WAYBAR_CC_UI_PASS="$ui_pass" \
-  WAYBAR_CC_TOKEN="$token" \
-  WAYBAR_CC_FIXTURE_DIR="${WAYBAR_CC_FIXTURE_DIR:-}" \
-  python3 "$api_py" fetch-bundle 2>/dev/null || true
+    WAYBAR_CC_UI_USER="$ui_user" \
+    WAYBAR_CC_UI_PASS="$ui_pass" \
+    WAYBAR_CC_TOKEN="$token" \
+    WAYBAR_CC_FIXTURE_DIR="${WAYBAR_CC_FIXTURE_DIR:-}" \
+    python3 "$api_py" fetch-bundle 2>/dev/null || true
 )
 
 if [ -z "$bundle" ] || ! printf '%s' "$bundle" | jq -e '.ok == true' >/dev/null 2>&1; then

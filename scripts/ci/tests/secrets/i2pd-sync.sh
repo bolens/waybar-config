@@ -36,10 +36,10 @@ ln -sfn "$TEST_DIR/i2pd/i2pd.conf" "$TEST_DIR/varlib/i2pd.conf"
 # secrets already present from overlay test
 out1=$(
   I2PD_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  I2PD_ETC_CONF="$TEST_DIR/i2pd/i2pd.conf" \
-  I2PD_VAR_CONF="$TEST_DIR/varlib/i2pd.conf" \
-  "$TEST_DIR/scripts/services/i2pd/i2pd-set-console-pass.sh" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    I2PD_ETC_CONF="$TEST_DIR/i2pd/i2pd.conf" \
+    I2PD_VAR_CONF="$TEST_DIR/varlib/i2pd.conf" \
+    "$TEST_DIR/scripts/services/i2pd/i2pd-set-console-pass.sh" 2>&1
 )
 if ! grep -q 'updated:' <<<"$out1"; then
   echo "FAIL: expected conf update on first push. Output: $out1" >&2
@@ -62,10 +62,10 @@ fi
 
 out2=$(
   I2PD_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  I2PD_ETC_CONF="$TEST_DIR/i2pd/i2pd.conf" \
-  I2PD_VAR_CONF="$TEST_DIR/varlib/i2pd.conf" \
-  "$TEST_DIR/scripts/services/i2pd/i2pd-set-console-pass.sh" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    I2PD_ETC_CONF="$TEST_DIR/i2pd/i2pd.conf" \
+    I2PD_VAR_CONF="$TEST_DIR/varlib/i2pd.conf" \
+    "$TEST_DIR/scripts/services/i2pd/i2pd-set-console-pass.sh" 2>&1
 )
 if ! grep -q 'already up to date' <<<"$out2"; then
   echo "FAIL: second push should be idempotent. Output: $out2" >&2
@@ -90,10 +90,10 @@ ln -sfn "$TEST_DIR/i2pd/i2pd.conf" "$TEST_DIR/varlib/i2pd.conf"
 
 out3=$(
   I2PD_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  I2PD_ETC_CONF="$TEST_DIR/i2pd/i2pd.conf" \
-  I2PD_VAR_CONF="$TEST_DIR/varlib/i2pd.conf" \
-  "$TEST_DIR/scripts/services/i2pd/i2pd-set-console-pass.sh" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    I2PD_ETC_CONF="$TEST_DIR/i2pd/i2pd.conf" \
+    I2PD_VAR_CONF="$TEST_DIR/varlib/i2pd.conf" \
+    "$TEST_DIR/scripts/services/i2pd/i2pd-set-console-pass.sh" 2>&1
 )
 if [[ ! -f "$TEST_DIR/data/waybar-secrets.jsonc" ]]; then
   echo "FAIL: secrets file not created on import. Output: $out3" >&2
@@ -115,10 +115,10 @@ fi
 
 out4=$(
   I2PD_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  I2PD_ETC_CONF="$TEST_DIR/i2pd/i2pd.conf" \
-  I2PD_VAR_CONF="$TEST_DIR/varlib/i2pd.conf" \
-  "$TEST_DIR/scripts/services/i2pd/i2pd-set-console-pass.sh" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    I2PD_ETC_CONF="$TEST_DIR/i2pd/i2pd.conf" \
+    I2PD_VAR_CONF="$TEST_DIR/varlib/i2pd.conf" \
+    "$TEST_DIR/scripts/services/i2pd/i2pd-set-console-pass.sh" 2>&1
 )
 if ! grep -q 'already up to date' <<<"$out4"; then
   echo "FAIL: import path should be idempotent on re-run. Output: $out4" >&2
@@ -132,10 +132,10 @@ rm -f "$TEST_DIR/varlib/i2pd.conf"
 echo 'not-a-real-conf' >"$TEST_DIR/varlib/i2pd.conf"
 out5=$(
   I2PD_TEST_MODE=1 \
-  WAYBAR_HOME="$TEST_DIR" \
-  I2PD_ETC_CONF="$TEST_DIR/i2pd/i2pd.conf" \
-  I2PD_VAR_CONF="$TEST_DIR/varlib/i2pd.conf" \
-  "$TEST_DIR/scripts/services/i2pd/i2pd-set-console-pass.sh" 2>&1
+    WAYBAR_HOME="$TEST_DIR" \
+    I2PD_ETC_CONF="$TEST_DIR/i2pd/i2pd.conf" \
+    I2PD_VAR_CONF="$TEST_DIR/varlib/i2pd.conf" \
+    "$TEST_DIR/scripts/services/i2pd/i2pd-set-console-pass.sh" 2>&1
 )
 if [[ ! -L "$TEST_DIR/varlib/i2pd.conf" ]]; then
   echo "FAIL: var conf should become symlink. Output: $out5" >&2

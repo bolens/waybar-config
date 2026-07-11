@@ -21,7 +21,6 @@ stale_lock_ttl=45
 
 mkdir -p "$cache_dir"
 
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -33,7 +32,7 @@ fi
 json="$(timeout 3 /usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh status 2>/dev/null || true)"
 if [ -n "$json" ]; then
   tmp_cache="$cache_file.tmp.$$"
-  printf '%s\n' "$json" > "$tmp_cache"
+  printf '%s\n' "$json" >"$tmp_cache"
   mv -f "$tmp_cache" "$cache_file"
   printf '%s\n' "$json"
   exit 0

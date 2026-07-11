@@ -42,14 +42,13 @@ fi
 # Prefer XDG runtime socket (Hyprland ≥0.40); fall back to legacy /tmp/hypr.
 socket=""
 for candidate in \
-	"${XDG_RUNTIME_DIR:-}/hypr/${signature}/.socket2.sock" \
-	"/tmp/hypr/${signature}/.socket2.sock"
-do
-	[ -n "$candidate" ] || continue
-	if [ -S "$candidate" ]; then
-		socket="$candidate"
-		break
-	fi
+  "${XDG_RUNTIME_DIR:-}/hypr/${signature}/.socket2.sock" \
+  "/tmp/hypr/${signature}/.socket2.sock"; do
+  [ -n "$candidate" ] || continue
+  if [ -S "$candidate" ]; then
+    socket="$candidate"
+    break
+  fi
 done
 [ -n "$socket" ] || exit 0
 
@@ -63,7 +62,7 @@ update_active_window_cache() {
     title="$(printf '%s' "$title" | sed -E 's/(.*) - Mozilla Firefox/\1/; s/(.*) - Zen Browser/\1/; s/(.*) - Google Chrome/\1/; s/(.*) - Floorp/\1/; s/(.*) - Chromium/\1/; s/(.*) - Brave/\1/; s/(.*) - Vivaldi/\1/')"
     local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
     mkdir -p "$cache_dir"
-    echo "$title" > "$cache_dir/active-window-title.raw.tmp"
+    echo "$title" >"$cache_dir/active-window-title.raw.tmp"
     mv -f "$cache_dir/active-window-title.raw.tmp" "$cache_dir/active-window-title.raw"
   fi
 }
@@ -75,19 +74,19 @@ update_active_window_cache() {
 socat -u "UNIX-CONNECT:${socket}" - 2>/dev/null | while IFS= read -r line; do
   event="${line%%>>*}"
   case "$event" in
-    workspace|focusedmon|moveworkspace)
+    workspace | focusedmon | moveworkspace)
       # Invalidate stale cache files
       rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/waybar"/workspaces-*.json 2>/dev/null || true
       "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$SIG_WORKSPACES"
       ;;
-    activewindow|windowtitle)
+    activewindow | windowtitle)
       update_active_window_cache
       "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$SIG_ACTIVE_WINDOW"
       ;;
     activelayout)
       "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$SIG_KEYBOARD"
       ;;
-    openwindow|closewindow|movewindow|changefloatingmode|float)
+    openwindow | closewindow | movewindow | changefloatingmode | float)
       update_active_window_cache
       if [ -x "$WAYBAR_SCRIPTS/dock/dock-windows-signal.sh" ]; then
         "$WAYBAR_SCRIPTS/dock/dock-windows-signal.sh"

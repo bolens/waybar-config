@@ -9,10 +9,12 @@ action="${2:-click}"
 script_dir="$(CDPATH='' cd -- "$(dirname "$0")" && pwd)"
 cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/waybar/privacy-status.json"
 if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
-  # shellcheck disable=SC1091
+  # shellcheck source=../../lib/waybar-settings.sh
   . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 fi
-# shellcheck source=compositor-session.sh
+# shellcheck source=../../lib/app-open-lib.sh
+. "$WAYBAR_SCRIPTS/lib/app-open-lib.sh"
+# shellcheck source=../../lib/compositor-session.sh
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 
 notify() {
@@ -21,8 +23,7 @@ notify() {
 
 open_settings_app() {
   local cmd="$1"
-  # shellcheck disable=SC2086
-  "$WAYBAR_SCRIPTS/tools/app-open.sh" $cmd
+  waybar_app_open "$cmd"
 }
 
 refresh_privacy() {
@@ -68,7 +69,7 @@ open_app_permissions() {
       fi
       # Honor explicit non-Plasma overrides (tests / custom tooling).
       case "$settings" in
-        systemsettings*|kcm_*)
+        systemsettings* | kcm_*)
           refresh_privacy
           status_notify "Privacy" screenshare
           notify "Privacy" "On Hyprland, revoke sharing from the portal prompt or close the sharing app"
@@ -100,7 +101,7 @@ open_camera_settings() {
         return
       fi
       case "$cam" in
-        systemsettings*|kcm_*)
+        systemsettings* | kcm_*)
           refresh_privacy
           status_notify "Webcam" webcam
           ;;

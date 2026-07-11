@@ -37,8 +37,8 @@ echo 72000 >"$NVME_ROOT/hwmon1/temp2_input"
 echo "Sensor 1" >"$NVME_ROOT/hwmon1/temp2_label"
 nvme_out=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$NVME_CACHE" \
-  WAYBAR_NVME_HWMON_ROOT="$NVME_ROOT" \
-  "$TEST_DIR/scripts/system/nvme-status.sh" --refresh
+    WAYBAR_NVME_HWMON_ROOT="$NVME_ROOT" \
+    "$TEST_DIR/scripts/system/nvme-status.sh" --refresh
 )
 if ! echo "$nvme_out" | jq -e '.class == "warning" and (.text | test("67"))' >/dev/null 2>&1; then
   # 67 is composite on hottest drive; warning threshold default 60
@@ -47,14 +47,14 @@ if ! echo "$nvme_out" | jq -e '.class == "warning" and (.text | test("67"))' >/d
 fi
 nvme_empty=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$NVME_CACHE" \
-  WAYBAR_NVME_HWMON_ROOT="$TEST_DIR/empty-hwmon" \
-  "$TEST_DIR/scripts/system/nvme-status.sh" --refresh
+    WAYBAR_NVME_HWMON_ROOT="$TEST_DIR/empty-hwmon" \
+    "$TEST_DIR/scripts/system/nvme-status.sh" --refresh
 )
 mkdir -p "$TEST_DIR/empty-hwmon"
 nvme_empty=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$NVME_CACHE" \
-  WAYBAR_NVME_HWMON_ROOT="$TEST_DIR/empty-hwmon" \
-  "$TEST_DIR/scripts/system/nvme-status.sh" --refresh
+    WAYBAR_NVME_HWMON_ROOT="$TEST_DIR/empty-hwmon" \
+    "$TEST_DIR/scripts/system/nvme-status.sh" --refresh
 )
 waybar_test_assert_jq "$nvme_empty" '.class == "disconnected" or (.class|tostring|test("disconnected"))' "empty nvme hwmon should disconnect: $nvme_empty"
 
@@ -72,9 +72,9 @@ cat >"$OLH_FIX" <<'JSON'
 JSON
 olh_out=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$OLH_CACHE" \
-  WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
-  WAYBAR_CORSAIRPSU_PRESENT=0 \
-  "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
+    WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
+    WAYBAR_CORSAIRPSU_PRESENT=0 \
+    "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
 )
 # prefer_presence default: bar shows count (2, cluster excluded), not temp
 waybar_test_assert_jq "$olh_out" '(.text | test("2")) and .class == "normal"' "openlinkhub fixture expected presence count 2: $olh_out"
@@ -92,9 +92,9 @@ jq '.services.openlinkhub.prefer_presence = false' "$OLH_SETTINGS/data/waybar-se
   && mv "$OLH_SETTINGS/data/waybar-settings.json.tmp" "$OLH_SETTINGS/data/waybar-settings.json"
 olh_temp=$(
   WAYBAR_HOME="$OLH_SETTINGS" WAYBAR_SCRIPTS="$OLH_SETTINGS/scripts" XDG_CACHE_HOME="$OLH_CACHE" \
-  WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
-  WAYBAR_CORSAIRPSU_PRESENT=0 \
-  "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
+    WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
+    WAYBAR_CORSAIRPSU_PRESENT=0 \
+    "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
 )
 waybar_test_assert_jq "$olh_temp" '(.text | test("71")) and .class == "warning"' "openlinkhub prefer_presence=false expected hot 71 warning: $olh_temp"
 # PSU-only + corsairpsu → pointer to PSU module
@@ -106,9 +106,9 @@ cat >"$OLH_FIX" <<'JSON'
 JSON
 olh_psu=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$OLH_CACHE" \
-  WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
-  WAYBAR_CORSAIRPSU_PRESENT=1 \
-  "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
+    WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
+    WAYBAR_CORSAIRPSU_PRESENT=1 \
+    "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
 )
 waybar_test_assert_jq "$olh_psu" '(.text | test("1")) and (.tooltip | test("PSU module|corsairpsu"; "i"))' "openlinkhub PSU-only should point at PSU module: $olh_psu"
 # corsairpsu via fake hwmon tree
@@ -117,16 +117,16 @@ mkdir -p "$OLH_HWMON/hwmon0"
 echo corsairpsu >"$OLH_HWMON/hwmon0/name"
 olh_hwmon=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$OLH_CACHE" \
-  WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
-  WAYBAR_HWMON_ROOT="$OLH_HWMON" \
-  "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
+    WAYBAR_OLH_FIXTURE_JSON="$OLH_FIX" \
+    WAYBAR_HWMON_ROOT="$OLH_HWMON" \
+    "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
 )
 waybar_test_assert_jq "$olh_hwmon" '.tooltip | test("PSU module|corsairpsu"; "i")' "openlinkhub should detect corsairpsu via WAYBAR_HWMON_ROOT: $olh_hwmon"
 olh_down=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$OLH_CACHE" \
-  WAYBAR_OLH_API_URL="http://127.0.0.1:9" \
-  WAYBAR_OLH_FORCE_ACTIVE=0 \
-  "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
+    WAYBAR_OLH_API_URL="http://127.0.0.1:9" \
+    WAYBAR_OLH_FORCE_ACTIVE=0 \
+    "$TEST_DIR/scripts/services/openlinkhub/openlinkhub-status.sh" --refresh
 )
 waybar_test_assert_jq "$olh_down" '.class == "disconnected" or (.class|tostring|test("disconnected"))' "openlinkhub inactive should disconnect: $olh_down"
 

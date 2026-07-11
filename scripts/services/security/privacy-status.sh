@@ -161,7 +161,7 @@ case "$kind" in
   --refresh)
     json="$(collect_privacy_json)"
     printf '%s\n' "$json"
-    
+
     # Split and write to individual files atomically
     printf '%s\n' "$json" | jq -c '.screenshare, .webcam, ."audio-in", ."audio-out", .location' | {
       read -r scr_line
@@ -169,15 +169,15 @@ case "$kind" in
       read -r aud_in_line
       read -r aud_out_line
       read -r loc_line
-      
-      [ -n "$scr_line" ] && printf '%s\n' "$scr_line" > "$cache_dir/privacy-screenshare.json.tmp.$$" && mv -f "$cache_dir/privacy-screenshare.json.tmp.$$" "$cache_dir/privacy-screenshare.json"
-      [ -n "$cam_line" ] && printf '%s\n' "$cam_line" > "$cache_dir/privacy-webcam.json.tmp.$$" && mv -f "$cache_dir/privacy-webcam.json.tmp.$$" "$cache_dir/privacy-webcam.json"
-      [ -n "$aud_in_line" ] && printf '%s\n' "$aud_in_line" > "$cache_dir/privacy-audio-in.json.tmp.$$" && mv -f "$cache_dir/privacy-audio-in.json.tmp.$$" "$cache_dir/privacy-audio-in.json"
-      [ -n "$aud_out_line" ] && printf '%s\n' "$aud_out_line" > "$cache_dir/privacy-audio-out.json.tmp.$$" && mv -f "$cache_dir/privacy-audio-out.json.tmp.$$" "$cache_dir/privacy-audio-out.json"
-      [ -n "$loc_line" ] && printf '%s\n' "$loc_line" > "$cache_dir/privacy-location.json.tmp.$$" && mv -f "$cache_dir/privacy-location.json.tmp.$$" "$cache_dir/privacy-location.json"
+
+      [ -n "$scr_line" ] && printf '%s\n' "$scr_line" >"$cache_dir/privacy-screenshare.json.tmp.$$" && mv -f "$cache_dir/privacy-screenshare.json.tmp.$$" "$cache_dir/privacy-screenshare.json"
+      [ -n "$cam_line" ] && printf '%s\n' "$cam_line" >"$cache_dir/privacy-webcam.json.tmp.$$" && mv -f "$cache_dir/privacy-webcam.json.tmp.$$" "$cache_dir/privacy-webcam.json"
+      [ -n "$aud_in_line" ] && printf '%s\n' "$aud_in_line" >"$cache_dir/privacy-audio-in.json.tmp.$$" && mv -f "$cache_dir/privacy-audio-in.json.tmp.$$" "$cache_dir/privacy-audio-in.json"
+      [ -n "$aud_out_line" ] && printf '%s\n' "$aud_out_line" >"$cache_dir/privacy-audio-out.json.tmp.$$" && mv -f "$cache_dir/privacy-audio-out.json.tmp.$$" "$cache_dir/privacy-audio-out.json"
+      [ -n "$loc_line" ] && printf '%s\n' "$loc_line" >"$cache_dir/privacy-location.json.tmp.$$" && mv -f "$cache_dir/privacy-location.json.tmp.$$" "$cache_dir/privacy-location.json"
     }
     ;;
-  screenshare|webcam|audio-in|audio-out|location)
+  screenshare | webcam | audio-in | audio-out | location)
     mkdir -p "$cache_dir"
     if [ ! -f "$cache_dir/privacy-$kind.json" ]; then
       json="$(collect_privacy_json)"
@@ -187,13 +187,13 @@ case "$kind" in
         read -r aud_in_line
         read -r aud_out_line
         read -r loc_line
-        
+
         # Write to files atomically via temporary files
-        [ -n "$scr_line" ] && printf '%s\n' "$scr_line" > "$cache_dir/privacy-screenshare.json.tmp.$$" && mv -f "$cache_dir/privacy-screenshare.json.tmp.$$" "$cache_dir/privacy-screenshare.json"
-        [ -n "$cam_line" ] && printf '%s\n' "$cam_line" > "$cache_dir/privacy-webcam.json.tmp.$$" && mv -f "$cache_dir/privacy-webcam.json.tmp.$$" "$cache_dir/privacy-webcam.json"
-        [ -n "$aud_in_line" ] && printf '%s\n' "$aud_in_line" > "$cache_dir/privacy-audio-in.json.tmp.$$" && mv -f "$cache_dir/privacy-audio-in.json.tmp.$$" "$cache_dir/privacy-audio-in.json"
-        [ -n "$aud_out_line" ] && printf '%s\n' "$aud_out_line" > "$cache_dir/privacy-audio-out.json.tmp.$$" && mv -f "$cache_dir/privacy-audio-out.json.tmp.$$" "$cache_dir/privacy-audio-out.json"
-        [ -n "$loc_line" ] && printf '%s\n' "$loc_line" > "$cache_dir/privacy-location.json.tmp.$$" && mv -f "$cache_dir/privacy-location.json.tmp.$$" "$cache_dir/privacy-location.json"
+        [ -n "$scr_line" ] && printf '%s\n' "$scr_line" >"$cache_dir/privacy-screenshare.json.tmp.$$" && mv -f "$cache_dir/privacy-screenshare.json.tmp.$$" "$cache_dir/privacy-screenshare.json"
+        [ -n "$cam_line" ] && printf '%s\n' "$cam_line" >"$cache_dir/privacy-webcam.json.tmp.$$" && mv -f "$cache_dir/privacy-webcam.json.tmp.$$" "$cache_dir/privacy-webcam.json"
+        [ -n "$aud_in_line" ] && printf '%s\n' "$aud_in_line" >"$cache_dir/privacy-audio-in.json.tmp.$$" && mv -f "$cache_dir/privacy-audio-in.json.tmp.$$" "$cache_dir/privacy-audio-in.json"
+        [ -n "$aud_out_line" ] && printf '%s\n' "$aud_out_line" >"$cache_dir/privacy-audio-out.json.tmp.$$" && mv -f "$cache_dir/privacy-audio-out.json.tmp.$$" "$cache_dir/privacy-audio-out.json"
+        [ -n "$loc_line" ] && printf '%s\n' "$loc_line" >"$cache_dir/privacy-location.json.tmp.$$" && mv -f "$cache_dir/privacy-location.json.tmp.$$" "$cache_dir/privacy-location.json"
       } 2>/dev/null || true
     fi
     emit_module_json "$kind"

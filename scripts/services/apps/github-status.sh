@@ -7,15 +7,17 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 cache_file="$cache_dir/github-status.json"
 lock_dir="$cache_dir/github-status.lock.d"
 script_dir="${0%/*}"
+# shellcheck source=../../lib/waybar-cache-helpers.sh
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 if [ -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
+  # shellcheck source=../../lib/waybar-settings.sh
   . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 fi
 ttl="$(waybar_module_interval github 300)"
 stale_lock_ttl=30
 preview_limit=$(waybar_settings_get '.github.preview_limit' '5')
 case "$preview_limit" in
-  ''|*[!0-9]*) preview_limit=5 ;;
+  '' | *[!0-9]*) preview_limit=5 ;;
 esac
 
 mkdir -p "$cache_dir"
@@ -29,16 +31,16 @@ if [ "${1:-}" != "--refresh" ]; then
 fi
 
 # --refresh mode
-# shellcheck disable=SC1091
+# shellcheck source=../../lib/unicode-animations-lib.sh
 . "$WAYBAR_SCRIPTS/lib/unicode-animations-lib.sh"
 
 perform_github_checks_and_output() {
   if ! command -v gh >/dev/null 2>&1; then
     json=$(emit_waybar_json "󰊤" "GitHub CLI not installed" "disabled")
     printf '%s\n' "$json"
-    
+
     tmp_cache="$cache_file.tmp.$$"
-    printf '%s\n' "$json" > "$tmp_cache"
+    printf '%s\n' "$json" >"$tmp_cache"
     mv -f "$tmp_cache" "$cache_file"
     return 0
   fi
@@ -55,7 +57,7 @@ perform_github_checks_and_output() {
       tooltip="No unread notifications\n\nLeft: open notifications · Right: github.com · Middle: refresh"
       class="normal"
     fi
-    
+
     json=$(emit_waybar_json "󰊤" "$tooltip" "$class")
   else
     json=$(printf '%s' "$raw_notifs" | jq -c --argjson limit "$preview_limit" '
@@ -94,7 +96,7 @@ perform_github_checks_and_output() {
   printf '%s\n' "$json"
 
   tmp_cache="$cache_file.tmp.$$"
-  printf '%s\n' "$json" > "$tmp_cache"
+  printf '%s\n' "$json" >"$tmp_cache"
   mv -f "$tmp_cache" "$cache_file"
 }
 

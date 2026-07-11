@@ -91,7 +91,7 @@ if [ -z "$sys_status" ]; then
     json=$(emit_waybar_json "󰛵 Off" "Syncthing daemon is offline" "offline")
   fi
   printf '%s\n' "$json"
-  printf '%s\n' "$json" > "$cache_file"
+  printf '%s\n' "$json" >"$cache_file"
   exit 0
 fi
 
@@ -108,7 +108,7 @@ device_tooltip=""
 if [ -n "$connections_json" ]; then
   total_devices=$(echo "$connections_json" | jq '.connections | length' 2>/dev/null || echo 0)
   connected_devices=$(echo "$connections_json" | jq '[.connections[] | select(.connected)] | length' 2>/dev/null || echo 0)
-  
+
   # Format connections summary for tooltip
   device_tooltip=$(echo "$connections_json" | jq -r '
     .connections | to_entries | map(
@@ -142,7 +142,7 @@ json=$(emit_waybar_json "$text" "$tooltip" "$class")
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"
 
 # Signal Waybar to refresh the module UI

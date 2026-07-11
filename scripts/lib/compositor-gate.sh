@@ -32,7 +32,7 @@ while [ $# -gt 0 ]; do
       shift
       break
       ;;
-    -h|--help)
+    -h | --help)
       usage
       exit 0
       ;;

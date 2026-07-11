@@ -28,7 +28,7 @@ waybar_test_assert_jq "$out" '.tooltip | test("AUR updates: 1")' "updates-status
 : >"$TEST_DIR/bin/calls.log"
 out=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$TEST_DIR/cache" WAYBAR_BACKGROUND=1 \
-  WAYBAR_UPDATES_ENABLE_AUR=0 \
+    WAYBAR_UPDATES_ENABLE_AUR=0 \
     "$TEST_DIR/scripts/services/sync/updates-status.sh" --refresh 2>/dev/null | tail -n 1
 ) || true
 if grep -q '^paru$' "$TEST_DIR/bin/calls.log"; then
@@ -44,13 +44,13 @@ rm -f "$TEST_DIR/bin/checkupdates" # force non-arch if backend not overridden
 : >"$TEST_DIR/bin/calls.log"
 out=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$TEST_DIR/cache" WAYBAR_BACKGROUND=1 \
-  WAYBAR_UPDATES_BACKEND=apt \
+    WAYBAR_UPDATES_BACKEND=apt \
     "$TEST_DIR/scripts/services/sync/updates-status.sh" --refresh 2>/dev/null | tail -n 1
 ) || true
 waybar_test_assert_jq "$out" '.tooltip | test("Backend: apt") and test("APT updates: 1")' "updates-status apt backend. out=$out"
 out=$(
   WAYBAR_HOME="$TEST_DIR" XDG_CACHE_HOME="$TEST_DIR/cache" WAYBAR_BACKGROUND=1 \
-  WAYBAR_UPDATES_BACKEND=dnf \
+    WAYBAR_UPDATES_BACKEND=dnf \
     "$TEST_DIR/scripts/services/sync/updates-status.sh" --refresh 2>/dev/null | tail -n 1
 ) || true
 waybar_test_assert_jq "$out" '.tooltip | test("Backend: dnf") and test("DNF updates: 1")' "updates-status dnf backend. out=$out"

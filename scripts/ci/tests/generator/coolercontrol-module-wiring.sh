@@ -57,10 +57,10 @@ mkdir -p "$CC_CACHE"
 
 cc_out=$(
   WAYBAR_HOME="$TEST_DIR" \
-  XDG_CACHE_HOME="$CC_CACHE" \
-  WAYBAR_CC_FIXTURE_DIR="$CC_FIX" \
-  WAYBAR_CC_WRITE_PROBE_TTL=0 \
-  "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" --refresh
+    XDG_CACHE_HOME="$CC_CACHE" \
+    WAYBAR_CC_FIXTURE_DIR="$CC_FIX" \
+    WAYBAR_CC_WRITE_PROBE_TTL=0 \
+    "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" --refresh
 )
 waybar_test_assert_jq "$cc_out" '.class | (type == "array" and index("warning") and index("writable"))' "coolercontrol-status expected class [warning, writable]: $cc_out"
 waybar_test_assert_jq "$cc_out" '.text | test("82")' "coolercontrol-status text missing hot temp: $cc_out"
@@ -74,10 +74,10 @@ cp -a "$CC_FIX" "$CC_FIX_RO"
 echo 403 >"$CC_FIX_RO/write_http.txt"
 cc_ro=$(
   WAYBAR_HOME="$TEST_DIR" \
-  XDG_CACHE_HOME="$CC_CACHE" \
-  WAYBAR_CC_FIXTURE_DIR="$CC_FIX_RO" \
-  WAYBAR_CC_WRITE_PROBE_TTL=0 \
-  "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" --refresh
+    XDG_CACHE_HOME="$CC_CACHE" \
+    WAYBAR_CC_FIXTURE_DIR="$CC_FIX_RO" \
+    WAYBAR_CC_WRITE_PROBE_TTL=0 \
+    "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" --refresh
 )
 waybar_test_assert_jq "$cc_ro" '.class | (type == "array" and index("warning") and index("readonly"))' "coolercontrol-status expected class [warning, readonly]: $cc_ro"
 waybar_test_assert_jq "$cc_ro" '.tooltip | test("read-only")' "readonly tooltip missing: $cc_ro"
@@ -85,7 +85,7 @@ waybar_test_assert_jq "$cc_ro" '.tooltip | test("read-only")' "readonly tooltip 
 # API cycle next (write)
 cycle_out=$(
   WAYBAR_CC_FIXTURE_DIR="$CC_FIX" \
-  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" cycle next
+    python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" cycle next
 )
 waybar_test_assert_jq "$cycle_out" '.ok == true and .name == "Gaming" and .uid == "mode-game"' "cycle next from Default should activate Gaming: $cycle_out"
 if [[ "$(cat "$CC_FIX/last_activate.txt" 2>/dev/null | tr -d '\n')" != "mode-game" ]]; then
@@ -96,7 +96,7 @@ fi
 # API cycle rejects read-only
 cycle_ro=$(
   WAYBAR_CC_FIXTURE_DIR="$CC_FIX_RO" \
-  python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" cycle next
+    python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" cycle next
 ) || true
 waybar_test_assert_jq "$cycle_ro" '.ok == false and .error == "read_only"' "cycle with read-only should error read_only: $cycle_ro"
 
@@ -112,10 +112,10 @@ chmod +x "$TEST_DIR/fakebin/notify-send"
 CC_NOTIFY_LOG="$TEST_DIR/cc-notify.log"
 : >"$CC_NOTIFY_LOG"
 PATH="$TEST_DIR/fakebin:/usr/bin:/bin" \
-WAYBAR_HOME="$TEST_DIR" \
-XDG_CACHE_HOME="$CC_CACHE" \
-WAYBAR_CC_FIXTURE_DIR="$CC_FIX_RO" \
-CC_NOTIFY_LOG="$CC_NOTIFY_LOG" \
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$CC_CACHE" \
+  WAYBAR_CC_FIXTURE_DIR="$CC_FIX_RO" \
+  CC_NOTIFY_LOG="$CC_NOTIFY_LOG" \
   "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-click.sh" next
 if [[ -s "$CC_FIX_RO/last_activate.txt" ]]; then
   echo "FAIL: readonly click next should not activate a mode" >&2
@@ -130,10 +130,10 @@ fi
 : >"$CC_NOTIFY_LOG"
 rm -f "$CC_FIX/last_activate.txt"
 PATH="$TEST_DIR/fakebin:/usr/bin:/bin" \
-WAYBAR_HOME="$TEST_DIR" \
-XDG_CACHE_HOME="$CC_CACHE" \
-WAYBAR_CC_FIXTURE_DIR="$CC_FIX" \
-CC_NOTIFY_LOG="$CC_NOTIFY_LOG" \
+  WAYBAR_HOME="$TEST_DIR" \
+  XDG_CACHE_HOME="$CC_CACHE" \
+  WAYBAR_CC_FIXTURE_DIR="$CC_FIX" \
+  CC_NOTIFY_LOG="$CC_NOTIFY_LOG" \
   "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-click.sh" next
 if [[ "$(cat "$CC_FIX/last_activate.txt" 2>/dev/null | tr -d '\n')" != "mode-game" ]]; then
   echo "FAIL: writable click next should activate Gaming" >&2
@@ -143,9 +143,9 @@ fi
 # Offline / no fixture → disconnected
 cc_missing=$(
   WAYBAR_HOME="$TEST_DIR" \
-  XDG_CACHE_HOME="$CC_CACHE" \
-  WAYBAR_CC_FORCE_ACTIVE=0 \
-  "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" --refresh
+    XDG_CACHE_HOME="$CC_CACHE" \
+    WAYBAR_CC_FORCE_ACTIVE=0 \
+    "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" --refresh
 )
 waybar_test_assert_jq "$cc_missing" '.class == "disconnected" or (.class|tostring|test("disconnected"))' "coolercontrol offline should emit disconnected: $cc_missing"
 

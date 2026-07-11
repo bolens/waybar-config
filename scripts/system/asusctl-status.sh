@@ -76,8 +76,8 @@ parse_profile_list() {
   local raw="$1"
   printf '%s\n' "$raw" | sed '/^$/d' | grep -viE 'error|asusd|running|help|usage|available|profiles?:' \
     | while IFS= read -r line; do
-        printf '%s\n' "$(normalize_profile "$line")"
-      done | awk 'NF' | paste -sd, -
+      printf '%s\n' "$(normalize_profile "$line")"
+    done | awk 'NF' | paste -sd, -
 }
 
 parse_battery_limit() {
@@ -87,9 +87,9 @@ parse_battery_limit() {
 
 profile_class() {
   case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
-    quiet|power-saver|powersaver) printf 'quiet' ;;
+    quiet | power-saver | powersaver) printf 'quiet' ;;
     balanced) printf 'balanced' ;;
-    performance|turbo) printf 'performance' ;;
+    performance | turbo) printf 'performance' ;;
     *) printf 'normal' ;;
   esac
 }

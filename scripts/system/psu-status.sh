@@ -69,7 +69,7 @@ if [ -z "$psu_dir" ]; then
   json=$(emit_waybar_json "" "Corsair PSU telemetry not found" "disconnected")
   printf '%s\n' "$json"
   tmp_cache="$cache_file.tmp.$$"
-  printf '%s\n' "$json" > "$tmp_cache"
+  printf '%s\n' "$json" >"$tmp_cache"
   mv -f "$tmp_cache" "$cache_file"
   exit 0
 fi
@@ -111,9 +111,9 @@ v_in=$((v_in_raw / 1000))
 # Consolidate scale operations into a single awk process invocation for efficiency
 read -r power_12v power_5v power_33v temp_vrm temp_case v_out_12v v_out_5v v_out_33v <<EOF
 $(awk -v p12="$power_12v_raw" -v p5="$power_5v_raw" -v p33="$power_33v_raw" \
-      -v tvrm="$temp_vrm_raw" -v tcase="$temp_case_raw" \
-      -v v12="$v_out_12v_raw" -v v5="$v_out_5v_raw" -v v33="$v_out_33v_raw" \
-      'BEGIN {
+  -v tvrm="$temp_vrm_raw" -v tcase="$temp_case_raw" \
+  -v v12="$v_out_12v_raw" -v v5="$v_out_5v_raw" -v v33="$v_out_33v_raw" \
+  'BEGIN {
         printf "%.1f %.1f %.1f %.1f %.1f %.2f %.2f %.2f\n",
           p12/1000000, p5/1000000, p33/1000000,
           tvrm/1000, tcase/1000,
@@ -164,5 +164,5 @@ json=$(emit_waybar_json "$text" "$tooltip" "$class")
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"

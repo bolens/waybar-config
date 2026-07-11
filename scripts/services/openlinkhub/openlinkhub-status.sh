@@ -51,8 +51,8 @@ emit_disconnected() {
 
 has_corsairpsu_hwmon() {
   case "${WAYBAR_CORSAIRPSU_PRESENT:-}" in
-    0|false|no) return 1 ;;
-    1|true|yes) return 0 ;;
+    0 | false | no) return 1 ;;
+    1 | true | yes) return 0 ;;
   esac
   local psu_path_file="$cache_dir/corsairpsu-path.txt" d
   local hwmon_root="${WAYBAR_HWMON_ROOT:-/sys/class/hwmon}"

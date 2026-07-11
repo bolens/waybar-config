@@ -15,7 +15,6 @@ mkdir -p "$cache_dir"
 
 script_dir="${0%/*}"
 
-
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0
@@ -77,18 +76,18 @@ if [ "$total" -eq 0 ]; then
 else
   text=$(printf '󱄜 %d' "$total")
   class="critical"
-  
+
   # Format service lists for tooltip
   tooltip=$(printf 'Failed Systemd Services: %d\n' "$total")
-  
+
   if [ "$system_count" -gt 0 ]; then
     tooltip=$(printf '%s\nSystem Services:\n%s' "$tooltip" "$sys_list")
   fi
-  
+
   if [ "$user_count" -gt 0 ]; then
     tooltip=$(printf '%s\nUser Services:\n%s' "$tooltip" "$usr_list")
   fi
-  
+
   tooltip=$(printf '%s\n\nLeft: inspect failed · Right: settings · Middle: refresh' "$tooltip")
 fi
 
@@ -97,5 +96,5 @@ json=$(emit_waybar_json "$text" "$tooltip" "$class")
 printf '%s\n' "$json"
 
 tmp_cache="$cache_file.tmp.$$"
-printf '%s\n' "$json" > "$tmp_cache"
+printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"
