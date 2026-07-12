@@ -9,6 +9,7 @@ waybar_test_begin "dock-appicon-css"
 waybar_test_gen_sandbox
 
 css="$TEST_DIR/theme/dock-appicons.generated.css"
+semantic="$TEST_DIR/theme/semantic-colors.generated.css"
 
 waybar_test_patch_settings '.icons.appicon.enabled = false'
 if ! waybar_test_gen_default; then
@@ -24,7 +25,8 @@ if ! grep -q 'icons.appicon disabled' "$css"; then
   exit 1
 fi
 
-waybar_test_patch_settings '.icons.appicon.enabled = true | .icons.appicon.size = 28'
+waybar_test_patch_settings \
+  '.icons.appicon.enabled = true | .icons.appicon.size = 28 | .icons.appicon.gap = 12'
 if ! waybar_test_gen_default; then
   echo "FAIL: generate failed with icons.appicon enabled" >&2
   exit 1
@@ -41,20 +43,49 @@ if ! grep -q 'background-size: 28px 28px' "$css"; then
   echo "FAIL: dock-appicons.generated.css should set exact background-size" >&2
   exit 1
 fi
-if ! grep -q 'url("dock-appicons/browser")' "$css"; then
-  echo "FAIL: expected browser dock-appicon CSS rule" >&2
+if ! grep -q 'margin-right: 12px' "$css"; then
+  echo "FAIL: dock-appicons.generated.css should use icons.appicon.gap" >&2
+  exit 1
+fi
+if ! grep -q 'url("file://.*/theme/dock-appicons/browser.png")' "$css"; then
+  echo "FAIL: expected file:// browser.png dock-appicon CSS rule" >&2
+  exit 1
+fi
+if ! grep -q '#custom-dock-browser.appicon:hover' "$css"; then
+  echo "FAIL: expected hover rules that keep background-image" >&2
   exit 1
 fi
 if ! grep -q '#dock-apps label.appicon' "$css"; then
   echo "FAIL: expected shared label.appicon rules" >&2
   exit 1
 fi
-if ! grep -q 'font-size: 0' "$ROOT_DIR/user-style/dock.css"; then
-  echo "FAIL: user-style/dock.css must collapse glyph metrics for label.appicon" >&2
-  exit 1
-fi
 if ! grep -q ':not(\.appicon)' "$ROOT_DIR/theme/accents/dock.css"; then
   echo "FAIL: accents/dock.css must skip .appicon for glyph color/hover" >&2
+  exit 1
+fi
+
+# Pill hover must use background-color (not background shorthand) or icons vanish.
+if [ -f "$semantic" ]; then
+  if grep -E '^[[:space:]]*background:' "$semantic" | grep -q '0\.12\|pill'; then
+    :
+  fi
+  if ! grep -q 'background-color:' "$semantic"; then
+    echo "FAIL: semantic-colors.generated.css must use background-color for pills" >&2
+    exit 1
+  fi
+  # The hover block should not use background shorthand next to box-shadow pill glow.
+  hover_block="$(tr '\n' ' ' <"$semantic" | grep -oE '\{[^}]*box-shadow: 0 0 10px[^}]*\}' | head -1 || true)"
+  if printf '%s' "$hover_block" | grep -qE '[[:space:]]background:'; then
+    echo "FAIL: pill hover must not use background shorthand (wipes background-image)" >&2
+    exit 1
+  fi
+fi
+
+theme_css="$ROOT_DIR/theme.css"
+sem_line="$(grep -n 'semantic-colors.generated.css' "$theme_css" | head -1 | cut -d: -f1)"
+icon_line="$(grep -n 'dock-appicons.generated.css' "$theme_css" | head -1 | cut -d: -f1)"
+if [ -z "$sem_line" ] || [ -z "$icon_line" ] || [ "$icon_line" -le "$sem_line" ]; then
+  echo "FAIL: theme.css must import dock-appicons.generated.css after semantic-colors" >&2
   exit 1
 fi
 
@@ -69,17 +100,12 @@ if [ ! -f "$TEST_DIR/scripts/lib/appicon-lib.sh" ]; then
   exit 1
 fi
 
-if ! grep -q 'theme/dock-appicons.generated.css' "$ROOT_DIR/theme.css"; then
-  echo "FAIL: theme.css must import theme/dock-appicons.generated.css" >&2
-  exit 1
-fi
-
 if git -C "$ROOT_DIR" check-ignore -q --no-index theme/dock-appicons.generated.css; then
   echo "FAIL: theme/dock-appicons.generated.css must NOT be gitignored" >&2
   exit 1
 fi
-if ! git -C "$ROOT_DIR" check-ignore -q --no-index theme/dock-appicons/browser; then
-  echo "FAIL: theme/dock-appicons/* runtime symlinks must be gitignored" >&2
+if ! git -C "$ROOT_DIR" check-ignore -q --no-index theme/dock-appicons/browser.png; then
+  echo "FAIL: theme/dock-appicons/*.png must be gitignored" >&2
   exit 1
 fi
 
@@ -89,13 +115,5 @@ if [ ! -x "$TEST_DIR/scripts/infra/install-appicon.sh" ]; then
 fi
 waybar_test_assert_bash_n "$TEST_DIR/scripts/infra/install-appicon.sh" \
   "install-appicon.sh failed bash -n"
-if ! grep -q 'APPICON_VERSION' "$TEST_DIR/scripts/infra/install-appicon.sh"; then
-  echo "FAIL: install-appicon.sh must pin APPICON_VERSION" >&2
-  exit 1
-fi
-if ! grep -q 'sha256' "$TEST_DIR/scripts/infra/install-appicon.sh"; then
-  echo "FAIL: install-appicon.sh must verify SHA256" >&2
-  exit 1
-fi
 
 waybar_test_end

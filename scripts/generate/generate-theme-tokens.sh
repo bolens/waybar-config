@@ -199,12 +199,12 @@ ${cluster_sels} {
 
 /* --- Module pill chrome (accent-tinted; follows theme.mode / presets) --- */
 ${pill_sels} {
-    background: ${pill_bg};
+    background-color: ${pill_bg};
     border: 1px solid ${pill_border};
 }
 
 ${pill_hover_sels} {
-    background: ${pill_hover_bg};
+    background-color: ${pill_hover_bg};
     border-color: ${pill_hover_border};
     box-shadow: 0 0 10px ${pill_hover_glow};
 }

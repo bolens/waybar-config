@@ -301,7 +301,8 @@
     "appicon": {
       "enabled": true, 
       "theme": "dark", 
-      "size": 18
+      "size": 18, 
+      "gap": 10 
     }
   },
 

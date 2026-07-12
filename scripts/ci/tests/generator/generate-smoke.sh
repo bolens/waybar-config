@@ -61,6 +61,12 @@ if ! grep -Fq 'theme/dock-appicons.generated.css' "$ROOT_DIR/theme.css"; then
   echo "FAIL: theme.css missing @import for theme/dock-appicons.generated.css" >&2
   fail=1
 fi
+sem_line="$(grep -n 'semantic-colors.generated.css' "$ROOT_DIR/theme.css" | head -1 | cut -d: -f1)"
+icon_line="$(grep -n 'dock-appicons.generated.css' "$ROOT_DIR/theme.css" | head -1 | cut -d: -f1)"
+if [ -n "$sem_line" ] && [ -n "$icon_line" ] && [ "$icon_line" -le "$sem_line" ]; then
+  echo "FAIL: dock-appicons.generated.css must load after semantic-colors.generated.css" >&2
+  fail=1
+fi
 if grep -Fq 'theme/drawers.css"' "$ROOT_DIR/theme.css" || grep -Fq "theme/drawers.css'" "$ROOT_DIR/theme.css"; then
   echo "FAIL: theme.css must not import hand theme/drawers.css" >&2
   fail=1
