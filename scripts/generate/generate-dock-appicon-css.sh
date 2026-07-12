@@ -75,7 +75,6 @@ mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
   printf '    min-height: %spx;\n' "$size"
   printf '    border-right: 1px solid rgba(0, 229, 255, 0.12);\n'
   printf '    border-radius: 6px;\n'
-  printf '    overflow: visible;\n'
   printf '}\n'
 
   # Last launcher in the drawer still needs a right margin for visual rhythm, or

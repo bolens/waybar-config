@@ -28,7 +28,6 @@
     min-height: 18px;
     border-right: 1px solid rgba(0, 229, 255, 0.12);
     border-radius: 6px;
-    overflow: visible;
 }
 
 #custom-dock-anyrun.appicon,

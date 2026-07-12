@@ -4,7 +4,6 @@
 
 #dock-apps {
     padding: 4px 6px;
-    overflow: visible;
 }
 
 #dock-apps > .running:not(.appicon) {
