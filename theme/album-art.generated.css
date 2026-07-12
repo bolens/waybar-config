@@ -4,5 +4,5 @@
     min-height: 22px;
 }
 #custom-album-art.album-art {
-    background-image: url("file:///home/panda/.cache/waybar/album-art");
+    background-image: url("album-art");
 }

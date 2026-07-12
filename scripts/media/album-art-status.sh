@@ -7,9 +7,9 @@ set -eu
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
-cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-mkdir -p "$cache_dir"
-art_base="$cache_dir/album-art"
+# Cover lives next to theme/album-art.generated.css (relative url("album-art")).
+mkdir -p "$WAYBAR_HOME/theme"
+art_base="$WAYBAR_HOME/theme/album-art"
 enabled=$(waybar_settings_get '.visual.album_art.enabled' 'false')
 
 emit_hidden() {

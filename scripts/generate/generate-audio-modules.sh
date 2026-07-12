@@ -131,11 +131,12 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
 ' | jq '.' >"$mod_dir/audio.generated.jsonc"
 
 # Optional album-art sizing / cover background when enabled.
-# Cover file is cached by album-art-status.sh at $XDG_CACHE_HOME/waybar/album-art.
+# Relative url("album-art") resolves next to this CSS (theme/album-art);
+# album-art-status.sh maintains that cover file. Absolute file:// URLs are
+# host-specific and break the generated-drift CI check.
 if jq -e '.visual.album_art.enabled == true' "$settings" >/dev/null 2>&1; then
   size=$(jq -r '.visual.album_art.size // 22' "$settings")
   case "$size" in '' | *[!0-9]*) size=22 ;; esac
-  cache_art="${XDG_CACHE_HOME:-$HOME/.cache}/waybar/album-art"
   cat >"$theme_dir/album-art.generated.css" <<EOF
 /* Generated from visual.album_art — do not edit by hand */
 #custom-album-art {
@@ -143,7 +144,7 @@ if jq -e '.visual.album_art.enabled == true' "$settings" >/dev/null 2>&1; then
     min-height: ${size}px;
 }
 #custom-album-art.album-art {
-    background-image: url("file://${cache_art}");
+    background-image: url("album-art");
 }
 EOF
 else

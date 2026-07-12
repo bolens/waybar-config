@@ -15,6 +15,7 @@ cd "$ROOT"
 
 fail=0
 # Include generated theme CSS — stylelint deliberately ignores *.generated.css.
+# Prune theme/rofi (rofi themes are not loaded by Waybar's GtkCssProvider).
 mapfile -t css_files < <(
   find . \( -path ./node_modules -o -path ./.git -o -path './theme/rofi' \) -prune -o \
     -type f -name '*.css' -print \
@@ -66,7 +67,8 @@ disallowed_props=(
 
 for prop in "${disallowed_props[@]}"; do
   # Match property declarations (optionally indented), not bare mentions in comments.
-  matches=$(rg -n --glob '!theme/rofi/**' "^[[:space:]]*${prop}[[:space:]]*:" "${css_files[@]}" 2>/dev/null || true)
+  # Use grep (not rg): generator CI images only install jq+dash.
+  matches=$(grep -nE "^[[:space:]]*${prop}[[:space:]]*:" "${css_files[@]}" 2>/dev/null || true)
   if [ -n "$matches" ]; then
     echo "FAIL: GTK3/Waybar-unsafe CSS property '${prop}':" >&2
     printf '%s\n' "$matches" >&2
@@ -76,7 +78,7 @@ done
 
 # Multi-percentage keyframe selectors (e.g. "0%, 100% {") crash Waybar's CSS parser.
 # Allowed: from { }, to { }, or a single percentage like "50% {".
-matches=$(rg -n --glob '!theme/rofi/**' \
+matches=$(grep -nE \
   -e '^[[:space:]]*[0-9]+%[[:space:]]*,[[:space:]]*[0-9]+%' \
   -e '^[[:space:]]*from[[:space:]]*,[[:space:]]*to' \
   -e '^[[:space:]]*to[[:space:]]*,[[:space:]]*from' \

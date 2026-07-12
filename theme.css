@@ -7,6 +7,7 @@
 @import "theme/dock-windows.css";
 @import "theme/animations.generated.css";
 @import "theme/album-art.generated.css";
+@import "theme/submap-per-output.generated.css";
 
 /* Group containers (HyDE-style pill clusters) — non-drawer groups only */
 #center,

@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# shellcheck disable=SC2154 # brightness_cache_file assigned in brightness-lib.sh (ShellCheck misses top-level assigns there)
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

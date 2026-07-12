@@ -29,6 +29,10 @@ node_modules/
 # Logs (runtime cache is under ~/.cache/waybar; keep any in-repo logs out)
 *.log
 
+# Runtime album cover (theme/album-art.generated.css uses relative url("album-art"))
+/theme/album-art
+/theme/album-art.*
+
 # Exclude the dry-run folder with large tarballs
 dry-run/
 

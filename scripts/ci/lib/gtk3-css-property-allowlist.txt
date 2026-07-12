@@ -1,0 +1,131 @@
+# GTK3 CssProvider property allowlist (Gtk 3.24 CSS Properties docs).
+# https://docs.gtk.org/gtk3/css-properties.html
+# One property name per line. Used by scripts/ci/check-gtk-css.sh.
+# Custom properties (--*) are always allowed by the checker.
+
+# Color
+color
+opacity
+
+# Font
+font
+font-family
+font-size
+font-style
+font-variant
+font-weight
+font-stretch
+font-feature-settings
+-gtk-dpi
+
+# Caret
+caret-color
+-gtk-secondary-caret-color
+
+# Text decoration
+letter-spacing
+text-decoration
+text-decoration-line
+text-decoration-color
+text-decoration-style
+text-shadow
+
+# Icon
+-gtk-icon-source
+-gtk-icon-transform
+-gtk-icon-style
+-gtk-icon-theme
+-gtk-icon-palette
+-gtk-icon-shadow
+-gtk-icon-effect
+
+# Box
+min-width
+min-height
+margin
+margin-top
+margin-right
+margin-bottom
+margin-left
+padding
+padding-top
+padding-right
+padding-bottom
+padding-left
+
+# Border
+border
+border-top
+border-right
+border-bottom
+border-left
+border-width
+border-style
+border-color
+border-top-width
+border-right-width
+border-bottom-width
+border-left-width
+border-top-style
+border-right-style
+border-bottom-style
+border-left-style
+border-top-color
+border-right-color
+border-bottom-color
+border-left-color
+border-radius
+border-top-left-radius
+border-top-right-radius
+border-bottom-right-radius
+border-bottom-left-radius
+border-image
+border-image-source
+border-image-repeat
+border-image-slice
+border-image-width
+
+# Outline
+outline
+outline-style
+outline-width
+outline-color
+outline-offset
+-gtk-outline-radius
+-gtk-outline-top-left-radius
+-gtk-outline-top-right-radius
+-gtk-outline-bottom-right-radius
+-gtk-outline-bottom-left-radius
+
+# Background
+background
+background-color
+background-clip
+background-origin
+background-size
+background-position
+background-repeat
+background-image
+background-blend-mode
+box-shadow
+
+# Transition
+transition
+transition-property
+transition-duration
+transition-timing-function
+transition-delay
+
+# Animation
+animation
+animation-name
+animation-duration
+animation-timing-function
+animation-iteration-count
+animation-direction
+animation-play-state
+animation-delay
+animation-fill-mode
+
+# Key bindings
+-gtk-key-bindings

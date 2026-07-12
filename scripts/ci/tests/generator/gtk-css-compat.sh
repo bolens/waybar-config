@@ -49,19 +49,19 @@ unsafe_props=(
   box-sizing cursor
 )
 for prop in "${unsafe_props[@]}"; do
-  if rg -n "^[[:space:]]*${prop}[[:space:]]*:" "${sandbox_css[@]}" 2>/dev/null; then
+  if grep -nE "^[[:space:]]*${prop}[[:space:]]*:" "${sandbox_css[@]}" 2>/dev/null; then
     echo "FAIL: sandbox CSS contains unsafe property ${prop}" >&2
     fail=1
   fi
 done
-if rg -n '^[[:space:]]*[0-9]+%[[:space:]]*,[[:space:]]*[0-9]+%' "${sandbox_css[@]}" 2>/dev/null; then
+if grep -nE '^[[:space:]]*[0-9]+%[[:space:]]*,[[:space:]]*[0-9]+%' "${sandbox_css[@]}" 2>/dev/null; then
   echo "FAIL: sandbox CSS has multi-percentage keyframe selectors" >&2
   fail=1
 fi
 
 echo "Testing fit_content workspace CSS never emits GTK3-unsafe sizing/overflow..."
 ws_gen="$TEST_DIR/theme/workspaces.generated.css"
-if [ -f "$ws_gen" ] && rg -n '^[[:space:]]*(width|height|max-width|max-height|overflow|overflow-x|overflow-y)[[:space:]]*:' "$ws_gen"; then
+if [ -f "$ws_gen" ] && grep -nE '^[[:space:]]*(width|height|max-width|max-height|overflow|overflow-x|overflow-y)[[:space:]]*:' "$ws_gen"; then
   echo "FAIL: workspaces.generated.css emits GTK3-unsafe sizing/overflow props" >&2
   fail=1
 fi

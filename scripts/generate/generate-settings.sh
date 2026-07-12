@@ -487,7 +487,8 @@ for _gen in \
   generate-tray-modules.sh \
   generate-hypr-tools-modules.sh \
   generate-theme-tokens.sh \
-  generate-animations-css.sh; do
+  generate-animations-css.sh \
+  generate-submap-css.sh; do
   if [ -x "$WAYBAR_SCRIPTS/generate/$_gen" ]; then
     "$WAYBAR_SCRIPTS/generate/$_gen"
   elif [ -f "$WAYBAR_SCRIPTS/generate/$_gen" ]; then
