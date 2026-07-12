@@ -33,7 +33,6 @@ match=$(waybar_settings_get '.liquidctl.match' '')
 pick=$(waybar_settings_get '.liquidctl.pick' '')
 skip_psu=$(waybar_settings_get '.liquidctl.skip_corsair_psu_if_hwmon' 'true')
 
-
 resolve_liquidctl() {
   if [ -n "${WAYBAR_LIQUIDCTL_BIN:-}" ]; then
     if [ -x "$WAYBAR_LIQUIDCTL_BIN" ]; then

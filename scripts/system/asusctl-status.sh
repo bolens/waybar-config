@@ -23,7 +23,6 @@ if [ "${1:-}" != "--refresh" ]; then
   exit 0
 fi
 
-
 resolve_asusctl() {
   if [ -n "${WAYBAR_ASUSCTL_BIN:-}" ]; then
     if [ -x "$WAYBAR_ASUSCTL_BIN" ]; then

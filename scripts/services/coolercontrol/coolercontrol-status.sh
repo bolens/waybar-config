@@ -28,7 +28,6 @@ fi
 
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
-
 emit_cc_json() {
   # $1 text $2 tooltip $3 primary class $4 optional capability class (writable|readonly)
   local text="$1" tooltip="$2" primary="$3" cap="${4:-}"

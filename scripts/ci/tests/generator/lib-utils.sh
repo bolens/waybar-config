@@ -299,13 +299,10 @@ bool_out=$(
     gauge_status_text "X" 50 4
   '
 )
-case "$bool_out" in
-  f0\|t1\|f1\|" 42%"\|"X "*) ;;
-  *)
-    echo "FAIL: bool/gauge helpers got: $bool_out" >&2
-    fail=1
-    ;;
-esac
+if [[ "$bool_out" != f0\|t1\|f1\|' 42%'\|'X '* ]]; then
+  echo "FAIL: bool/gauge helpers got: $bool_out" >&2
+  fail=1
+fi
 
 echo "Testing theme-colors-lib resolve..."
 theme_colors=$(
@@ -317,13 +314,10 @@ theme_colors=$(
     waybar_theme_color_with_alpha "#ff00aa" "0.5"
   '
 )
-case "$theme_colors" in
-  *\|"255, 0, 170"\|"rgba(255, 0, 170, 0.5)") ;;
-  *)
-    echo "FAIL: theme-colors helpers got: $theme_colors" >&2
-    fail=1
-    ;;
-esac
+if [[ "$theme_colors" != *\|'255, 0, 170'\|'rgba(255, 0, 170, 0.5)' ]]; then
+  echo "FAIL: theme-colors helpers got: $theme_colors" >&2
+  fail=1
+fi
 
 echo "Testing waybar_test_patch_settings..."
 waybar_test_patch_settings '.theme.font_size = 99'

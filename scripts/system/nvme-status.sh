@@ -27,7 +27,6 @@ fi
 temp_warn=$(waybar_settings_get '.thresholds.nvme.temp.warning' '60')
 temp_crit=$(waybar_settings_get '.thresholds.nvme.temp.critical' '75')
 
-
 # Fixture hook for tests: directory of fake hwmon trees (each with name + temp*_input).
 scan_root="${WAYBAR_NVME_HWMON_ROOT:-/sys/class/hwmon}"
 

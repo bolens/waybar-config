@@ -36,7 +36,6 @@ prefer_presence=$(waybar_settings_get '.services.openlinkhub.prefer_presence' 't
 temp_warn=$(waybar_settings_get '.thresholds.openlinkhub.temp.warning' '60')
 temp_crit=$(waybar_settings_get '.thresholds.openlinkhub.temp.critical' '75')
 
-
 has_corsairpsu_hwmon() {
   case "${WAYBAR_CORSAIRPSU_PRESENT:-}" in
     0 | false | no) return 1 ;;

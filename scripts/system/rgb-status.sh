@@ -24,7 +24,6 @@ fi
 
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
-
 openrgb_bin="${WAYBAR_OPENRGB_BIN:-}"
 if [ -z "$openrgb_bin" ] && command -v openrgb >/dev/null 2>&1; then
   openrgb_bin=$(command -v openrgb)
