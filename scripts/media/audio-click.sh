@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Audio sink volume/mute clicks and scroll (PipeWire/wpctl or pactl).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

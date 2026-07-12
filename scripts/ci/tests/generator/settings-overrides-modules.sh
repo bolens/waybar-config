@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "settings-overrides-modules"
 waybar_test_gen_sandbox
-if ! waybar_test_gen_default >/dev/null; then
+if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed before overrides" >&2
   exit 1
 fi

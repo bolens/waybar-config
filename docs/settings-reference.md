@@ -55,16 +55,13 @@ Common fields: `layer` (`overlay` recommended on Plasma for tooltips), `output`,
 - Interval keys (e.g. `cpu`, `weather`) are read by status scripts via `waybar_module_interval <key> <fallback>`.
 - Value `"once"` → long cache TTL for signal-driven modules.
 - `signals.<key>` must match the Waybar module `signal` field generators emit.
-- **Click / listener scripts must refresh that same number.** Prefer:
+- **Click / listener scripts must refresh that same number.** Prefer the key:
 
   ```bash
   "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" my_feature
-  # or:
-  sig=$(waybar_settings_get '.signals.my_feature' '42')
-  pkill -x -RTMIN+"$sig" waybar
   ```
 
-  Do not hardcode `RTMIN+N` in new code — if `signals.*` changes, hardcoded offsets miss the module Waybar subscribed to.
+  Numeric offsets and raw `pkill -RTMIN+N` are legacy — if `signals.*` changes, they miss the module Waybar subscribed to.
 
 ## `thresholds`
 

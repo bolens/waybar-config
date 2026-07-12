@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "settings-overrides-polish"
 waybar_test_gen_sandbox
-if ! waybar_test_gen_default >/dev/null; then
+if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed before polish clicks" >&2
   exit 1
 fi
@@ -15,7 +15,7 @@ fi
 echo "Testing polish default click wiring (no on_click overrides)..."
 cp "$ROOT_DIR/scripts/ci/lib/fixtures/settings/generator-polish-clicks.jsonc" \
   "$TEST_DIR/data/waybar-settings.jsonc"
-if ! waybar_test_gen_modules >/dev/null; then
+if ! waybar_test_gen_modules; then
   echo "FAIL: generate failed for polish defaults" >&2
   fail=1
 fi

@@ -9,7 +9,6 @@ set -eu
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
 target="${1:-next}"
-signal_num=$(waybar_settings_get '.signals.asusctl' '28')
 cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/waybar/asusctl-status.json"
 
 resolve_asusctl() {
@@ -74,12 +73,7 @@ cycle_next() {
 }
 
 signal_refresh() {
-  if [ -f "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
-    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$signal_num" "$cache_file"
-  else
-    rm -f "$cache_file" 2>/dev/null || true
-    pkill -x -RTMIN+"$signal_num" waybar >/dev/null 2>&1 || true
-  fi
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" asusctl "$cache_file"
   "$WAYBAR_SCRIPTS/system/asusctl-status.sh" --refresh >/dev/null 2>&1 || true
 }
 

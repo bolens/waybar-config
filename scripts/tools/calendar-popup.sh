@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Calendar popup (yad/rofi) launched from the clock module.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

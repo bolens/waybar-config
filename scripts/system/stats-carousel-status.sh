@@ -43,12 +43,11 @@ write_index() {
 }
 
 signal_refresh() {
-  sig=$(waybar_settings_get '.signals.stats_carousel' '32')
-  case "$sig" in '' | *[!0-9]*) sig=32 ;; esac
   if [ -x "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
-    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$sig" "$cache_file" 2>/dev/null || true
+    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" stats_carousel "$cache_file" 2>/dev/null || true
   else
     rm -f "$cache_file" 2>/dev/null || true
+    sig=$(waybar_settings_get '.signals.stats_carousel' '32')
     pkill -x -RTMIN+"$sig" waybar >/dev/null 2>&1 || true
   fi
 }

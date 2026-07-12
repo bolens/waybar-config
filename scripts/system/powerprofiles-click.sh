@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Cycle power-profiles-daemon profiles (next/prev/menu) and signal Waybar.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -55,8 +56,4 @@ powerprofilesctl set "$target" >/dev/null 2>&1 || exit 0
 notify-send "Power profile" "Switched to $target" 2>/dev/null || true
 
 # shellcheck source=waybar-signal.sh
-if [ -f "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
-  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" powerprofiles
-else
-  pkill -x -RTMIN+3 waybar >/dev/null 2>&1 || true
-fi
+"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" powerprofiles

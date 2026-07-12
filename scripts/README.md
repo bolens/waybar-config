@@ -28,7 +28,7 @@ Project docs hub: **[docs/README.md](../docs/README.md)** ([architecture](../doc
 |----------------|------|
 | `waybar-cache-helpers.sh` | Intervals, cache/locks, `serve_*`, `emit_waybar_json`, `write_cache_and_exit`, `emit_disconnected`, `waybar_threshold_class` |
 | `waybar-settings.sh` | Settings compile / getters / `waybar_settings_bool` |
-| `waybar-signal.sh` | `pkill -RTMIN+N` by numeric offset or `signals.*` key (+ optional cache invalidate) |
+| `waybar-signal.sh` | `pkill -RTMIN+N` by **`signals.*` key** (preferred) or numeric offset (+ optional cache invalidate). Numeric args are legacy. |
 | `settings-bool-lib.sh` | Portable `waybar_is_false` / `waybar_is_truthy` |
 | `gauge-lib.sh` | `gauge_bar`, `gauge_or_pct`, `gauge_status_text` |
 | `theme-colors-lib.sh` | Preset color merge + hex/rgba helpers for generators |

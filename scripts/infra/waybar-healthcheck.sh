@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# Timer-driven heal: restart dead waybar and revive expected listeners (privacy, dock, …).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

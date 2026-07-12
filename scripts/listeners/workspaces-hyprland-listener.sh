@@ -15,19 +15,10 @@ WAYBAR_LISTENER_LOCK_NAME=hypr-workspaces
 command -v socat >/dev/null 2>&1 || exit 0
 
 WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
-settings="$WAYBAR_HOME/data/waybar-settings.json"
-sig() {
-  local key="$1"
-  local fallback="$2"
-  if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
-    jq -r --arg k "$key" --argjson fb "$fallback" '.signals[$k] // $fb' "$settings" 2>/dev/null || printf '%s' "$fallback"
-  else
-    printf '%s' "$fallback"
-  fi
-}
-SIG_WORKSPACES="$(sig workspaces 16)"
-SIG_KEYBOARD="$(sig keyboard_layout 2)"
-SIG_DOCK_WINDOWS="$(sig dock_windows 11)"
+# Pass signals.* keys (not numbers) so waybar-signal.sh resolves from settings.
+SIG_WORKSPACES=workspaces
+SIG_KEYBOARD=keyboard_layout
+SIG_DOCK_WINDOWS=dock_windows
 
 # Discover Hyprland Instance Signature:
 # Hyprland registers active sessions with a unique instance hash.

@@ -10,7 +10,6 @@ set -euo pipefail
 . "$WAYBAR_SCRIPTS/lib/rofi-popup-lib.sh"
 
 action="${1:-menu}"
-signal_num=$(waybar_settings_get '.signals.homelab' '33')
 status_sh="$WAYBAR_SCRIPTS/services/homelab/homelab-status.sh"
 app_open="$WAYBAR_SCRIPTS/tools/app-open.sh"
 
@@ -32,11 +31,7 @@ first_url() {
 
 signal_refresh() {
   "$status_sh" --refresh >/dev/null 2>&1 || true
-  if [ -f "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
-    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$signal_num" 2>/dev/null || true
-  else
-    pkill -x -RTMIN+"$signal_num" waybar >/dev/null 2>&1 || true
-  fi
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" homelab 2>/dev/null || true
 }
 
 case "$action" in

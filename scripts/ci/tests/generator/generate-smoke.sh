@@ -8,7 +8,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 waybar_test_begin "generate-smoke"
 waybar_test_gen_sandbox
 if ! waybar_test_gen_default; then
-  echo "FAIL: default generate failed" >&2
+  echo "FAIL: default generate failed (see generator dump above; try scripts/generate/generate-settings.sh)" >&2
   exit 1
 fi
 echo "Generator scripts completed successfully."

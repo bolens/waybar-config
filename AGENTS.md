@@ -31,6 +31,7 @@ Details: [docs/architecture.md](docs/architecture.md).
 | Theme / presets / wallpaper | [docs/theming.md](docs/theming.md) |
 | Key meanings | [docs/settings-reference.md](docs/settings-reference.md) |
 | Something broken | [docs/troubleshooting.md](docs/troubleshooting.md) |
+| Signal a module after click/listener work | `scripts/lib/waybar-signal.sh <signals.* key>` (prefer key, not RTMIN number) |
 | Local gate | `make check-fast` or targeted `scripts/ci/tests/…` |
 | Contributor norms | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
@@ -39,9 +40,11 @@ Details: [docs/architecture.md](docs/architecture.md).
 - **Do** keep PRs small; regenerate and commit intended generated artifacts.
 - **Do** hide modules when optional deps are missing.
 - **Do** add CI suite + matrix entry when adding generator/secrets tests (`make check-suite-inventory`).
+- **Do** refresh modules with `waybar-signal.sh <key>` matching `signals.*` / generated `signal`.
 - **Don’t** reimplement generators in ad-hoc Python when `make generate` already covers the path.
 - **Don’t** write live secrets via MCP or dump secret values into chat/logs.
 - **Don’t** skip hooks or force-push `main`.
+- **Don’t** hardcode `pkill -RTMIN+N` in new click/listener code.
 
 ## MCP quick flow
 

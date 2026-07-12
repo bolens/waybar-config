@@ -167,7 +167,7 @@ PY
 
 # Scroll script: empty per-output raw seeded from global on KDE.
 # Keep stderr so gen helper can dump generator output on failure.
-if ! waybar_test_gen_modules >/dev/null; then
+if ! waybar_test_gen_modules; then
   echo "FAIL: generate-settings failed before scroll seed test" >&2
   fail=1
 fi

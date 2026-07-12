@@ -16,7 +16,6 @@ api_url=$(waybar_settings_get '.services.coolercontrol.api_url' 'http://127.0.0.
 ui_user=$(waybar_settings_get '.services.coolercontrol.ui_user' 'CCAdmin')
 ui_pass="${WAYBAR_CC_UI_PASS:-$(waybar_settings_get '.services.coolercontrol.ui_pass' '')}"
 token="${WAYBAR_CC_TOKEN:-$(waybar_settings_get '.services.coolercontrol.token' '')}"
-signal_num=$(waybar_settings_get '.signals.coolercontrol' '27')
 
 export WAYBAR_CC_API_URL="$api_url"
 export WAYBAR_CC_UI_USER="$ui_user"
@@ -33,11 +32,7 @@ notify() {
 }
 
 signal_refresh() {
-  if [ -f "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
-    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$signal_num" 2>/dev/null || true
-  else
-    pkill -x -RTMIN+"$signal_num" waybar >/dev/null 2>&1 || true
-  fi
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" coolercontrol 2>/dev/null || true
   # Also force a background refresh for cache-driven modules
   "$WAYBAR_SCRIPTS/services/coolercontrol/coolercontrol-status.sh" --refresh >/dev/null 2>&1 || true
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Keep launcher process footprint minimal for service restarts.
+# Systemd/user entry: generate if needed, start listeners, exec waybar (minimal parent footprint).
 set -euo pipefail
 
 theme_has_arrow() {

@@ -91,8 +91,8 @@ def main():
             subprocess.run(["hyprctl", "keyword", f"device:{device_name}:enabled", "false"], capture_output=True)
             subprocess.run(["notify-send", "Touchpad Status", "Touchpad disabled."])
 
-        # Refresh waybar status (signal 20)
-        subprocess.run([signal_script, "20", cache_file])
+        # Refresh waybar status via signals.touchpad
+        subprocess.run([signal_script, "touchpad", cache_file])
 
     else:
         # Status mode

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Per-slot open-window dock icons (focus highlight + click to activate).
 set -euo pipefail
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

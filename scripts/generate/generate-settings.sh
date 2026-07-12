@@ -18,24 +18,6 @@ system_out="$WAYBAR_HOME/modules/system.generated.jsonc"
 [ -f "$settings" ] || exit 0
 command -v jq >/dev/null 2>&1 || exit 1
 
-expand_group_modules() {
-  # Legacy helper: @network.interfaces collapses to []. Real interface expansion
-  # happens in build_groups_json jq via the network manifest — keep this for
-  # any callers still expecting a flat module list without custom/if-* ids.
-  local group_key="$1"
-  jq -c --arg key "$group_key" '
-    .groups[$key].modules // []
-    | map(
-        if . == "@network.interfaces" then
-          []
-        else
-          .
-        end
-      )
-    | flatten
-  ' "$settings"
-}
-
 network_interface_modules() {
   if [[ ! -f "$network_manifest" ]]; then
     return 0
@@ -93,7 +75,7 @@ build_groups_json() {
         end
       );
 
-    # --- media transforms ---
+    # --- media transforms (keep in sync with generate-drawers-modules.sh for tooltip labels) ---
     def insert_album_art($mods):
       # visual.album_art.enabled → insert custom/album-art immediately before mpris.
       if (($settings[0].visual.album_art.enabled // false) == true) then

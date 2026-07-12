@@ -118,6 +118,7 @@ jq -n --slurpfile s "$settings" \
     );
 
   def insert_album_art($mods):
+    # Keep in sync with generate-settings.sh build_groups_json (same transform for drawer tooltips).
     if (($s[0].visual.album_art.enabled // false) == true) then
       if (($mods | index("custom/album-art")) != null) then $mods
       else

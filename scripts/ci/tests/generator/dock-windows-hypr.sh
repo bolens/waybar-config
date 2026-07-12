@@ -54,7 +54,7 @@ cp -f "$TEST_DIR/data/waybar-settings.json" "$TEST_DIR/data/waybar-settings.json
 
 # Preserve real hyprland.jsonc (sandbox normally stubs it to {})
 cp "$ROOT_DIR/modules/hyprland.jsonc" "$TEST_DIR/modules/hyprland.jsonc"
-WAYBAR_COMPOSITOR=hyprland waybar_test_gen_modules >/dev/null || {
+WAYBAR_COMPOSITOR=hyprland waybar_test_gen_modules || {
   echo "FAIL: hyprland generate failed" >&2
   fail=1
 }
@@ -73,7 +73,7 @@ waybar_test_assert_jq "$desk" \
   "desk-hypr should list hyprland/submap under Hyprland"
 
 # KDE path should not copy native overlay
-WAYBAR_COMPOSITOR=kde waybar_test_gen_modules >/dev/null || true
+WAYBAR_COMPOSITOR=kde waybar_test_gen_modules || true
 kde_native=$(waybar_test_read_jsonc "$TEST_DIR/modules/hyprland.native.generated.jsonc")
 waybar_test_assert_jq "$kde_native" \
   '. == {}' \

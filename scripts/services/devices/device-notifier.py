@@ -220,8 +220,8 @@ def main():
             else:
                 err_msg = mount_res.stderr.strip() or "Unknown error"
                 subprocess.run(["notify-send", "Device Notifier", f"Failed to mount {desc}: {err_msg}"])
-            # Refresh waybar
-            subprocess.run([signal_script, "19", cache_file])
+            # Refresh waybar via signals.device_notifier
+            subprocess.run([signal_script, "device_notifier", cache_file])
 
         elif action == "unmount":
             dev = selected_item["device"]
@@ -233,8 +233,8 @@ def main():
             else:
                 err_msg = unmount_res.stderr.strip() or "Unknown error"
                 subprocess.run(["notify-send", "Device Notifier", f"Failed to unmount {desc}: {err_msg}"])
-            # Refresh waybar
-            subprocess.run([signal_script, "19", cache_file])
+            # Refresh waybar via signals.device_notifier
+            subprocess.run([signal_script, "device_notifier", cache_file])
 
         elif action == "open":
             mps = selected_item["mountpoints"]
@@ -242,7 +242,7 @@ def main():
                 subprocess.run(["xdg-open", mps[0]])
 
         elif action == "rescan":
-            subprocess.run([signal_script, "19", cache_file])
+            subprocess.run([signal_script, "device_notifier", cache_file])
 
     else:
         # Status mode (Waybar output)

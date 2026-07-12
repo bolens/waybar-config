@@ -56,6 +56,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       interval: "once",
       exec: ($scripts + "/media/media-prev.sh"),
       "on-click": "playerctl previous",
+      # Defaults asymmetric on purpose: rewind farther (30s) than skip-ahead (10s).
       "on-click-right": ("playerctl position " + (((($s[0].audio // {}).seek_back_sec) // 30) | tostring) + "-")
     },
     "custom/media-next": {

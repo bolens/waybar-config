@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
+# Fan / cooling status for Waybar (CPU/GPU RPM from hwmon; thresholds from settings).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
-script_dir="${0%/*}"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
@@ -13,9 +13,6 @@ stale_lock_ttl=15
 
 mkdir -p "$cache_dir"
 
-script_dir="${0%/*}"
-# Handle sourcing when run directly or by Waybar
-. "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 if [ "${1:-}" != "--refresh" ]; then
   if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
     exit 0

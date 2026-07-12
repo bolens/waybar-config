@@ -148,7 +148,7 @@ waybar_test_gen_restore_sot
 
 # Re-generate from restored jsonc so later override tests start clean
 
-waybar_test_gen_default >/dev/null
+waybar_test_gen_default
 
 # validate-generated-config contract script (after full restore/regen)
 

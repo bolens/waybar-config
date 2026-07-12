@@ -66,15 +66,15 @@ For click/listener refresh, use the **same** `signals.<key>` the generator wires
 
 ```bash
 "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" my_feature
-# or: sig=$(waybar_settings_get '.signals.my_feature' 'N'); pkill -x -RTMIN+"$sig" waybar
 ```
 
-Do not hardcode `RTMIN+N` — drift from `signals.*` leaves the bar stale after clicks.
+Prefer the **key** (not a numeric offset). Do not hardcode `RTMIN+N` — drift from `signals.*` leaves the bar stale after clicks. Add a one-line purpose header on new status/click scripts.
+
 ## 4. Wire the generator
 
 Most modules are emitted by a domain script under `scripts/generate/` that `generate-settings.sh` already calls. Either:
 
-- Extend an existing emitter (e.g. `generate-utilities-modules.sh`, `generate-system` path inside settings generate), or
+- Extend an existing emitter (e.g. `generate-utilities-modules.sh`, or the system modules jq inside `generate-settings.sh`), or
 - Add `generate-<domain>-modules.sh` and invoke it from `generate-settings.sh`.
 
 Emit JSON that includes `exec`, `interval` / `signal`, `return-type`, tooltips, and CSS `class` hooks as needed. **Do not** hand-edit `modules/*.generated.jsonc`.

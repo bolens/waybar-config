@@ -108,6 +108,7 @@ essential_files=(
   "modules/hypr-tools.generated.jsonc"
   "modules/utilities.generated.jsonc"
   "theme/tokens.generated.css"
+  "theme/album-art.generated.css"
 )
 
 validate_all_generated_files() {

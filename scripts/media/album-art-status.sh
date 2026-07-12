@@ -8,9 +8,17 @@ set -eu
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
 # Cover lives next to theme/album-art.generated.css (relative url("album-art")).
+# Never glob album-art.* — that would delete album-art.generated.css.
 mkdir -p "$WAYBAR_HOME/theme"
 art_base="$WAYBAR_HOME/theme/album-art"
 enabled=$(waybar_settings_get '.visual.album_art.enabled' 'false')
+
+clear_cached_art() {
+  rm -f "$art_base" \
+    "$art_base".png "$art_base".jpg "$art_base".jpeg "$art_base".webp "$art_base".img \
+    "$art_base".png.tmp "$art_base".jpg.tmp "$art_base".jpeg.tmp "$art_base".webp.tmp "$art_base".img.tmp \
+    2>/dev/null || true
+}
 
 emit_hidden() {
   emit_waybar_json "" "${1:-No album art}" "hidden"
@@ -30,7 +38,7 @@ if ! command -v playerctl >/dev/null 2>&1; then
 fi
 
 if ! playerctl status >/dev/null 2>&1; then
-  rm -f "$art_base" "$art_base".* 2>/dev/null || true
+  clear_cached_art
   emit_hidden "No active player"
   exit 0
 fi
@@ -41,7 +49,7 @@ artist=$(playerctl metadata --format '{{artist}}' 2>/dev/null || true)
 tooltip=$(printf '%s\n%s' "${title:-Unknown}" "${artist:-}")
 
 if [ -z "$art_url" ]; then
-  rm -f "$art_base" "$art_base".* 2>/dev/null || true
+  clear_cached_art
   emit_hidden "No album art"
   exit 0
 fi

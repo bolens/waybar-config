@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# Toggle Feral GameMode and signal the gamemode Waybar module.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

@@ -31,6 +31,7 @@ if [[ -n "$ws_visible" ]]; then
 fi
 
 crit_pulse0="$(rgba_from "$critical" "0.0" "rgba(255, 42, 127, 0.0)")"
+# Soft pulse/breathe alphas — strong enough to read on glass, not opaque.
 crit_pulse1="$(rgba_from "$critical" "0.35" "rgba(255, 42, 127, 0.35)")"
 crit_breathe_bg="$(rgba_from "$critical" "0.25" "rgba(255, 42, 127, 0.25)")"
 crit_breathe_glow="$(rgba_from "$critical" "0.4" "rgba(255, 42, 127, 0.4)")"

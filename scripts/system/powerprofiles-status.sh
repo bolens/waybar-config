@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# Powerprofilesctl status for Waybar (hides when powerprofilesctl is absent).
 set -eu
 
 if ! command -v powerprofilesctl >/dev/null 2>&1; then
