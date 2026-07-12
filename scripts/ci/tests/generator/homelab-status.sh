@@ -120,4 +120,63 @@ ok=$(
 )
 waybar_test_assert_jq "$ok" '.class == "normal" and (.text | test("2/2"))' "all up expected normal 2/2: $ok"
 
+echo "Testing homelab-click open-first / refresh / empty menu..."
+mkdir -p "$TEST_DIR/scripts/services/homelab" "$TEST_DIR/scripts/tools" "$TEST_DIR/scripts/lib"
+cp -f "$ROOT_DIR/scripts/services/homelab/homelab-click.sh" "$TEST_DIR/scripts/services/homelab/"
+cp -f "$ROOT_DIR/scripts/lib/rofi-popup-lib.sh" "$TEST_DIR/scripts/lib/" 2>/dev/null || true
+cp -f "$ROOT_DIR/scripts/lib/waybar-signal.sh" "$TEST_DIR/scripts/lib/" 2>/dev/null || true
+chmod +x "$TEST_DIR/scripts/services/homelab/homelab-click.sh"
+
+cat >"$TEST_DIR/scripts/tools/app-open.sh" <<'EOF'
+#!/usr/bin/env sh
+# Record opened URL for assertions (last arg).
+printf '%s\n' "$*" >"${WAYBAR_HOME}/.homelab-open"
+EOF
+chmod +x "$TEST_DIR/scripts/tools/app-open.sh"
+
+rm -f "$TEST_DIR/.homelab-open"
+PATH="$TEST_DIR/bin:$PATH" \
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" XDG_CACHE_HOME="$TEST_DIR/hl-click" \
+  bash "$TEST_DIR/scripts/services/homelab/homelab-click.sh" open-first
+if [ ! -f "$TEST_DIR/.homelab-open" ] || ! grep -q 'http://up.test/a' "$TEST_DIR/.homelab-open"; then
+  echo "FAIL: open-first should open first target URL via app-open: $(cat "$TEST_DIR/.homelab-open" 2>/dev/null || echo missing)" >&2
+  fail=1
+else
+  echo "PASS: open-first opened first URL"
+fi
+
+# refresh should not open a URL
+rm -f "$TEST_DIR/.homelab-open"
+PATH="$TEST_DIR/bin:$PATH" \
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" XDG_CACHE_HOME="$TEST_DIR/hl-refresh" \
+  bash "$TEST_DIR/scripts/services/homelab/homelab-click.sh" refresh
+if [ -f "$TEST_DIR/.homelab-open" ]; then
+  echo "FAIL: refresh must not open a URL" >&2
+  fail=1
+else
+  echo "PASS: refresh did not open URL"
+fi
+
+# empty targets → menu exits quietly
+jq '.homelab.targets = []' "$TEST_DIR/data/waybar-settings.json" >"$TEST_DIR/data/waybar-settings.json.tmp"
+mv -f "$TEST_DIR/data/waybar-settings.json.tmp" "$TEST_DIR/data/waybar-settings.json"
+cp -f "$TEST_DIR/data/waybar-settings.json" "$TEST_DIR/data/waybar-settings.jsonc"
+rm -f "$TEST_DIR/.homelab-open"
+if ! PATH="$TEST_DIR/bin:$PATH" \
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  bash "$TEST_DIR/scripts/services/homelab/homelab-click.sh" menu; then
+  echo "FAIL: menu with empty targets should exit 0" >&2
+  fail=1
+elif [ -f "$TEST_DIR/.homelab-open" ]; then
+  echo "FAIL: empty menu should not open URL" >&2
+  fail=1
+else
+  echo "PASS: empty targets menu is a no-op"
+fi
+
+if ! bash -n "$TEST_DIR/scripts/services/homelab/homelab-click.sh"; then
+  echo "FAIL: homelab-click.sh bash -n" >&2
+  fail=1
+fi
+
 waybar_test_end

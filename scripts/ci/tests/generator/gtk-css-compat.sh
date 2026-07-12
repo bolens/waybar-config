@@ -131,7 +131,7 @@ fi
 rm -rf "$ok_root"
 
 echo "Testing sandbox CSS has no :root / var() after generate..."
-if ! python3 - "$TEST_DIR" <<'PY'
+if ! python3 - "$TEST_DIR" <<'PY'; then
 import re, sys
 from pathlib import Path
 root = Path(sys.argv[1])
@@ -146,7 +146,6 @@ if bad:
     print("\n".join(bad))
     sys.exit(1)
 PY
-then
   echo "FAIL: sandbox CSS still contains :root or var()" >&2
   fail=1
 else

@@ -326,6 +326,7 @@ jobs:
           - power-menu
           - pomodoro
           - homelab-status
+          - apply-profile
           - cava-status
           - cava-placement
           - album-art-wiring

@@ -77,15 +77,18 @@ if grep -q 'active: true' "$rm_css"; then
   fail=1
 fi
 
-echo "Testing GTK CssProvider accepts reduced-motion CSS..."
-if command -v python3 >/dev/null 2>&1; then
+echo "Testing GTK CssProvider accepts reduced-motion CSS (skipped if Gtk unavailable)..."
+if python3 -c 'import gi; gi.require_version("Gtk","3.0"); from gi.repository import Gtk' >/dev/null 2>&1; then
   WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" WAYBAR_REDUCED_MOTION=1 \
     waybar_apply_reduced_motion_css
   if ! python3 - "$rm_css" <<'PY'; then
-import gi, sys
+import gi
+import sys
+from pathlib import Path
+
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
-from pathlib import Path
+
 p = Gtk.CssProvider()
 try:
     p.load_from_data(Path(sys.argv[1]).read_bytes())
@@ -96,6 +99,8 @@ print("ok: Gtk accepts reduced-motion CSS")
 PY
     fail=1
   fi
+else
+  echo "note: Gtk.CssProvider probe skipped (PyGObject GTK3 not installed)"
 fi
 
 if ! bash -n "$TEST_DIR/scripts/lib/reduced-motion-lib.sh"; then
@@ -103,5 +108,4 @@ if ! bash -n "$TEST_DIR/scripts/lib/reduced-motion-lib.sh"; then
   fail=1
 fi
 
-echo "PASS: reduced-motion"
 waybar_test_end
