@@ -18,7 +18,7 @@ fi
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."custom/liquidctl".exec | test("system/liquidctl-status\\.sh$")' "custom/liquidctl exec missing system/liquidctl-status.sh"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."custom/liquidctl".interval == 60' "custom/liquidctl interval expected 60 from module_intervals.liquidctl"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."custom/liquidctl"."on-click-middle" | test("liquidctl-status\\.sh --refresh")' "custom/liquidctl middle-click should refresh"
-waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" '.["group/hardware"].modules | index("custom/liquidctl")' "custom/liquidctl missing from group/hardware modules"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" '.["group/cooling"].modules | index("custom/liquidctl")' "custom/liquidctl missing from group/cooling modules"
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '.module_intervals.liquidctl == 60' "module_intervals.liquidctl expected 60 in compiled settings"
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '.thresholds.liquidctl.temp.warning == 55 and .thresholds.liquidctl.temp.critical == 65' "thresholds.liquidctl.temp missing/wrong in compiled settings"
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '.liquidctl.skip_corsair_psu_if_hwmon == true' "liquidctl.skip_corsair_psu_if_hwmon expected true in compiled settings"

@@ -15,7 +15,7 @@ on:
       - "theme.css"
       - "config.jsonc"
       - "style.css"
-      - "user-style.css"
+      - "user-style/**"
       - "Makefile"
       - "systemd/**"
       - ".shellcheckrc"
@@ -89,6 +89,8 @@ jobs:
               - 'includes/**'
               - 'theme/**'
               - 'theme.css'
+              - 'style.css'
+              - 'user-style/**'
               - 'config.jsonc'
             # Non-scripts paths that still require the generator matrix.
             generator_nonscript:
@@ -98,6 +100,8 @@ jobs:
               - 'includes/**'
               - 'theme/**'
               - 'theme.css'
+              - 'style.css'
+              - 'user-style/**'
               - 'config.jsonc'
             # Secrets suites are narrower: helpers they copy + polish scripts they run.
             # Keep in sync with waybar_test_secrets_sandbox / waybar_test_secrets_copy_polish_scripts
@@ -155,7 +159,7 @@ jobs:
               - 'theme.css'
               - 'config.jsonc'
               - 'style.css'
-              - 'user-style.css'
+              - 'user-style/**'
             systemd:
               - 'systemd/**'
               - 'scripts/ci/check-systemd-units.sh'
@@ -242,6 +246,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Compare CI matrix to on-disk suites
         run: bash scripts/ci/check-suite-inventory.sh
+      - name: Check CI path filters cover CSS surfaces
+        run: bash scripts/ci/check-ci-path-filters.sh
 
   # Fast fail-early checks before the heavier suites.
   syntax:
@@ -305,6 +311,9 @@ jobs:
         suite:
           - generate-smoke
           - drawer-sot-contracts
+          - drawer-group-css-contracts
+          - pill-css-contracts
+          - slot-css-contracts
           - listener-lifecycle
           - settings-overrides-modules
           - settings-overrides-polish
@@ -340,6 +349,7 @@ jobs:
           - dock-windows-plasma
           - active-window-kde-cache
           - github-status
+          - vpn-cooling-refresh
           - per-output-core
           - per-output-modules
           - visual-gauges

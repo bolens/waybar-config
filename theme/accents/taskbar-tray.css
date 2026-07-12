@@ -1,0 +1,28 @@
+/* Taskbar + tray accent colors */
+
+#taskbar button {
+    color: #c8f6ff;
+    background: transparent;
+    border: none;
+}
+
+#taskbar button.active {
+    color: #00e5ff;
+    background: rgba(0, 229, 255, 0.18);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}
+
+#taskbar button:hover {
+    color: #c8f6ff;
+    background: rgba(255, 42, 127, 0.18);
+    border: 1px solid rgba(255, 42, 127, 0.45);
+    text-shadow: 0 0 6px rgba(255, 42, 127, 0.3);
+}
+
+#tray > .active:hover,
+#tray > .needs-attention:hover,
+#tray > .passive:hover {
+    background: rgba(0, 229, 255, 0.12);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.22);
+}

@@ -14,6 +14,48 @@ GTK3/Waybar has **no CSS `var()`** — generators bake concrete color values int
 | `preset` | Load [`data/themes/<theme.preset>.jsonc`](../data/themes/), then optional `theme.colors` overrides |
 | `wallpaper` | Auto matugen → wallust → pywal. Default `theme.wallpaper.scope: per_output` styles each monitor |
 
+GTK3 has no CSS variables. Generators bake colors into:
+
+| File | Owns |
+|------|------|
+| `theme/tokens.generated.css` | Font, bar chrome, tooltips |
+| `theme/module-pills.generated.css` | Shared pill layout from `scripts/lib/css-selectors-lib.sh` |
+| `theme/semantic-colors.generated.css` | Theme-aware pill/drawer/slot colors (`slot_count`-aware) |
+| `theme/drawers.generated.css` / `theme/groups.generated.css` | Drawer shells + `#center`/`#status` cluster layout from the same lib SoT |
+| `theme/modules.css` / `theme/groups.css` | Hand layout overrides (privacy chips, `#workspaces`/`#submap`, …) |
+| `theme/workspaces.css` / `theme/dock-windows.css` | Strip chrome only |
+| `theme/workspaces.generated.css` / `theme/dock-windows.generated.css` | Slot layout from `slot_count` |
+| `theme/accents/*.css` | Shared cyberpunk **brand** state accents (not theme-tinted) |
+| `user-style/*.css` | Personal taste overrides — **must load last** via `style.css` |
+
+### Where does new CSS go?
+
+| Change | Put it here |
+|--------|-------------|
+| New module that should share pill chrome | Add ID to `waybar_css_pill_ids` in `scripts/lib/css-selectors-lib.sh`, then `make generate` |
+| Theme-aware color (follows `theme.mode` / presets) | Generator → `semantic-colors.generated.css` (do not hand-edit) |
+| Shared state color that stays cyberpunk on every preset | `theme/accents/<domain>.css` |
+| Personal one-off taste | `user-style/<domain>.css` |
+| Layout-only quirk (padding, hidden, letter-spacing) | `theme/modules.css` (or drawers/groups generators if it is an ID list) |
+| New drawer side | `drawers.icons` + `groups.*` in settings **and** `waybar_css_drawer_sides` / group map in the lib |
+
+### Accents vs `theme.mode`
+
+`theme/accents/*.css` is **intentional brand chrome**: VPN greens, clock yellow, privacy in-use colors, dock app hovers, etc. stay cyberpunk even when `theme.mode` is `preset`/`nord`/wallpaper. Semantic pill backgrounds and `.warning`/`.critical` **do** follow the active theme. Do not move brand accents into the theme generator unless you are deliberately making them theme-aware.
+
+`style.css` is import glue (no thin accent/user hubs):
+
+```css
+@import "…/hyprwhspr-style.css";
+@import "theme.css";
+@import "theme/accents/….css";   /* domain accents */
+@import "user-style/….css";      /* personal — last */
+```
+
+`@import` paths resolve relative to the **file that contains them**. From `style.css` (config root) use `theme/accents/…` and `user-style/…`. Avoid `/*` / `*.css` globs inside CSS comments — GTK treats that as a nested comment and rejects the stylesheet.
+
+Do not re-set `.warning`/`.critical` colors in accents or user-style modules.
+
 ```jsonc
 "theme": {
   "mode": "preset",
@@ -46,6 +88,8 @@ On the `theme` object: `font_family`, `font_size`, `tooltip_font_size`, `border_
 
 Clock calendar spans and Rofi menus consume the same color set.
 
+After editing theme colors or CSS layout/accent modules, run `make generate` (or at least `bash scripts/generate/generate-theme-tokens.sh`) so `semantic-colors.generated.css` picks up accent-tinted module pills and drawer handles.
+
 ## Floating / glass bars
 
 ```jsonc
@@ -69,7 +113,7 @@ Under `visual` in settings:
 |-----|------|
 | `gauges` | Unicode metric gauges |
 | `album_art` | MPRIS art chip (on by default) |
-| `stats_carousel` | Opt-in rotating metrics |
+| `stats_carousel` | Rotating cpu/mem/disk/gpu chip (on by default; scroll to cycle; `module_intervals.stats_carousel`, default 8) |
 | `animations` | `workspace_pulse`, `critical_breathe`, `idle_glow`, `reduced_motion` |
 
 ### Reduced motion

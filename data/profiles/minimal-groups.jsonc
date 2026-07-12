@@ -5,6 +5,14 @@
   //
   // Keeps: workspaces, media, net, notifications, clock, cpu/mem/disk, updates, weather, power menu, pomodoro
   // Drops: CoolerControl, liquidctl, OpenLinkHub, ASUS, Stream Deck, i2pd, security scanners, dock hardware extras
+  "layouts": {
+    "top": {
+      "modules_left": ["group/desk-controls", "group/devices", "group/media", "group/net"]
+    },
+    "bottom": {
+      "modules_right": ["group/tools", "group/infra", "group/security", "group/hardware", "group/cooling", "clock#bottom"]
+    }
+  },
   "groups": {
     "power": {
       "drawer": "left",
@@ -17,11 +25,16 @@
         "custom/notifications",
         "custom/powerprofiles",
         "custom/brightness",
-        "bluetooth",
         "idle_inhibitor",
-        "custom/keyboard-layout",
-        "custom/kdeconnect",
-        "custom/clipboard"
+        "custom/keyboard-layout"
+      ]
+    },
+    "devices": {
+      "drawer": "right",
+      "modules": [
+        "custom/devices-drawer",
+        "bluetooth",
+        "custom/kdeconnect"
       ]
     },
     "media": {
@@ -48,7 +61,8 @@
         "custom/nightlight",
         "custom/clipboard",
         "custom/weather",
-        "custom/pomodoro"
+        "custom/pomodoro",
+        "custom/github"
       ]
     },
     "infra": {
@@ -56,13 +70,16 @@
       "modules": [
         "custom/infra-drawer",
         "custom/updates",
-        "custom/github",
         "custom/uptime"
       ]
     },
     "hardware": {
       "drawer": "left",
       "modules": ["custom/hardware-drawer", "custom/cpu", "custom/memory", "custom/disk"]
+    },
+    "cooling": {
+      "drawer": "left",
+      "modules": ["custom/cooling-drawer"]
     },
     "security": {
       "drawer": "left",

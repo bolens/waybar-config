@@ -173,7 +173,8 @@ tooltip=$(printf 'Docker: %s (running %s / total %s / unhealthy %s)\nPodman: %s 
   "$podman_state" "$podman_running" "$podman_total" "$([ "$podman_state" = "ready" ] && printf ' - engine reachable, no containers tracked' || printf '')" \
   "$vm_state" "$vm_running" "$vm_total" \
   "$waydroid_state" "$waydroid_health" "$waydroid_session" "$waydroid_container")
-tooltip=$(printf '%b' "$tooltip" | escape_markup)
+# escape_markup takes an arg (does not read stdin).
+tooltip=$(escape_markup "$tooltip")
 tooltip=$(printf '%s\n\nLeft: virt-manager · Right: podman ps · Middle: virsh list' "$tooltip")
 
 json=$(jq -cn \

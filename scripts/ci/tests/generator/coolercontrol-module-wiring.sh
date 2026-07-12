@@ -20,7 +20,7 @@ waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."cu
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."custom/coolercontrol"."on-scroll-up" | test("coolercontrol-click\\.sh next")' "custom/coolercontrol scroll-up should cycle next mode"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."custom/coolercontrol"."on-scroll-down" | test("coolercontrol-click\\.sh prev")' "custom/coolercontrol scroll-down should cycle prev mode"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."custom/coolercontrol"."on-click-right" | test("coolercontrol-click\\.sh menu")' "custom/coolercontrol right-click should open mode menu"
-waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" '.["group/hardware"].modules | index("custom/coolercontrol")' "custom/coolercontrol missing from group/hardware modules"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" '.["group/cooling"].modules | index("custom/coolercontrol")' "custom/coolercontrol missing from group/cooling modules"
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '.module_intervals.coolercontrol == 60' "module_intervals.coolercontrol expected 60 in compiled settings"
 mkdir -p "$TEST_DIR/scripts/services/coolercontrol"
 cp "$ROOT_DIR/scripts/services/coolercontrol/coolercontrol-status.sh" \

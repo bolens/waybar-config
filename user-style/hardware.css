@@ -1,0 +1,35 @@
+/* Cooling / PSU / security scanners */
+
+#custom-psu {
+    color: #ff9f1c;
+    text-shadow: 0 0 6px rgba(255, 159, 28, 0.35);
+}
+
+#custom-fans,
+#custom-liquidctl,
+#custom-coolercontrol,
+#custom-nvme,
+#custom-openlinkhub,
+#custom-rgb {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}
+
+#custom-coolercontrol.writable {
+    border-color: rgba(44, 255, 176, 0.35);
+}
+
+#custom-libredefender.normal,
+#custom-chkrootkit.normal {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.35);
+}
+
+#custom-libredefender.scanning,
+#custom-chkrootkit.scanning {
+    color: #c8f6ff;
+    text-shadow: 0 0 6px rgba(200, 246, 255, 0.35);
+    background: rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.22);
+}

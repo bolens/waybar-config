@@ -109,6 +109,14 @@ essential_files=(
   "modules/utilities.generated.jsonc"
   "theme/tokens.generated.css"
   "theme/album-art.generated.css"
+  "theme/module-pills.generated.css"
+  "theme/semantic-colors.generated.css"
+  "theme/drawers.generated.css"
+  "theme/groups.generated.css"
+  "theme/dock-windows.generated.css"
+  "theme/workspaces.generated.css"
+  "theme/animations.generated.css"
+  "theme/reduced-motion.generated.css"
 )
 
 validate_all_generated_files() {
@@ -128,20 +136,13 @@ validate_all_generated_files() {
         echo "FAIL [$stage]: JSON syntax error in $file_rel" >&2
         check_fail=1
       fi
+    elif [[ "$file_rel" == *.css ]]; then
+      if grep -E "/home/|~/\.config/waybar" "$file_path" >/dev/null 2>&1; then
+        echo "FAIL [$stage]: Hardcoded path detected in $file_rel" >&2
+        check_fail=1
+      fi
     fi
   done
-
-  local css_file="$TEST_DIR/theme/workspaces.generated.css"
-  if [ ! -f "$css_file" ]; then
-    echo "FAIL [$stage]: workspaces.generated.css was not created!" >&2
-    check_fail=1
-  elif [ ! -s "$css_file" ]; then
-    echo "FAIL [$stage]: workspaces.generated.css is empty!" >&2
-    check_fail=1
-  elif grep -E "/home/|~/\.config/waybar" "$css_file" >/dev/null 2>&1; then
-    echo "FAIL [$stage]: Hardcoded path detected in $css_file" >&2
-    check_fail=1
-  fi
 
   local gen_files=()
   while IFS= read -r -d $'\0'; do

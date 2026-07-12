@@ -1,0 +1,15 @@
+/* Storage / memory purple */
+
+#custom-disk,
+#custom-memory,
+#custom-memory.normal {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.28);
+}
+
+#custom-disk:hover,
+#custom-memory:hover,
+#custom-memory.normal:hover {
+    color: #f5d0fe;
+    text-shadow: 0 0 8px rgba(224, 170, 255, 0.55);
+}

@@ -1,0 +1,61 @@
+/* Peripherals / sync / vaults / touchpad */
+
+#custom-kdeconnect,
+#custom-kdeconnect.connected,
+#custom-device-battery,
+#custom-syncthing,
+#custom-streamdeck,
+#custom-i2pd {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+}
+
+#custom-kdeconnect.disconnected {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+#custom-device-battery.charging {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.35);
+}
+
+#custom-device-notifier {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.3);
+}
+
+#custom-device-notifier.empty {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+#custom-device-notifier.unmounted {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+
+#custom-device-notifier.mounted {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.3);
+}
+
+#custom-vaults,
+#custom-vaults.locked,
+#custom-touchpad,
+#custom-touchpad.enabled,
+#custom-colorpicker {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
+}
+
+#custom-vaults.empty,
+#custom-touchpad.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+#custom-vaults.unlocked {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}

@@ -1,0 +1,13 @@
+/* Non-drawer overrides — cluster pill geometry: groups.generated.css */
+
+#workspaces {
+    background: transparent;
+    border: none;
+    margin: 0;
+    padding: 0 4px;
+}
+
+#submap {
+    background: transparent;
+    border: none;
+}

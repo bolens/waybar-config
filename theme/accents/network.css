@@ -1,0 +1,54 @@
+/* Network / VPN / Tailscale / Bluetooth accents */
+
+#network.bandwidthUpBytes,
+#network.bandwidthDownBytes {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.3);
+}
+
+#network.bond {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+
+#custom-vpnstatus,
+#custom-vpnstatus.normal {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.35);
+}
+
+#custom-vpnstatus.offline,
+#custom-vpnstatus.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+#network.eno1,
+#network.enp5s0,
+#custom-eno1,
+#custom-enp5s0 {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.3);
+}
+
+#network.wlan0,
+#custom-wlan0 {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}
+
+#network.wlan0.disconnected,
+#custom-wlan0.disconnected,
+#network.bond.disconnected,
+#network.eno1.disconnected,
+#network.enp5s0.disconnected,
+#custom-eno1.disconnected,
+#custom-enp5s0.disconnected {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+#bluetooth {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+}

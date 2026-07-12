@@ -50,6 +50,23 @@ waybar_test_assert_json_file_jq "$TEST_DIR/modules/audio.generated.jsonc" \
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/audio.generated.jsonc" \
   '."custom/album-art".exec | test("media/album-art-status\\.sh$")' \
   "custom/album-art exec should point at album-art-status.sh"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/audio.generated.jsonc" \
+  '."custom/album-art".signal == 36' \
+  "custom/album-art should wire signals.album_art"
+waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" \
+  '.module_intervals.album_art == "once" and .signals.album_art == 36' \
+  "album_art interval/signal should be signal-driven"
+if [ ! -x "$TEST_DIR/scripts/listeners/album-art-listener.sh" ]; then
+  echo "FAIL: album-art-listener.sh missing" >&2
+  fail=1
+fi
+waybar_test_assert_bash_n "$TEST_DIR/scripts/listeners/album-art-listener.sh" \
+  "album-art-listener.sh failed bash -n"
+if ! grep -q 'WAYBAR_LISTENER_LOCK_NAME=album-art' \
+  "$TEST_DIR/scripts/listeners/album-art-listener.sh"; then
+  echo "FAIL: album-art-listener.sh must set WAYBAR_LISTENER_LOCK_NAME=album-art" >&2
+  fail=1
+fi
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" \
   '
     (."group/media".modules | index("custom/album-art")) as $a

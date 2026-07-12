@@ -1,0 +1,63 @@
+/* Media strip — purple family (overrides semantic cyan pill chrome) */
+
+#custom-media-prev,
+#custom-media-next,
+#custom-mpris,
+#mpris {
+    color: #e0aaff;
+    background: rgba(224, 170, 255, 0.12);
+    border: 1px solid rgba(224, 170, 255, 0.28);
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+    font-size: 13px;
+}
+
+#custom-media-prev:hover,
+#custom-media-next:hover,
+#custom-mpris:hover,
+#mpris:hover {
+    color: #f5d0fe;
+    background: rgba(224, 170, 255, 0.22);
+    border-color: rgba(224, 170, 255, 0.55);
+    box-shadow: 0 0 10px rgba(224, 170, 255, 0.35);
+    text-shadow: 0 0 8px rgba(224, 170, 255, 0.55);
+}
+
+#custom-media-prev.paused,
+#custom-media-next.paused,
+#custom-mpris.paused,
+#mpris.paused {
+    color: rgba(224, 170, 255, 0.5);
+}
+
+#custom-mpris.paused,
+#mpris.paused {
+    font-style: italic;
+}
+
+#custom-media-prev.paused:hover,
+#custom-media-next.paused:hover,
+#custom-mpris.paused:hover,
+#mpris.paused:hover {
+    color: #e0aaff;
+}
+
+#custom-media-prev.stopped,
+#custom-media-next.stopped,
+#custom-mpris.stopped,
+#mpris.stopped {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+    background: rgba(0, 229, 255, 0.04);
+    border-color: rgba(0, 229, 255, 0.08);
+}
+
+#custom-media-prev.stopped:hover,
+#custom-media-next.stopped:hover,
+#custom-mpris.stopped:hover,
+#mpris.stopped:hover {
+    color: rgba(200, 246, 255, 0.7);
+    background: rgba(0, 229, 255, 0.08);
+    border-color: rgba(0, 229, 255, 0.15);
+    box-shadow: none;
+    text-shadow: none;
+}

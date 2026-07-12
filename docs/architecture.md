@@ -47,6 +47,7 @@ scripts/infra/waybar-launch.sh  (+ systemd user units, listeners)
 2. Launch compiles settings if needed, skips `make generate` when the stamp (`~/.cache/waybar/generated.stamp`) matches inputs, starts listeners via `listener-ctl.sh`, then execs Waybar.
 3. Status modules under `scripts/<domain>/` poll or listen; most use [`scripts/lib/waybar-cache-helpers.sh`](../scripts/lib/waybar-cache-helpers.sh) (`serve_cache_or_refresh`) and intervals from `module_intervals` via `waybar_module_interval`.
 4. Settings reads go through [`scripts/lib/waybar-settings.sh`](../scripts/lib/waybar-settings.sh) (`waybar_settings_get`, secrets merge).
+5. Long-running listeners (`privacy`, `vpn-tailscale`, `album-art`, compositor watchers, …) push updates with [`scripts/lib/waybar-signal.sh`](../scripts/lib/waybar-signal.sh) keyed by `signals.*` — see [`scripts/README.md`](../scripts/README.md#listeners-daemons).
 
 ## Generators
 
@@ -55,6 +56,9 @@ scripts/infra/waybar-launch.sh  (+ systemd user units, listeners)
 - `scripts/generate/generate-settings.sh` — bar defaults, layouts, groups, system modules, then domain emitters (utilities, audio, clock, drawers, network-custom, privacy, active-window, dock-windows, tray, hypr-tools, theme tokens, animations, …)
 - `scripts/generate/generate-compositor-modules.sh`
 - `scripts/generate/generate-workspaces-css.sh`
+- `scripts/generate/generate-dock-windows-css.sh`
+- `scripts/generate/generate-drawers-css.sh`
+- `scripts/generate/generate-groups-css.sh`
 
 Sibling scripts also emit network/dock modules when invoked from `generate-settings.sh`.
 

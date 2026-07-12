@@ -1,66 +1,17 @@
-/* Cyberpunk theme tokens - GTK-safe static values */
+/* Theme import hub — layout modules + generated theme CSS.
+ * Load order is controlled by style.css (accents then user-style last). */
 @import "theme/tokens.generated.css";
+@import "theme/module-pills.generated.css";
 @import "theme/modules.css";
-@import "theme/drawers.css";
+@import "theme/groups.generated.css";
+@import "theme/groups.css";
+@import "theme/drawers.generated.css";
 @import "theme/workspaces.css";
 @import "theme/workspaces.generated.css";
 @import "theme/dock-windows.css";
+@import "theme/dock-windows.generated.css";
 @import "theme/semantic-colors.generated.css";
 @import "theme/animations.generated.css";
 @import "theme/album-art.generated.css";
 @import "theme/submap-per-output.generated.css";
 @import "theme/reduced-motion.generated.css";
-
-/* Group containers (HyDE-style pill clusters) — non-drawer groups only */
-#center,
-#status {
-    background: rgba(0, 229, 255, 0.04);
-    border: 1px solid rgba(0, 229, 255, 0.16);
-    border-radius: 8px;
-    padding: 0 2px;
-    margin: 4px 2px;
-}
-
-#center > *,
-#status > * {
-    margin-top: 0;
-    margin-bottom: 0;
-}
-
-#center > *:not(:last-child),
-#status > *:not(:last-child) {
-    margin-right: 0;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    border-right: none;
-}
-
-#center > *:not(:first-child),
-#status > *:not(:first-child) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-}
-
-#center > *:first-child,
-#status > *:first-child {
-    border-top-left-radius: 6px;
-    border-bottom-left-radius: 6px;
-}
-
-#center > *:last-child,
-#status > *:last-child {
-    border-top-right-radius: 6px;
-    border-bottom-right-radius: 6px;
-}
-
-#workspaces {
-    background: transparent;
-    border: none;
-    margin: 0;
-    padding: 0 4px;
-}
-
-#submap {
-    background: transparent;
-    border: none;
-}

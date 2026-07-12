@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Rotate cpu/memory/disk/gpu into one Waybar module; scroll cycles the active metric.
+# Cache/serve pattern matches disk-status; gauges/tooltips match cpu/memory peers.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -13,6 +14,9 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 mkdir -p "$cache_dir"
 index_file="$cache_dir/stats-carousel.index"
 cache_file="$cache_dir/stats-carousel.json"
+lock_dir="$cache_dir/stats-carousel.lock.d"
+ttl="$(waybar_module_interval stats_carousel 8)"
+stale_lock_ttl=15
 
 modules=$(waybar_settings_get '.visual.stats_carousel.modules' '')
 # waybar_settings_get uses jq -r; arrays print as JSON (not one element per line).
@@ -42,14 +46,118 @@ write_index() {
   printf '%s\n' "$1" >"$index_file"
 }
 
-signal_refresh() {
+# Signal Waybar without deleting cache (caller just wrote fresh JSON).
+signal_bar() {
   if [ -x "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
-    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" stats_carousel "$cache_file" 2>/dev/null || true
+    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" stats_carousel 2>/dev/null || true
   else
-    rm -f "$cache_file" 2>/dev/null || true
     sig=$(waybar_settings_get '.signals.stats_carousel' '32')
     pkill -x -RTMIN+"$sig" waybar >/dev/null 2>&1 || true
   fi
+}
+
+click_hints() {
+  printf 'Scroll: cycle stats (%s/%s)\nLeft: system monitor · Right: btop · Middle: refresh' \
+    "$((idx + 1))" "$mod_count"
+}
+
+emit_and_cache() {
+  gauges_enabled=$(waybar_settings_get '.visual.gauges.enabled' 'true')
+  gauge_width=$(waybar_settings_get '.visual.gauges.width' '8')
+  disk_path=$(waybar_settings_get '.disk.path' '/')
+
+  idx=$(read_index)
+  mod=$(printf '%s\n' "$modules" | sed -n "$((idx + 1))p")
+  [ -n "$mod" ] || mod=cpu
+
+  metrics="$("$WAYBAR_SCRIPTS/infra/system-metrics-collector.sh" 2>/dev/null || true)"
+  hints=$(click_hints)
+  json=""
+
+  case "$mod" in
+    memory | mem)
+      if [ -z "$metrics" ]; then
+        json=$(emit_waybar_json "󰘚 --" "Memory telemetry unavailable" "disabled")
+      else
+        pct=$(printf '%s' "$metrics" | jq -r '.memory.mem_pct // 0')
+        used=$(printf '%s' "$metrics" | jq -r '.memory.mem_used_gib // "0"')
+        total=$(printf '%s' "$metrics" | jq -r '.memory.mem_total_gib // "0"')
+        mem_warn=$(waybar_settings_get '.thresholds.memory.warning' '70')
+        mem_crit=$(waybar_settings_get '.thresholds.memory.critical' '85')
+        class="$(waybar_threshold_class "$pct" "$mem_warn" "$mem_crit")"
+        text=$(gauge_status_text "󰘚" "$pct")
+        tip=$(printf 'Memory: %s/%s GiB (%s%%)\n%s' "$used" "$total" "$pct" "$hints")
+        json=$(emit_waybar_json "$text" "$tip" "$class")
+      fi
+      ;;
+    disk)
+      df_info=$(df -h "$disk_path" 2>/dev/null | awk 'NR==2 {print $2, $3, $4, $5}')
+      set -- $df_info
+      size="${1:-0}"
+      used="${2:-0}"
+      avail="${3:-0}"
+      pct="${4:-0%}"
+      percent_num=$(printf '%s' "$pct" | tr -d '%')
+      disk_warn=$(waybar_settings_get '.thresholds.disk.warning' '75')
+      disk_crit=$(waybar_settings_get '.thresholds.disk.critical' '90')
+      class="$(waybar_threshold_class "$percent_num" "$disk_warn" "$disk_crit")"
+      text=$(gauge_status_text "󰋊" "$percent_num")
+      tip=$(printf 'Disk Space (%s)\nTotal: %s\nUsed: %s\nAvailable: %s\nUsage: %s\n%s' \
+        "$disk_path" "$size" "$used" "$avail" "$pct" "$hints")
+      json=$(emit_waybar_json "$text" "$tip" "$class")
+      ;;
+    gpu)
+      if [ -z "$metrics" ]; then
+        json=$(emit_waybar_json "󰢮 --" "GPU telemetry unavailable" "disabled")
+      else
+        avail=$(printf '%s' "$metrics" | jq -r '(.gpu.available // false) | tostring')
+        if [ "$avail" != "true" ]; then
+          json=$(emit_waybar_json "󰢮 --" "GPU telemetry unavailable" "disabled")
+        else
+          util=$(printf '%s' "$metrics" | jq -r '.gpu.util // 0')
+          temp=$(printf '%s' "$metrics" | jq -r '.gpu.temp // 0')
+          name=$(printf '%s' "$metrics" | jq -r '.gpu.name // "GPU"')
+          gpu_warn=$(waybar_settings_get '.thresholds.gpu.util.warning' '70')
+          gpu_crit=$(waybar_settings_get '.thresholds.gpu.util.critical' '90')
+          gpu_temp_warn=$(waybar_settings_get '.thresholds.gpu.temp.warning' '75')
+          gpu_temp_crit=$(waybar_settings_get '.thresholds.gpu.temp.critical' '90')
+          class="$(waybar_threshold_class "$util" "$gpu_warn" "$gpu_crit" "$temp" "$gpu_temp_warn" "$gpu_temp_crit")"
+          text=$(gauge_status_text "󰢮" "$util")
+          formatted_temp="N/A"
+          if [ "$temp" -gt 0 ] 2>/dev/null; then
+            formatted_temp=$(format_locale_temp "$temp")
+          fi
+          tip=$(printf '%s · %s%% · temp %s\n%s' "$name" "$util" "$formatted_temp" "$hints")
+          json=$(emit_waybar_json "$text" "$tip" "$class")
+        fi
+      fi
+      ;;
+    *)
+      if [ -z "$metrics" ]; then
+        json=$(emit_waybar_json "󰍛 --" "CPU telemetry unavailable" "disabled")
+      else
+        usage=$(printf '%s' "$metrics" | jq -r '.cpu.usage // 0')
+        temp=$(printf '%s' "$metrics" | jq -r '.cpu.temp // 0')
+        cpu_warn=$(waybar_settings_get '.thresholds.cpu.usage.warning' '60')
+        cpu_crit=$(waybar_settings_get '.thresholds.cpu.usage.critical' '85')
+        cpu_temp_warn=$(waybar_settings_get '.thresholds.cpu.temp.warning' '75')
+        cpu_temp_crit=$(waybar_settings_get '.thresholds.cpu.temp.critical' '85')
+        class="$(waybar_threshold_class "$usage" "$cpu_warn" "$cpu_crit" "$temp" "$cpu_temp_warn" "$cpu_temp_crit")"
+        text=$(gauge_status_text "󰍛" "$usage")
+        formatted_temp="N/A"
+        if [ "$temp" -gt 0 ] 2>/dev/null; then
+          formatted_temp=$(format_locale_temp "$temp")
+        fi
+        tip=$(printf 'CPU Utilization: %s%%\nTemperature: %s\n%s' "$usage" "$formatted_temp" "$hints")
+        json=$(emit_waybar_json "$text" "$tip" "$class")
+      fi
+      ;;
+  esac
+
+  printf '%s\n' "$json"
+  tmp_cache="$cache_file.tmp.$$"
+  printf '%s\n' "$json" >"$tmp_cache"
+  mv -f "$tmp_cache" "$cache_file"
 }
 
 case "${1:-}" in
@@ -57,98 +165,32 @@ case "${1:-}" in
     idx=$(read_index)
     idx=$(((idx + 1) % mod_count))
     write_index "$idx"
-    signal_refresh
+    emit_and_cache >/dev/null
+    signal_bar
     exit 0
     ;;
   --prev)
     idx=$(read_index)
     idx=$(((idx - 1 + mod_count) % mod_count))
     write_index "$idx"
-    signal_refresh
+    emit_and_cache >/dev/null
+    signal_bar
+    exit 0
+    ;;
+  --refresh)
+    emit_and_cache
+    # Middle-click: push bar without wiping the cache we just wrote.
+    # Background refresh (WAYBAR_BACKGROUND=1) must not signal — that would loop.
+    if [ "${WAYBAR_BACKGROUND:-}" != "1" ]; then
+      signal_bar
+    fi
     exit 0
     ;;
 esac
 
-gauges_enabled=$(waybar_settings_get '.visual.gauges.enabled' 'true')
-gauge_width=$(waybar_settings_get '.visual.gauges.width' '8')
-disk_path=$(waybar_settings_get '.disk.path' '/')
-
-idx=$(read_index)
-mod=$(printf '%s\n' "$modules" | sed -n "$((idx + 1))p")
-[ -n "$mod" ] || mod=cpu
-
-metrics="$("$WAYBAR_SCRIPTS/infra/system-metrics-collector.sh" 2>/dev/null || true)"
-
-emit_cpu() {
-  if [ -z "$metrics" ]; then
-    emit_waybar_json "󰍛 --" "CPU telemetry unavailable" "disabled"
-    return
-  fi
-  usage=$(printf '%s' "$metrics" | jq -r '.cpu.usage // 0')
-  temp=$(printf '%s' "$metrics" | jq -r '.cpu.temp // 0')
-  cpu_warn=$(waybar_settings_get '.thresholds.cpu.usage.warning' '60')
-  cpu_crit=$(waybar_settings_get '.thresholds.cpu.usage.critical' '85')
-  class="$(waybar_threshold_class "$usage" "$cpu_warn" "$cpu_crit")"
-  text=$(printf '󰍛 %s' "$(gauge_or_pct "$usage")")
-  tip=$(printf 'CPU %s%% · temp %s\nScroll: cycle stats (%s/%s)' "$usage" "$temp" "$((idx + 1))" "$mod_count")
-  emit_waybar_json "$text" "$tip" "$class"
-}
-
-emit_memory() {
-  if [ -z "$metrics" ]; then
-    emit_waybar_json "󰘚 --" "Memory telemetry unavailable" "disabled"
-    return
-  fi
-  pct=$(printf '%s' "$metrics" | jq -r '.memory.mem_pct // 0')
-  used=$(printf '%s' "$metrics" | jq -r '.memory.mem_used_gib // "0"')
-  total=$(printf '%s' "$metrics" | jq -r '.memory.mem_total_gib // "0"')
-  mem_warn=$(waybar_settings_get '.thresholds.memory.warning' '70')
-  mem_crit=$(waybar_settings_get '.thresholds.memory.critical' '85')
-  class="$(waybar_threshold_class "$pct" "$mem_warn" "$mem_crit")"
-  text=$(printf '󰘚 %s' "$(gauge_or_pct "$pct")")
-  tip=$(printf 'Memory %s / %s GiB\nScroll: cycle stats (%s/%s)' "$used" "$total" "$((idx + 1))" "$mod_count")
-  emit_waybar_json "$text" "$tip" "$class"
-}
-
-emit_disk() {
-  df_info=$(df -h "$disk_path" 2>/dev/null | awk 'NR==2 {print $2, $3, $5}')
-  set -- $df_info
-  size="${1:-0}"
-  used="${2:-0}"
-  pct="${3:-0%}"
-  percent_num=$(printf '%s' "$pct" | tr -d '%')
-  disk_warn=$(waybar_settings_get '.thresholds.disk.warning' '75')
-  disk_crit=$(waybar_settings_get '.thresholds.disk.critical' '90')
-  class="$(waybar_threshold_class "$percent_num" "$disk_warn" "$disk_crit")"
-  text=$(printf '󰋊 %s' "$(gauge_or_pct "$percent_num")")
-  tip=$(printf 'Disk %s (%s used of %s)\nScroll: cycle stats (%s/%s)' "$disk_path" "$used" "$size" "$((idx + 1))" "$mod_count")
-  emit_waybar_json "$text" "$tip" "$class"
-}
-
-emit_gpu() {
-  if [ -z "$metrics" ]; then
-    emit_waybar_json "󰢮 --" "GPU telemetry unavailable" "disabled"
-    return
-  fi
-  avail=$(printf '%s' "$metrics" | jq -r '(.gpu.available // false) | tostring')
-  if [ "$avail" != "true" ]; then
-    emit_waybar_json "󰢮 --" "GPU telemetry unavailable" "disabled"
-    return
-  fi
-  util=$(printf '%s' "$metrics" | jq -r '.gpu.util // 0')
-  temp=$(printf '%s' "$metrics" | jq -r '.gpu.temp // 0')
-  name=$(printf '%s' "$metrics" | jq -r '.gpu.name // "GPU"')
-  gpu_warn=$(waybar_settings_get '.thresholds.gpu.util.warning' '70')
-  gpu_crit=$(waybar_settings_get '.thresholds.gpu.util.critical' '90')
-  class="$(waybar_threshold_class "$util" "$gpu_warn" "$gpu_crit")"
-  text=$(printf '󰢮 %s' "$(gauge_or_pct "$util")")
-  tip=$(printf '%s · %s%% · temp %s\nScroll: cycle stats (%s/%s)' "$name" "$util" "$temp" "$((idx + 1))" "$mod_count")
-  emit_waybar_json "$text" "$tip" "$class"
-}
-
-case "$mod" in
-  memory | mem) emit_memory ;;
-  disk) emit_disk ;;
-  gpu) emit_gpu ;;
-  *) emit_cpu ;;
-esac
+# Poll path (Waybar interval): serve cache or kick background --refresh.
+if serve_cache_or_refresh "$cache_file" "$ttl" "$lock_dir" "$stale_lock_ttl"; then
+  exit 0
+fi
+emit_waybar_json "󰍛 --" "Initializing stats carousel..." "normal"
+exit 0

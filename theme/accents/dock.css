@@ -1,0 +1,52 @@
+/* Dock launcher brand accents */
+
+#custom-dock-browser,
+#custom-dock-helium,
+#custom-dock-pear,
+#custom-dock-floorp,
+#custom-dock-cursor,
+#custom-dock-vscode,
+#custom-dock-zed,
+#custom-dock-kitty,
+#custom-dock-terminal,
+#custom-dock-files,
+#custom-dock-obsidian,
+#custom-dock-krita,
+#custom-dock-orcaslicer,
+#custom-dock-discord,
+#custom-dock-steam,
+#custom-dock-heroic,
+#custom-dock-lutris,
+#custom-dock-anyrun {
+    color: #c8f6ff;
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.15);
+}
+
+#custom-dock-browser:hover { color: #00e5ff; text-shadow: 0 0 8px rgba(0, 229, 255, 0.45); }
+#custom-dock-helium:hover { color: #ffe600; text-shadow: 0 0 8px rgba(255, 230, 0, 0.45); }
+#custom-dock-pear:hover { color: #a6e3a1; text-shadow: 0 0 8px rgba(166, 227, 161, 0.45); }
+#custom-dock-floorp:hover { color: #89b4fa; text-shadow: 0 0 8px rgba(137, 180, 250, 0.45); }
+#custom-dock-cursor:hover { color: #a6e3a1; text-shadow: 0 0 8px rgba(166, 227, 161, 0.45); }
+#custom-dock-vscode:hover { color: #00e5ff; text-shadow: 0 0 8px rgba(0, 229, 255, 0.45); }
+#custom-dock-zed:hover { color: #74c7ec; text-shadow: 0 0 8px rgba(116, 199, 236, 0.45); }
+#custom-dock-kitty:hover { color: #f5c2e7; text-shadow: 0 0 8px rgba(245, 194, 231, 0.45); }
+#custom-dock-terminal:hover { color: #e0aaff; text-shadow: 0 0 8px rgba(224, 170, 255, 0.4); }
+#custom-dock-files:hover { color: #2cffb0; text-shadow: 0 0 8px rgba(44, 255, 176, 0.4); }
+#custom-dock-obsidian:hover { color: #ff2a7f; text-shadow: 0 0 8px rgba(255, 42, 127, 0.45); }
+#custom-dock-krita:hover { color: #f38ba8; text-shadow: 0 0 8px rgba(243, 139, 168, 0.45); }
+#custom-dock-orcaslicer:hover { color: #94e2d5; text-shadow: 0 0 8px rgba(148, 226, 213, 0.45); }
+#custom-dock-discord:hover { color: #ff2a7f; text-shadow: 0 0 8px rgba(255, 42, 127, 0.45); }
+#custom-dock-steam:hover { color: #c8f6ff; text-shadow: 0 0 8px rgba(200, 246, 255, 0.35); }
+#custom-dock-heroic:hover { color: #f9e2af; text-shadow: 0 0 8px rgba(249, 226, 175, 0.45); }
+#custom-dock-lutris:hover { color: #fab387; text-shadow: 0 0 8px rgba(250, 179, 135, 0.45); }
+#custom-dock-anyrun:hover { color: #cba6f7; text-shadow: 0 0 8px rgba(203, 166, 247, 0.45); }
+
+#custom-dock-windows {
+    color: #c8f6ff;
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.12);
+}
+
+#custom-dock-windows.active {
+    color: #00e5ff;
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.35);
+}

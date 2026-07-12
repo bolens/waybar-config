@@ -149,6 +149,10 @@ perform_github_checks_and_output() {
   tmp_cache="$cache_file.tmp.$$"
   printf '%s\n' "$json" >"$tmp_cache"
   mv -f "$tmp_cache" "$cache_file"
+
+  if [ -x "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
+    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" github 2>/dev/null || true
+  fi
 }
 
 animate_command dots "Checking GitHub..." "Connecting to api.github.com..." perform_github_checks_and_output

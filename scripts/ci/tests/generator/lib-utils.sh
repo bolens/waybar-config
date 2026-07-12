@@ -336,5 +336,35 @@ if [ "$jsonc_py" != "1" ]; then
   fail=1
 fi
 
+echo "Testing css-selectors-lib helpers..."
+css_sel=$(
+  WAYBAR_HOME="$TEST_DIR" bash -c '
+    . "'"$TEST_DIR"'/scripts/lib/css-selectors-lib.sh"
+    printf "%s|" "$(waybar_css_clamp_int bogus 5 1 10)"
+    printf "%s|" "$(waybar_css_drawer_group_for_side desk)"
+    printf "%s|" "$(waybar_css_drawer_group_for_side dock)"
+    printf "%s|" "$(waybar_css_drawer_sides | wc -l)"
+    printf "%s|" "$(waybar_css_pill_ids | grep -c "^#idle_inhibitor$")"
+    printf "%s" "$(waybar_css_drawer_accent_handle_ids | grep -c power || true)"
+  '
+)
+# Expected: clamp default 5 | desk-controls | dock-apps | 13 sides | 1 idle | 0 power in accent
+if [[ "$css_sel" != "5|desk-controls|dock-apps|13|1|0" ]]; then
+  echo "FAIL: css-selectors-lib helpers got: $css_sel" >&2
+  fail=1
+fi
+hover_ok=$(
+  WAYBAR_HOME="$TEST_DIR" bash -c '
+    . "'"$TEST_DIR"'/scripts/lib/css-selectors-lib.sh"
+    waybar_css_pill_hover_ids | grep -Fxq "#submap" || exit 1
+    waybar_css_pill_hover_ids | grep -Eq "^#custom-lock$" && exit 1
+    echo ok
+  '
+)
+if [ "$hover_ok" != "ok" ]; then
+  echo "FAIL: pill hover SoT should include #submap and exclude #custom-lock" >&2
+  fail=1
+fi
+
 # Verify behavior when waybar-settings.jsonc is missing
 waybar_test_end

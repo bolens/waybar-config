@@ -69,6 +69,7 @@ check-contracts:
 
 check-suite-inventory:
 	bash scripts/ci/check-suite-inventory.sh
+	bash scripts/ci/check-ci-path-filters.sh
 
 check-docs-index:
 	bash scripts/ci/check-docs-index.sh
@@ -126,6 +127,9 @@ generate:
 	bash scripts/generate/generate-settings.sh
 	bash scripts/generate/generate-compositor-modules.sh
 	bash scripts/generate/generate-workspaces-css.sh
+	bash scripts/generate/generate-dock-windows-css.sh
+	bash scripts/generate/generate-drawers-css.sh
+	bash scripts/generate/generate-groups-css.sh
 
 profile-minimal:
 	bash scripts/tools/apply-profile.sh minimal-groups

@@ -1,0 +1,33 @@
+/* UPS / updates / idle / gamemode personal states */
+
+#custom-ups.good {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.35);
+}
+
+#custom-ups.good:hover {
+    color: #5fffd0;
+    background: rgba(44, 255, 176, 0.14);
+    border-color: rgba(44, 255, 176, 0.45);
+    box-shadow: 0 0 10px rgba(44, 255, 176, 0.28);
+    text-shadow: 0 0 8px rgba(44, 255, 176, 0.55);
+}
+
+#custom-updates.normal {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+#custom-updates.normal:hover {
+    color: rgba(200, 246, 255, 0.7);
+    background: rgba(0, 229, 255, 0.08);
+    border-color: rgba(0, 229, 255, 0.15);
+    box-shadow: none;
+    text-shadow: none;
+}
+
+#idle_inhibitor.activated,
+#custom-gamemode.active {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}

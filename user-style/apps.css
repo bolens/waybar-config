@@ -1,0 +1,24 @@
+/* App / service taste accents */
+
+#custom-weather {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+
+#custom-weather.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+#custom-github,
+#custom-github.normal,
+#custom-github.disabled {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+#custom-uptime,
+#custom-sunshine {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.35);
+}

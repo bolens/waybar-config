@@ -162,12 +162,9 @@ perform_checks_and_output() {
   printf '%s\n' "$json" >"$tmp"
   mv -f "$tmp" "$cache_file"
 
-  # Signal waybar if running in background
-  if [ "${WAYBAR_BACKGROUND:-0}" = "1" ]; then
-    sig_num=$(_get_config_override '.signals.updates' '1')
-    if [ -n "$sig_num" ] && [ "$sig_num" != "null" ]; then
-      "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$sig_num"
-    fi
+  # Always signal so middle-click / background refresh update the bar promptly.
+  if [ -x "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
+    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" updates 2>/dev/null || true
   fi
 
   # Print final JSON to stdout so animate_command displays it at the end

@@ -31,14 +31,25 @@
       "custom/powerprofiles",
       "custom/asusctl",
       "custom/brightness",
-      "bluetooth",
       "idle_inhibitor",
       "custom/keyboard-layout",
+      "custom/touchpad"
+    ]
+  },
+  "group/devices": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": true
+    },
+    "modules": [
+      "custom/devices-drawer",
+      "bluetooth",
       "custom/kdeconnect",
       "custom/device-notifier",
       "custom/streamdeck",
-      "custom/vaults",
-      "custom/touchpad",
       "custom/device-battery"
     ]
   },
@@ -100,7 +111,8 @@
       "custom/rgb",
       "custom/discord",
       "custom/weather",
-      "custom/pomodoro"
+      "custom/pomodoro",
+      "custom/github"
     ]
   },
   "group/top-status": {
@@ -158,7 +170,6 @@
       "custom/updates",
       "custom/ups",
       "custom/systemd",
-      "custom/github",
       "custom/uptime"
     ]
   },
@@ -172,12 +183,21 @@
     },
     "modules": [
       "custom/hardware-drawer",
-      "custom/cpu",
-      "custom/gpu",
-      "custom/memory",
-      "custom/disk",
+      "custom/stats-carousel",
       "custom/nvme",
-      "custom/psu",
+      "custom/psu"
+    ]
+  },
+  "group/cooling": {
+    "orientation": "inherit",
+    "drawer": {
+      "click-to-reveal": true,
+      "transition-duration": 500,
+      "children-class": "drawer-child",
+      "transition-left-to-right": false
+    },
+    "modules": [
+      "custom/cooling-drawer",
       "custom/fans",
       "custom/liquidctl",
       "custom/coolercontrol",
@@ -194,6 +214,7 @@
     },
     "modules": [
       "custom/security-drawer",
+      "custom/vaults",
       "custom/libredefender",
       "custom/chkrootkit"
     ]

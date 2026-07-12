@@ -51,15 +51,45 @@ if [ "$drawer_count" -lt 8 ]; then
   fail=1
 fi
 
-# Content contracts: hardware lists CPU/GPU; desk lists Notifications
+# Content contracts: hardware lists Stats (carousel) or CPU/GPU; desk lists Notifications
 hw_tip=$(echo "$clean_drawers" | jq -r '."custom/hardware-drawer"."tooltip-format"')
-if ! printf '%s' "$hw_tip" | grep -q 'CPU' || ! printf '%s' "$hw_tip" | grep -q 'GPU'; then
-  echo "FAIL: hardware-drawer tooltip missing CPU/GPU contents: $hw_tip" >&2
+if ! printf '%s' "$hw_tip" | grep -qE 'Stats|CPU'; then
+  echo "FAIL: hardware-drawer tooltip missing Stats/CPU contents: $hw_tip" >&2
   fail=1
 fi
 desk_tip=$(echo "$clean_drawers" | jq -r '."custom/desk-drawer"."tooltip-format"')
 if ! printf '%s' "$desk_tip" | grep -q 'Notifications'; then
   echo "FAIL: desk-drawer tooltip missing Notifications: $desk_tip" >&2
+  fail=1
+fi
+devices_tip=$(echo "$clean_drawers" | jq -r '."custom/devices-drawer"."tooltip-format" // empty')
+if [ -z "$devices_tip" ] || ! printf '%s' "$devices_tip" | grep -qiE 'Bluetooth|Stream Deck|KDE Connect'; then
+  echo "FAIL: devices-drawer tooltip missing peripheral contents: $devices_tip" >&2
+  fail=1
+fi
+cooling_tip=$(echo "$clean_drawers" | jq -r '."custom/cooling-drawer"."tooltip-format" // empty')
+if [ -z "$cooling_tip" ] || ! printf '%s' "$cooling_tip" | grep -qiE 'Fans|CoolerControl|Liquidctl'; then
+  echo "FAIL: cooling-drawer tooltip missing cooling contents: $cooling_tip" >&2
+  fail=1
+fi
+security_tip=$(echo "$clean_drawers" | jq -r '."custom/security-drawer"."tooltip-format" // empty')
+if [ -z "$security_tip" ] || ! printf '%s' "$security_tip" | grep -q 'Vaults'; then
+  echo "FAIL: security-drawer tooltip missing Vaults: $security_tip" >&2
+  fail=1
+fi
+tools_tip=$(echo "$clean_drawers" | jq -r '."custom/tools-drawer"."tooltip-format" // empty')
+if [ -z "$tools_tip" ] || ! printf '%s' "$tools_tip" | grep -q 'GitHub'; then
+  echo "FAIL: tools-drawer tooltip missing GitHub: $tools_tip" >&2
+  fail=1
+fi
+infra_github=$(echo "$clean_drawers" | jq -r '."custom/infra-drawer"."tooltip-format" // empty')
+if printf '%s' "$infra_github" | grep -q 'GitHub'; then
+  echo "FAIL: infra-drawer should not list GitHub (moved to tools): $infra_github" >&2
+  fail=1
+fi
+desk_vaults=$(printf '%s' "$desk_tip")
+if printf '%s' "$desk_vaults" | grep -q 'Vaults'; then
+  echo "FAIL: desk-drawer should not list Vaults (moved to security): $desk_tip" >&2
   fail=1
 fi
 

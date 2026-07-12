@@ -35,9 +35,11 @@
       "tray": { "format": "󰇝", "tooltip": "Background apps" },
       "media": { "format": "󰝚", "tooltip": "Media & volume" },
       "net": { "format": "󰖩", "tooltip": "Network" },
+      "devices": { "format": "󰁹", "tooltip": "Devices" },
       "tools": { "format": "󰒓", "tooltip": "Quick tools" },
       "infra": { "format": "󰒍", "tooltip": "Infrastructure" },
       "hardware": { "format": "󰻠", "tooltip": "Hardware" },
+      "cooling": { "format": "󰈐", "tooltip": "Cooling" },
       "power": { "format": "", "tooltip": "Power menu" },
       "privacy": { "format": "󰕥", "tooltip": "Privacy" },
       "security": { "format": "󰒃", "tooltip": "Security" }
@@ -79,6 +81,7 @@
     "weather": 1800,
     "systemd": 60,
     "github": 300,
+    "album_art": "once",
     "network_iface": 60,
     "network_bandwidth": 5,
     "clock": 60,
@@ -99,8 +102,7 @@
     "pomodoro": 1,
     "homelab": 60,
     "cava": 0,
-    "album_art": 5,
-    "stats_carousel": 2
+    "stats_carousel": 8
   },
   "signals": {
     "notifications": 10,
@@ -134,12 +136,15 @@
     "rgb": 30,
     "pomodoro": 31,
     "homelab": 33,
-    "stats_carousel": 32
+    "stats_carousel": 32,
+    "weather": 34,
+    "github": 35,
+    "album_art": 36
   },
   "layouts": {
     "top": {
       "position": "top",
-      "modules_left": ["group/desk-controls", "group/media", "group/net"], 
+      "modules_left": ["group/desk-controls", "group/devices", "group/media", "group/net"], 
       "modules_center": ["group/desk-hypr", "custom/keybindhint", "custom/gamemode"],
       "modules_right": ["group/top-status", "group/power"]
     },
@@ -148,7 +153,7 @@
       "position": "bottom",
       "modules_left": ["group/dock-apps"],
       "modules_center": ["custom/active-window"],
-      "modules_right": ["group/tools", "group/infra", "group/security", "group/hardware", "clock#bottom"]
+      "modules_right": ["group/tools", "group/infra", "group/security", "group/hardware", "group/cooling", "clock#bottom"]
     }
   },
   "groups": {
@@ -164,6 +169,7 @@
         "custom/shutdown"
       ]
     },
+    
     "desk-controls": {
       "drawer": "right",
       "modules": [
@@ -172,14 +178,20 @@
         "custom/powerprofiles",
         "custom/asusctl",
         "custom/brightness",
-        "bluetooth",
         "idle_inhibitor",
         "custom/keyboard-layout",
+        "custom/touchpad"
+      ]
+    },
+    
+    "devices": {
+      "drawer": "right",
+      "modules": [
+        "custom/devices-drawer",
+        "bluetooth",
         "custom/kdeconnect",
         "custom/device-notifier",
         "custom/streamdeck",
-        "custom/vaults",
-        "custom/touchpad",
         "custom/device-battery"
       ]
     },
@@ -200,6 +212,7 @@
         "@network.interfaces"
       ]
     },
+    
     "tools": {
       "drawer": "left",
       "modules": [
@@ -212,7 +225,8 @@
         "custom/rgb",
         "custom/discord",
         "custom/weather",
-        "custom/pomodoro"
+        "custom/pomodoro",
+        "custom/github"
       ]
     },
     "top-status": {
@@ -233,6 +247,7 @@
       "drawer": "left",
       "modules": ["custom/tray-drawer", "tray"]
     },
+    
     "infra": {
       "drawer": "left",
       "modules": [
@@ -245,18 +260,29 @@
         "custom/updates",
         "custom/ups",
         "custom/systemd",
-        "custom/github",
         "custom/uptime"
       ]
     },
+    
     "hardware": {
       "drawer": "left",
-      "modules": ["custom/hardware-drawer", "custom/cpu", "custom/gpu", "custom/memory", "custom/disk", "custom/nvme", "custom/psu", "custom/fans", "custom/liquidctl", "custom/coolercontrol", "custom/openlinkhub"]
+      "modules": ["custom/hardware-drawer", "custom/cpu", "custom/gpu", "custom/memory", "custom/disk", "custom/nvme", "custom/psu"]
+    },
+    "cooling": {
+      "drawer": "left",
+      "modules": [
+        "custom/cooling-drawer",
+        "custom/fans",
+        "custom/liquidctl",
+        "custom/coolercontrol",
+        "custom/openlinkhub"
+      ]
     },
     "security": {
       "drawer": "left",
       "modules": [
         "custom/security-drawer",
+        "custom/vaults",
         "custom/libredefender",
         "custom/chkrootkit"
       ]
@@ -302,9 +328,11 @@
   },
   "homelab": {
     
-    
     "timeout_sec": 3,
-    "targets": []
+    "targets": [
+      { "name": "Caddy", "url": "https://bolens.dev/health", "expect": "2xx" },
+      { "name": "Portainer", "url": "https://portainer.bolens.dev", "expect": "2xx" }
+    ]
   },
   "active_window": {
     "zscroll": true, 
@@ -332,7 +360,7 @@
   },
   "updates": {
     "preview_limit": 40, 
-    "enable_aur": false 
+    "enable_aur": true 
   },
   "github": {
     "preview_limit": 5, 
@@ -490,7 +518,7 @@
     "gauges": { "enabled": true, "width": 8 },
     "album_art": { "enabled": true, "size": 22 },
     "stats_carousel": {
-      "enabled": false,
+      "enabled": true,
       "modules": ["cpu", "memory", "disk", "gpu"]
     },
     "animations": {

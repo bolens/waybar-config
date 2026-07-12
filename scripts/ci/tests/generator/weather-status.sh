@@ -19,8 +19,14 @@ waybar_test_assert_json_file_jq "$TEST_DIR/modules/utilities.generated.jsonc" \
   '."custom/weather".exec | test("services/apps/weather-status\\.sh$")' \
   "custom/weather exec missing weather-status.sh"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/utilities.generated.jsonc" \
-  '."custom/weather"."on-click-middle" | test("weather-status\\.sh --refresh")' \
-  "custom/weather middle-click should refresh"
+  '."custom/weather".signal == 34' \
+  "custom/weather should wire signals.weather"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/utilities.generated.jsonc" \
+  '
+    (."custom/weather"."on-click-middle" | test("weather-status\\.sh --refresh"))
+    and (."custom/weather"."on-click-middle" | test("waybar-signal\\.sh weather"))
+  ' \
+  "custom/weather middle-click should refresh and signal"
 
 mkdir -p "$TEST_DIR/scripts/services/apps" "$TEST_DIR/bin" "$TEST_DIR/wx-cache"
 cp "$ROOT_DIR/scripts/services/apps/weather-status.sh" "$TEST_DIR/scripts/services/apps/"

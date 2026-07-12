@@ -246,10 +246,11 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       format: "{}",
       "return-type": "json",
       interval: iv("weather"),
+      signal: sig("weather"),
       exec: ($scripts + "/services/apps/weather-status.sh"),
       "on-click": ($s[0].weather.on_click // (app_open + " xdg-open https://open-meteo.com/")),
       "on-click-right": ($s[0].weather.on_click_right // (app_open + " xdg-open https://weather.com/")),
-      "on-click-middle": ($s[0].weather.on_click_middle // ($scripts + "/services/apps/weather-status.sh --refresh"))
+      "on-click-middle": ($s[0].weather.on_click_middle // ($scripts + "/services/apps/weather-status.sh --refresh && " + $scripts + "/lib/waybar-signal.sh weather"))
     },
     "custom/pomodoro": {
       format: "{}",
@@ -272,10 +273,11 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       format: "{}",
       "return-type": "json",
       interval: iv("github"),
+      signal: sig("github"),
       exec: ($scripts + "/services/apps/github-status.sh"),
       "on-click": ((($s[0].github // {}).on_click) // (app_open + " xdg-open " + (app("github_notifications") // "https://github.com/notifications"))),
       "on-click-right": ((($s[0].github // {}).on_click_right) // (app_open + " xdg-open " + (app("github_home") // "https://github.com"))),
-      "on-click-middle": ((($s[0].github // {}).on_click_middle) // ($scripts + "/services/apps/github-status.sh --refresh"))
+      "on-click-middle": ((($s[0].github // {}).on_click_middle) // ($scripts + "/services/apps/github-status.sh --refresh && " + $scripts + "/lib/waybar-signal.sh github"))
     },
     "custom/device-battery": {
       format: "{}",

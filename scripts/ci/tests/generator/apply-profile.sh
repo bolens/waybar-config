@@ -30,8 +30,8 @@ fi
 
 waybar_test_compile_settings
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" \
-  '(.groups.hardware.modules | index("custom/coolercontrol")) == null' \
-  "minimal-groups should drop custom/coolercontrol from hardware"
+  '(.groups.cooling.modules | index("custom/coolercontrol")) == null' \
+  "minimal-groups should drop custom/coolercontrol from cooling"
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" \
   '(.groups.hardware.modules | index("custom/cpu")) != null' \
   "minimal-groups should keep custom/cpu"

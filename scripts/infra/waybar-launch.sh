@@ -81,6 +81,9 @@ config_inputs_newer_than() {
     "$WAYBAR_SCRIPTS/generate/generate-active-window-modules.sh" \
     "$WAYBAR_SCRIPTS/generate/generate-center-extras-modules.sh" \
     "$WAYBAR_SCRIPTS/generate/generate-dock-windows-modules.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-dock-windows-css.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-drawers-css.sh" \
+    "$WAYBAR_SCRIPTS/generate/generate-groups-css.sh" \
     "$WAYBAR_SCRIPTS/generate/generate-tray-modules.sh" \
     "$WAYBAR_SCRIPTS/generate/generate-hypr-tools-modules.sh" \
     "$WAYBAR_SCRIPTS/generate/generate-theme-tokens.sh" \
@@ -133,6 +136,15 @@ if [ "$need_regen" -eq 1 ]; then
   if [ -x "$WAYBAR_SCRIPTS/generate/generate-workspaces-css.sh" ]; then
     "$WAYBAR_SCRIPTS/generate/generate-workspaces-css.sh"
   fi
+  if [ -x "$WAYBAR_SCRIPTS/generate/generate-dock-windows-css.sh" ]; then
+    "$WAYBAR_SCRIPTS/generate/generate-dock-windows-css.sh"
+  fi
+  if [ -x "$WAYBAR_SCRIPTS/generate/generate-drawers-css.sh" ]; then
+    "$WAYBAR_SCRIPTS/generate/generate-drawers-css.sh"
+  fi
+  if [ -x "$WAYBAR_SCRIPTS/generate/generate-groups-css.sh" ]; then
+    "$WAYBAR_SCRIPTS/generate/generate-groups-css.sh"
+  fi
 
   # generate-settings already invokes dock/network/domain module generators; only
   # re-run them here when generate-settings is absent.
@@ -153,6 +165,9 @@ if [ "$need_regen" -eq 1 ]; then
       generate-active-window-modules.sh \
       generate-center-extras-modules.sh \
       generate-dock-windows-modules.sh \
+      generate-dock-windows-css.sh \
+      generate-drawers-css.sh \
+      generate-groups-css.sh \
       generate-tray-modules.sh \
       generate-hypr-tools-modules.sh \
       generate-theme-tokens.sh; do
@@ -189,6 +204,9 @@ if ! waybar_gtk_css_smoke; then
   for _gen in \
     generate-theme-tokens.sh \
     generate-workspaces-css.sh \
+    generate-dock-windows-css.sh \
+    generate-drawers-css.sh \
+    generate-groups-css.sh \
     generate-animations-css.sh \
     generate-submap-css.sh; do
     if [ -x "$WAYBAR_SCRIPTS/generate/$_gen" ]; then
@@ -247,6 +265,14 @@ launch_detached "$WAYBAR_SCRIPTS/system/brightness-status.sh" --refresh
 
   if [ -x "$WAYBAR_SCRIPTS/listeners/device-notifier-listener.sh" ]; then
     start_waybar_listener "$WAYBAR_SCRIPTS/listeners/device-notifier-listener.sh" device-notifier
+  fi
+
+  if [ -x "$WAYBAR_SCRIPTS/listeners/vpn-tailscale-listener.sh" ]; then
+    start_waybar_listener "$WAYBAR_SCRIPTS/listeners/vpn-tailscale-listener.sh" vpn-tailscale
+  fi
+
+  if [ -x "$WAYBAR_SCRIPTS/listeners/album-art-listener.sh" ]; then
+    start_waybar_listener "$WAYBAR_SCRIPTS/listeners/album-art-listener.sh" album-art
   fi
 ) &
 

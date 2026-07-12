@@ -33,17 +33,34 @@ for port_file in \
 done
 echo "PASS: generated modules keep literal \$WAYBAR_HOME/scripts"
 
-# Makefile generate contract (dry-run must include the three entry scripts)
+# Makefile generate contract (dry-run must include entry scripts)
 make_n=$(make -C "$ROOT_DIR" -n generate 2>/dev/null || true)
 case "$make_n" in
-  *generate-settings.sh*generate-compositor-modules.sh*generate-workspaces-css.sh*)
-    echo "PASS: make generate dry-run lists settings+compositor+workspaces-css"
+  *generate-settings.sh*generate-compositor-modules.sh*generate-workspaces-css.sh*generate-dock-windows-css.sh*generate-drawers-css.sh*generate-groups-css.sh*)
+    echo "PASS: make generate dry-run lists settings+compositor+css generators"
     ;;
   *)
     echo "FAIL: make -n generate missing expected scripts: $make_n" >&2
     fail=1
     ;;
 esac
+
+# theme.css must pull the CSS SoT artifacts (not deleted hand drawers.css)
+for import in \
+  theme/module-pills.generated.css \
+  theme/drawers.generated.css \
+  theme/groups.generated.css \
+  theme/dock-windows.generated.css \
+  theme/workspaces.generated.css; do
+  if ! grep -Fq "$import" "$ROOT_DIR/theme.css"; then
+    echo "FAIL: theme.css missing @import for $import" >&2
+    fail=1
+  fi
+done
+if grep -Fq 'theme/drawers.css"' "$ROOT_DIR/theme.css" || grep -Fq "theme/drawers.css'" "$ROOT_DIR/theme.css"; then
+  echo "FAIL: theme.css must not import hand theme/drawers.css" >&2
+  fail=1
+fi
 
 # ---------------------------------------------------------------------------
 # Contracts for recent reliability / tooltip / SoT work (default real settings)

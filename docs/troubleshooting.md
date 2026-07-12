@@ -54,7 +54,7 @@ Prefer a read-only CoolerControl access token for day-to-day monitoring.
 
 ## Dock windows wrong on Plasma
 
-Per-output filtering needs screen metadata from the compositor. Plasma’s WindowsRunner often lacks it → both bars may show the full list. Hyprland is usually correct when `hyprctl` clients include monitors. Needs `qt6-tools` (`qdbus6`). Disable with `dock_windows.enabled: false`.
+Per-output filtering prefers WindowsRunner screen props when present; otherwise Waybar enriches via KWin `getWindowInfo` geometry + `kscreen-doctor` output rects. If those probes fail, both bars may still show the full list. Hyprland is usually correct when `hyprctl` clients include monitors. Needs `qt6-tools` (`qdbus6`) and `kscreen-doctor`. Disable with `dock_windows.enabled: false`.
 
 ## Theme / wallpaper not updating
 

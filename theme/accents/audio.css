@@ -1,0 +1,38 @@
+/* PulseAudio + mic accents */
+
+#pulseaudio {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.3);
+}
+
+#pulseaudio:hover {
+    color: #5fffd0;
+    background: rgba(44, 255, 176, 0.14);
+    border-color: rgba(44, 255, 176, 0.45);
+    box-shadow: 0 0 10px rgba(44, 255, 176, 0.28);
+    text-shadow: 0 0 8px rgba(44, 255, 176, 0.55);
+}
+
+#custom-mic.muted:hover,
+#custom-mic.unknown:hover {
+    color: #ff5a9a;
+    background: rgba(255, 42, 127, 0.14);
+    border-color: rgba(255, 42, 127, 0.45);
+    box-shadow: 0 0 10px rgba(255, 42, 127, 0.28);
+    text-shadow: 0 0 8px rgba(255, 42, 127, 0.55);
+}
+
+#pulseaudio.muted,
+#bluetooth.disabled,
+#custom-mic.muted {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+#pulseaudio.muted:hover {
+    color: #ff5a9a;
+    background: rgba(255, 42, 127, 0.14);
+    border-color: rgba(255, 42, 127, 0.45);
+    box-shadow: 0 0 10px rgba(255, 42, 127, 0.28);
+    text-shadow: 0 0 8px rgba(255, 42, 127, 0.55);
+}

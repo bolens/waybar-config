@@ -53,13 +53,17 @@ Common fields: `layer` (`overlay` recommended on Plasma for tooltips), `output`,
 ## `module_intervals` and `signals`
 
 - Interval keys (e.g. `cpu`, `weather`) are read by status scripts via `waybar_module_interval <key> <fallback>`.
-- Value `"once"` → long cache TTL for signal-driven modules.
+- Value `"once"` → long cache TTL for signal-driven modules (`vpn`, `tailscale`, `album_art`, …).
 - `signals.<key>` must match the Waybar module `signal` field generators emit.
+- Reserved offsets used by polish modules: `weather` 34, `github` 35, `album_art` 36 (see `signals` in settings).
 - **Click / listener scripts must refresh that same number.** Prefer the key:
 
   ```bash
   "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" my_feature
   ```
+
+  For middle-click “refresh now” on poll-heavy modules, generators should run
+  `--refresh && waybar-signal.sh <key>` (cache write alone does not update the bar).
 
   Numeric offsets and raw `pkill -RTMIN+N` are legacy — if `signals.*` changes, they miss the module Waybar subscribed to.
 
@@ -75,12 +79,16 @@ Warning/critical cutoffs for metric modules (`cpu`, `gpu`, `memory`, `disk`, fan
 - Layouts place **group ids** and **module ids** on the bar (e.g. `group/media`, `clock#bottom`).
 - Groups define drawer direction and the ordered module list inside each strip.
 - Special tokens like `@network.interfaces` expand at generate time.
+- Crowded strips are split by concern: `devices` (peripherals), `cooling` (fans/liquid), `tools` (capture + app widgets), `infra` (homelab/host), `hardware` (telemetry), `security` (vaults + scanners).
 
 Laptop / fork-friendly overrides: [`data/profiles/minimal-groups.jsonc`](../data/profiles/minimal-groups.jsonc) via `make profile-minimal`.
 
 ## `theme` and `visual`
 
 See [theming](theming.md). Visual polish flags live under `visual.*` (gauges, album art, carousel, CSS animation toggles, `reduced_motion`).
+
+- `visual.stats_carousel.enabled` (default `true`) replaces `custom/{cpu,memory,disk,gpu}` in `group/hardware` with `custom/stats-carousel`. Scroll cycles; middle-click refreshes. Interval key: `module_intervals.stats_carousel` (default `8`, same as `cpu`).
+- `visual.stats_carousel.modules` — ordered list of slides (`cpu`, `memory`, `disk`, `gpu`).
 
 ## `homelab.targets`
 
@@ -93,7 +101,11 @@ See [theming](theming.md). Visual polish flags live under `visual.*` (gauges, al
 }
 ```
 
-Empty targets hide the module. One target → left opens URL. Two or more → rofi picker.
+Empty targets hide the module. One target → left opens URL. Two or more → rofi picker. Defaults in this tree ship with personal health URLs; forks should edit or clear via `data/profiles/minimal-groups.jsonc`.
+
+## `updates.enable_aur`
+
+When `true` (default on Arch-oriented machines), `updates-status.sh` also queries AUR via `paru` if present. Disable with `false` or `WAYBAR_UPDATES_ENABLE_AUR=0`.
 
 ## `apps` and personalization
 

@@ -1,0 +1,36 @@
+/* Shared muted / offline / disconnected accents */
+
+#custom-discord.offline,
+#custom-vpnstatus.offline,
+#custom-tailscale.offline,
+#custom-clipboard.empty,
+#custom-clipboard.unknown,
+#custom-screenshot.unknown,
+#custom-screenrecord.idle,
+#custom-screenrecord.unknown,
+#custom-nightlight.inactive,
+#custom-mic.unknown,
+#custom-notifications.unknown,
+#custom-runtimes.disabled,
+#custom-powerprofiles.disabled,
+#custom-brightness.disabled,
+#custom-tailscale.disabled,
+#custom-clipboard.disabled,
+#custom-gpu.suspended,
+#custom-syncthing.offline,
+#custom-syncthing.disabled,
+#custom-sunshine.offline,
+#custom-sunshine.disabled,
+#custom-streamdeck.offline,
+#custom-streamdeck.disabled,
+#custom-i2pd.offline,
+#custom-i2pd.disabled,
+#custom-ups.disconnected,
+#custom-coolercontrol.disconnected,
+#custom-asusctl.disconnected,
+#custom-nvme.disconnected,
+#custom-openlinkhub.disconnected,
+#custom-rgb.disconnected {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}

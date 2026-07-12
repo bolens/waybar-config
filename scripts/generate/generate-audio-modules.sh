@@ -110,6 +110,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
           format: "{}",
           "return-type": "json",
           interval: iv("album_art"),
+          signal: sig("album_art"),
           exec: ($scripts + "/media/album-art-status.sh"),
           tooltip: true,
           "hide-empty-text": true,

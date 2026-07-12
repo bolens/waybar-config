@@ -81,7 +81,8 @@
   "custom/album-art": {
     "format": "{}",
     "return-type": "json",
-    "interval": 5,
+    "interval": "once",
+    "signal": 36,
     "exec": "$WAYBAR_HOME/scripts/media/album-art-status.sh",
     "tooltip": true,
     "hide-empty-text": true,

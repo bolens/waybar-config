@@ -4,19 +4,32 @@
 KRunner's Match method returns typed D-Bus literals only (no JSON). Each entry
 is `[Argument: (sssida{sv}) "id", "title", "app", …]` with optional a{sv}
 props. Field order is id / title / app; screen/output may appear in props.
+
+When screen props are missing (common on Plasma), enrich via
+``org.kde.KWin.getWindowInfo`` geometry + kscreen-doctor output rects so
+``dock_windows.per_output`` can filter dual-monitor bars.
+
+Hermetic CI fixtures (no live qdbus/kscreen):
+
+* ``WAYBAR_TEST_NO_QDBUS=1`` — skip real qdbus calls
+* ``WAYBAR_TEST_OUTPUT_GEOMS='NAME:x,y,WxH;…'`` — fake output rectangles
+* ``WAYBAR_TEST_WINDOW_INFO_MAP='uuid=x,y,WxH;…'`` — fake window geometries
+  (uuid may be bare or ``{uuid}``; WindowsRunner ids use ``0_{uuid}``)
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import re
+import subprocess
 import sys
 from typing import Any
 
 # Entry marker in qdbus6 --literal output for krunner Match results.
 _ENTRY_MARK = "[Argument: (sssida{sv}) "
 
-# Optional screen/output props (future KWin / fixture metadata).
+# Optional screen/output props (WindowsRunner / fixture metadata).
 _SCREEN_KEY_RE = re.compile(
     r'"(?:screen|output|monitor)"\s*=\s*'
     r'(?:'
@@ -24,6 +37,17 @@ _SCREEN_KEY_RE = re.compile(
     r'|'
     r'("(?:\\.|[^"\\])*")'
     r')',
+    re.IGNORECASE,
+)
+
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+_GEOM_RE = re.compile(
+    r"Geometry:\s*(-?\d+)\s*,\s*(-?\d+)\s+(\d+)x(\d+)",
+    re.IGNORECASE,
+)
+_OUTPUT_RE = re.compile(r"Output:\s*(?:\d+\s+)?(\S+)", re.IGNORECASE)
+_INFO_NUM_RE = re.compile(
+    r'"(x|y|width|height)"\s*=\s*\[Variant(?:\([^)]*\))?:\s*([0-9.+-]+)\]',
     re.IGNORECASE,
 )
 
@@ -68,6 +92,21 @@ def _extract_screen(props_blob: str) -> str | None:
         return None
     parsed = _parse_quoted(raw, 0)
     return parsed[0] if parsed else raw.strip('"')
+
+
+def runner_id_to_uuid(runner_id: str) -> str | None:
+    """Map WindowsRunner id ``0_{uuid}`` → ``{uuid}`` for getWindowInfo."""
+    rid = (runner_id or "").strip()
+    if not rid:
+        return None
+    if rid.startswith("0_{") and rid.endswith("}"):
+        return "{" + rid[3:-1] + "}"
+    if rid.startswith("{") and rid.endswith("}"):
+        return rid
+    # Bare uuid
+    if re.fullmatch(r"[0-9a-fA-F-]{36}", rid):
+        return "{" + rid + "}"
+    return None
 
 
 def parse_windows_runner_literal(raw: str) -> list[dict[str, Any]]:
@@ -124,6 +163,177 @@ def parse_windows_runner_literal(raw: str) -> list[dict[str, Any]]:
     return entries
 
 
+def parse_output_geometries(text: str) -> list[dict[str, Any]]:
+    """Parse kscreen-doctor -o (ANSI-stripped) into name/x/y/w/h dicts."""
+    text = _ANSI_RE.sub("", text or "")
+    geoms: list[dict[str, Any]] = []
+    current: str | None = None
+    for line in text.splitlines():
+        om = _OUTPUT_RE.search(line)
+        if om:
+            current = om.group(1)
+            continue
+        gm = _GEOM_RE.search(line)
+        if gm and current:
+            geoms.append(
+                {
+                    "name": current,
+                    "x": int(gm.group(1)),
+                    "y": int(gm.group(2)),
+                    "w": int(gm.group(3)),
+                    "h": int(gm.group(4)),
+                }
+            )
+    return geoms
+
+
+def load_output_geometries() -> list[dict[str, Any]]:
+    """Load output rects from env fixture or kscreen-doctor."""
+    fixture = os.environ.get("WAYBAR_TEST_OUTPUT_GEOMS", "").strip()
+    if fixture:
+        # name:x,y,wxh;name2:...
+        geoms: list[dict[str, Any]] = []
+        for part in fixture.split(";"):
+            part = part.strip()
+            if not part or ":" not in part:
+                continue
+            name, rest = part.split(":", 1)
+            m = re.fullmatch(r"(-?\d+),(-?\d+),(\d+)x(\d+)", rest.strip())
+            if not m:
+                continue
+            geoms.append(
+                {
+                    "name": name.strip(),
+                    "x": int(m.group(1)),
+                    "y": int(m.group(2)),
+                    "w": int(m.group(3)),
+                    "h": int(m.group(4)),
+                }
+            )
+        return geoms
+
+    if os.environ.get("WAYBAR_TEST_NO_QDBUS") in ("1", "true", "TRUE", "yes", "YES"):
+        return []
+
+    try:
+        proc = subprocess.run(
+            ["kscreen-doctor", "-o"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+            env={**os.environ, "TERM": "dumb", "NO_COLOR": "1"},
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    return parse_output_geometries(proc.stdout or "")
+
+
+def parse_window_info_geometry(literal: str) -> tuple[float, float] | None:
+    """Return window center (cx, cy) from getWindowInfo --literal output."""
+    vals: dict[str, float] = {}
+    for key, num in _INFO_NUM_RE.findall(literal or ""):
+        try:
+            vals[key.lower()] = float(num)
+        except ValueError:
+            continue
+    if not all(k in vals for k in ("x", "y", "width", "height")):
+        return None
+    return (
+        vals["x"] + vals["width"] / 2.0,
+        vals["y"] + vals["height"] / 2.0,
+    )
+
+
+def output_for_point(
+    cx: float, cy: float, geoms: list[dict[str, Any]]
+) -> str | None:
+    """Pick the output whose rect contains (cx, cy); prefer smallest area on ties."""
+    hits: list[tuple[int, str]] = []
+    for g in geoms:
+        x, y, w, h = g["x"], g["y"], g["w"], g["h"]
+        if x <= cx < x + w and y <= cy < y + h:
+            hits.append((w * h, g["name"]))
+    if not hits:
+        return None
+    hits.sort(key=lambda t: t[0])
+    return hits[0][1]
+
+
+def fetch_window_center(uuid: str) -> tuple[float, float] | None:
+    """Call getWindowInfo for uuid; honor WAYBAR_TEST_WINDOW_INFO_MAP fixture."""
+    fixture = os.environ.get("WAYBAR_TEST_WINDOW_INFO_MAP", "").strip()
+    if fixture:
+        # uuid=x,y,wxh;...
+        for part in fixture.split(";"):
+            part = part.strip()
+            if not part or "=" not in part:
+                continue
+            key, rest = part.split("=", 1)
+            key = key.strip()
+            if key not in (uuid, uuid.strip("{}")):
+                continue
+            m = re.fullmatch(r"(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)", rest.strip())
+            if not m:
+                continue
+            x, y, w, h = map(float, m.groups())
+            return (x + w / 2.0, y + h / 2.0)
+        return None
+
+    if os.environ.get("WAYBAR_TEST_NO_QDBUS") in ("1", "true", "TRUE", "yes", "YES"):
+        return None
+
+    try:
+        proc = subprocess.run(
+            [
+                "qdbus6",
+                "--literal",
+                "org.kde.KWin",
+                "/KWin",
+                "org.kde.KWin.getWindowInfo",
+                uuid,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return parse_window_info_geometry(proc.stdout or "")
+
+
+def enrich_screens(
+    entries: list[dict[str, Any]],
+    *,
+    geoms: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Fill missing screen fields via getWindowInfo geometry + output rects."""
+    if not entries:
+        return entries
+    if all(e.get("screen") for e in entries):
+        return entries
+
+    if geoms is None:
+        geoms = load_output_geometries()
+    if not geoms:
+        return entries
+
+    for e in entries:
+        if e.get("screen"):
+            continue
+        uuid = runner_id_to_uuid(str(e.get("id") or ""))
+        if not uuid:
+            continue
+        center = fetch_window_center(uuid)
+        if not center:
+            continue
+        name = output_for_point(center[0], center[1], geoms)
+        if name:
+            e["screen"] = name
+    return entries
+
+
 def filter_by_output(
     entries: list[dict[str, Any]], output: str | None
 ) -> list[dict[str, Any]]:
@@ -177,10 +387,17 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Emit JSON array instead of pipe lines",
     )
+    p_parse.add_argument(
+        "--no-enrich",
+        action="store_true",
+        help="Skip getWindowInfo/kscreen geometry enrichment",
+    )
 
     args = parser.parse_args(argv)
     raw = sys.stdin.read()
     entries = parse_windows_runner_literal(raw)
+    if not args.no_enrich:
+        entries = enrich_screens(entries)
     entries = filter_by_output(entries, args.output or None)
 
     if args.json:

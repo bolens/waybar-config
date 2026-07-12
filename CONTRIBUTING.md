@@ -33,7 +33,7 @@ make check-fast      # quick local gate
 make check           # full gate (suites + drift + lint)
 make check-generator # all generator suites
 make check-secrets   # secrets/settings suites
-make check-suite-inventory  # CI matrix ↔ on-disk suite stems
+make check-suite-inventory  # CI matrix ↔ on-disk suites + CSS path-filter coverage
 make check-docs-index       # docs/README.md ↔ docs/*.md + hub backlinks
 make check-drift     # generate then fail on dirty generated files
 ```

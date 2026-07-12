@@ -124,7 +124,19 @@ EOF
 #custom-coolercontrol.critical,
 #custom-openlinkhub.critical,
 #custom-stats-carousel.critical,
-#custom-systemd.critical {
+#custom-systemd.critical,
+#custom-ups.critical,
+#custom-updates.critical,
+#custom-device-battery.critical,
+#custom-homelab.critical,
+#custom-docker.critical,
+#custom-syncthing.critical,
+#custom-sunshine.critical,
+#custom-streamdeck.critical,
+#custom-i2pd.critical,
+#custom-runtimes.critical,
+#custom-libredefender.critical,
+#custom-chkrootkit.critical {
     animation: waybar-critical-breathe 1s steps(12, start) infinite alternate;
 }
 

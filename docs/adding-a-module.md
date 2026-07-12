@@ -82,7 +82,9 @@ Emit JSON that includes `exec`, `interval` / `signal`, `return-type`, tooltips, 
 ## 5. CSS (optional)
 
 - Prefer theme tokens from `theme/tokens.generated.css` / semantic colors.
-- Module-specific rules go in `theme/` or `user-style.css` — avoid baking one-off colors that ignore `theme.mode`.
+- Module-specific rules go in `theme/accents/` or `user-style/` — avoid baking one-off colors that ignore `theme.mode` unless they are intentional cyberpunk brand accents (see [Theming → Accents vs theme.mode](theming.md)).
+- Add new shared pills to `scripts/lib/css-selectors-lib.sh` (`waybar_css_pill_ids`) so layout + semantic chrome stay in sync.
+- Add new drawer sides to settings **and** `waybar_css_drawer_sides` / the group map in the same lib (CI: `drawer-group-css-contracts`, `pill-css-contracts`).
 
 ## 6. Regenerate and validate
 
@@ -95,22 +97,43 @@ bash scripts/ci/tests/generator/<relevant-suite>.sh
 
 Commit updated `.generated.*` artifacts when they change (CI drift check enforces this).
 
-## 7. Tests / CI
+## 7. Signal-driven refresh (clicks + listeners)
+
+Waybar **on-click stdout is ignored** for custom modules. After `--refresh` writes cache:
+
+```bash
+"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" my_feature
+```
+
+Or wire the generator middle-click as:
+
+```text
+…/my-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh my_feature
+```
+
+For event-driven modules (`interval: "once"`), add a listener under `scripts/listeners/`, register its lock name in `listener-ctl.sh` / launch / healthcheck, and signal the matching `signals.*` key. See [scripts/README.md](../scripts/README.md#listeners-daemons).
+
+## 8. Tests / CI
 
 | Change | Suite / check |
 |--------|----------------|
 | Generator output / module JSON | New or extended `scripts/ci/tests/generator/*.sh` + CI matrix name |
+| VPN / cooling / docker polish | `vpn-cooling-refresh` |
+| Album art signal + CSS | `album-art-wiring` |
+| Plasma dock per-output enrich | `dock-windows-plasma` (+ `WAYBAR_TEST_*` fixtures) |
+| Listener lock / launch / heal | `listener-lifecycle`, `check-shell-contracts` |
 | Secrets / polish scripts | `scripts/ci/tests/secrets/*.sh` |
 | Shell contracts | Covered by `make check-contracts` |
 | Python helper | `make check-python` / ruff |
 
 After adding a suite file, ensure `.github/workflows/ci.yml` matrix lists it (`make check-suite-inventory`).
 
-## 8. Docs
+## 9. Docs
 
 - Mention the module in the README module catalog if it is user-facing.
 - Optional deps → README Dependencies tables.
 - Settings keys → keep [settings-reference](settings-reference.md) in sync when adding top-level keys.
+- New listeners → [scripts/README.md](../scripts/README.md#listeners-daemons).
 
 ## Quick agent path
 

@@ -1,0 +1,27 @@
+/* Active window — slightly wider pill on the bottom bar */
+
+#custom-active-window {
+    color: #c8f6ff;
+    padding: 0 12px;
+    background: rgba(0, 229, 255, 0.04);
+    border: 1px solid rgba(0, 229, 255, 0.15);
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+#custom-active-window:hover {
+    background: rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.35);
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.45);
+}
+
+#custom-active-window.desktop {
+    color: rgba(200, 246, 255, 0.45);
+    background: transparent;
+    border: 1px solid transparent;
+    text-shadow: none;
+}
+
+#custom-active-window.desktop:hover {
+    background: rgba(200, 246, 255, 0.08);
+    border-color: rgba(200, 246, 255, 0.15);
+}

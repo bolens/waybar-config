@@ -28,7 +28,8 @@ fi
 jq '.weather.unit = "C"' "$TEST_DIR/data/waybar-settings.json" >"$TEST_DIR/data/waybar-settings.json.tmp" \
   && mv "$TEST_DIR/data/waybar-settings.json.tmp" "$TEST_DIR/data/waybar-settings.json"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."custom/nvme".exec | test("system/nvme-status\\.sh$")' "custom/nvme exec missing"
-waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" '.["group/hardware"].modules | index("custom/nvme") and index("custom/openlinkhub")' "hardware group missing nvme/openlinkhub"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" '.["group/hardware"].modules | index("custom/nvme")' "hardware group missing nvme"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" '.["group/cooling"].modules | index("custom/openlinkhub")' "cooling group missing openlinkhub"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" '."custom/openlinkhub".exec | test("openlinkhub-status\\.sh$")' "custom/openlinkhub exec missing"
 
 # NVMe fixture hwmon tree

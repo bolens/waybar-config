@@ -4,7 +4,7 @@ set -eu
 
 runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
 
-KNOWN_LISTENERS="privacy kde-activewindow hypr-workspaces device-notifier"
+KNOWN_LISTENERS="privacy kde-activewindow hypr-workspaces device-notifier vpn-tailscale album-art"
 
 stop_listener() {
   lock_name="$1"

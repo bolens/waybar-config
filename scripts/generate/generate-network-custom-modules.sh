@@ -20,6 +20,9 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
   def sig($k): ($s[0].signals[$k] // null);
   def app_open: ($scripts + "/tools/app-open.sh");
+  # Middle-click: refresh cache then signal — Waybar ignores on-click stdout.
+  def sig_refresh($key; $script):
+    ($script + " --refresh && " + $scripts + "/lib/waybar-signal.sh " + $key);
 
   {
     "custom/vpnstatus": {
@@ -28,7 +31,9 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       interval: iv("vpn"),
       signal: sig("vpn"),
       exec: ($scripts + "/network/vpn-status.sh"),
-      "on-click": ("python3 " + $scripts + "/network/vpn-status-popup.py")
+      "on-click": ("python3 " + $scripts + "/network/vpn-status-popup.py"),
+      "on-click-right": (app_open + " " + (($s[0].apps.network_editor // "nm-connection-editor"))),
+      "on-click-middle": sig_refresh("vpn"; $scripts + "/network/vpn-status.sh")
     },
     "custom/tailscale": {
       format: "{}",
@@ -37,7 +42,8 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       signal: sig("tailscale"),
       exec: ($scripts + "/network/tailscale-status.sh"),
       "on-click": (app_open + " " + ($s[0].network.tailscale_status_cmd // "ghostty -e tailscale status")),
-      "on-click-right": (app_open + " xdg-open " + ($s[0].network.tailscale_admin_url // "http://100.100.100.100/"))
+      "on-click-right": (app_open + " xdg-open " + ($s[0].network.tailscale_admin_url // "http://100.100.100.100/")),
+      "on-click-middle": sig_refresh("tailscale"; $scripts + "/network/tailscale-status.sh")
     },
     "custom/i2pd": {
       format: "{}",

@@ -6,6 +6,7 @@ set -euo pipefail
 
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 . "$WAYBAR_SCRIPTS/lib/theme-colors-lib.sh"
+. "$WAYBAR_SCRIPTS/lib/css-selectors-lib.sh"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
 
 [ -f "$settings" ] || exit 0
@@ -54,6 +55,36 @@ critical_active_glow="$(color_with_alpha "$critical" "0.55")"
 critical_hover_bg="$(color_with_alpha "$critical" "0.18")"
 critical_breathe_bg="$(color_with_alpha "$critical" "0.25")"
 critical_breathe_glow="$(color_with_alpha "$critical" "0.4")"
+# Shared module / drawer chrome (hand CSS owns layout; this owns theme-aware color).
+pill_bg="$(color_with_alpha "$accent" "0.06")"
+pill_border="$(color_with_alpha "$accent" "0.12")"
+pill_hover_bg="$(color_with_alpha "$accent" "0.12")"
+pill_hover_border="$(color_with_alpha "$accent" "0.4")"
+pill_hover_glow="$(color_with_alpha "$accent" "0.22")"
+group_bg="$(color_with_alpha "$accent" "0.04")"
+group_border="$(color_with_alpha "$accent" "0.16")"
+drawer_glow="$(color_with_alpha "$accent" "0.35")"
+drawer_hover_glow="$(color_with_alpha "$accent" "0.45")"
+power_glow="$(color_with_alpha "$critical" "0.35")"
+power_hover_glow="$(color_with_alpha "$critical" "0.5")"
+power_hover_bg="$(color_with_alpha "$critical" "0.14")"
+warning_glow="$(color_with_alpha "$warning" "0.35")"
+warning_hover_bg="$(color_with_alpha "$warning" "0.14")"
+warning_hover_border="$(color_with_alpha "$warning" "0.45")"
+# Fixed secondary accents for power-menu specialty (not in theme.colors).
+power_logout="#e0aaff"
+power_logout_bg="$(color_with_alpha "$power_logout" "0.14")"
+power_logout_border="$(color_with_alpha "$power_logout" "0.45")"
+power_logout_glow="$(color_with_alpha "$power_logout" "0.35")"
+power_suspend="#2cffb0"
+power_suspend_bg="$(color_with_alpha "$power_suspend" "0.14")"
+power_suspend_border="$(color_with_alpha "$power_suspend" "0.45")"
+power_suspend_glow="$(color_with_alpha "$power_suspend" "0.35")"
+accent_hover_fg="$fg"
+# Soft lighten for drawer hover when fg matches cyberpunk default.
+if [[ "$(printf '%s' "$fg" | tr '[:upper:]' '[:lower:]')" == "#c8f6ff" ]]; then
+  accent_hover_fg="#c8f6ff"
+fi
 
 jq -n --slurpfile s "$settings" --argjson colors "$colors_json" --arg mode "$mode" \
   --arg fg "$fg" --arg accent "$accent" --arg warning "$warning" --arg critical "$critical" \
@@ -124,10 +155,133 @@ jq -n --slurpfile s "$settings" --argjson colors "$colors_json" --arg mode "$mod
     + (if $mode == "wallpaper" then "\n@import \"tokens.wallpaper.generated.css\";\n" else "" end)
 ' -r >"$theme_dir/tokens.generated.css"
 
+# Shared pill layout (SoT: scripts/lib/css-selectors-lib.sh → waybar_css_pill_ids).
+{
+  printf '%s\n' '/* Generated shared pill layout — do not edit by hand */' ''
+  waybar_css_pill_ids | waybar_css_emit_selector_list
+  cat <<'EOF'
+ {
+    padding: 0 10px;
+    margin: 4px 0;
+    border-radius: 6px;
+    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+}
+EOF
+} >"$theme_dir/module-pills.generated.css"
+
+ws_slots="$(waybar_css_slot_count "$settings" workspaces 5 1 10)"
+dock_slots="$(waybar_css_slot_count "$settings" dock_windows 12 1 16)"
+pill_sels="$(waybar_css_pill_ids | waybar_css_emit_selector_list)"
+pill_hover_sels="$(waybar_css_pill_hover_ids | waybar_css_emit_selector_list ':hover')"
+cluster_sels="$(waybar_css_cluster_group_ids | waybar_css_emit_selector_list)"
+drawer_accent_sels="$(waybar_css_drawer_accent_handle_ids | waybar_css_emit_selector_list)"
+drawer_accent_hover_sels="$(waybar_css_drawer_accent_handle_ids | waybar_css_emit_selector_list ':hover')"
+dock_inactive_sels="$(waybar_css_id_range '#custom-dock-win-' "$dock_slots" '.dock-win-inactive')"
+dock_active_sels="$(waybar_css_id_range '#custom-dock-win-' "$dock_slots" '.dock-win-active')"
+dock_hit_hover_sels="$(waybar_css_id_range '#custom-dock-win-' "$dock_slots" '.dock-win-hit:hover')"
+dock_active_hover_sels="$(waybar_css_id_range '#custom-dock-win-' "$dock_slots" '.dock-win-active:hover')"
+ws_inactive_sels="$(waybar_css_id_range '#custom-ws-' "$ws_slots" '.ws-inactive')"
+ws_active_sels="$(waybar_css_id_range '#custom-ws-' "$ws_slots" '.ws-active')"
+ws_active_label_sels="$(waybar_css_id_range '#custom-ws-' "$ws_slots" '.ws-active label')"
+ws_inactive_hover_sels="$(waybar_css_id_range '#custom-ws-' "$ws_slots" '.ws-inactive:hover')"
+ws_active_hover_sels="$(waybar_css_id_range '#custom-ws-' "$ws_slots" '.ws-active:hover')"
+
 # GTK3 cannot use var()/ :root — bake semantic colors as concrete rules (override static CSS).
+# Pill ID list SoT: css-selectors-lib.sh; layout chrome: module-pills.generated.css + modules.css.
 cat >"$theme_dir/semantic-colors.generated.css" <<EOF
 /* Generated theme semantic colors — do not edit by hand */
 
+/* --- Group chrome (non-drawer clusters) --- */
+${cluster_sels} {
+    background: ${group_bg};
+    border: 1px solid ${group_border};
+}
+
+/* --- Module pill chrome (accent-tinted; follows theme.mode / presets) --- */
+${pill_sels} {
+    background: ${pill_bg};
+    border: 1px solid ${pill_border};
+}
+
+${pill_hover_sels} {
+    background: ${pill_hover_bg};
+    border-color: ${pill_hover_border};
+    box-shadow: 0 0 10px ${pill_hover_glow};
+}
+
+/* --- Drawer handles --- */
+${drawer_accent_sels} {
+    color: ${accent};
+    text-shadow: 0 0 6px ${drawer_glow};
+}
+
+${drawer_accent_hover_sels} {
+    color: ${accent_hover_fg};
+    text-shadow: 0 0 8px ${drawer_hover_glow};
+    background: ${accent_hover_bg};
+}
+
+#custom-power-drawer {
+    color: ${critical};
+    text-shadow: 0 0 6px ${power_glow};
+}
+
+#custom-power-drawer:hover {
+    color: ${critical_hover};
+    text-shadow: 0 0 8px ${power_hover_glow};
+    background: ${power_hover_bg};
+}
+
+/* Power action specialty hovers (warning / accent / critical + fixed secondary accents) */
+#custom-lock:hover {
+    color: ${warning};
+    background: ${warning_hover_bg};
+    border-color: ${warning_hover_border};
+    box-shadow: 0 0 10px ${warning_glow};
+    text-shadow: 0 0 8px ${warning_glow};
+}
+
+#custom-logout:hover {
+    color: ${power_logout};
+    background: ${power_logout_bg};
+    border-color: ${power_logout_border};
+    box-shadow: 0 0 10px ${power_logout_glow};
+    text-shadow: 0 0 8px ${power_logout_glow};
+}
+
+#custom-suspend:hover {
+    color: ${power_suspend};
+    background: ${power_suspend_bg};
+    border-color: ${power_suspend_border};
+    box-shadow: 0 0 10px ${power_suspend_glow};
+    text-shadow: 0 0 8px ${power_suspend_glow};
+}
+
+#custom-reboot:hover {
+    color: ${accent};
+    background: ${pill_hover_bg};
+    border-color: ${pill_hover_border};
+    box-shadow: 0 0 10px ${pill_hover_glow};
+    text-shadow: 0 0 8px ${drawer_hover_glow};
+}
+
+#custom-shutdown:hover {
+    color: ${critical};
+    background: ${power_hover_bg};
+    border-color: ${critical_border};
+    box-shadow: 0 0 10px ${critical_glow};
+    text-shadow: 0 0 8px ${critical_active_glow};
+}
+
+#custom-power-menu:hover {
+    color: ${critical};
+    background: ${power_hover_bg};
+    border-color: ${critical_border};
+    box-shadow: 0 0 10px ${critical_glow};
+    text-shadow: 0 0 8px ${critical_active_glow};
+}
+
+/* --- Threshold / status classes --- */
 #custom-cpu.warning,
 #custom-gpu.warning,
 #custom-memory.warning,
@@ -144,10 +298,24 @@ cat >"$theme_dir/semantic-colors.generated.css" <<EOF
 #custom-device-battery.warning,
 #custom-homelab.warning,
 #custom-github.warning,
+#custom-docker.warning,
+#custom-syncthing.warning,
+#custom-sunshine.warning,
+#custom-streamdeck.warning,
+#custom-i2pd.warning,
+#custom-runtimes.warning,
+#custom-powerprofiles.warning,
+#custom-asusctl.warning,
+#custom-brightness.warning,
+#custom-tailscale.warning,
+#custom-libredefender.warning,
+#custom-chkrootkit.warning,
+#custom-hyprwhspr.warning,
 #custom-pomodoro.work {
     color: ${warning};
     border-color: ${warning_border};
     background: ${warning_bg};
+    text-shadow: 0 0 6px ${warning};
 }
 
 #custom-cpu.critical,
@@ -165,11 +333,23 @@ cat >"$theme_dir/semantic-colors.generated.css" <<EOF
 #custom-updates.critical,
 #custom-device-battery.critical,
 #custom-homelab.critical,
-#custom-systemd.critical {
+#custom-systemd.critical,
+#custom-docker.critical,
+#custom-syncthing.critical,
+#custom-sunshine.critical,
+#custom-streamdeck.critical,
+#custom-i2pd.critical,
+#custom-runtimes.critical,
+#custom-powerprofiles.critical,
+#custom-brightness.critical,
+#custom-tailscale.critical,
+#custom-libredefender.critical,
+#custom-chkrootkit.critical {
     color: ${critical};
     border-color: ${critical_border};
     background: ${critical_bg};
     box-shadow: 0 0 8px ${critical_glow};
+    text-shadow: 0 0 8px ${critical};
 }
 
 #custom-pomodoro.break {
@@ -177,149 +357,44 @@ cat >"$theme_dir/semantic-colors.generated.css" <<EOF
     border-color: ${accent_dim};
 }
 
-#custom-dock-win-0.dock-win-inactive,
-#custom-dock-win-1.dock-win-inactive,
-#custom-dock-win-2.dock-win-inactive,
-#custom-dock-win-3.dock-win-inactive,
-#custom-dock-win-4.dock-win-inactive,
-#custom-dock-win-5.dock-win-inactive,
-#custom-dock-win-6.dock-win-inactive,
-#custom-dock-win-7.dock-win-inactive,
-#custom-dock-win-8.dock-win-inactive,
-#custom-dock-win-9.dock-win-inactive,
-#custom-dock-win-10.dock-win-inactive,
-#custom-dock-win-11.dock-win-inactive,
-#custom-dock-win-12.dock-win-inactive,
-#custom-dock-win-13.dock-win-inactive,
-#custom-dock-win-14.dock-win-inactive,
-#custom-dock-win-15.dock-win-inactive {
+${dock_inactive_sels} {
     color: ${accent_dim};
 }
 
-#custom-dock-win-0.dock-win-active,
-#custom-dock-win-1.dock-win-active,
-#custom-dock-win-2.dock-win-active,
-#custom-dock-win-3.dock-win-active,
-#custom-dock-win-4.dock-win-active,
-#custom-dock-win-5.dock-win-active,
-#custom-dock-win-6.dock-win-active,
-#custom-dock-win-7.dock-win-active,
-#custom-dock-win-8.dock-win-active,
-#custom-dock-win-9.dock-win-active,
-#custom-dock-win-10.dock-win-active,
-#custom-dock-win-11.dock-win-active,
-#custom-dock-win-12.dock-win-active,
-#custom-dock-win-13.dock-win-active,
-#custom-dock-win-14.dock-win-active,
-#custom-dock-win-15.dock-win-active {
+${dock_active_sels} {
     color: ${critical};
     background-color: ${critical_active_bg};
     text-shadow: 0 0 8px ${critical_active_glow};
 }
 
-#custom-dock-win-0.dock-win-hit:hover,
-#custom-dock-win-1.dock-win-hit:hover,
-#custom-dock-win-2.dock-win-hit:hover,
-#custom-dock-win-3.dock-win-hit:hover,
-#custom-dock-win-4.dock-win-hit:hover,
-#custom-dock-win-5.dock-win-hit:hover,
-#custom-dock-win-6.dock-win-hit:hover,
-#custom-dock-win-7.dock-win-hit:hover,
-#custom-dock-win-8.dock-win-hit:hover,
-#custom-dock-win-9.dock-win-hit:hover,
-#custom-dock-win-10.dock-win-hit:hover,
-#custom-dock-win-11.dock-win-hit:hover,
-#custom-dock-win-12.dock-win-hit:hover,
-#custom-dock-win-13.dock-win-hit:hover,
-#custom-dock-win-14.dock-win-hit:hover,
-#custom-dock-win-15.dock-win-hit:hover {
+${dock_hit_hover_sels} {
     color: ${accent};
     background-color: ${accent_hover_bg};
 }
 
-#custom-dock-win-0.dock-win-active:hover,
-#custom-dock-win-1.dock-win-active:hover,
-#custom-dock-win-2.dock-win-active:hover,
-#custom-dock-win-3.dock-win-active:hover,
-#custom-dock-win-4.dock-win-active:hover,
-#custom-dock-win-5.dock-win-active:hover,
-#custom-dock-win-6.dock-win-active:hover,
-#custom-dock-win-7.dock-win-active:hover,
-#custom-dock-win-8.dock-win-active:hover,
-#custom-dock-win-9.dock-win-active:hover,
-#custom-dock-win-10.dock-win-active:hover,
-#custom-dock-win-11.dock-win-active:hover,
-#custom-dock-win-12.dock-win-active:hover,
-#custom-dock-win-13.dock-win-active:hover,
-#custom-dock-win-14.dock-win-active:hover,
-#custom-dock-win-15.dock-win-active:hover {
+${dock_active_hover_sels} {
     color: ${critical_hover};
     background-color: ${critical_hover_bg};
 }
 
-#custom-ws-0.ws-inactive,
-#custom-ws-1.ws-inactive,
-#custom-ws-2.ws-inactive,
-#custom-ws-3.ws-inactive,
-#custom-ws-4.ws-inactive,
-#custom-ws-5.ws-inactive,
-#custom-ws-6.ws-inactive,
-#custom-ws-7.ws-inactive,
-#custom-ws-8.ws-inactive,
-#custom-ws-9.ws-inactive {
+${ws_inactive_sels} {
     color: ${accent_dim};
 }
 
-#custom-ws-0.ws-active,
-#custom-ws-1.ws-active,
-#custom-ws-2.ws-active,
-#custom-ws-3.ws-active,
-#custom-ws-4.ws-active,
-#custom-ws-5.ws-active,
-#custom-ws-6.ws-active,
-#custom-ws-7.ws-active,
-#custom-ws-8.ws-active,
-#custom-ws-9.ws-active {
+${ws_active_sels} {
     color: ${critical};
 }
 
-#custom-ws-0.ws-active label,
-#custom-ws-1.ws-active label,
-#custom-ws-2.ws-active label,
-#custom-ws-3.ws-active label,
-#custom-ws-4.ws-active label,
-#custom-ws-5.ws-active label,
-#custom-ws-6.ws-active label,
-#custom-ws-7.ws-active label,
-#custom-ws-8.ws-active label,
-#custom-ws-9.ws-active label {
+${ws_active_label_sels} {
     text-shadow: 0 0 8px ${critical_active_glow};
 }
 
-#custom-ws-0.ws-inactive:hover,
-#custom-ws-1.ws-inactive:hover,
-#custom-ws-2.ws-inactive:hover,
-#custom-ws-3.ws-inactive:hover,
-#custom-ws-4.ws-inactive:hover,
-#custom-ws-5.ws-inactive:hover,
-#custom-ws-6.ws-inactive:hover,
-#custom-ws-7.ws-inactive:hover,
-#custom-ws-8.ws-inactive:hover,
-#custom-ws-9.ws-inactive:hover {
+${ws_inactive_hover_sels} {
     color: ${accent};
     background-color: ${accent_hover_bg};
 }
 
-#custom-ws-0.ws-active:hover,
-#custom-ws-1.ws-active:hover,
-#custom-ws-2.ws-active:hover,
-#custom-ws-3.ws-active:hover,
-#custom-ws-4.ws-active:hover,
-#custom-ws-5.ws-active:hover,
-#custom-ws-6.ws-active:hover,
-#custom-ws-7.ws-active:hover,
-#custom-ws-8.ws-active:hover,
-#custom-ws-9.ws-active:hover {
+${ws_active_hover_sels} {
     color: ${critical_hover};
 }
 EOF

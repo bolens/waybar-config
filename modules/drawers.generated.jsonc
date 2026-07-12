@@ -2,7 +2,12 @@
   "custom/desk-drawer": {
     "format": "󰍜",
     "tooltip": true,
-    "tooltip-format": "Session controls\nContains: Notifications · Power profile · ASUS profile · Brightness · Bluetooth · Idle inhibitor · Keyboard layout · KDE Connect · Removable devices · Stream Deck · Vaults · Touchpad · Device battery\nClick to toggle"
+    "tooltip-format": "Session controls\nContains: Notifications · Power profile · ASUS profile · Brightness · Idle inhibitor · Keyboard layout · Touchpad\nClick to toggle"
+  },
+  "custom/devices-drawer": {
+    "format": "󰁹",
+    "tooltip": true,
+    "tooltip-format": "Devices\nContains: Bluetooth · KDE Connect · Removable devices · Stream Deck · Device battery\nClick to toggle"
   },
   "custom/dock-drawer": {
     "format": "󰀻",
@@ -27,17 +32,22 @@
   "custom/tools-drawer": {
     "format": "󰒓",
     "tooltip": true,
-    "tooltip-format": "Quick tools\nContains: Screenshot · Screen record · Night light · Clipboard · Color picker · RGB · Discord · Weather · Pomodoro\nClick to toggle"
+    "tooltip-format": "Quick tools\nContains: Screenshot · Screen record · Night light · Clipboard · Color picker · RGB · Discord · Weather · Pomodoro · GitHub\nClick to toggle"
   },
   "custom/infra-drawer": {
     "format": "󰒍",
     "tooltip": true,
-    "tooltip-format": "Infrastructure\nContains: Homelab · Docker · Syncthing · Sunshine · Runtimes · Updates · UPS · Systemd · GitHub · Uptime\nClick to toggle"
+    "tooltip-format": "Infrastructure\nContains: Homelab · Docker · Syncthing · Sunshine · Runtimes · Updates · UPS · Systemd · Uptime\nClick to toggle"
   },
   "custom/hardware-drawer": {
     "format": "󰻠",
     "tooltip": true,
-    "tooltip-format": "Hardware\nContains: CPU · GPU · Memory · Disk · NVMe · PSU · Fans · Liquidctl · CoolerControl · OpenLinkHub\nClick to toggle"
+    "tooltip-format": "Hardware\nContains: Stats · NVMe · PSU\nClick to toggle"
+  },
+  "custom/cooling-drawer": {
+    "format": "󰈐",
+    "tooltip": true,
+    "tooltip-format": "Cooling\nContains: Fans · Liquidctl · CoolerControl · OpenLinkHub\nClick to toggle"
   },
   "custom/power-drawer": {
     "format": "",
@@ -52,7 +62,7 @@
   "custom/security-drawer": {
     "format": "󰒃",
     "tooltip": true,
-    "tooltip-format": "Security\nContains: LibreDefender · chkrootkit\nClick to toggle"
+    "tooltip-format": "Security\nContains: Vaults · LibreDefender · chkrootkit\nClick to toggle"
   },
   "idle_inhibitor": {
     "format": "{icon}",

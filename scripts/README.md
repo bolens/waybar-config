@@ -8,10 +8,10 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `generate/` | Config generators (`generate-*.sh`); `generate-settings.sh` orchestrates network/dock/domain emitters |
 | `ci/` | Contract checks, unit tests, validate, pre-commit hook |
 | `infra/` | Launch, healthcheck, listener-ctl, metrics collector |
-| `listeners/` | Long-running watchers (`active-window-listener-kde.py` + `lib/kde_listener/` mixins) |
+| `listeners/` | Long-running watchers — see table below |
 | `dock/` | Dock launcher + dock-windows |
 | `workspaces/` | Workspaces, active window, keybind hints |
-| `system/` | CPU/mem/disk/gpu/nvme/fans/liquidctl/asusctl/rgb/power/brightness/… |
+| `system/` | CPU/mem/disk/gpu/nvme/fans/liquidctl/asusctl/rgb/power/brightness/cooling-click/… |
 | `network/` | Wi‑Fi, VPN, ethernet, Tailscale, … |
 | `media/` | Audio, mic, MPRIS; optional `cava-status.sh` visualizer ([`cava`](https://github.com/karlstav/cava) — see [Dependencies](../README.md#optional-media--session)) |
 | `notifications/` | Notifications + clipboard |
@@ -50,14 +50,32 @@ Project docs hub: **[docs/README.md](../docs/README.md)** ([architecture](../doc
 | `system-metrics-{cpu,gpu,top}.sh` | Sourced by `infra/system-metrics-collector.sh` |
 | `reduced-motion-lib.sh` | Probe Plasma Instant / Hyprland / settings for animation gating |
 | `kde_listener/` | Mixins/helpers for the KDE session listener |
+| `dock-windows-kde-lib.{sh,py}` | Plasma WindowsRunner parse + per-output geometry enrich |
+
+### `listeners/` daemons
+
+Started by `waybar-launch.sh`, healed by `waybar-healthcheck.sh`, stopped via `listener-ctl.sh stop-all`. Each takes a singleton lock (`WAYBAR_LISTENER_LOCK_NAME=…` + `dock-windows-listener-lock.sh`).
+
+| Lock name | Script | Signals |
+|-----------|--------|---------|
+| `privacy` | `privacy-listener.sh` | `privacy`, `mic` |
+| `device-notifier` | `device-notifier-listener.sh` | `device_notifier` |
+| `vpn-tailscale` | `vpn-tailscale-listener.sh` | `vpn`, `tailscale` |
+| `album-art` | `album-art-listener.sh` | `album_art` |
+| `kde-activewindow` | `active-window-listener-kde.py` | workspaces / dock (Plasma) |
+| `hypr-workspaces` | `workspaces-hyprland-listener.sh` | `workspaces` (Hyprland) |
+
+New listeners: add the lock name to `listener-ctl.sh` `KNOWN_LISTENERS`, start in `waybar-launch.sh`, heal in `waybar-healthcheck.sh`, and cover in `listener-lifecycle` / shell contracts.
 
 ### `generate/` domain emitters
 
 `generate-settings.sh` runs network + dock generators, then these domain scripts (no pass-through orchestrator):
 
-`generate-utilities-modules.sh`, `generate-audio-modules.sh`, `generate-clock-modules.sh`, `generate-drawers-modules.sh`, `generate-network-custom-modules.sh`, `generate-privacy-modules.sh`, `generate-active-window-modules.sh`, `generate-center-extras-modules.sh`, `generate-dock-windows-modules.sh`, `generate-tray-modules.sh`, `generate-hypr-tools-modules.sh`, `generate-theme-tokens.sh`, `generate-animations-css.sh`, `generate-reduced-motion-css.sh`, `generate-submap-css.sh`.
+`generate-utilities-modules.sh`, `generate-audio-modules.sh`, `generate-clock-modules.sh`, `generate-drawers-modules.sh`, `generate-drawers-css.sh`, `generate-groups-css.sh`, `generate-network-custom-modules.sh`, `generate-privacy-modules.sh`, `generate-active-window-modules.sh`, `generate-center-extras-modules.sh`, `generate-dock-windows-modules.sh`, `generate-dock-windows-css.sh`, `generate-tray-modules.sh`, `generate-hypr-tools-modules.sh`, `generate-theme-tokens.sh`, `generate-animations-css.sh`, `generate-reduced-motion-css.sh`, `generate-submap-css.sh`.
 
 Sibling scripts (also invoked from Makefile / launch): `generate-compositor-modules.sh`, `generate-workspaces-css.sh`, `generate-dock-modules.sh`, `generate-network-modules.sh`.
+
+CSS selector SoT: `scripts/lib/css-selectors-lib.sh` (pills, drawer sides/groups, cluster groups, slot ranges).
 
 ### `services/` subfolders
 
@@ -133,6 +151,7 @@ make install-hooks   # secrets pre-commit symlink
 | `ci/tests/generator/*.sh` | Generator suites (CI matrix shards each file) |
 | `ci/tests/secrets/*.sh` | Secrets/settings suites (CI matrix shards each file) |
 | `ci/check-suite-inventory.sh` | Fails if CI matrix names ≠ on-disk suite stems |
+| `ci/check-ci-path-filters.sh` | Fails if dorny generator/validate filters miss `style.css` / `user-style/**` / theme |
 | `ci/check-generated-drift.sh` | `make generate` then `git diff` on committed artifacts |
 | `ci/install-hooks.sh` | Symlink secrets pre-commit (`make install-hooks`) |
 

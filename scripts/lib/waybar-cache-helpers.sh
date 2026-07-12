@@ -160,6 +160,7 @@ serve_metrics_cache_or_refresh() {
 }
 
 escape_markup() {
+  # Escapes pango/HTML-ish specials. Pass the string as $1 — does not read stdin.
   printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
 }
 

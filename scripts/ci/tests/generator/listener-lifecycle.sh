@@ -90,6 +90,42 @@ if ! grep -q 'WAYBAR_LISTENER_LOCK_NAME=device-notifier' "$TEST_DIR/scripts/list
   fail=1
 fi
 
+if ! grep -q 'vpn-tailscale' "$TEST_DIR/scripts/infra/listener-ctl.sh"; then
+  echo "FAIL: listener-ctl KNOWN_LISTENERS should include vpn-tailscale" >&2
+  fail=1
+fi
+if ! grep -q 'album-art' "$TEST_DIR/scripts/infra/listener-ctl.sh"; then
+  echo "FAIL: listener-ctl KNOWN_LISTENERS should include album-art" >&2
+  fail=1
+fi
+if [ ! -x "$TEST_DIR/scripts/listeners/vpn-tailscale-listener.sh" ]; then
+  echo "FAIL: vpn-tailscale-listener.sh missing" >&2
+  fail=1
+fi
+if [ ! -x "$TEST_DIR/scripts/listeners/album-art-listener.sh" ]; then
+  echo "FAIL: album-art-listener.sh missing" >&2
+  fail=1
+fi
+if ! grep -q 'WAYBAR_LISTENER_LOCK_NAME=vpn-tailscale' "$TEST_DIR/scripts/listeners/vpn-tailscale-listener.sh"; then
+  echo "FAIL: vpn-tailscale-listener.sh missing WAYBAR_LISTENER_LOCK_NAME=vpn-tailscale" >&2
+  fail=1
+fi
+if ! grep -q 'WAYBAR_LISTENER_LOCK_NAME=album-art' "$TEST_DIR/scripts/listeners/album-art-listener.sh"; then
+  echo "FAIL: album-art-listener.sh missing WAYBAR_LISTENER_LOCK_NAME=album-art" >&2
+  fail=1
+fi
+# Launch + healthcheck must know about the new listeners (stop-all + heal).
+for needle in vpn-tailscale album-art; do
+  if ! grep -q "$needle" "$TEST_DIR/scripts/infra/waybar-launch.sh"; then
+    echo "FAIL: waybar-launch.sh should start $needle listener" >&2
+    fail=1
+  fi
+  if ! grep -q "$needle" "$TEST_DIR/scripts/infra/waybar-healthcheck.sh"; then
+    echo "FAIL: waybar-healthcheck.sh should heal $needle listener" >&2
+    fail=1
+  fi
+done
+
 # KDE listener loads signals from settings (not only hardcoded RTMIN offsets)
 
 signals_py="$TEST_DIR/scripts/lib/kde_listener/signals.py"

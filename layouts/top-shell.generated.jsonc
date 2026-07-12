@@ -11,6 +11,7 @@
   ],
   "modules-left": [
     "group/desk-controls",
+    "group/devices",
     "group/media",
     "group/net"
   ]

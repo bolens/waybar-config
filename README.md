@@ -41,7 +41,7 @@ Full map (keep in sync when adding pages): **[docs/README.md](docs/README.md)**
 * `scripts/`: Status/click handlers, listeners, generators, and CI — domain folders plus `lib/`, `generate/`, `ci/`, `infra/`. See [scripts/README.md](scripts/README.md).
 * `systemd/`: Portable user units (`waybar.service`, healthcheck service + timer) using `%h/.config/waybar`.
 * `theme/`: CSS tokens/modules plus Rofi themes under `theme/rofi/`.
-* `style.css` / `user-style.css` / `theme.css`: Bar stylesheet entry points (`style.css` also imports hyprwhspr styles when installed).
+* `style.css` / `theme.css`: Import hubs. Shared accents live under `theme/accents/`; personal overrides under `user-style/` (imported last from `style.css`). (`style.css` also imports hyprwhspr styles when installed.)
 
 ## Getting Started
 
@@ -229,7 +229,7 @@ make check-ruff      # ruff check scripts/
 make check-systemd   # systemd unit templates → real scripts
 make check-generator # scripts/ci/tests/generator/*.sh (CI runs these as a matrix)
 make check-secrets   # scripts/ci/tests/secrets/*.sh (CI runs these as a matrix)
-make check-suite-inventory  # CI matrix ↔ on-disk suite files
+make check-suite-inventory  # CI matrix ↔ on-disk suite files (+ CSS path filters)
 make check-docs-index       # docs/README.md ↔ docs/*.md + hub backlinks
 make check-drift     # make generate then fail on dirty generated artifacts
 make fmt-shell       # shfmt -w scripts/
@@ -256,24 +256,25 @@ Groups and module lists live in `data/waybar-settings.jsonc` → `groups.*` (see
 
 | Module | Group | Binary / dep | Notes |
 |--------|-------|--------------|-------|
-| `custom/cpu` `gpu` `memory` `disk` `nvme` | hardware | sysfs / `nvidia-smi` | Threshold CSS: `.warning` / `.critical` (theme tokens) |
-| `custom/psu` `fans` `liquidctl` `coolercontrol` `openlinkhub` | hardware | optional daemons | Hide when absent; OLH right-click restarts service |
+| `custom/cpu` `gpu` `memory` `disk` `nvme` `psu` | hardware | sysfs / `nvidia-smi` | Threshold CSS: `.warning` / `.critical` (theme tokens) |
+| `custom/fans` `liquidctl` `coolercontrol` `openlinkhub` | cooling | optional daemons | Hide when absent; OLH right-click restarts service |
 | `custom/cava` | media | **`cava` (optional)** | Continuous bars; hides when silent/missing — see [Dependencies](#optional-media--session) |
 | `mpris` / `custom/mpris` / pulse / mic | media | playerctl / PipeWire | Mic left opens `apps.audio_mixer` |
 | `custom/album-art` | media | `playerctl` | **On by default**; set `visual.album_art.enabled: false` to hide |
 | `custom/pomodoro` | tools | none | Click toggle · right reset · middle skip |
 | `custom/weather` | tools | `curl` | Open-Meteo (default) → wttr.in fallback |
-| `custom/nightlight` | tools / desk | compositor helpers | Toggle / preview / settings |
-| `custom/notifications` `clipboard` | desk-controls | Plasma / mako / cliphist | Left open · Right DND/clear · Middle settings |
+| `custom/nightlight` | tools | compositor helpers | Toggle / preview / settings |
+| `custom/github` | tools | `gh` | Notifications + review-requested PRs |
+| `custom/notifications` | desk-controls | Plasma / mako | Left open · Right DND · Middle settings |
+| `custom/clipboard` | tools | cliphist | Left open · Right clear |
 | `custom/power-menu` | power | `rofi` | Grid menu; individuals still available |
 | `custom/homelab` | infra | `curl` | `homelab.targets[]`; hidden if empty; multi-target → rofi picker |
-| `custom/github` | infra | `gh` | Notifications + review-requested PRs |
 | `custom/updates` | infra | pacman/apt/dnf | Review → “Upgrade System Now” in terminal |
 | `custom/docker` `runtimes` | infra | docker / podman / libvirt | Optional container/VM strip |
-| `custom/streamdeck` | devices | streamdeck-ui | Left open · Right restart · Middle refresh |
+| `bluetooth` / `kdeconnect` / `streamdeck` / device battery | devices | optional | Peripherals strip (top bar) |
 | `custom/vaults` / security scanners | security | optional | Hide when tools absent |
 | `custom/dock-windows` | bottom center | `qdbus6` (Plasma) / `hyprctl` | **On by default**; set `dock_windows.enabled: false` to hide. Plasma: install `qt6-tools`. |
-| `custom/stats-carousel` | hardware | metrics collector | Opt-in via `visual.stats_carousel.enabled` |
+| `custom/stats-carousel` | hardware | metrics collector | **On by default** (`visual.stats_carousel.enabled`); replaces cpu/mem/disk/gpu; scroll to cycle |
 | `hyprland/submap` | desk-hypr | Hyprland | Native overlay; shows active submap name |
 | Privacy / VPN / Tailscale / i2pd | privacy / net | PipeWire / daemons | |
 
@@ -320,9 +321,9 @@ Or manually: merge [`data/profiles/minimal-groups.jsonc`](data/profiles/minimal-
 
 #### Known limitation (Plasma)
 
-**Per-monitor** (`dock_windows.per_output`, default on): when the compositor exposes screen metadata, each bar only lists windows on that output. Plasma’s WindowsRunner often lacks screen props today, so **both bars may show the full window list** until KWin exposes output info. Hyprland per-output filtering works when `hyprctl` clients include monitor fields.
+**Per-monitor** (`dock_windows.per_output`, default on): each bar prefers windows on that output. When WindowsRunner omits screen props, the dock enriches via KWin `getWindowInfo` geometry + `kscreen-doctor` output rects. If those probes fail, both bars may still show the full list. Hyprland per-output filtering uses `hyprctl` client monitor fields.
 
-Set `dock_windows.enabled: false` to hide. Plasma needs `qt6-tools` (`qdbus6`).
+Set `dock_windows.enabled: false` to hide. Plasma needs `qt6-tools` (`qdbus6`) and `kscreen-doctor` for geometry-based per-output enrich.
 
 ### Theming
 
@@ -366,7 +367,7 @@ With `bars.output: ["*"]`, bars already appear on every monitor. These honor `$W
 
 ### Visual polish
 
-Under `visual` in settings: unicode gauges (`visual.gauges`), album art, stats carousel, CSS animations (`workspace_pulse`, `critical_breathe`, `idle_glow`), and `reduced_motion` (`auto` / `force` / `off`). Cava: `cava.placement` `drawer` | `inline`.
+Under `visual` in settings: unicode gauges (`visual.gauges`), album art (signal-driven), stats carousel (**on by default**; scroll cycles cpu/mem/disk/gpu), CSS animations (`workspace_pulse`, `critical_breathe`, `idle_glow`), and `reduced_motion` (`auto` / `force` / `off`). Cava: `cava.placement` `drawer` | `inline`.
 
 ## Dependencies
 

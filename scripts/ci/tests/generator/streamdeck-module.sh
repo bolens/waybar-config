@@ -44,8 +44,8 @@ waybar_test_assert_jq "$clean_utils" \
   "streamdeck left-click must not be a raw systemctl restart"
 
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" \
-  '."group/desk-controls".modules | index("custom/streamdeck") != null' \
-  "custom/streamdeck should be in group/desk-controls"
+  '."group/devices".modules | index("custom/streamdeck") != null' \
+  "custom/streamdeck should be in group/devices"
 
 echo "Testing streamdeck-click open launches streamdeck (stubbed)..."
 stub=$(mktemp -d)

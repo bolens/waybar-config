@@ -40,6 +40,9 @@ waybar_test_gen_default() {
     "$TEST_DIR/scripts/generate/generate-settings.sh"
     "$TEST_DIR/scripts/generate/generate-compositor-modules.sh"
     "$TEST_DIR/scripts/generate/generate-workspaces-css.sh"
+    "$TEST_DIR/scripts/generate/generate-dock-windows-css.sh"
+    "$TEST_DIR/scripts/generate/generate-drawers-css.sh"
+    "$TEST_DIR/scripts/generate/generate-groups-css.sh"
   } >"$log" 2>&1; then
     echo "FAIL: waybar_test_gen_default failed. Generator output:" >&2
     cat "$log" >&2 || true

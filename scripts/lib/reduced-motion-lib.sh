@@ -121,24 +121,37 @@ waybar_reduced_motion_active() {
 waybar_apply_reduced_motion_css() {
   _wb_home="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
   _wb_out="$_wb_home/theme/reduced-motion.generated.css"
+  _wb_settings="$_wb_home/data/waybar-settings.json"
   mkdir -p "$_wb_home/theme"
 
-  if _wb_source="$(waybar_reduced_motion_active)"; then
-    cat >"$_wb_out" <<EOF
-/* Generated reduced-motion override — do not edit by hand */
-/* active: true · source: ${_wb_source} */
-/* GTK3 has no prefers-reduced-motion media query; this file is applied at launch. */
+  _wb_ws_slots=5
+  _wb_dock_slots=12
+  if [ -f "$_wb_settings" ] && command -v jq >/dev/null 2>&1; then
+    _wb_ws_slots="$(jq -r '.workspaces.slot_count // 5' "$_wb_settings" 2>/dev/null || echo 5)"
+    _wb_dock_slots="$(jq -r '.dock_windows.slot_count // 12' "$_wb_settings" 2>/dev/null || echo 12)"
+  fi
+  case "$_wb_ws_slots" in *[!0-9]* | '') _wb_ws_slots=5 ;; esac
+  case "$_wb_dock_slots" in *[!0-9]* | '') _wb_dock_slots=12 ;; esac
+  if [ "$_wb_ws_slots" -lt 1 ]; then _wb_ws_slots=1; fi
+  if [ "$_wb_ws_slots" -gt 10 ]; then _wb_ws_slots=10; fi
+  if [ "$_wb_dock_slots" -lt 1 ]; then _wb_dock_slots=1; fi
+  if [ "$_wb_dock_slots" -gt 16 ]; then _wb_dock_slots=16; fi
 
-#custom-ws-0.ws-active,
-#custom-ws-1.ws-active,
-#custom-ws-2.ws-active,
-#custom-ws-3.ws-active,
-#custom-ws-4.ws-active,
-#custom-ws-5.ws-active,
-#custom-ws-6.ws-active,
-#custom-ws-7.ws-active,
-#custom-ws-8.ws-active,
-#custom-ws-9.ws-active,
+  if _wb_source="$(waybar_reduced_motion_active)"; then
+    {
+      printf '%s\n' \
+        '/* Generated reduced-motion override — do not edit by hand */' \
+        "/* active: true · source: ${_wb_source} */" \
+        '/* GTK3 has no prefers-reduced-motion media query; this file is applied at launch. */' \
+        ''
+      _wb_i=0
+      while [ "$_wb_i" -lt "$_wb_ws_slots" ]; do
+        [ "$_wb_i" -gt 0 ] && printf ',\n'
+        printf '#custom-ws-%s.ws-active' "$_wb_i"
+        _wb_i=$((_wb_i + 1))
+      done
+      cat <<'EOF'
+,
 #workspaces button.active,
 .critical,
 #custom-cpu.critical,
@@ -165,36 +178,20 @@ waybar_apply_reduced_motion_css() {
 #custom-psu,
 #custom-fans,
 #custom-updates,
-#custom-homelab,
-#custom-ws-0.ws-hit,
-#custom-ws-1.ws-hit,
-#custom-ws-2.ws-hit,
-#custom-ws-3.ws-hit,
-#custom-ws-4.ws-hit,
-#custom-ws-5.ws-hit,
-#custom-ws-6.ws-hit,
-#custom-ws-7.ws-hit,
-#custom-ws-8.ws-hit,
-#custom-ws-9.ws-hit,
-#custom-dock-win-0.dock-win-hit,
-#custom-dock-win-1.dock-win-hit,
-#custom-dock-win-2.dock-win-hit,
-#custom-dock-win-3.dock-win-hit,
-#custom-dock-win-4.dock-win-hit,
-#custom-dock-win-5.dock-win-hit,
-#custom-dock-win-6.dock-win-hit,
-#custom-dock-win-7.dock-win-hit,
-#custom-dock-win-8.dock-win-hit,
-#custom-dock-win-9.dock-win-hit,
-#custom-dock-win-10.dock-win-hit,
-#custom-dock-win-11.dock-win-hit,
-#custom-dock-win-12.dock-win-hit,
-#custom-dock-win-13.dock-win-hit,
-#custom-dock-win-14.dock-win-hit,
-#custom-dock-win-15.dock-win-hit {
-    transition: none;
-}
+#custom-homelab
 EOF
+      _wb_i=0
+      while [ "$_wb_i" -lt "$_wb_ws_slots" ]; do
+        printf ',\n#custom-ws-%s.ws-hit' "$_wb_i"
+        _wb_i=$((_wb_i + 1))
+      done
+      _wb_i=0
+      while [ "$_wb_i" -lt "$_wb_dock_slots" ]; do
+        printf ',\n#custom-dock-win-%s.dock-win-hit' "$_wb_i"
+        _wb_i=$((_wb_i + 1))
+      done
+      printf '\n{\n    transition: none;\n}\n'
+    } >"$_wb_out"
     return 0
   fi
 

@@ -1,5 +1,322 @@
 /* Generated theme semantic colors — do not edit by hand */
 
+/* --- Group chrome (non-drawer clusters) --- */
+#center,
+#status {
+    background: rgba(0, 229, 255, 0.04);
+    border: 1px solid rgba(0, 229, 255, 0.16);
+}
+
+/* --- Module pill chrome (accent-tinted; follows theme.mode / presets) --- */
+#custom-active-window,
+#window,
+#mpris,
+#custom-mpris,
+#pulseaudio,
+#network.bond,
+#network.bandwidthUpBytes,
+#network.bandwidthDownBytes,
+#network.eno1,
+#network.enp5s0,
+#network.wlan0,
+#custom-eno1,
+#custom-enp5s0,
+#custom-wlan0,
+#custom-vpnstatus,
+#bluetooth,
+#custom-powerprofiles,
+#custom-asusctl,
+#custom-brightness,
+#custom-tailscale,
+#custom-notifications,
+#custom-screenshot,
+#custom-screenrecord,
+#custom-clipboard,
+#custom-mic,
+#custom-docker,
+#custom-runtimes,
+#custom-updates,
+#custom-nightlight,
+#custom-cpu,
+#custom-gpu,
+#custom-memory,
+#custom-disk,
+#custom-nvme,
+#custom-psu,
+#custom-fans,
+#custom-liquidctl,
+#custom-coolercontrol,
+#custom-openlinkhub,
+#custom-stats-carousel,
+#custom-ups,
+#custom-dock-browser,
+#custom-dock-helium,
+#custom-dock-pear,
+#custom-dock-floorp,
+#custom-dock-cursor,
+#custom-dock-vscode,
+#custom-dock-zed,
+#custom-dock-kitty,
+#custom-dock-terminal,
+#custom-dock-files,
+#custom-dock-obsidian,
+#custom-dock-krita,
+#custom-dock-orcaslicer,
+#custom-dock-discord,
+#custom-dock-steam,
+#custom-dock-heroic,
+#custom-dock-lutris,
+#custom-dock-anyrun,
+#custom-dock-windows,
+#taskbar,
+#clock,
+#clock.bottom,
+#tray,
+#idle_inhibitor,
+#custom-hyprwhspr,
+#custom-hyprnotify,
+#custom-hyprlight,
+#custom-discord,
+#custom-keyboard-layout,
+#custom-kdeconnect,
+#custom-device-notifier,
+#custom-device-battery,
+#custom-streamdeck,
+#custom-colorpicker,
+#custom-rgb,
+#custom-vaults,
+#custom-touchpad,
+#custom-gamemode,
+#custom-keybindhint,
+#custom-privacy-screenshare,
+#custom-privacy-webcam,
+#custom-privacy-audio-in,
+#custom-privacy-audio-out,
+#custom-privacy-location,
+#custom-lock,
+#custom-power-menu,
+#custom-logout,
+#custom-suspend,
+#custom-reboot,
+#custom-shutdown,
+#custom-cava,
+#custom-pomodoro,
+#custom-homelab,
+#custom-github,
+#custom-weather,
+#custom-systemd,
+#custom-uptime,
+#custom-syncthing,
+#custom-sunshine,
+#custom-i2pd,
+#custom-libredefender,
+#custom-chkrootkit,
+#custom-media-prev,
+#custom-media-next {
+    background: rgba(0, 229, 255, 0.06);
+    border: 1px solid rgba(0, 229, 255, 0.12);
+}
+
+#submap:hover,
+#custom-active-window:hover,
+#window:hover,
+#mpris:hover,
+#custom-mpris:hover,
+#pulseaudio:hover,
+#network.bond:hover,
+#network.bandwidthUpBytes:hover,
+#network.bandwidthDownBytes:hover,
+#network.eno1:hover,
+#network.enp5s0:hover,
+#network.wlan0:hover,
+#custom-eno1:hover,
+#custom-enp5s0:hover,
+#custom-wlan0:hover,
+#custom-vpnstatus:hover,
+#bluetooth:hover,
+#custom-powerprofiles:hover,
+#custom-asusctl:hover,
+#custom-brightness:hover,
+#custom-tailscale:hover,
+#custom-notifications:hover,
+#custom-screenshot:hover,
+#custom-screenrecord:hover,
+#custom-clipboard:hover,
+#custom-mic:hover,
+#custom-docker:hover,
+#custom-runtimes:hover,
+#custom-updates:hover,
+#custom-nightlight:hover,
+#custom-cpu:hover,
+#custom-gpu:hover,
+#custom-memory:hover,
+#custom-disk:hover,
+#custom-nvme:hover,
+#custom-psu:hover,
+#custom-fans:hover,
+#custom-liquidctl:hover,
+#custom-coolercontrol:hover,
+#custom-openlinkhub:hover,
+#custom-stats-carousel:hover,
+#custom-ups:hover,
+#custom-dock-browser:hover,
+#custom-dock-helium:hover,
+#custom-dock-pear:hover,
+#custom-dock-floorp:hover,
+#custom-dock-cursor:hover,
+#custom-dock-vscode:hover,
+#custom-dock-zed:hover,
+#custom-dock-kitty:hover,
+#custom-dock-terminal:hover,
+#custom-dock-files:hover,
+#custom-dock-obsidian:hover,
+#custom-dock-krita:hover,
+#custom-dock-orcaslicer:hover,
+#custom-dock-discord:hover,
+#custom-dock-steam:hover,
+#custom-dock-heroic:hover,
+#custom-dock-lutris:hover,
+#custom-dock-anyrun:hover,
+#custom-dock-windows:hover,
+#taskbar:hover,
+#clock:hover,
+#clock.bottom:hover,
+#tray:hover,
+#idle_inhibitor:hover,
+#custom-hyprwhspr:hover,
+#custom-hyprnotify:hover,
+#custom-hyprlight:hover,
+#custom-discord:hover,
+#custom-keyboard-layout:hover,
+#custom-kdeconnect:hover,
+#custom-device-notifier:hover,
+#custom-device-battery:hover,
+#custom-streamdeck:hover,
+#custom-colorpicker:hover,
+#custom-rgb:hover,
+#custom-vaults:hover,
+#custom-touchpad:hover,
+#custom-gamemode:hover,
+#custom-keybindhint:hover,
+#custom-privacy-screenshare:hover,
+#custom-privacy-webcam:hover,
+#custom-privacy-audio-in:hover,
+#custom-privacy-audio-out:hover,
+#custom-privacy-location:hover,
+#custom-cava:hover,
+#custom-pomodoro:hover,
+#custom-homelab:hover,
+#custom-github:hover,
+#custom-weather:hover,
+#custom-systemd:hover,
+#custom-uptime:hover,
+#custom-syncthing:hover,
+#custom-sunshine:hover,
+#custom-i2pd:hover,
+#custom-libredefender:hover,
+#custom-chkrootkit:hover,
+#custom-media-prev:hover,
+#custom-media-next:hover {
+    background: rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.22);
+}
+
+/* --- Drawer handles --- */
+#custom-desk-drawer,
+#custom-devices-drawer,
+#custom-dock-drawer,
+#custom-tray-drawer,
+#custom-media-drawer,
+#custom-net-drawer,
+#custom-tools-drawer,
+#custom-infra-drawer,
+#custom-hardware-drawer,
+#custom-cooling-drawer,
+#custom-privacy-drawer,
+#custom-security-drawer {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}
+
+#custom-desk-drawer:hover,
+#custom-devices-drawer:hover,
+#custom-dock-drawer:hover,
+#custom-tray-drawer:hover,
+#custom-media-drawer:hover,
+#custom-net-drawer:hover,
+#custom-tools-drawer:hover,
+#custom-infra-drawer:hover,
+#custom-hardware-drawer:hover,
+#custom-cooling-drawer:hover,
+#custom-privacy-drawer:hover,
+#custom-security-drawer:hover {
+    color: #c8f6ff;
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.45);
+    background: rgba(0, 229, 255, 0.10);
+}
+
+#custom-power-drawer {
+    color: #ff2a7f;
+    text-shadow: 0 0 6px rgba(255, 42, 127, 0.35);
+}
+
+#custom-power-drawer:hover {
+    color: #ff5a9a;
+    text-shadow: 0 0 8px rgba(255, 42, 127, 0.5);
+    background: rgba(255, 42, 127, 0.14);
+}
+
+/* Power action specialty hovers (warning / accent / critical + fixed secondary accents) */
+#custom-lock:hover {
+    color: #ffe600;
+    background: rgba(255, 230, 0, 0.14);
+    border-color: rgba(255, 230, 0, 0.45);
+    box-shadow: 0 0 10px rgba(255, 230, 0, 0.35);
+    text-shadow: 0 0 8px rgba(255, 230, 0, 0.35);
+}
+
+#custom-logout:hover {
+    color: #e0aaff;
+    background: rgba(224, 170, 255, 0.14);
+    border-color: rgba(224, 170, 255, 0.45);
+    box-shadow: 0 0 10px rgba(224, 170, 255, 0.35);
+    text-shadow: 0 0 8px rgba(224, 170, 255, 0.35);
+}
+
+#custom-suspend:hover {
+    color: #2cffb0;
+    background: rgba(44, 255, 176, 0.14);
+    border-color: rgba(44, 255, 176, 0.45);
+    box-shadow: 0 0 10px rgba(44, 255, 176, 0.35);
+    text-shadow: 0 0 8px rgba(44, 255, 176, 0.35);
+}
+
+#custom-reboot:hover {
+    color: #00e5ff;
+    background: rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.22);
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.45);
+}
+
+#custom-shutdown:hover {
+    color: #ff2a7f;
+    background: rgba(255, 42, 127, 0.14);
+    border-color: rgba(255, 42, 127, 0.55);
+    box-shadow: 0 0 10px rgba(255, 42, 127, 0.25);
+    text-shadow: 0 0 8px rgba(255, 42, 127, 0.55);
+}
+
+#custom-power-menu:hover {
+    color: #ff2a7f;
+    background: rgba(255, 42, 127, 0.14);
+    border-color: rgba(255, 42, 127, 0.55);
+    box-shadow: 0 0 10px rgba(255, 42, 127, 0.25);
+    text-shadow: 0 0 8px rgba(255, 42, 127, 0.55);
+}
+
+/* --- Threshold / status classes --- */
 #custom-cpu.warning,
 #custom-gpu.warning,
 #custom-memory.warning,
@@ -16,10 +333,24 @@
 #custom-device-battery.warning,
 #custom-homelab.warning,
 #custom-github.warning,
+#custom-docker.warning,
+#custom-syncthing.warning,
+#custom-sunshine.warning,
+#custom-streamdeck.warning,
+#custom-i2pd.warning,
+#custom-runtimes.warning,
+#custom-powerprofiles.warning,
+#custom-asusctl.warning,
+#custom-brightness.warning,
+#custom-tailscale.warning,
+#custom-libredefender.warning,
+#custom-chkrootkit.warning,
+#custom-hyprwhspr.warning,
 #custom-pomodoro.work {
     color: #ffe600;
     border-color: rgba(255, 230, 0, 0.45);
     background: rgba(255, 230, 0, 0.08);
+    text-shadow: 0 0 6px #ffe600;
 }
 
 #custom-cpu.critical,
@@ -37,11 +368,23 @@
 #custom-updates.critical,
 #custom-device-battery.critical,
 #custom-homelab.critical,
-#custom-systemd.critical {
+#custom-systemd.critical,
+#custom-docker.critical,
+#custom-syncthing.critical,
+#custom-sunshine.critical,
+#custom-streamdeck.critical,
+#custom-i2pd.critical,
+#custom-runtimes.critical,
+#custom-powerprofiles.critical,
+#custom-brightness.critical,
+#custom-tailscale.critical,
+#custom-libredefender.critical,
+#custom-chkrootkit.critical {
     color: #ff2a7f;
     border-color: rgba(255, 42, 127, 0.55);
     background: rgba(255, 42, 127, 0.1);
     box-shadow: 0 0 8px rgba(255, 42, 127, 0.25);
+    text-shadow: 0 0 8px #ff2a7f;
 }
 
 #custom-pomodoro.break {
@@ -60,11 +403,7 @@
 #custom-dock-win-8.dock-win-inactive,
 #custom-dock-win-9.dock-win-inactive,
 #custom-dock-win-10.dock-win-inactive,
-#custom-dock-win-11.dock-win-inactive,
-#custom-dock-win-12.dock-win-inactive,
-#custom-dock-win-13.dock-win-inactive,
-#custom-dock-win-14.dock-win-inactive,
-#custom-dock-win-15.dock-win-inactive {
+#custom-dock-win-11.dock-win-inactive {
     color: rgba(0, 229, 255, 0.42);
 }
 
@@ -79,11 +418,7 @@
 #custom-dock-win-8.dock-win-active,
 #custom-dock-win-9.dock-win-active,
 #custom-dock-win-10.dock-win-active,
-#custom-dock-win-11.dock-win-active,
-#custom-dock-win-12.dock-win-active,
-#custom-dock-win-13.dock-win-active,
-#custom-dock-win-14.dock-win-active,
-#custom-dock-win-15.dock-win-active {
+#custom-dock-win-11.dock-win-active {
     color: #ff2a7f;
     background-color: rgba(255, 42, 127, 0.14);
     text-shadow: 0 0 8px rgba(255, 42, 127, 0.55);
@@ -100,11 +435,7 @@
 #custom-dock-win-8.dock-win-hit:hover,
 #custom-dock-win-9.dock-win-hit:hover,
 #custom-dock-win-10.dock-win-hit:hover,
-#custom-dock-win-11.dock-win-hit:hover,
-#custom-dock-win-12.dock-win-hit:hover,
-#custom-dock-win-13.dock-win-hit:hover,
-#custom-dock-win-14.dock-win-hit:hover,
-#custom-dock-win-15.dock-win-hit:hover {
+#custom-dock-win-11.dock-win-hit:hover {
     color: #00e5ff;
     background-color: rgba(0, 229, 255, 0.10);
 }
@@ -120,11 +451,7 @@
 #custom-dock-win-8.dock-win-active:hover,
 #custom-dock-win-9.dock-win-active:hover,
 #custom-dock-win-10.dock-win-active:hover,
-#custom-dock-win-11.dock-win-active:hover,
-#custom-dock-win-12.dock-win-active:hover,
-#custom-dock-win-13.dock-win-active:hover,
-#custom-dock-win-14.dock-win-active:hover,
-#custom-dock-win-15.dock-win-active:hover {
+#custom-dock-win-11.dock-win-active:hover {
     color: #ff5a9a;
     background-color: rgba(255, 42, 127, 0.18);
 }
@@ -133,12 +460,7 @@
 #custom-ws-1.ws-inactive,
 #custom-ws-2.ws-inactive,
 #custom-ws-3.ws-inactive,
-#custom-ws-4.ws-inactive,
-#custom-ws-5.ws-inactive,
-#custom-ws-6.ws-inactive,
-#custom-ws-7.ws-inactive,
-#custom-ws-8.ws-inactive,
-#custom-ws-9.ws-inactive {
+#custom-ws-4.ws-inactive {
     color: rgba(0, 229, 255, 0.42);
 }
 
@@ -146,12 +468,7 @@
 #custom-ws-1.ws-active,
 #custom-ws-2.ws-active,
 #custom-ws-3.ws-active,
-#custom-ws-4.ws-active,
-#custom-ws-5.ws-active,
-#custom-ws-6.ws-active,
-#custom-ws-7.ws-active,
-#custom-ws-8.ws-active,
-#custom-ws-9.ws-active {
+#custom-ws-4.ws-active {
     color: #ff2a7f;
 }
 
@@ -159,12 +476,7 @@
 #custom-ws-1.ws-active label,
 #custom-ws-2.ws-active label,
 #custom-ws-3.ws-active label,
-#custom-ws-4.ws-active label,
-#custom-ws-5.ws-active label,
-#custom-ws-6.ws-active label,
-#custom-ws-7.ws-active label,
-#custom-ws-8.ws-active label,
-#custom-ws-9.ws-active label {
+#custom-ws-4.ws-active label {
     text-shadow: 0 0 8px rgba(255, 42, 127, 0.55);
 }
 
@@ -172,12 +484,7 @@
 #custom-ws-1.ws-inactive:hover,
 #custom-ws-2.ws-inactive:hover,
 #custom-ws-3.ws-inactive:hover,
-#custom-ws-4.ws-inactive:hover,
-#custom-ws-5.ws-inactive:hover,
-#custom-ws-6.ws-inactive:hover,
-#custom-ws-7.ws-inactive:hover,
-#custom-ws-8.ws-inactive:hover,
-#custom-ws-9.ws-inactive:hover {
+#custom-ws-4.ws-inactive:hover {
     color: #00e5ff;
     background-color: rgba(0, 229, 255, 0.10);
 }
@@ -186,11 +493,6 @@
 #custom-ws-1.ws-active:hover,
 #custom-ws-2.ws-active:hover,
 #custom-ws-3.ws-active:hover,
-#custom-ws-4.ws-active:hover,
-#custom-ws-5.ws-active:hover,
-#custom-ws-6.ws-active:hover,
-#custom-ws-7.ws-active:hover,
-#custom-ws-8.ws-active:hover,
-#custom-ws-9.ws-active:hover {
+#custom-ws-4.ws-active:hover {
     color: #ff5a9a;
 }

@@ -1,213 +1,58 @@
-/* Shared module pill styling */
-
-#workspaces,
-#submap,
-#custom-active-window,
-#window,
-#mpris,
-#pulseaudio,
-#network.bond,
-#network.bandwidthUpBytes,
-#network.bandwidthDownBytes,
-#network.eno1,
-#network.enp5s0,
-#network.wlan0,
-#custom-vpnstatus,
-#bluetooth,
-#custom-powerprofiles,
-#custom-brightness,
-#custom-tailscale,
-#custom-notifications,
-#custom-screenshot,
-#custom-screenrecord,
-#custom-clipboard,
-#custom-mic,
-#custom-docker,
-#custom-runtimes,
-#custom-updates,
-#custom-nightlight,
-#custom-cpu,
-#custom-gpu,
-#custom-memory,
-#custom-ups,
-#custom-dock-browser,
-#custom-dock-helium,
-#custom-dock-pear,
-#custom-dock-floorp,
-#custom-dock-cursor,
-#custom-dock-vscode,
-#custom-dock-zed,
-#custom-dock-kitty,
-#custom-dock-terminal,
-#custom-dock-files,
-#custom-dock-obsidian,
-#custom-dock-krita,
-#custom-dock-orcaslicer,
-#custom-dock-discord,
-#custom-dock-steam,
-#custom-dock-heroic,
-#custom-dock-lutris,
-#custom-dock-anyrun,
-#custom-dock-windows,
-#taskbar,
-#clock,
-#clock.bottom,
-#tray,
-#idle-inhibitor,
-#custom-hyprwhspr,
-#custom-hyprnotify,
-#custom-hyprlight,
-#custom-discord,
-#custom-keyboard-layout,
-#custom-device-notifier,
-#custom-colorpicker,
-#custom-vaults,
-#custom-touchpad,
-#custom-gamemode,
-#custom-keybindhint,
-#custom-privacy-screenshare,
-#custom-privacy-webcam,
-#custom-privacy-audio-in,
-#custom-privacy-audio-out,
-#custom-privacy-location,
-#custom-lock,
-#custom-power-menu,
-#custom-logout,
-#custom-suspend,
-#custom-reboot,
-#custom-shutdown,
-#custom-cava,
-#custom-pomodoro,
-#custom-homelab {
-    padding: 0 10px;
-    margin: 4px 0;
-    border-radius: 6px;
-    background: rgba(0, 229, 255, 0.06);
-    border: 1px solid rgba(0, 229, 255, 0.12);
-    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
-}
+/* Shared module layout overrides — shared pill chrome: module-pills.generated.css
+ * Colors: semantic-colors.generated.css
+ */
 
 /* Wider tracking helps cava bars read as discrete columns */
 #custom-cava {
     letter-spacing: 0.12em;
 }
 
+/* Compact privacy chips */
+#custom-privacy-screenshare,
+#custom-privacy-webcam,
+#custom-privacy-audio-in,
+#custom-privacy-audio-out,
+#custom-privacy-location {
+    padding: 0 6px;
+    min-width: 18px;
+}
+
+#taskbar button {
+    padding: 0 8px;
+    margin: 0 2px;
+    border-radius: 6px;
+}
+
+#tray > .active,
+#tray > .needs-attention,
+#tray > .passive {
+    border-radius: 4px;
+}
+
+#custom-keyboard-layout {
+    font-weight: 700;
+    min-width: 28px;
+}
+
+#network.bandwidthUpBytes,
+#network.bandwidthDownBytes {
+    font-size: 12px;
+    padding: 0 8px;
+}
+
+#network.wlan0,
+#custom-wlan0 {
+    padding-right: 14px;
+}
+
+/* Size comes from album-art.generated.css; this owns cover + spacing */
 #custom-album-art {
     padding: 0;
     margin: 4px 2px;
     border-radius: 4px;
-    min-width: 22px;
-    min-height: 22px;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-}
-
-#custom-stats-carousel {
-    padding: 0 10px;
-    margin: 4px 0;
-    border-radius: 6px;
-    background: rgba(0, 229, 255, 0.06);
-    border: 1px solid rgba(0, 229, 255, 0.12);
-    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
-}
-
-#custom-eno1,
-#custom-enp5s0,
-#custom-wlan0 {
-    padding: 0 10px;
-    margin: 4px 0;
-    border-radius: 6px;
-    background: rgba(0, 229, 255, 0.06);
-    border: 1px solid rgba(0, 229, 255, 0.12);
-    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
-}
-
-#mpris:hover,
-#pulseaudio:hover,
-#custom-mic:hover,
-#network.bond:hover,
-#network.bandwidthUpBytes:hover,
-#network.bandwidthDownBytes:hover,
-#network.eno1:hover,
-#network.enp5s0:hover,
-#network.wlan0:hover,
-#custom-eno1:hover,
-#custom-enp5s0:hover,
-#custom-wlan0:hover,
-#custom-vpnstatus:hover,
-#bluetooth:hover,
-#custom-powerprofiles:hover,
-#custom-brightness:hover,
-#custom-tailscale:hover,
-#custom-notifications:hover,
-#custom-screenshot:hover,
-#custom-screenrecord:hover,
-#custom-clipboard:hover,
-#custom-docker:hover,
-#custom-runtimes:hover,
-#custom-updates:hover,
-#custom-nightlight:hover,
-#custom-hyprwhspr:hover,
-#custom-hyprnotify:hover,
-#custom-hyprlight:hover,
-#custom-discord:hover,
-#custom-cpu:hover,
-#custom-gpu:hover,
-#custom-memory:hover,
-#custom-ups:hover,
-#custom-dock-browser:hover,
-#custom-dock-helium:hover,
-#custom-dock-pear:hover,
-#custom-dock-floorp:hover,
-#custom-dock-cursor:hover,
-#custom-dock-vscode:hover,
-#custom-dock-zed:hover,
-#custom-dock-kitty:hover,
-#custom-dock-terminal:hover,
-#custom-dock-files:hover,
-#custom-dock-obsidian:hover,
-#custom-dock-krita:hover,
-#custom-dock-orcaslicer:hover,
-#custom-dock-discord:hover,
-#custom-dock-steam:hover,
-#custom-dock-heroic:hover,
-#custom-dock-lutris:hover,
-#custom-dock-anyrun:hover,
-#custom-dock-windows:hover,
-#taskbar:hover,
-#submap:hover,
-#window:hover,
-#custom-active-window:hover,
-#tray:hover,
-#clock:hover,
-#clock.bottom:hover,
-#idle-inhibitor:hover,
-#custom-gamemode:hover,
-#custom-keybindhint:hover,
-#custom-keyboard-layout:hover,
-#custom-device-notifier:hover,
-#custom-colorpicker:hover,
-#custom-vaults:hover,
-#custom-touchpad:hover,
-#custom-privacy-screenshare:hover,
-#custom-privacy-webcam:hover,
-#custom-privacy-audio-in:hover,
-#custom-privacy-audio-out:hover,
-#custom-privacy-location:hover,
-#custom-lock:hover,
-#custom-power-menu:hover,
-#custom-logout:hover,
-#custom-suspend:hover,
-#custom-reboot:hover,
-#custom-shutdown:hover,
-#custom-cava:hover,
-#custom-pomodoro:hover,
-#custom-homelab:hover,
-#custom-stats-carousel:hover {
-    background: rgba(0, 229, 255, 0.12);
-    border-color: rgba(0, 229, 255, 0.4);
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.22);
 }
 
 #custom-hyprnotify.hidden,
@@ -220,61 +65,19 @@
 #custom-active-window.hidden,
 #custom-cava.hidden,
 #custom-homelab.hidden,
-#custom-album-art.hidden {
+#custom-album-art.hidden,
+#custom-systemd.hidden,
+#custom-asusctl.disconnected,
+#custom-liquidctl.disconnected,
+#custom-coolercontrol.disconnected,
+#custom-nvme.disconnected,
+#custom-openlinkhub.disconnected,
+#custom-rgb.disconnected,
+#custom-device-battery.none {
     min-width: 0;
     padding: 0;
     margin: 0;
     border: none;
     background: transparent;
+    box-shadow: none;
 }
-
-/* Threshold classes emitted by hardware / infra status scripts */
-#custom-cpu.warning,
-#custom-gpu.warning,
-#custom-memory.warning,
-#custom-disk.warning,
-#custom-nvme.warning,
-#custom-stats-carousel.warning,
-#custom-psu.warning,
-#custom-fans.warning,
-#custom-liquidctl.warning,
-#custom-coolercontrol.warning,
-#custom-openlinkhub.warning,
-#custom-ups.warning,
-#custom-updates.warning,
-#custom-device-battery.warning,
-#custom-homelab.warning,
-#custom-github.warning,
-#custom-pomodoro.work {
-    color: #ffe600;
-    border-color: rgba(255, 230, 0, 0.45);
-    background: rgba(255, 230, 0, 0.08);
-}
-
-#custom-cpu.critical,
-#custom-gpu.critical,
-#custom-memory.critical,
-#custom-disk.critical,
-#custom-nvme.critical,
-#custom-psu.critical,
-#custom-fans.critical,
-#custom-liquidctl.critical,
-#custom-coolercontrol.critical,
-#custom-openlinkhub.critical,
-#custom-stats-carousel.critical,
-#custom-ups.critical,
-#custom-updates.critical,
-#custom-device-battery.critical,
-#custom-homelab.critical,
-#custom-systemd.critical {
-    color: #ff2a7f;
-    border-color: rgba(255, 42, 127, 0.55);
-    background: rgba(255, 42, 127, 0.1);
-    box-shadow: 0 0 8px rgba(255, 42, 127, 0.25);
-}
-
-#custom-pomodoro.break {
-    color: #00e5ff;
-    border-color: rgba(0, 229, 255, 0.4);
-}
-

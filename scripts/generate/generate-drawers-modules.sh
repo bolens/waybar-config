@@ -25,12 +25,14 @@ jq -n --slurpfile s "$settings" \
     # (desk-controls, media, …); this map bridges SoT names → group/*.
     {
       desk: "desk-controls",
+      devices: "devices",
       tray: "tray-apps",
       media: "media",
       net: "net",
       tools: "tools",
       infra: "infra",
       hardware: "hardware",
+      cooling: "cooling",
       power: "power",
       privacy: "privacy",
       security: "security"
@@ -148,16 +150,17 @@ jq -n --slurpfile s "$settings" \
       end;
 
   def apply_stats_carousel($mods):
+    # Keep drawer + non-metric modules; bind . as $m before index (see generate-settings.sh).
     if (($s[0].visual.stats_carousel.enabled // false) != true) then $mods
     else
       ["custom/cpu", "custom/memory", "custom/disk", "custom/gpu"] as $hw
-      | ($mods | map(select($hw | index(.) != null)) | length) as $n
+      | ($mods | map(select(. as $m | $hw | index($m) != null)) | length) as $n
       | if $n == 0 then $mods
         else
           ($mods | to_entries | map(select(.value as $v | $hw | index($v) != null)) | .[0].key // 0) as $at
-          | ($mods[:$at] | map(select($hw | index(.) == null)))
+          | ($mods[:$at] | map(select(. as $m | $hw | index($m) == null)))
             + ["custom/stats-carousel"]
-            + ($mods[$at:] | map(select($hw | index(.) == null)))
+            + ($mods[$at:] | map(select(. as $m | $hw | index($m) == null)))
         end
     end;
 
@@ -228,6 +231,7 @@ jq -n --slurpfile s "$settings" \
 
   [
     drawer("desk"; "desk-drawer"),
+    drawer("devices"; "devices-drawer"),
     drawer("dock"; "dock-drawer"),
     drawer("tray"; "tray-drawer"),
     drawer("media"; "media-drawer"),
@@ -235,6 +239,7 @@ jq -n --slurpfile s "$settings" \
     drawer("tools"; "tools-drawer"),
     drawer("infra"; "infra-drawer"),
     drawer("hardware"; "hardware-drawer"),
+    drawer("cooling"; "cooling-drawer"),
     drawer("power"; "power-drawer"),
     drawer("privacy"; "privacy-drawer"),
     drawer("security"; "security-drawer")

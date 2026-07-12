@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fast GTK3 CSS smoke for waybar-launch: load theme.css (or style.css) like Waybar.
+# Fast GTK3 CSS smoke for waybar-launch: load style.css (or theme.css) like Waybar.
 # Exit 0 if clean / Gtk unavailable; exit 1 if Gtk rejects CSS (would crash Waybar).
 # Usage: waybar-gtk-css-smoke.sh [WAYBAR_HOME]
 set -euo pipefail
@@ -18,8 +18,8 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 root = Path(sys.argv[1])
-# Prefer theme.css (full import chain Waybar uses via style.css → theme.css).
-candidates = [root / "theme.css", root / "style.css"]
+# Prefer style.css — that is what Waybar loads (theme + accents + user-style domains).
+candidates = [root / "style.css", root / "theme.css"]
 target = next((p for p in candidates if p.is_file()), None)
 if target is None:
     sys.exit(0)
@@ -30,7 +30,17 @@ bad = []
 for path in root.rglob("*.css"):
     if "theme/rofi" in path.as_posix() or "node_modules" in path.as_posix():
         continue
-    text = re.sub(r"/\*.*?\*/", "", path.read_text(errors="ignore"), flags=re.S)
+    raw = path.read_text(errors="ignore")
+    # GTK treats "/ *" inside a comment as nested comment start (e.g. theme/*.css globs).
+    for m in re.finditer(r"/\*.*?\*/", raw, flags=re.S):
+        body = m.group(0)[2:-2]  # strip delimiters
+        if "/*" in body or re.search(r"/[*]", body):
+            bad.append(
+                f"{path.relative_to(root)}: nested comment / slash-star inside /* */ "
+                f"(avoid globs like path/*.css in comments)"
+            )
+            break
+    text = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
     if re.search(r"(^|[\s,}])(:root)(\s*[,{])", text, re.M):
         bad.append(f"{path.relative_to(root)}: :root")
     if re.search(r"\bvar\s*\(", text):

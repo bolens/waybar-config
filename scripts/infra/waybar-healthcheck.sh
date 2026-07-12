@@ -48,6 +48,22 @@ check_and_heal_listeners() {
     fi
   fi
 
+  # 2b. VPN / Tailscale tunnel watcher
+  if ! is_listener_running "vpn-tailscale"; then
+    if [ -x "$WAYBAR_SCRIPTS/listeners/vpn-tailscale-listener.sh" ]; then
+      log "vpn-tailscale listener dead; restarting"
+      "$script_dir/listener-ctl.sh" start "$WAYBAR_SCRIPTS/listeners/vpn-tailscale-listener.sh" vpn-tailscale
+    fi
+  fi
+
+  # 2c. Album-art MPRIS follower
+  if ! is_listener_running "album-art"; then
+    if [ -x "$WAYBAR_SCRIPTS/listeners/album-art-listener.sh" ]; then
+      log "album-art listener dead; restarting"
+      "$script_dir/listener-ctl.sh" start "$WAYBAR_SCRIPTS/listeners/album-art-listener.sh" album-art
+    fi
+  fi
+
   # 3. Compositor-specific listener
   comp="$(detect_compositor)"
   if [ "$comp" = "hyprland" ]; then

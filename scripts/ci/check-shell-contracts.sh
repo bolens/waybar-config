@@ -318,6 +318,24 @@ fi
 kill "$hc_waybar_pid" 2>/dev/null || true
 rm -rf "$hc_rt" "$hc_bin" "$hc_home"
 
+# Healthcheck / listener-ctl must list new singleton listeners so heal covers them.
+if ! grep -q 'vpn-tailscale' "$WAYBAR_SCRIPTS/infra/waybar-healthcheck.sh"; then
+  echo "FAIL: waybar-healthcheck.sh missing vpn-tailscale heal path" >&2
+  fail=1
+fi
+if ! grep -q 'album-art' "$WAYBAR_SCRIPTS/infra/waybar-healthcheck.sh"; then
+  echo "FAIL: waybar-healthcheck.sh missing album-art heal path" >&2
+  fail=1
+fi
+if ! grep -q 'vpn-tailscale' "$WAYBAR_SCRIPTS/infra/listener-ctl.sh"; then
+  echo "FAIL: listener-ctl KNOWN_LISTENERS missing vpn-tailscale" >&2
+  fail=1
+fi
+if ! grep -q 'album-art' "$WAYBAR_SCRIPTS/infra/listener-ctl.sh"; then
+  echo "FAIL: listener-ctl KNOWN_LISTENERS missing album-art" >&2
+  fail=1
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "FAIL: shell contract checks failed" >&2
   exit 1

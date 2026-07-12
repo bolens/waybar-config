@@ -16,9 +16,9 @@ fi
 echo "=== stylelint ==="
 pnpm exec stylelint \
   "style.css" \
-  "user-style.css" \
   "theme.css" \
   "theme/**/*.css" \
+  "user-style/**/*.css" \
   --ignore-pattern "**/*.generated.css" \
   --ignore-pattern "theme/rofi/**"
 echo "ok: stylelint clean"

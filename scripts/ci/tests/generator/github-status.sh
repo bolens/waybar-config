@@ -28,6 +28,12 @@ fi
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/utilities.generated.jsonc" \
   '."custom/github".exec | test("services/apps/github-status\\.sh$")' \
   "custom/github exec missing github-status.sh"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/utilities.generated.jsonc" \
+  '."custom/github".signal == 35 and (."custom/github"."on-click-middle" | test("waybar-signal\\.sh github"))' \
+  "custom/github should signal on middle refresh"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/utilities.generated.jsonc" \
+  '."custom/weather".signal == 34 and (."custom/weather"."on-click-middle" | test("waybar-signal\\.sh weather"))' \
+  "custom/weather should signal on middle refresh"
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" \
   '.github.show_reviews == true' \
   "github.show_reviews should default true"

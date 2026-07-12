@@ -160,4 +160,50 @@ if ! grep -q 'Install qt6-tools (qdbus6)' "$WAYBAR_TEST_NOTIFY_LOG"; then
   fail=1
 fi
 
+# --- Geometry enrichment unit helpers (no qdbus) ---
+python3 - "$TEST_DIR/scripts/lib/dock-windows-kde-lib.py" <<'PY' || fail=1
+import importlib.util
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location("dock_kde", path)
+mod = importlib.util.module_from_spec(spec)
+assert spec.loader is not None
+spec.loader.exec_module(mod)
+
+assert mod.runner_id_to_uuid("0_{aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee}") == "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee}"
+assert mod.runner_id_to_uuid("{aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee}") == "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee}"
+assert mod.runner_id_to_uuid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee") == "{aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee}"
+assert mod.runner_id_to_uuid("") is None
+
+geoms = mod.parse_output_geometries(
+    "Output: 1 DP-1 uuid\n\tGeometry: 0,0 1920x1080\nOutput: 2 HDMI-A-1 uuid\n\tGeometry: 1920,0 1920x1080\n"
+)
+assert [(g["name"], g["x"], g["w"]) for g in geoms] == [("DP-1", 0, 1920), ("HDMI-A-1", 1920, 1920)]
+assert mod.output_for_point(100, 100, geoms) == "DP-1"
+assert mod.output_for_point(2000, 100, geoms) == "HDMI-A-1"
+
+center = mod.parse_window_info_geometry(
+    '[Argument: a{sv} {"x" = [Variant(double): 10], "y" = [Variant(double): 20], '
+    '"width" = [Variant(double): 100], "height" = [Variant(double): 50]}]'
+)
+assert center == (60.0, 45.0)
+print("PASS: dock-windows-kde enrich unit helpers")
+PY
+
+# --- Geometry enrichment when WindowsRunner omits screen props ---
+NO_SCREEN="$ROOT_DIR/scripts/ci/lib/fixtures/windows-runner/golden-no-screen.txt"
+export WAYBAR_TEST_OUTPUT_GEOMS='DP-1:0,0,1920x1080;HDMI-A-1:1920,0,1920x1080'
+export WAYBAR_TEST_WINDOW_INFO_MAP='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee=100,100,800x600;11111111-2222-3333-4444-555555555555=2000,100,800x600'
+enriched=$(
+  WAYBAR_TEST_NO_QDBUS=1 \
+    WAYBAR_TEST_OUTPUT_GEOMS="$WAYBAR_TEST_OUTPUT_GEOMS" \
+    WAYBAR_TEST_WINDOW_INFO_MAP="$WAYBAR_TEST_WINDOW_INFO_MAP" \
+    python3 "$TEST_DIR/scripts/lib/dock-windows-kde-lib.py" parse --json --output DP-1 <"$NO_SCREEN"
+)
+waybar_test_assert_jq "$enriched" \
+  'length == 1 and .[0].screen == "DP-1" and (.[0].title | test("Terminal"))' \
+  "geometry enrich + DP-1 filter should keep Terminal only: $enriched"
+
 waybar_test_end

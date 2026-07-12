@@ -1,0 +1,28 @@
+/* Dock launcher spacing (personal) */
+
+#dock-apps {
+    padding: 0 3px;
+}
+
+#dock-apps > * {
+    padding: 0 5px;
+    margin: 4px 1px;
+    min-width: 18px;
+}
+
+#dock-apps > *:not(:last-child) {
+    margin-right: 1px;
+    border-right: 1px solid rgba(0, 229, 255, 0.12);
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+#dock-apps > *:not(:first-child) {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+#dock-apps > .running {
+    color: #00e5ff;
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.8), 0 0 10px rgba(0, 229, 255, 0.4);
+}

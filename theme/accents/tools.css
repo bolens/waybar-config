@@ -1,0 +1,70 @@
+/* Desk tools / capture / profiles / default cyan idle */
+
+#custom-powerprofiles,
+#custom-powerprofiles.balanced,
+#custom-asusctl,
+#custom-asusctl.balanced,
+#custom-brightness,
+#custom-tailscale,
+#custom-screenshot,
+#custom-screenshot.hyprland,
+#custom-screenshot.kde,
+#custom-screenrecord,
+#custom-screenrecord.hyprland,
+#custom-screenrecord.kde,
+#custom-clipboard,
+#custom-runtimes,
+#custom-nightlight,
+#custom-mic.active,
+#custom-notifications.active,
+#custom-docker,
+#custom-ups,
+#custom-cpu,
+#custom-gpu {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}
+
+#custom-powerprofiles.performance,
+#custom-asusctl.performance,
+#custom-nightlight.active {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+
+#custom-powerprofiles.power-saver,
+#custom-asusctl.quiet {
+    color: #2cffb0;
+    text-shadow: 0 0 6px rgba(44, 255, 176, 0.32);
+}
+
+#custom-nightlight.forced {
+    color: #ff9500;
+    text-shadow: 0 0 8px rgba(255, 149, 0, 0.75);
+}
+
+#custom-screenrecord.recording {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+/* Threshold .warning / .critical colors: theme/semantic-colors.generated.css */
+#custom-docker.disabled {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+#custom-ups.critical {
+    font-weight: 700;
+}
+
+#custom-vpnstatus.normal,
+#custom-docker.normal,
+#custom-runtimes.normal,
+#custom-cpu.normal,
+#custom-gpu.normal,
+#custom-clipboard.normal,
+#custom-updates {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}

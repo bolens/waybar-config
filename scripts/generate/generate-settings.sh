@@ -111,18 +111,18 @@ build_groups_json() {
     # --- hardware transforms ---
     def apply_stats_carousel($mods):
       # Replace cpu/memory/disk/gpu entries with one custom/stats-carousel at first hw slot.
+      # Keep drawer + other telemetry (nvme/psu/fans/…). Bind . as $m before piping to
+      # index — `$hw | index(.)` would rebind . to $hw and match every module.
       if (($settings[0].visual.stats_carousel.enabled // false) != true) then $mods
       else
         ["custom/cpu", "custom/memory", "custom/disk", "custom/gpu"] as $hw
-        | ($mods | map(select($hw | index(.) == null))) as $rest
-        | ($mods | map(select($hw | index(.) != null)) | length) as $n
+        | ($mods | map(select(. as $m | $hw | index($m) != null)) | length) as $n
         | if $n == 0 then $mods
           else
-            # Insert carousel where the first hardware metric was.
             ($mods | to_entries | map(select(.value as $v | $hw | index($v) != null)) | .[0].key // 0) as $at
-            | ($mods[:$at] | map(select($hw | index(.) == null)))
+            | ($mods[:$at] | map(select(. as $m | $hw | index($m) == null)))
               + ["custom/stats-carousel"]
-              + ($mods[$at:] | map(select($hw | index(.) == null)))
+              + ($mods[$at:] | map(select(. as $m | $hw | index($m) == null)))
           end
       end;
 
@@ -310,8 +310,8 @@ build_system_json() {
         tooltip: true,
         interval: interval("fans"),
         exec: ($scripts + "/system/fans-status.sh"),
-        "on-click": click_app("nvtop"),
-        "on-click-right": click_app("btop"),
+        "on-click": ($scripts + "/system/cooling-click.sh open nvtop"),
+        "on-click-right": ($scripts + "/system/cooling-click.sh menu btop"),
         "on-click-middle": ($scripts + "/system/fans-status.sh --refresh")
       },
       "custom/liquidctl": {
@@ -320,8 +320,8 @@ build_system_json() {
         tooltip: true,
         interval: interval("liquidctl"),
         exec: ($scripts + "/system/liquidctl-status.sh"),
-        "on-click": click_app("btop"),
-        "on-click-right": click_app("system_monitor"),
+        "on-click": ($scripts + "/system/cooling-click.sh open btop"),
+        "on-click-right": ($scripts + "/system/cooling-click.sh menu system_monitor"),
         "on-click-middle": ($scripts + "/system/liquidctl-status.sh --refresh")
       },
       "custom/coolercontrol": {
@@ -484,11 +484,14 @@ for _gen in \
   generate-audio-modules.sh \
   generate-clock-modules.sh \
   generate-drawers-modules.sh \
+  generate-drawers-css.sh \
+  generate-groups-css.sh \
   generate-network-custom-modules.sh \
   generate-privacy-modules.sh \
   generate-active-window-modules.sh \
   generate-center-extras-modules.sh \
   generate-dock-windows-modules.sh \
+  generate-dock-windows-css.sh \
   generate-tray-modules.sh \
   generate-hypr-tools-modules.sh \
   generate-theme-tokens.sh \

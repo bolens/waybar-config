@@ -10,6 +10,7 @@
     "group/infra",
     "group/security",
     "group/hardware",
+    "group/cooling",
     "clock#bottom"
   ],
   "modules-left": [

@@ -227,26 +227,32 @@ from gi.repository import Gtk
 
 root = Path(sys.argv[1])
 errors = []
+# Import hubs: @import paths are relative to the file; load_from_data resolves
+# them against cwd and false-fails. Validate hubs via load_from_path(entry) below.
+skip_standalone = {
+    "style.css",
+    "theme.css",
+}
 for rel in sys.argv[2:]:
-    path = root / rel
-    # Skip entrypoints that @import absolute system paths (hyprwhspr, etc.).
-    # Those are validated separately via theme.css when present.
-    if rel in {"style.css"}:
+    if rel in skip_standalone:
         continue
+    path = root / rel
     provider = Gtk.CssProvider()
     try:
-        provider.load_from_data(path.read_bytes())
+        provider.load_from_path(str(path))
     except Exception as exc:
         errors.append(f"{rel}: {exc}")
 
-# Prefer load_from_path for theme.css so relative @imports resolve like Waybar.
-theme = root / "theme.css"
-if theme.is_file():
+# Waybar entry: full import chain with correct relative resolution.
+entry = root / "style.css"
+if not entry.is_file():
+    entry = root / "theme.css"
+if entry.is_file():
     provider = Gtk.CssProvider()
     try:
-        provider.load_from_path(str(theme))
+        provider.load_from_path(str(entry))
     except Exception as exc:
-        errors.append(f"theme.css (import chain): {exc}")
+        errors.append(f"{entry.name} (import chain): {exc}")
 
 if errors:
     print("\n".join(errors))

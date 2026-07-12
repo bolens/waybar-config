@@ -4,7 +4,7 @@
   "description": "DevDependencies for CSS/Markdown lint in CI and make check",
   "packageManager": "pnpm@11.11.0",
   "scripts": {
-    "lint:css": "stylelint \"style.css\" \"user-style.css\" \"theme.css\" \"theme/**/*.css\" --ignore-pattern \"**/*.generated.css\" --ignore-pattern \"theme/rofi/**\"",
+    "lint:css": "stylelint \"style.css\" \"theme.css\" \"theme/**/*.css\" \"user-style/**/*.css\" --ignore-pattern \"**/*.generated.css\" --ignore-pattern \"theme/rofi/**\"",
     "lint:md": "markdownlint-cli2"
   },
   "devDependencies": {

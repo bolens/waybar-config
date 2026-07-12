@@ -8,6 +8,7 @@ set -euo pipefail
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 . "$WAYBAR_SCRIPTS/lib/theme-colors-lib.sh"
 . "$WAYBAR_SCRIPTS/lib/settings-bool-lib.sh"
+. "$WAYBAR_SCRIPTS/lib/css-selectors-lib.sh"
 config="${WAYBAR_HOME}/data/workspace-bar.json"
 settings="${WAYBAR_HOME}/data/waybar-settings.json"
 out="$WAYBAR_HOME/theme/workspaces.generated.css"
@@ -24,35 +25,13 @@ read_config() {
   fi
 }
 
-# Emit comma-separated #custom-ws-N$suffix selectors for 0..count-1.
-ws_selectors() {
-  local count="$1"
-  local suffix="$2"
-  local i
-  for ((i = 0; i < count; i++)); do
-    if [[ "$i" -gt 0 ]]; then
-      printf ',\n'
-    fi
-    printf '#custom-ws-%s%s' "$i" "$suffix"
-  done
-}
-
 bar_spacing="6"
 if [[ -f "$settings" ]]; then
   bar_spacing="$(jq -r '.bars.spacing // 6' "$settings" 2>/dev/null || echo 6)"
 fi
 
 # workspaces.slot_count: clamp 1–10, default 5 (match compositor modules).
-slot_count=5
-if [[ -f "$settings" ]]; then
-  slot_count="$(jq -r '.workspaces.slot_count // 5' "$settings" 2>/dev/null || echo 5)"
-fi
-if [[ "$slot_count" -lt 1 ]] 2>/dev/null; then
-  slot_count=5
-fi
-if [[ "$slot_count" -gt 10 ]] 2>/dev/null; then
-  slot_count=10
-fi
+slot_count="$(waybar_css_slot_count "$settings" workspaces 5 1 10)"
 
 fit_content="$(read_config fit_content true)"
 slot_width="$(read_config slot_width 44)"
@@ -91,9 +70,12 @@ else
   glyph_pad="$glyph_pad_h"
 fi
 
-hit_sels="$(ws_selectors "$slot_count" '.ws-hit')"
-label_sels="$(ws_selectors "$slot_count" '.ws-hit label')"
-active_sels="$(ws_selectors "$slot_count" '.ws-active')"
+hit_sels="$(waybar_css_id_range '#custom-ws-' "$slot_count" '.ws-hit')"
+label_sels="$(waybar_css_id_range '#custom-ws-' "$slot_count" '.ws-hit label')"
+active_sels="$(waybar_css_id_range '#custom-ws-' "$slot_count" '.ws-active')"
+inactive_sels="$(waybar_css_id_range '#custom-ws-' "$slot_count" '.ws-inactive')"
+inactive_hover_sels="$(waybar_css_id_range '#custom-ws-' "$slot_count" '.ws-inactive:hover')"
+hidden_sels="$(waybar_css_id_range '#custom-ws-' "$slot_count" '.hidden')"
 
 {
   cat <<EOF
@@ -105,6 +87,17 @@ active_sels="$(ws_selectors "$slot_count" '.ws-active')"
 }
 
 ${hit_sels} {
+    background: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-right: 0;
+    transition:
+        color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 280ms cubic-bezier(0.4, 0, 0.2, 1),
+        background-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
 EOF
 
   if [[ "$fit_content" -eq 1 ]]; then
@@ -126,6 +119,25 @@ EOF
 
 ${label_sels} {
     font-size: ${font_size}px;
+    transition: color 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+${inactive_sels} {
+    opacity: 0.65;
+}
+
+${active_sels} {
+    opacity: 1;
+}
+
+${inactive_hover_sels} {
+    opacity: 1;
+}
+
+${hidden_sels} {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
 }
 
 #custom-ws-0.ws-hit:not(.hidden) {

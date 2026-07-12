@@ -53,8 +53,8 @@ else
   fi
 fi
 
-# Run docker ps to fetch active containers. We capture status and image fields.
-container_rows=$(timeout 3 docker ps -a --format '{{.Status}}|{{.Image}}' 2>/dev/null || true)
+# Run docker ps to fetch active containers (name + status + image).
+container_rows=$(timeout 3 docker ps -a --format '{{.Names}}|{{.Status}}|{{.Image}}' 2>/dev/null || true)
 if [ -z "$container_rows" ] && [ "$engine_version" = "unknown" ]; then
   # Verify if daemon is actually down
   if ! timeout 2 docker ps -a >/dev/null 2>&1; then
@@ -63,25 +63,41 @@ if [ -z "$container_rows" ] && [ "$engine_version" = "unknown" ]; then
   fi
 fi
 
-# Extract statuses using a single awk invocation.
-# We count total, running (Up), paused, restarting, unhealthy, and search for Portainer image.
-read -r containers running unhealthy paused restarting portainer_found <<EOF
-$(printf '%s\n' "$container_rows" | awk -F'|' '
+# Single awk pass: counts + unhealthy/restarting name lists (tab-separated fields).
+parsed=$(printf '%s\n' "$container_rows" | awk -F'|' '
   NF>=2 {
     c++
-    st = tolower($1)
-    img = tolower($2)
+    name = $1
+    st = tolower($2)
+    img = tolower($3)
     if (st ~ /^up/) r++
-    if (st ~ /unhealthy/) u++
+    if (st ~ /unhealthy/) {
+      u++
+      if (u == 1) unames = name
+      else if (u <= 6) unames = unames ", " name
+      else if (u == 7) unames = unames ", …"
+    }
     if (st ~ /paused/) p++
-    if (st ~ /restarting/) re++
+    if (st ~ /restarting/) {
+      re++
+      if (re == 1) rnames = name
+      else if (re <= 6) rnames = rnames ", " name
+      else if (re == 7) rnames = rnames ", …"
+    }
     if (img ~ /portainer\/portainer/) port=1
   }
   END {
-    print c+0, r+0, u+0, p+0, re+0, port+0
+    printf "%d\t%d\t%d\t%d\t%d\t%d\t%s\t%s\n", c+0, r+0, u+0, p+0, re+0, port+0, unames, rnames
   }
 ')
+IFS=$(printf '\t')
+# shellcheck disable=SC2034
+read -r containers running unhealthy paused restarting portainer_found unhealthy_names restarting_names <<EOF
+$parsed
 EOF
+IFS=$(printf ' \t\n')
+: "${containers:=0}" "${running:=0}" "${unhealthy:=0}" "${paused:=0}" "${restarting:=0}" "${portainer_found:=0}"
+: "${unhealthy_names:=}" "${restarting_names:=}"
 
 if [ "${portainer_found:-0}" -eq 1 ]; then
   portainer_status="Online"
@@ -134,10 +150,14 @@ fi
 tooltip=$(printf 'Docker Engine: online\nRunning: %s\nTotal: %s\nUnhealthy: %s\nPaused: %s\nRestarting: %s' \
   "$running" "$containers" "$unhealthy" "$paused" "$restarting")
 
-if [ "$unhealthy" -gt 0 ]; then
-  tooltip=$(printf '%s\nUnhealthy containers present (open lazydocker for details)' "$tooltip")
+if [ -n "$unhealthy_names" ]; then
+  tooltip=$(printf '%s\nUnhealthy: %s' "$tooltip" "$unhealthy_names")
 fi
-tooltip=$(printf '%b' "$tooltip" | escape_markup)
+if [ -n "$restarting_names" ]; then
+  tooltip=$(printf '%s\nRestarting: %s' "$tooltip" "$restarting_names")
+fi
+# escape_markup takes an arg (does not read stdin).
+tooltip=$(escape_markup "$tooltip")
 tooltip=$(printf '%s\n\nLeft: lazydocker · Right: Portainer · Middle: docker ps' "$tooltip")
 
 text=$(printf '󰡨 %s/%s' "$running" "$containers")

@@ -200,10 +200,11 @@
     "format": "{}",
     "return-type": "json",
     "interval": 1800,
+    "signal": 34,
     "exec": "$WAYBAR_HOME/scripts/services/apps/weather-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://open-meteo.com/",
     "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://weather.com/",
-    "on-click-middle": "$WAYBAR_HOME/scripts/services/apps/weather-status.sh --refresh"
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/apps/weather-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh weather"
   },
   "custom/pomodoro": {
     "format": "{}",
@@ -226,10 +227,11 @@
     "format": "{}",
     "return-type": "json",
     "interval": 300,
+    "signal": 35,
     "exec": "$WAYBAR_HOME/scripts/services/apps/github-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://github.com/notifications",
     "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://github.com",
-    "on-click-middle": "$WAYBAR_HOME/scripts/services/apps/github-status.sh --refresh"
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/apps/github-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh github"
   },
   "custom/device-battery": {
     "format": "{}",

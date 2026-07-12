@@ -1,0 +1,42 @@
+/* Generated cluster group layout — do not edit by hand */
+/* SoT: scripts/lib/css-selectors-lib.sh (waybar_css_cluster_group_ids) */
+/* Colors: theme/semantic-colors.generated.css */
+
+#center,
+#status {
+    border-radius: 8px;
+    padding: 0 2px;
+    margin: 4px 2px;
+}
+
+#center > *,
+#status > * {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#center > *:not(:last-child),
+#status > *:not(:last-child) {
+    margin-right: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+}
+
+#center > *:not(:first-child),
+#status > *:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+#center > *:first-child,
+#status > *:first-child {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+#center > *:last-child,
+#status > *:last-child {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}

@@ -1,0 +1,69 @@
+/* Session / desk chrome accents */
+
+#custom-keyboard-layout {
+    color: #00e5ff;
+    text-shadow: 0 0 6px rgba(0, 229, 255, 0.35);
+}
+
+#custom-gamemode.inactive {
+    color: rgba(200, 246, 255, 0.45);
+    text-shadow: none;
+}
+
+#custom-keybindhint.ready {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.35);
+}
+
+#window {
+    color: #c8f6ff;
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.18);
+}
+
+#submap {
+    color: #ff2a7f;
+    text-shadow: 0 0 8px #ff2a7f;
+}
+
+#custom-discord:hover {
+    color: #c8f6ff;
+    background-color: rgba(255, 42, 127, 0.18);
+    border-color: rgba(255, 42, 127, 0.45);
+    box-shadow: 0 0 10px rgba(255, 42, 127, 0.3);
+}
+
+#custom-discord.discord:hover,
+#custom-discord.offline:hover {
+    color: #c8f6ff;
+}
+
+#custom-discord.discord {
+    color: #ff2a7f;
+    text-shadow: 0 0 6px rgba(255, 42, 127, 0.5);
+}
+
+#custom-notifications.none,
+#custom-notifications.notification {
+    color: #e0aaff;
+    text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
+}
+
+#custom-notifications.paused,
+#custom-notifications.dnd-none,
+#custom-notifications.dnd-notification,
+#custom-notifications.dnd-inhibited-none,
+#custom-notifications.dnd-inhibited-notification {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+
+#clock,
+#clock.bottom {
+    color: #ffe600;
+    text-shadow: 0 0 6px #ffe600;
+}
+
+#idle_inhibitor {
+    color: rgba(200, 246, 255, 0.55);
+    text-shadow: none;
+}

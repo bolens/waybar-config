@@ -339,10 +339,16 @@ if [ "$used" = "open-meteo" ]; then
   emit_from_open_meteo "$raw_weather" || {
     if [ -f "$cache_file" ]; then exit 0; fi
     emit_waybar_json "󰖐 ??" "Weather data parsing failed" "disabled"
+    exit 0
   }
 else
   emit_from_wttr "$raw_weather" || {
     if [ -f "$cache_file" ]; then exit 0; fi
     emit_waybar_json "󰖐 ??" "Weather data parsing failed" "disabled"
+    exit 0
   }
+fi
+
+if [ -x "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" weather 2>/dev/null || true
 fi
