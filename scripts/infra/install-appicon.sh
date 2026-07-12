@@ -56,5 +56,7 @@ if [ ! -x "$tmpdir/appicon" ]; then
 fi
 
 install -m 755 "$tmpdir/appicon" "$DEST_DIR/appicon"
+# Drop any negative-cache from a prior bar session without appicon installed.
+rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/waybar/appicon-bin-miss" 2>/dev/null || true
 echo "installed: $DEST_DIR/appicon ($("$DEST_DIR/appicon" version 2>/dev/null || echo "$APPICON_VERSION"))"
 echo "Enable dock icons: set icons.appicon.enabled=true in data/waybar-settings.jsonc, then make generate."

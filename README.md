@@ -416,6 +416,7 @@ sudo dnf install jq curl ripgrep socat qt6-qttools wireplumber pipewire-pulse \
 | MPRIS / album art (`custom/mpris`, `custom/album-art`) | `playerctl` | `playerctl` | `playerctl` | Album art also needs `curl`; on by default — set `visual.album_art.enabled: false` to hide |
 | Scrolling titles (`zscroll`) | AUR `zscroll-git` | build from [upstream](https://github.com/noctuid/zscroll) | same | Optional polish for MPRIS / active-window |
 | Audio visualizer (`custom/cava`) | `cava` | `cava` | `cava` | Hides when binary missing or output silent. Config: `cava.bars` / `cava.framerate` |
+| Dock brand icons (`icons.appicon`) | [`bolens/appicon`](https://github.com/bolens/appicon) (`make install-appicon`) | same release tarball | same | Peer-optional like cava/zscroll: glyphs if missing; launch prefetches; dock uses `--offline` |
 | Mixer click fallbacks | `pavucontrol` / `pwvucontrol` / AUR `wiremix` | `pavucontrol` | `pavucontrol` | Used when `apps.audio_mixer` is unset |
 | Power profiles | `power-profiles-daemon` (`powerprofilesctl`) | `power-profiles-daemon` | `power-profiles-daemon` | |
 | Brightness | `brightnessctl` | `brightnessctl` | `brightnessctl` | |
@@ -614,6 +615,7 @@ Scripts resolve config via `WAYBAR_HOME` → `$XDG_CONFIG_HOME/waybar` → `~/.c
 | `WAYBAR_UPDATES_BACKEND` | Force `arch` / `apt` / `dnf` / `none` |
 | `WAYBAR_UPDATES_ENABLE_AUR` | `1`/`0` overrides `updates.enable_aur` (Arch only) |
 | `WAYBAR_CAVA_BIN` | Override `cava` binary path for `custom/cava` (tests / custom installs) |
+| `APPICON_BIN` | Override `appicon` binary path for dock icons (tests / custom installs) |
 
 **Updates backends** (`custom/updates`): prefer `checkupdates` (Arch) → `apt` → `dnf`; Flatpak is additive. AUR/`paru` only on the Arch path when `enable_aur` is set — never hard-required. Review click uses `apps.paru_update` / `apt_update` / `dnf_update` when set, else a terminal with the matching upgrade command.
 

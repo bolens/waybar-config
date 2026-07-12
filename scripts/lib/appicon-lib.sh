@@ -1,13 +1,51 @@
 #!/usr/bin/env bash
 # Shared helpers for bolens/appicon (dock PNG proof). Never embeds SVGL URLs.
+# Peer-optional like zscroll/cava: glyph/CSS fallback when binary missing or resolve fails.
 # shellcheck shell=bash
+
+# Negative-cache when appicon is not on PATH (avoid probing every dock signal).
+# Cleared on successful bin find and at waybar-launch (bar reload re-probes once).
+waybar_appicon_bin_miss_path() {
+  printf '%s\n' "${XDG_CACHE_HOME:-$HOME/.cache}/waybar/appicon-bin-miss"
+}
+
+waybar_appicon_bin_miss_clear() {
+  rm -f "$(waybar_appicon_bin_miss_path)" 2>/dev/null || true
+}
+
+waybar_appicon_bin_miss_mark() {
+  local stamp
+  stamp="$(waybar_appicon_bin_miss_path)"
+  mkdir -p "$(dirname "$stamp")" 2>/dev/null || return 0
+  : >"$stamp" 2>/dev/null || true
+}
+
+# Return 0 when a recent binary-miss stamp exists (skip PATH probes). TTL default 86400s.
+waybar_appicon_bin_miss_fresh() {
+  local ttl="${1:-86400}" stamp now mtime age
+  stamp="$(waybar_appicon_bin_miss_path)"
+  [ -f "$stamp" ] || return 1
+  now="$(date +%s)"
+  mtime="$(stat -c %Y "$stamp" 2>/dev/null || printf '0')"
+  age=$((now - mtime))
+  [ "$age" -ge 0 ] && [ "$age" -lt "$ttl" ]
+}
 
 waybar_appicon_bin() {
   if [ -n "${APPICON_BIN:-}" ] && [ -x "$APPICON_BIN" ]; then
+    waybar_appicon_bin_miss_clear
     printf '%s\n' "$APPICON_BIN"
     return 0
   fi
+  # Explicit override that is missing still counts as unavailable (do not stamp — tests set APPICON_BIN).
+  if [ -n "${APPICON_BIN:-}" ]; then
+    return 1
+  fi
+  if waybar_appicon_bin_miss_fresh; then
+    return 1
+  fi
   if command -v appicon >/dev/null 2>&1; then
+    waybar_appicon_bin_miss_clear
     command -v appicon
     return 0
   fi
@@ -16,11 +54,19 @@ waybar_appicon_bin() {
     "${HOME}/.local/bin/appicon" \
     "${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/bin/appicon"; do
     if [ -x "$candidate" ]; then
+      waybar_appicon_bin_miss_clear
       printf '%s\n' "$candidate"
       return 0
     fi
   done
+  waybar_appicon_bin_miss_mark
   return 1
+}
+
+# True when icons.appicon.enabled and the binary is available (respects bin-miss stamp).
+waybar_appicon_ready() {
+  waybar_appicon_enabled || return 1
+  waybar_appicon_bin >/dev/null 2>&1
 }
 
 waybar_appicon_enabled() {

@@ -9,7 +9,7 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `ci/` | Contract checks, unit tests, validate, pre-commit hook |
 | `infra/` | Launch, healthcheck, listener-ctl, metrics collector, `install-appicon.sh` |
 | `listeners/` | Long-running watchers — see table below |
-| `dock/` | Dock launcher + dock-windows |
+| `dock/` | Dock launcher + dock-windows + `dock-appicon-prefetch.sh` (warm path on launch) |
 | `workspaces/` | Workspaces, active window, keybind hints |
 | `system/` | CPU/mem/disk/gpu/nvme/fans/liquidctl/asusctl/rgb/power/brightness/cooling-click/… |
 | `network/` | Wi‑Fi, VPN, ethernet, Tailscale, … |
@@ -51,6 +51,7 @@ Project docs hub: **[docs/README.md](../docs/README.md)** ([architecture](../doc
 | `reduced-motion-lib.sh` | Probe Plasma Instant / Hyprland / settings for animation gating |
 | `kde_listener/` | Mixins/helpers for the KDE session listener |
 | `dock-windows-kde-lib.{sh,py}` | Plasma WindowsRunner parse + per-output geometry enrich |
+| `appicon-lib.sh` | Optional [`bolens/appicon`](https://github.com/bolens/appicon) helpers — glyph fallback, bin-miss stamp, offline resolve + materialize |
 
 ### `listeners/` daemons
 

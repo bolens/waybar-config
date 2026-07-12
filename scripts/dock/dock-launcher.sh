@@ -50,6 +50,9 @@ dock_appicon_prepare() {
     return 0
   fi
 
+  # Missing binary: glyph fallback; bin-miss stamp avoids PATH probes every signal.
+  waybar_appicon_bin >/dev/null 2>&1 || return 0
+
   # Recent miss → skip spawn; glyph stays until prefetch / TTL.
   if waybar_appicon_miss_fresh "$app_id"; then
     return 0

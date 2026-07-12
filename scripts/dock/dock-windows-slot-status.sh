@@ -110,6 +110,9 @@ dock_windows_appicon_prepare() {
     return 0
   fi
 
+  # No warm PNG yet and binary missing → glyph only (bin-miss stamp skips PATH thrash).
+  waybar_appicon_bin >/dev/null 2>&1 || return 0
+
   query="$(dock_windows_appicon_query_for "$title" "$app" || true)"
   [ -n "$query" ] || query="$app_key"
   path="$(waybar_appicon_resolve "$query" "$display_size" "$theme" offline || true)"

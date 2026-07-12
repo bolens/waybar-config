@@ -86,6 +86,41 @@ else
   echo "PASS: expired miss stamp is not fresh"
 fi
 
+# --- binary-miss stamp (cava/zscroll peer: no PATH thrash) ---
+waybar_appicon_bin_miss_clear
+rm -f "$CACHE/waybar/appicon-bin-miss"
+unset APPICON_BIN
+# Force PATH without appicon and without ~/.local/bin candidates by using empty bin dir only.
+export PATH="/usr/bin:/bin"
+# Hide real home candidates for this probe.
+HOME_SAVE="$HOME"
+export HOME="$TEST_DIR/empty-home"
+mkdir -p "$HOME"
+if waybar_appicon_bin >/dev/null 2>&1; then
+  echo "FAIL: bin should be missing without candidates" >&2
+  fail=1
+elif [ ! -f "$CACHE/waybar/appicon-bin-miss" ]; then
+  echo "FAIL: missing binary should stamp appicon-bin-miss" >&2
+  fail=1
+else
+  echo "PASS: bin miss creates stamp"
+fi
+# Second call must not re-probe (stamp fresh) — still fail fast.
+if waybar_appicon_bin >/dev/null 2>&1; then
+  echo "FAIL: stamped miss should keep bin unavailable" >&2
+  fail=1
+else
+  echo "PASS: bin miss stamp skips further probes"
+fi
+waybar_appicon_bin_miss_clear
+export HOME="$HOME_SAVE"
+if waybar_appicon_bin_miss_fresh; then
+  echo "FAIL: bin_miss_clear should remove stamp" >&2
+  fail=1
+else
+  echo "PASS: bin_miss_clear"
+fi
+
 # --- resolve online vs offline ---
 waybar_test_install_path_stubs
 waybar_test_write_bin_stub appicon <<'EOF'

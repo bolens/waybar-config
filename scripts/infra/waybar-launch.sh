@@ -65,6 +65,17 @@ esac
 # shellcheck source=waybar-settings.sh
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
+# Optional appicon peer (like cava/zscroll): re-probe binary on each bar launch, then
+# warm ~/.cache/appicon + theme/dock-appicons offline hot path in the background.
+if [ -f "$WAYBAR_SCRIPTS/lib/appicon-lib.sh" ]; then
+  # shellcheck source=../lib/appicon-lib.sh
+  . "$WAYBAR_SCRIPTS/lib/appicon-lib.sh"
+  waybar_appicon_bin_miss_clear
+  if waybar_appicon_ready && [ -x "$WAYBAR_SCRIPTS/dock/dock-appicon-prefetch.sh" ]; then
+    launch_detached "$WAYBAR_SCRIPTS/dock/dock-appicon-prefetch.sh"
+  fi
+fi
+
 config_inputs_newer_than() {
   local stamp="$1"
   local f

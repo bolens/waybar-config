@@ -295,8 +295,8 @@
     "section_order": ["web", "dev", "misc"]
   },
   // Optional brand/desktop icons via bolens/appicon (make install-appicon).
-  // When enabled, dock-launcher resolves PNGs and theme/dock-appicons.generated.css
-  // paints them; glyph icons remain the fallback if the binary is missing or resolve fails.
+  // Peer-optional like zscroll/cava: glyphs stay when binary missing or resolve fails.
+  // Launch prefetches when enabled+installed; dock ticks use --offline against cache.
   "icons": {
     "appicon": {
       "enabled": true, // make install-appicon; glyph fallback if binary missing
