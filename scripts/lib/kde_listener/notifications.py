@@ -1,3 +1,10 @@
+"""Plasma notification tracking via dbus-monitor text parsing.
+
+Plasma's Notifications D-Bus API has no stable typed listener for unread
+history, so we scrape `dbus-monitor` lines for Notify / method-return /
+NotificationClosed and keep a local unread count + history cache for Waybar.
+"""
+
 import os
 import re
 import subprocess
@@ -99,6 +106,8 @@ class NotificationsMixin:
         return s.replace('\\"', '"').replace('\\\\', '\\')
 
     def check_notify_args_complete(self):
+        # Notify is positional: app_name, replaces_id, app_icon, summary, body, …
+        # We only need the first five; later args (actions, hints, timeout) are ignored.
         if self.notif_method == "Notify" and len(self.notif_args) >= 5:
             app_name = self.unescape_dbus_str(str(self.notif_args[0]))
             replaces_id = int(self.notif_args[1])
@@ -110,6 +119,9 @@ class NotificationsMixin:
             self.notif_method = None
 
     def process_dbus_monitor_line(self, line):
+        # Hand-rolled state machine over dbus-monitor's human-readable dump:
+        # multiline string bodies, serial → reply_serial matching for the
+        # returned notification id, and NotificationClosed (id, reason).
         if self.notif_in_string:
             if line.endswith('"') and not line.endswith('\\"'):
                 self.notif_current_string += "\n" + line[:-1]
@@ -225,6 +237,9 @@ class NotificationsMixin:
             self.update_notifications_cache()
 
     def handle_notification_closed(self, notif_id, reason):
+        # Close reasons (org.freedesktop.Notifications): 1=expired, 2=dismissed,
+        # 3=CloseNotification, 4=undefined. Count down for 2/3/4 only — expired
+        # (1) is left in history until the user clears unread.
         if reason in (2, 3, 4):
             initial_len = len(self.notifications)
             self.notifications = [n for n in self.notifications if n.get("id") != notif_id]

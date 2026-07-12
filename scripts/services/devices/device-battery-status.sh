@@ -46,6 +46,7 @@ pick_icon() {
 }
 
 # Collect Device-scoped batteries; prefer the lowest capacity (most urgent).
+# best_cap=101 is a sentinel so any real 0–100 capacity wins on first compare.
 # Test/portability: WAYBAR_POWER_SUPPLY_ROOT overrides /sys/class/power_supply.
 power_supply_root="${WAYBAR_POWER_SUPPLY_ROOT:-/sys/class/power_supply}"
 best_cap=101

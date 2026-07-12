@@ -62,6 +62,14 @@ In [`data/waybar-settings.jsonc`](../data/waybar-settings.jsonc):
 3. Append the module id to the right `groups.*.modules` list (and/or `layouts.*` if it is a top-level bar entry).
 4. Add any feature block (`my_feature: { … }`) the generator or script reads.
 
+For click/listener refresh, use the **same** `signals.<key>` the generator wires into the module:
+
+```bash
+"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" my_feature
+# or: sig=$(waybar_settings_get '.signals.my_feature' 'N'); pkill -x -RTMIN+"$sig" waybar
+```
+
+Do not hardcode `RTMIN+N` — drift from `signals.*` leaves the bar stale after clicks.
 ## 4. Wire the generator
 
 Most modules are emitted by a domain script under `scripts/generate/` that `generate-settings.sh` already calls. Either:

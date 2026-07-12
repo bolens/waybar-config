@@ -117,7 +117,10 @@ def redact_secrets(data: Any) -> Any:
 
 
 def structure_only(data: Any) -> Any:
-    """Keep dict/list shape; replace leaves with type names (no secret values)."""
+    """Shape-only view for secrets status: types, no values.
+
+    Lists keep a single exemplar element so length/content cannot leak.
+    """
     if isinstance(data, dict):
         return {k: structure_only(v) for k, v in data.items()}
     if isinstance(data, list):

@@ -56,7 +56,7 @@ notify-send "Power profile" "Switched to $target" 2>/dev/null || true
 
 # shellcheck source=waybar-signal.sh
 if [ -f "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
-  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" 3
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" powerprofiles
 else
   pkill -x -RTMIN+3 waybar >/dev/null 2>&1 || true
 fi

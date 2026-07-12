@@ -27,20 +27,28 @@ Project docs hub: **[docs/README.md](../docs/README.md)** ([architecture](../doc
 | File / package | Role |
 |----------------|------|
 | `waybar-cache-helpers.sh` | Intervals, cache/locks, `serve_*`, `emit_waybar_json`, `write_cache_and_exit`, `emit_disconnected`, `waybar_threshold_class` |
+| `waybar-settings.sh` | Settings compile / getters / `waybar_settings_bool` |
+| `waybar-signal.sh` | `pkill -RTMIN+N` by numeric offset or `signals.*` key (+ optional cache invalidate) |
 | `settings-bool-lib.sh` | Portable `waybar_is_false` / `waybar_is_truthy` |
 | `gauge-lib.sh` | `gauge_bar`, `gauge_or_pct`, `gauge_status_text` |
 | `theme-colors-lib.sh` | Preset color merge + hex/rgba helpers for generators |
 | `jsonc_util.py` | Shared JSONC load/dump/merge (MCP re-exports; pass scripts import) |
 | `output-lib.sh` | Monitor list, CSS class, scroll-per-output |
+| `compositor-session.sh` | Detect Hyprland / Plasma / unknown for compositor-aware modules |
+| `compositor-gate.sh` | Hide/no-op when required compositor is absent |
+| `clipboard-lib.sh` | cliphist / Klipper backends + clipboard signal helper |
+| `capture-lib.sh` | Screenshot/screenrecord dirs, tools, screenrecord signal |
+| `notifications-lib.sh` | Plasma notifications / DND helpers + notifications signal |
+| `brightness-lib.sh` | Per-output backlight / DDC target resolution |
 | `waybar-locale-lib.sh` | `detect_*` clock/date/weather + `format_locale_*` (`WAYBAR_WEATHER_UNIT` pins unit for CI) |
 | `locale_temp.py` | Python twin of `format_locale_temp` (CoolerControl etc.) |
 | `waybar-systemd-scan-lib.sh` | `check_systemd_scan_service` (libredefender / chkrootkit) |
-| `waybar-settings.sh` | Settings compile / getters / `waybar_settings_bool` |
 | `rofi-popup-lib.sh` | Shared Rofi header/hints rows + `center_text` |
 | `network-ip-lib.sh` | `get_public_ip` (multi-endpoint curl/wget) |
 | `xdg-applications.sh` / `xdg-icons-lib.sh` | Desktop dirs + icon map / `guess_icon` |
 | `gtk_popup_helpers.py` | Shared mouse position / public IP for GTK popups |
 | `system-metrics-{cpu,gpu,top}.sh` | Sourced by `infra/system-metrics-collector.sh` |
+| `reduced-motion-lib.sh` | Probe Plasma Instant / Hyprland / settings for animation gating |
 | `kde_listener/` | Mixins/helpers for the KDE session listener |
 
 ### `generate/` domain emitters
@@ -128,9 +136,19 @@ make install-hooks   # secrets pre-commit symlink
 | `ci/check-generated-drift.sh` | `make generate` then `git diff` on committed artifacts |
 | `ci/install-hooks.sh` | Symlink secrets pre-commit (`make install-hooks`) |
 
-Generator shards: `generate-smoke`, `drawer-sot-contracts`, `listener-lifecycle`, `settings-overrides-modules`, `settings-overrides-polish`, `settings-overrides-layout-theme`, `lib-utils`, `generator-resilience`, `path-edge-cases`, `liquidctl`, `coolercontrol-module-wiring`, `coolercontrol-module-auth`, `asusctl`, `hw-nvme-olh`, `hw-rgb-fans`, `portability`.
+**Suite inventory (source of truth):** on-disk stems under `ci/tests/generator/` and `ci/tests/secrets/`, mirrored by the CI matrix in `.github/workflows/ci.yml`. Do not maintain a hand-written shard list here — it goes stale. After adding a suite file:
 
-Secrets shards: `overlay-getters`, `capture-lib`, `credential-guards`, `i2pd-sync`, `coolercontrol-sync-bootstrap`, `coolercontrol-sync-auth`, `polish-runtime`, `compositor-gate`, `precommit-secrets`.
+```bash
+# Add the stem to the matching matrix in .github/workflows/ci.yml, then:
+make check-suite-inventory
+```
+
+List current suites:
+
+```bash
+ls scripts/ci/tests/generator/*.sh | xargs -n1 basename
+ls scripts/ci/tests/secrets/*.sh | xargs -n1 basename
+```
 
 CI `secrets:` path filter in `.github/workflows/ci.yml` must stay aligned with `waybar_test_secrets_sandbox` / `waybar_test_secrets_copy_polish_scripts` / `waybar_test_install_script_stubs` (fixture `app-open.sh` stub — not real `scripts/tools/**`).
 

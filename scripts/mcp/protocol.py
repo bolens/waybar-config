@@ -8,6 +8,7 @@ from typing import Any
 
 SERVER_NAME = "waybar-mcp"
 SERVER_VERSION = "1.0.0"
+# MCP clients negotiate this protocol date; bump only when adopting a new spec.
 PROTOCOL_VERSION = "2024-11-05"
 
 
@@ -40,6 +41,7 @@ def write_response(resp: dict[str, Any]) -> None:
 
 
 def capabilities() -> dict[str, Any]:
+    # Empty objects mean “feature supported, no options” (MCP initialize).
     return {
         "tools": {},
         "resources": {},

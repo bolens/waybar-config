@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""Touchpad enable/disable status for Waybar (Hyprland via hyprctl; Plasma via libinput).
+
+On Hyprland, finds a mouse device whose name looks like a touchpad (touchpad,
+glidepoint, elan*, syna*) and toggles device:enabled. Plasma path uses settings
+/ libinput helpers when compositor is kde.
+"""
 import json
 import os
 import subprocess

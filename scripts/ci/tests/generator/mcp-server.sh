@@ -9,6 +9,7 @@ waybar_test_begin "mcp-server"
 waybar_test_gen_sandbox
 
 export XDG_CACHE_HOME="$TEST_DIR/cache"
+# Force MCP into safe skip/stub mode (no real systemctl/make on the host).
 export TEST_SUITE_RUN=1
 mkdir -p "$XDG_CACHE_HOME" "$TEST_DIR/mock-bin"
 export MOCK_BIN="$TEST_DIR/mock-bin"
@@ -95,6 +96,7 @@ assert_contains "$resp" 'waybar_generate' "prompts/get after_edit_workflow menti
 # --- unknown method ---
 resp=$(run_mcp '{"jsonrpc":"2.0","id":6,"method":"not/a/method","params":{}}')
 assert_contains "$resp" '"error"' "unknown method returns error"
+# -32601 = JSON-RPC Method not found
 assert_contains "$resp" '-32601' "unknown method code -32601"
 
 # --- overview / get_settings ---

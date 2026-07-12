@@ -281,6 +281,8 @@ def get_tools_list() -> list[dict[str, Any]]:
 def handle_tool_call(
     paths: WaybarPaths, tool_name: str, arguments: dict[str, Any] | None
 ) -> dict[str, Any]:
+    # Schemas in get_tools_list() must stay in sync with these handler keys
+    # (and all_tool_names()). Adding a tool requires both sides.
     args = arguments or {}
     handlers: dict[str, Callable[[], dict[str, Any]]] = {
         "waybar_overview": lambda: json_result(settings_ops.overview(paths)),

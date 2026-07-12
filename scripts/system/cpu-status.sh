@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CPU usage / temp icon module — serves metrics-icons cache or rebuilds on miss.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -25,7 +26,7 @@ cpu_temp_crit=$(waybar_settings_get '.thresholds.cpu.temp.critical' '85')
 gauges_enabled=$(waybar_settings_get '.visual.gauges.enabled' 'true')
 gauge_width=$(waybar_settings_get '.visual.gauges.width' '8')
 
-# 3. Hard fallback for the first launch if cache does not exist yet
+# First-launch fallback when the collector has not written a cache yet.
 metrics="$("$WAYBAR_SCRIPTS/infra/system-metrics-collector.sh" 2>/dev/null || true)"
 if [ -z "$metrics" ]; then
   emit_waybar_json "󰍛" "CPU telemetry unavailable" "disabled"

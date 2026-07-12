@@ -1,3 +1,4 @@
+"""Active-window title cleanup: strip browser suffixes and truncate for the bar."""
 import re
 
 

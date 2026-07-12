@@ -136,6 +136,7 @@ waybar_services_nut_target() {
     return
   fi
 
+  # Legacy installs kept UPS config in waybar-services.json before settings SoT.
   if [[ -f "$WAYBAR_SERVICES_LEGACY" ]] && command -v jq >/dev/null 2>&1; then
     jq -r '.ups.nut_target // "ups@127.0.0.1:3493"' "$WAYBAR_SERVICES_LEGACY" 2>/dev/null || true
     return

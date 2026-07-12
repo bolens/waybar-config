@@ -284,7 +284,9 @@ WAYBAR_LISTENER_LOCK_NAME=privacy
 sleep 30
 EOF
 chmod +x "$hc_home/scripts/listeners/privacy-listener.sh"
-# Long-lived fake waybar MainPID (systemctl stub exits immediately, so $$ would be gone)
+# Long-lived fake waybar MainPID: the systemctl stub exits immediately, so
+# using $$ would leave a dead pid; sleep 300 keeps healthcheck believing waybar
+# is up so it restarts the privacy listener.
 sleep 300 &
 hc_waybar_pid=$!
 printf '%s\n' "$hc_waybar_pid" >"$hc_bin/waybar.pid"

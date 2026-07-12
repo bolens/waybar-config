@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Disk usage icon module — serves metrics cache or rebuilds from collector.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

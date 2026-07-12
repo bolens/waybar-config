@@ -56,6 +56,10 @@ def check(label: str, job: str, subdir: str) -> None:
         return
     fail = 1
     print(f"FAIL {label}: CI matrix != scripts/ci/tests/{subdir}/", file=sys.stderr)
+    print(
+        f"  Fix: add/remove stems under .github/workflows/ci.yml → {job} → strategy.matrix.suite",
+        file=sys.stderr,
+    )
     only_disk = sorted(set(disk) - set(ci))
     only_ci = sorted(set(ci) - set(disk))
     if only_disk:

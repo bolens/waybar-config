@@ -1,3 +1,8 @@
+"""Resolve Waybar RTMIN offsets from settings.signals (with built-in defaults).
+
+Defaults cover the KDE listener's hard dependencies; settings.signals overlays
+them so generators and this listener stay in sync when offsets change.
+"""
 import json
 import os
 import subprocess

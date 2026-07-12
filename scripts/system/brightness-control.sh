@@ -48,7 +48,7 @@ clamp() {
 
 refresh_waybar() {
   rm -f "$brightness_cache_file" 2>/dev/null || true
-  pkill -x -RTMIN+8 waybar >/dev/null 2>&1 || true
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" brightness
 }
 
 # with_queue_lock:

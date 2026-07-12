@@ -223,12 +223,14 @@ if [ -z "$status_raw" ]; then
   emit_disconnected "liquidctl: no status (permissions or no device)"
 fi
 
-# Drop devices already covered / RGB-only from the status payload.
+# Drop devices already covered elsewhere (Aura RGB / PSU hwmon / OpenLinkHub)
+# so liquidctl does not duplicate modules already shown on the bar.
 parsed="$(printf '%s' "$status_raw" | jq -c --argjson skip_psu "$skip_psu_hwmon" '
   def useful($u; $k):
     ($u == "°C" or $u == "C" or $u == "rpm" or $u == "W" or $u == "V" or $u == "A" or $u == "%")
     or ($k | test("temperature|speed|power|voltage|current|duty|pump|fan|liquid"; "i"));
 
+  # Prefer liquid temp → pump → fan → power so the bar shows the most useful metric.
   def rank_key($k):
     if ($k | test("^Liquid temperature$"; "i")) then 0
     elif ($k | test("liquid"; "i") and test("temp"; "i")) then 1

@@ -32,7 +32,7 @@ get_anim_frame() {
       printf '%s' "$1"
       ;;
     clock)
-      # 12 frames
+      # 12 frames — \U escapes avoid editor/shell encoding breakage for clock faces.
       set -- "$(printf '\U0001f55b')" "$(printf '\U0001f550')" "$(printf '\U0001f551')" "$(printf '\U0001f552')" "$(printf '\U0001f553')" "$(printf '\U0001f554')" "$(printf '\U0001f555')" "$(printf '\U0001f556')" "$(printf '\U0001f557')" "$(printf '\U0001f558')" "$(printf '\U0001f559')" "$(printf '\U0001f55a')"
       idx=$((frame_index % 12))
       shift "$idx"

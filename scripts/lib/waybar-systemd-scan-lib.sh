@@ -1,5 +1,24 @@
 #!/usr/bin/env sh
 # Systemd timer/service scan status helper (libredefender / chkrootkit style modules).
+#
+# check_systemd_scan_service ARGS (positional):
+#   1  service_name      systemd unit to probe (e.g. libredefender-scan.service)
+#   2  timer_name        stamp-<timer_name>.timer under /var/lib/systemd/timers/
+#   3  display_name      tooltip title
+#   4  label             short bar text label
+#   5  init_icon         glyph while first check runs
+#   6  cache_file        Waybar JSON cache path
+#   7  lock_dir          refresh lock directory
+#   8  ttl               fresh-cache TTL (seconds)
+#   9  stale_lock_ttl    when to steal a dead lock
+#  10  stale_scan_ttl    seconds since last stamp → "stale" warning
+#  11  stale_scan_text   status string when scan is stale
+#  12  click_hint        tooltip click instructions
+#  13  script_path       $0 of the status script (for background --refresh)
+#  14  is_refresh        optional "--refresh" (else serve/cache / scanning UI)
+#
+# When the service is active/activating, emit a scanning frame and spawn a
+# background waiter that --refresh-es once the unit leaves active|activating.
 check_systemd_scan_service() {
   local service_name="$1"
   local timer_name="$2"

@@ -14,6 +14,7 @@ WAYBAR_HOME = Path(__file__).resolve().parents[2]
 GLYPH_FILE = WAYBAR_HOME / "data/workspace-glyphs.json"
 NAMES_FILE = WAYBAR_HOME / "data/workspace-desktops.json"
 KWINRC = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "kwinrc"
+# qdbus6 --literal shape: (uss) <0-based pos>, "<uuid>", "<name>"
 DESKTOP_RE = re.compile(r'\(uss\) (\d+), "([^"]+)", "([^"]+)"')
 DEFAULT_DESKTOP_RE = re.compile(r"^desktop\s+\d+$", re.IGNORECASE)
 
@@ -45,6 +46,11 @@ def configured_names() -> dict[int, str]:
 
 
 def kwinrc_names() -> dict[int, str]:
+    """Map desktop index → name from ~/.config/kwinrc [Desktops] Name_N=.
+
+    kwinrc uses 1-based Name_1, Name_2, …; we store 0-based indices to match
+    VirtualDesktopManager.desktops positions and configured_names().
+    """
     names: dict[int, str] = {}
     if not KWINRC.is_file():
         return names
@@ -75,6 +81,8 @@ def lookup_glyph(name: str, glyphs: dict[str, str]) -> str:
 
 
 def resolve_name(position: int, dbus_name: str, kwin_names: dict[int, str], configured: dict[int, str]) -> str:
+    # Priority: custom D-Bus name → kwinrc → data/workspace-desktops.json → raw.
+    # Generic "Desktop N" names are treated as placeholders and get remapped.
     if not DEFAULT_DESKTOP_RE.match(dbus_name.strip()):
         return dbus_name
     if position in kwin_names:
@@ -154,6 +162,8 @@ def build_kde_state(output: str | None = None) -> dict:
 
 
 def resolve_hypr_name(position: int, raw_name: str, configured: dict[int, str]) -> str:
+    # Hyprland often names workspaces "1","2",… — remap via configured index
+    # (1-based name → 0-based key) before falling back to enumerate position.
     name = raw_name.strip()
     if name.isdigit():
         index = int(name) - 1
@@ -280,7 +290,9 @@ def main() -> int:
     import time
     cache_dir = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "waybar"
     cache_file = cache_dir / f"workspaces-{output or 'default'}.json"
-    
+
+    # Short TTL so N workspace slot scripts in one Waybar tick share one
+    # Hyprland/KWin query instead of each spawning qdbus/hyprctl.
     state = None
     if cache_file.is_file():
         try:

@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# VPN tunnel status for Waybar (hides when no configured VPN / inactive).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

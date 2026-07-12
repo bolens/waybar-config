@@ -62,7 +62,9 @@ capture_notify() {
 }
 
 capture_signal_screenrecord() {
-  pkill -x -RTMIN+6 waybar >/dev/null 2>&1 || true
+  # Prefer signals.screenrecord from settings (default 6).
+  : "${WAYBAR_SCRIPTS:=${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts}"
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" screenrecord
 }
 
 normalize_capture_mode() {

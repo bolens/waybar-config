@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# GPU util / temp icon module — serves metrics-icons cache or rebuilds on miss.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

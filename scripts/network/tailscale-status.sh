@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# Tailscale status for Waybar (hides when tailscaled / tailscale CLI absent).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

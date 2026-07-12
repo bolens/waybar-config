@@ -59,6 +59,7 @@ class ActiveWindowMixin:
             self.update_active_window(title, app, "")
             invocation.return_value(None)
         elif method == "windowsChanged":
+            # Debounce KWin windowAdded/Removed spam into one dock refresh.
             if self.windows_changed_timeout_id != 0:
                 GLib.source_remove(self.windows_changed_timeout_id)
             self.windows_changed_timeout_id = GLib.timeout_add(250, self.flush_windows_changed)
@@ -92,6 +93,7 @@ class ActiveWindowMixin:
             pass
 
     def update_active_window(self, title, app, output=""):
+        # 150ms debounce coalesces rapid caption/focus events into one cache write.
         self.pending_title = title
         self.pending_app = app
         self.pending_output = output or ""

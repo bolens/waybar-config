@@ -17,6 +17,7 @@ waybar_module_interval() {
   val="$(jq -r --arg k "$key" --argjson fb "$fallback" '
     (.module_intervals[$k] // .poll_intervals[$k] // $fb) as $v
     | if ($v|type) == "number" then $v
+      # "once" → day-long TTL for signal-driven modules (not re-probed by libs).
       elif $v == "once" then 86400
       else $fb end
   ' "$settings" 2>/dev/null || printf '%s' "$fallback")"
@@ -25,6 +26,7 @@ waybar_module_interval() {
 
 cache_file_age() {
   file="$1"
+  # Missing file → huge age so callers always treat cache as stale.
   [ -f "$file" ] || {
     printf '%s' 999999
     return
@@ -113,6 +115,8 @@ refresh_in_background() {
   printf '%s\n' "$!" >"$local_lock_dir/pid"
 }
 serve_cache_or_refresh() {
+  # Prefer serving stale JSON over a blank module while a background refresh
+  # holds the lock; only return 1 when there is no cache file at all.
   local cache_file="$1"
   local ttl="$2"
   local lock_dir="$3"

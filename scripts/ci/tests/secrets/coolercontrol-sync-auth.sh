@@ -50,7 +50,8 @@ fi
   fi
 ) || fail=1
 
-# Mock curl auth path: must use POST /login (not GET) and Bearer /status
+# Mock curl auth path: POST /login required (GET → 405); netrc password
+# "invalid-auth-check" forces 401; "000" mimics curl transport failure.
 CC_CURL_FAKE="$TEST_DIR/fakebin"
 mkdir -p "$CC_CURL_FAKE"
 CC_CURL_LOG="$TEST_DIR/curl-args.log"

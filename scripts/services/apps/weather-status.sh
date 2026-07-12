@@ -28,6 +28,7 @@ use_metric=1
 [ "$weather_unit" = "F" ] && use_metric=0
 
 if [ "${1:-}" != "--refresh" ]; then
+  # Unit change must invalidate cache even if TTL remains (avoid stale °C/°F).
   if [ -f "$cache_file" ] && [ "$(cache_file_age "$cache_file")" -le "$ttl" ] 2>/dev/null; then
     if jq -e --arg unit "°$weather_unit" '.text | endswith($unit)' "$cache_file" >/dev/null 2>&1; then
       cat "$cache_file"

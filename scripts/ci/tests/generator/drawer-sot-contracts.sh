@@ -46,6 +46,7 @@ while IFS= read -r drawer_key; do
   fi
 done <<<"$drawer_keys"
 if [ "$drawer_count" -lt 8 ]; then
+  # Settings SoT currently defines ≥8 drawer sides; fewer means a generate miss.
   echo "FAIL: expected at least 8 drawer modules, found $drawer_count" >&2
   fail=1
 fi

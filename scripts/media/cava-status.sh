@@ -22,7 +22,8 @@ emit_hidden() {
 
 if ! command -v "$cava_bin" >/dev/null 2>&1; then
   emit_hidden
-  # Stay alive so Waybar does not restart-spam; wake on bar reload.
+  # Infinite sleep keeps the custom module process alive so Waybar does not
+  # restart-spam when cava is not installed; wake only on bar reload.
   while true; do sleep 3600; done
 fi
 
@@ -43,6 +44,7 @@ framerate = $framerate
 method = raw
 raw_target = $fifo
 data_format = ascii
+# Index into ▁▂▃▄▅▆▇█ (0–7); full loudness uses █ unlike gauge_bar's ▇ max.
 ascii_max_range = 7
 EOF
 
@@ -69,6 +71,7 @@ while IFS= read -r line; do
 
   if [ "$all_zero" -eq 1 ]; then
     silent_streak=$((silent_streak + 1))
+    # ~8 silent frames at configured framerate before hiding the module.
     if [ "$silent_streak" -ge 8 ]; then
       emit_waybar_json "" "Cava (silent)" "hidden"
       continue

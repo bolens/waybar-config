@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# LibreDefender weekly scan status (systemd timer stamp + service ActiveState).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

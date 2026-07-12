@@ -92,7 +92,7 @@ age_stale=$(WAYBAR_HOME="$TEST_DIR" bash -c "
   cache_file_age '$cache_test_file'
 ")
 
-# If touch command succeeded, verify value
+# 140s slack covers slow FS / touch -d fallbacks that land slightly under 150.
 if [ "$age_stale" -ge 140 ] 2>/dev/null; then
   : # Pass
 elif [ "$age_stale" -ge 0 ] 2>/dev/null && [ "$age_stale" -lt 140 ] 2>/dev/null; then
@@ -105,6 +105,7 @@ age_missing=$(WAYBAR_HOME="$TEST_DIR" bash -c "
   cache_file_age '$TEST_DIR/data/non-existent-file.json'
 ")
 
+# Must match the 999999 missing-file sentinel in waybar-cache-helpers.sh.
 if [ "$age_missing" -ne 999999 ]; then
   echo "FAIL: cache_file_age for missing file did not return 999999! Value: $age_missing" >&2
   fail=1

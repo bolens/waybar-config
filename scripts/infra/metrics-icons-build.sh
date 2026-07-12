@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 # Pre-render Waybar JSON payloads for cpu/gpu/memory icon modules.
+#
+# Class thresholds come from settings.thresholds (same SoT as cpu-status.sh).
+# Icon modules usually serve this cache; rebuilding with stale hardcodes used to
+# diverge from settings (e.g. CPU temp critical 80 vs 85).
 set -eu
 
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
@@ -10,8 +14,33 @@ set -eu
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 metrics_file="${1:-$cache_dir/system-metrics.json}"
 icons_file="${2:-$cache_dir/metrics-icons.json}"
+settings_file="$WAYBAR_HOME/data/waybar-settings.json"
 
 [ -f "$metrics_file" ] || exit 0
+
+# Defaults match data/waybar-settings.jsonc thresholds.*; override from compiled JSON.
+cpu_usage_warn=60
+cpu_usage_crit=85
+cpu_temp_warn=75
+cpu_temp_crit=85
+gpu_util_warn=70
+gpu_util_crit=90
+gpu_temp_warn=75
+gpu_temp_crit=83
+mem_warn=70
+mem_crit=85
+if [ -f "$settings_file" ] && command -v jq >/dev/null 2>&1; then
+  cpu_usage_warn=$(jq -r '.thresholds.cpu.usage.warning // 60' "$settings_file" 2>/dev/null || echo 60)
+  cpu_usage_crit=$(jq -r '.thresholds.cpu.usage.critical // 85' "$settings_file" 2>/dev/null || echo 85)
+  cpu_temp_warn=$(jq -r '.thresholds.cpu.temp.warning // 75' "$settings_file" 2>/dev/null || echo 75)
+  cpu_temp_crit=$(jq -r '.thresholds.cpu.temp.critical // 85' "$settings_file" 2>/dev/null || echo 85)
+  gpu_util_warn=$(jq -r '.thresholds.gpu.util.warning // 70' "$settings_file" 2>/dev/null || echo 70)
+  gpu_util_crit=$(jq -r '.thresholds.gpu.util.critical // 90' "$settings_file" 2>/dev/null || echo 90)
+  gpu_temp_warn=$(jq -r '.thresholds.gpu.temp.warning // 75' "$settings_file" 2>/dev/null || echo 75)
+  gpu_temp_crit=$(jq -r '.thresholds.gpu.temp.critical // 83' "$settings_file" 2>/dev/null || echo 83)
+  mem_warn=$(jq -r '.thresholds.memory.warning // 70' "$settings_file" 2>/dev/null || echo 70)
+  mem_crit=$(jq -r '.thresholds.memory.critical // 85' "$settings_file" 2>/dev/null || echo 85)
+fi
 
 cpu_temp_raw="$(jq -r '.cpu.temp // 0' "$metrics_file" 2>/dev/null || echo 0)"
 gpu_temp_raw="$(jq -r '.gpu.temp // 0' "$metrics_file" 2>/dev/null || echo 0)"
@@ -26,8 +55,20 @@ fi
 
 json="$(jq -cn --slurpfile m "$metrics_file" \
   --arg cpu_temp_fmt "$cpu_temp_fmt" \
-  --arg gpu_temp_fmt "$gpu_temp_fmt" '
+  --arg gpu_temp_fmt "$gpu_temp_fmt" \
+  --argjson cpu_usage_warn "$cpu_usage_warn" \
+  --argjson cpu_usage_crit "$cpu_usage_crit" \
+  --argjson cpu_temp_warn "$cpu_temp_warn" \
+  --argjson cpu_temp_crit "$cpu_temp_crit" \
+  --argjson gpu_util_warn "$gpu_util_warn" \
+  --argjson gpu_util_crit "$gpu_util_crit" \
+  --argjson gpu_temp_warn "$gpu_temp_warn" \
+  --argjson gpu_temp_crit "$gpu_temp_crit" \
+  --argjson mem_warn "$mem_warn" \
+  --argjson mem_crit "$mem_crit" '
+  # Right-pad usage/util so sparkline + percent stay column-aligned in the bar.
   def pad3($val): ($val | tostring) as $s | if ($s | length) == 1 then "  " + $s elif ($s | length) == 2 then " " + $s else $s end;
+  # Map 0–100 history samples onto 8 block glyphs (100/8 = 12.5 per step).
   def sparkline($history):
     [" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"] as $blocks |
     $history | map(
@@ -69,8 +110,8 @@ json="$(jq -cn --slurpfile m "$metrics_file" \
         + ($cpu_top | map("  • " + .) | join("\n"))
       ),
       class: (
-        if $usage >= 85 or $temp >= 80 then "critical"
-        elif $usage >= 60 or $temp >= 70 then "warning"
+        if $usage >= $cpu_usage_crit or $temp >= $cpu_temp_crit then "critical"
+        elif $usage >= $cpu_usage_warn or $temp >= $cpu_temp_warn then "warning"
         else "normal"
         end
       )
@@ -86,6 +127,7 @@ json="$(jq -cn --slurpfile m "$metrics_file" \
         ($metrics.gpu.suspended // false) as $suspended |
         ($metrics.gpu.vendor // "") as $vendor |
         {
+          # Idle AMD often reports util ~0 while temp is still meaningful — show temp.
           text: (
             if $vendor == "amd" and $util < 5 and $temp > 0 then
               "󰢮 \($gpu_temp_fmt)"
@@ -96,8 +138,8 @@ json="$(jq -cn --slurpfile m "$metrics_file" \
           tooltip: "\($name)\nUtil: \($util)%\nTemp: \($gpu_temp_fmt)\nVRAM: \($gmu)/\($gmt) MiB (\($vp)%)",
           class: (
             if $suspended then "suspended"
-            elif $temp >= 83 or $util >= 90 then "critical"
-            elif $temp >= 75 or $util >= 70 then "warning"
+            elif $temp >= $gpu_temp_crit or $util >= $gpu_util_crit then "critical"
+            elif $temp >= $gpu_temp_warn or $util >= $gpu_util_warn then "warning"
             else "normal"
             end
           )
@@ -119,8 +161,8 @@ json="$(jq -cn --slurpfile m "$metrics_file" \
         + ($mem_top | map("  • " + .) | join("\n"))
       ),
       class: (
-        if $mp >= 85 then "critical"
-        elif $mp >= 70 then "warning"
+        if $mp >= $mem_crit then "critical"
+        elif $mp >= $mem_warn then "warning"
         else "normal"
         end
       )

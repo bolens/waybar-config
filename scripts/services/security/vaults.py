@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""gocryptfs vault discovery and Waybar status/click helpers.
+
+Scans a vaults base directory for mount dirs paired with cipher dirs named
+`.<Name>`, `.<Name>.cipher`, or `<Name>_cipher` (must contain gocryptfs.conf).
+"""
 import json
 import os
 import subprocess

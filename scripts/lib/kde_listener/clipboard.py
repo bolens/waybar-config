@@ -1,3 +1,4 @@
+"""Klipper clipboard-changed watcher mixin — keeps clipboard Waybar cache warm."""
 import json
 import os
 import sys

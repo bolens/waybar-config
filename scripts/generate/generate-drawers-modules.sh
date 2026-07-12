@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Domain module emitter (split from former generate-module-configs.sh).
+# Drawer handle modules (custom/*-drawer) + tooltip-format from group contents.
+# Settings drawer side keys map via drawer_group() to Waybar group ids — see jq below.
 set -euo pipefail
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -20,6 +21,8 @@ jq -n --slurpfile s "$settings" \
   --slurpfile dock "${WAYBAR_HOME}/data/dock-apps.json" \
   --slurpfile net "${WAYBAR_HOME}/data/network-interfaces.json" '
   def drawer_group($key):
+    # Settings drawer side keys (desk, media, …) ≠ Waybar group ids
+    # (desk-controls, media, …); this map bridges SoT names → group/*.
     {
       desk: "desk-controls",
       tray: "tray-apps",

@@ -97,4 +97,4 @@ printf '%s\n' "$json" >"$tmp_cache"
 mv -f "$tmp_cache" "$cache_file"
 
 # Signal Waybar to refresh the module UI
-pkill -x -RTMIN+24 waybar >/dev/null 2>&1 || true
+"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" streamdeck

@@ -19,6 +19,9 @@ system_out="$WAYBAR_HOME/modules/system.generated.jsonc"
 command -v jq >/dev/null 2>&1 || exit 1
 
 expand_group_modules() {
+  # Legacy helper: @network.interfaces collapses to []. Real interface expansion
+  # happens in build_groups_json jq via the network manifest — keep this for
+  # any callers still expecting a flat module list without custom/if-* ids.
   local group_key="$1"
   jq -c --arg key "$group_key" '
     .groups[$key].modules // []
@@ -74,6 +77,7 @@ build_groups_json() {
       };
 
     def expand_modules($mods):
+      # Expand @network.interfaces → custom/<id> list from network-interfaces.json.
       reduce $mods[] as $mod (
         [];
         if $mod == "@network.interfaces" then
@@ -89,7 +93,9 @@ build_groups_json() {
         end
       );
 
+    # --- media transforms ---
     def insert_album_art($mods):
+      # visual.album_art.enabled → insert custom/album-art immediately before mpris.
       if (($settings[0].visual.album_art.enabled // false) == true) then
         if (($mods | index("custom/album-art")) != null) then $mods
         else
@@ -110,6 +116,7 @@ build_groups_json() {
       end;
 
     def apply_cava_placement($mods):
+      # cava.placement=inline → cava first (always-visible head); drawer keeps SoT order.
       (($settings[0].cava.placement // "drawer") | tostring) as $place
       | if ($mods | index("custom/cava")) == null then $mods
         elif $place == "inline" then
@@ -119,7 +126,9 @@ build_groups_json() {
           $mods
         end;
 
+    # --- hardware transforms ---
     def apply_stats_carousel($mods):
+      # Replace cpu/memory/disk/gpu entries with one custom/stats-carousel at first hw slot.
       if (($settings[0].visual.stats_carousel.enabled // false) != true) then $mods
       else
         ["custom/cpu", "custom/memory", "custom/disk", "custom/gpu"] as $hw

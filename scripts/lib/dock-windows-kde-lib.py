@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Parse KWin WindowsRunner qdbus --literal Match output for dock-windows."""
+"""Parse KWin WindowsRunner qdbus --literal Match output for dock-windows.
+
+KRunner's Match method returns typed D-Bus literals only (no JSON). Each entry
+is `[Argument: (sssida{sv}) "id", "title", "app", …]` with optional a{sv}
+props. Field order is id / title / app; screen/output may appear in props.
+"""
 
 from __future__ import annotations
 
@@ -122,7 +127,11 @@ def parse_windows_runner_literal(raw: str) -> list[dict[str, Any]]:
 def filter_by_output(
     entries: list[dict[str, Any]], output: str | None
 ) -> list[dict[str, Any]]:
-    """Filter to output when any entry has screen metadata; else return all."""
+    """Filter to output when any entry has screen metadata; else return all.
+
+    When KWin omits screen props, filtering would empty the dock on multi-monitor
+    setups — keep every window until metadata is actually present.
+    """
     if not output:
         return entries
     if not any(e.get("screen") for e in entries):

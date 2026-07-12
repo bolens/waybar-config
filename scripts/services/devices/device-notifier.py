@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""Removable / optical device notifier for Waybar (lsblk JSON).
+
+Walks lsblk --json trees, skips loop/zram/swap, and keeps leaves that are
+removable/hotplug (or inherit that from a parent) or type rom. Mounted state
+drives the status glyph and click actions.
+"""
 import json
 import os
 import subprocess

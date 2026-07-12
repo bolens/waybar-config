@@ -43,6 +43,8 @@ def run_cmd(
     log(f"Executing: {' '.join(cmd_args)}")
 
     if _test_suite():
+        # CI/agent runs: never touch real systemctl/make. Prefer a MOCK_BIN stub
+        # when present so success paths are exercised without host side effects.
         mock_bin = _mock_bin()
         stub = os.path.join(mock_bin, os.path.basename(args[0])) if mock_bin else ""
         if stub and os.path.isfile(stub) and os.access(stub, os.X_OK):

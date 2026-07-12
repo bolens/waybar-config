@@ -83,6 +83,8 @@ fi
 
 parsed=$(
   printf '%s' "$body" | jq -c '
+    # OpenLinkHub exposes a synthetic "cluster" node (ProductType 999) that is
+    # not real hardware — filter it so temps/power come from devices only.
     def is_cluster($v):
       (($v.ProductType // 0) == 999)
       or (($v.Product // "" | ascii_downcase) == "cluster")
@@ -105,6 +107,7 @@ parsed=$(
             id: .key,
             product: (.value.Product // .value.product // .value.name // .key),
             type: (.value.ProductType // .value.productType // 0),
+            # Corsair HX/RM/HXi/RMi family names when IsPSU flag is absent.
             is_psu: (
               (.value.GetDevice.IsPSU == true)
               or ((.value.Product // "") | test("HX[0-9]|RM[0-9]|HXi|RMi|PSU"; "i"))

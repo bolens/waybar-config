@@ -27,6 +27,9 @@ gauge_bar() {
     _pct=100
   fi
 
+  # Each cell has 8 fill steps (▁…▇). Full cells intentionally use ▇ (level 7),
+  # not █ — █ is reserved for cava's ascii_max_range mapping; the *) branch
+  # below is defensive only and should not be hit by this clamp.
   _out=""
   _i=0
   while [ "$_i" -lt "$_width" ]; do

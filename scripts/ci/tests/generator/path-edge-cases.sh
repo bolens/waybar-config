@@ -20,6 +20,7 @@ else
 fi
 
 echo "Verifying Hyprland generate without modules/hyprland.jsonc..."
+# Desk-hypr group must self-heal without a stub hyprland.jsonc file.
 HYPR_DIR=$(waybar_test_mktemp)
 waybar_test_populate_tree "$HYPR_DIR"
 WAYBAR_HOME="$HYPR_DIR" WAYBAR_SCRIPTS="$HYPR_DIR/scripts" \
@@ -50,6 +51,7 @@ print(','.join(json.loads(t)['group/desk-hypr']['modules']))
 fi
 
 echo "Verifying validate rejects flat script paths..."
+# Domain subdirs required (scripts/system/…); flat scripts/cpu-status.sh is invalid.
 FLAT_DIR=$(waybar_test_mktemp)
 mkdir -p "$FLAT_DIR/modules" "$FLAT_DIR/includes" "$FLAT_DIR/layouts" "$FLAT_DIR/data" "$FLAT_DIR/scripts/ci"
 cp "$ROOT_DIR/scripts/ci/validate-generated-config.sh" "$FLAT_DIR/scripts/ci/"

@@ -13,6 +13,7 @@ waybar_test_populate_tree() {
   cp "$root"/layouts/*.jsonc "$dest/layouts/" 2>/dev/null || true
   cp "$root"/includes/*.jsonc "$dest/includes/" 2>/dev/null || true
   cp "$root"/modules/*.jsonc "$dest/modules/" 2>/dev/null || true
+  # Default stub prevents Hyprland generate failures in non-Hypr CI sandboxes.
   if [ "${2:-}" != "no-hyprland-stub" ]; then
     echo "{}" >"$dest/modules/hyprland.jsonc"
   fi
@@ -32,14 +33,37 @@ waybar_test_gen_sandbox() {
 }
 
 waybar_test_gen_default() {
-  "$TEST_DIR/scripts/generate/generate-settings.sh"
-  "$TEST_DIR/scripts/generate/generate-compositor-modules.sh"
-  "$TEST_DIR/scripts/generate/generate-workspaces-css.sh"
+  # On failure, dump generator stderr so suites do not only print "generate failed".
+  local log
+  log=$(mktemp "${TMPDIR:-/tmp}/waybar-gen.XXXXXX")
+  if ! {
+    "$TEST_DIR/scripts/generate/generate-settings.sh"
+    "$TEST_DIR/scripts/generate/generate-compositor-modules.sh"
+    "$TEST_DIR/scripts/generate/generate-workspaces-css.sh"
+  } >"$log" 2>&1; then
+    echo "FAIL: waybar_test_gen_default failed. Generator output:" >&2
+    cat "$log" >&2 || true
+    rm -f "$log"
+    return 1
+  fi
+  rm -f "$log"
+  return 0
 }
 
 waybar_test_gen_modules() {
-  "$TEST_DIR/scripts/generate/generate-settings.sh"
-  "$TEST_DIR/scripts/generate/generate-compositor-modules.sh"
+  local log
+  log=$(mktemp "${TMPDIR:-/tmp}/waybar-gen.XXXXXX")
+  if ! {
+    "$TEST_DIR/scripts/generate/generate-settings.sh"
+    "$TEST_DIR/scripts/generate/generate-compositor-modules.sh"
+  } >"$log" 2>&1; then
+    echo "FAIL: waybar_test_gen_modules failed. Generator output:" >&2
+    cat "$log" >&2 || true
+    rm -f "$log"
+    return 1
+  fi
+  rm -f "$log"
+  return 0
 }
 
 waybar_test_gen_restore_sot() {
@@ -50,12 +74,17 @@ waybar_test_gen_restore_sot() {
 }
 
 # Compile waybar-settings.jsonc → waybar-settings.json via lib helper.
+# Suites that mutate settings mid-test often edit .json then `cp` → .jsonc so the
+# next generate sees the patch. Production is jsonc → compile → json; that
+# inversion is intentional for speed — do not "fix" it by only writing .jsonc
+# without recompiling (or only writing .json without mirroring to .jsonc).
 waybar_test_compile_settings() {
   local home="${1:-$TEST_DIR}"
   WAYBAR_HOME="$home" bash -c ". '$home/scripts/lib/waybar-settings.sh'" >/dev/null
 }
 
-# Minimal sandbox for secrets / settings exposure suites.
+# Minimal sandbox for secrets / settings exposure suites — sparse script copy
+# (not a full tree) for isolation and speed.
 waybar_test_secrets_sandbox() {
   local root fixture
   root="$(waybar_test_root)"

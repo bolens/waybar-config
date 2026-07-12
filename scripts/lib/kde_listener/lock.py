@@ -1,3 +1,4 @@
+"""Single-instance lock under $XDG_RUNTIME_DIR for the KDE listener process."""
 import atexit
 import os
 import shutil

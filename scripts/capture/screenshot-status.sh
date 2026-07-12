@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Screenshot module status (static glyph; clicks handled by screenshot-click.sh).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

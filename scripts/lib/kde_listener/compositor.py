@@ -1,3 +1,4 @@
+"""Compositor detection for the KDE session listener (hyprland / kde / unknown)."""
 import os
 import subprocess
 

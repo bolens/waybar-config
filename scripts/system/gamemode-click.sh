@@ -34,4 +34,4 @@ case "$action" in
     ;;
 esac
 
-pkill -x -RTMIN+15 waybar >/dev/null 2>&1 || true
+"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" gamemode

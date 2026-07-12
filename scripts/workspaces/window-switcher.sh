@@ -32,7 +32,6 @@ case "$_wspo" in false | False | FALSE | 0 | no | No | NO | off | Off | OFF) ;; 
   ;;
 esac
 
-switcher_theme=$(waybar_settings_get '.rofi.switcher.width' '') # Theme file is retrieved in the execution block if needed, but we check width here
 switcher_theme_file=$(waybar_settings_get '.rofi.theme' '')
 switcher_theme_file="${switcher_theme_file/\$WAYBAR_HOME/$WAYBAR_HOME}"
 switcher_theme_file="${switcher_theme_file/\$\{WAYBAR_HOME\}/$WAYBAR_HOME}"

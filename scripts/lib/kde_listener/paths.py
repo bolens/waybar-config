@@ -1,3 +1,4 @@
+"""Path helpers for the KDE listener (scripts/ root resolution)."""
 import os
 
 

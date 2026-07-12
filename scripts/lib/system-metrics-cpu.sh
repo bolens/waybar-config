@@ -41,6 +41,8 @@ compute_cpu_usage_percent() {
   idle_now=$((idle + iowait))
 
   if [ ! -f "$stat_prev" ]; then
+    # CPU % needs two /proc/stat samples; without a prior file, take a short
+    # baseline sleep so the first refresh is not stuck at 0%.
     printf '%s %s\n' "$total_now" "$idle_now" >"$stat_prev"
     sleep 0.15
     IFS=' ' read -r user nice system idle iowait irq softirq steal < <(read_cpu_counters)

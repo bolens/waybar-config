@@ -53,6 +53,7 @@ waybar_test_assert_jq "$empty" \
   "empty targets should hide: $empty"
 
 # Configure two targets via compiled settings (inline JSONC comments break naive python strip).
+# Mutate .json then mirror to .jsonc (test SoT inversion — see waybar_test_compile_settings).
 waybar_test_compile_settings
 jq '
   .homelab = {

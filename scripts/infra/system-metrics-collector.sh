@@ -15,6 +15,7 @@ stat_prev="$cache_dir/cpu-stat.prev"
 topology_file="$cache_dir/cpu-topology.json"
 
 ttl="$(waybar_module_interval cpu 8)"
+# Topology (cores/threads) almost never changes — cache for a day.
 topology_ttl=86400
 stale_lock_ttl=30
 

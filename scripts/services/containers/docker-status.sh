@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# Docker daemon / container count status (hides when docker CLI or daemon absent).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

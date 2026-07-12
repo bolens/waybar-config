@@ -254,7 +254,11 @@ class CcClient:
             return code, None
 
     def probe_write(self) -> tuple[bool | None, int]:
-        """Return (writable, http_code). None writable = probe failed."""
+        """Return (writable, http_code). None writable = probe failed.
+
+        Empty PATCH /settings is CoolerControl's documented writability probe:
+        200 = writable, 401/403 = read-only auth, other codes = inconclusive.
+        """
         code, _ = self.request(
             "PATCH",
             "/settings",

@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
-# Domain module emitter (split from former generate-module-configs.sh).
+# Domain module emitter for desk/utilities modules (notifications, capture, nightlight, …).
+#
+# Adding a module here:
+# 1. Add a "custom/<id>" object in the jq map below (exec under $scripts/<domain>/…).
+# 2. Wire module_intervals / signals / groups in data/waybar-settings.jsonc.
+# 3. Use helpers: iv("key"), sig("key"), app("key"), brightness_out / capture_out
+#    (append " $WAYBAR_OUTPUT_NAME" when per_output is on).
+# 4. Keep scripts='$WAYBAR_HOME/scripts' as a literal so generated JSON stays portable
+#    (match other generate-*-modules.sh emitters).
+# 5. make generate && commit intended *.generated.jsonc.
 set -euo pipefail
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -17,10 +26,12 @@ theme_dir="$WAYBAR_HOME/theme"
 mkdir -p "$mod_dir" "$theme_dir"
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
+  # iv/sig: module_intervals (or legacy poll_intervals) and signals.* → Waybar fields.
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
   def sig($k): ($s[0].signals[$k] // null);
   def app($k): ($s[0].apps[$k] // "");
   def app_open: ($scripts + "/tools/app-open.sh");
+  # Append output name to click args when brightness/capture.per_output is enabled.
   def brightness_out:
     ((($s[0].brightness // {}).per_output) as $p | if $p == false then false else true end)
     | if . then " \"$WAYBAR_OUTPUT_NAME\"" else "" end;

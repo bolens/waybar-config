@@ -40,7 +40,7 @@ Optional overlay: `data/waybar-secrets.jsonc` (gitignored). Never put credential
 | `hypr_tools` | Hyprland helper command paths |
 | `weather` | Provider, unit, location |
 | `bluetooth` / `keyboard` / `gamemode` / `kdeconnect` / … | Click/scroll overrides and small feature blocks |
-| `thresholds` | Warning/critical cutoffs for metrics |
+| `thresholds` | Warning/critical cutoffs for metrics (status scripts **and** `infra/metrics-icons-build.sh`) |
 | `nightlight` | Temperature / toggle behavior |
 | `rofi` | Menu theming / bindings |
 | `apps` | Launch commands and URLs (machine-specific) |
@@ -55,6 +55,23 @@ Common fields: `layer` (`overlay` recommended on Plasma for tooltips), `output`,
 - Interval keys (e.g. `cpu`, `weather`) are read by status scripts via `waybar_module_interval <key> <fallback>`.
 - Value `"once"` → long cache TTL for signal-driven modules.
 - `signals.<key>` must match the Waybar module `signal` field generators emit.
+- **Click / listener scripts must refresh that same number.** Prefer:
+
+  ```bash
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" my_feature
+  # or:
+  sig=$(waybar_settings_get '.signals.my_feature' '42')
+  pkill -x -RTMIN+"$sig" waybar
+  ```
+
+  Do not hardcode `RTMIN+N` in new code — if `signals.*` changes, hardcoded offsets miss the module Waybar subscribed to.
+
+## `thresholds`
+
+Warning/critical cutoffs for metric modules (`cpu`, `gpu`, `memory`, `disk`, fans, liquidctl, …).
+
+- Status scripts (e.g. `cpu-status.sh`) and `infra/metrics-icons-build.sh` both read these keys.
+- Changing `thresholds.cpu.temp.critical` (etc.) updates icon CSS classes on the next metrics refresh — no generator edit required.
 
 ## `layouts` and `groups`
 

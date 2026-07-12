@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Screenshot click actions (select / full / window) via capture-lib helpers.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"

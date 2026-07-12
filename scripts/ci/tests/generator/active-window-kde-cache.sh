@@ -23,6 +23,8 @@ for needle in \
     fail=1
   fi
 done
+# Guard against reintroducing a 3-arg update — callDBus with a third string
+# silently failed on Plasma (CI enforces two-arg ss only).
 if grep -Fq '"update", title, app, output' "$aw_py" || grep -Fq 'type="s" name="output"' "$aw_py"; then
   echo "FAIL: KDE update must stay two-arg (ss); third arg broke callDBus" >&2
   fail=1
@@ -164,7 +166,8 @@ print("PASS: empty title writes desktop class to per-output cache")
 PY
 
 # Scroll script: empty per-output raw seeded from global on KDE.
-if ! waybar_test_gen_modules >/dev/null 2>&1; then
+# Keep stderr so gen helper can dump generator output on failure.
+if ! waybar_test_gen_modules >/dev/null; then
   echo "FAIL: generate-settings failed before scroll seed test" >&2
   fail=1
 fi

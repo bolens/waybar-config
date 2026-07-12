@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Shared helpers for compositor-aware clipboard modules.
+# Shared helpers for compositor-aware clipboard modules (cliphist / Klipper).
+# Signals Waybar via signals.clipboard (see waybar-signal.sh).
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 script_dir="${script_dir:-$(dirname "$0")}"
@@ -10,7 +11,8 @@ else
 fi
 
 signal_waybar() {
-  pkill -x -RTMIN+9 waybar >/dev/null 2>&1 || true
+  # Prefer signals.clipboard from settings (default 9) — do not hardcode RTMIN+N.
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" clipboard
 }
 
 cliphist_available() {

@@ -26,7 +26,7 @@ update_privacy() {
       tmp="${cache_file}.tmp.$$"
       printf '%s\n' "$json" >"$tmp"
       mv "$tmp" "$cache_file"
-      pkill -x -RTMIN+17 waybar >/dev/null 2>&1 || true
+      "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" privacy
       prev_state="$json"
     elif [ ! -f "$cache_file" ]; then
       tmp="${cache_file}.tmp.$$"
@@ -39,7 +39,7 @@ update_privacy() {
 
 update_mic() {
   "$WAYBAR_SCRIPTS/media/mic-status.sh" --refresh >/dev/null 2>&1 || true
-  pkill -x -RTMIN+7 waybar >/dev/null 2>&1 || true
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" mic
 }
 
 # Initial update

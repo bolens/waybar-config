@@ -52,7 +52,7 @@ start_nightlight() {
 
 refresh_waybar() {
   rm -f "$cache_dir/nightlight-status.json" 2>/dev/null || true
-  pkill -x -RTMIN+14 waybar >/dev/null 2>&1 || true
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" nightlight
 }
 
 kde_get_enabled() {

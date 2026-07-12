@@ -47,6 +47,8 @@ def get_settings(
 
 
 def write_settings(paths: WaybarPaths, data: dict[str, Any]) -> None:
+    # Programmatic writes emit pretty JSON (JSONC comments are lost by design).
+    # Dual-write .jsonc + .json keeps shell waybar-settings.sh in sync.
     paths.settings_jsonc.parent.mkdir(parents=True, exist_ok=True)
     dump_json(data, str(paths.settings_jsonc))
     # Keep compiled .json in sync for shell helpers.
@@ -74,6 +76,7 @@ def diff_settings(paths: WaybarPaths, overlay: dict[str, Any]) -> dict[str, Any]
 def set_settings_path(
     paths: WaybarPaths, path: str, value: Any, *, dry_run: bool = False
 ) -> dict[str, Any]:
+    # Path heuristic blocks accidental secret writes via MCP (pass/token/…).
     if path_looks_secret(path):
         raise ValueError(f"refusing to write secret-looking path: {path}")
     before = load_settings(paths)

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Package update count for Waybar (dnf/pacman/…; long lock TTL for slow checks).
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -12,6 +13,7 @@ fi
 cache_file="$cache_dir/updates-status.json"
 lock_dir="$cache_dir/updates-status.lock.d"
 ttl="$(waybar_module_interval updates 300)"
+# Package checks (dnf/pacman/…) can run long; keep lock alive for 2 minutes.
 stale_lock_ttl=120
 
 mkdir -p "$cache_dir"

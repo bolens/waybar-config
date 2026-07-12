@@ -1,3 +1,4 @@
+"""D-Bus / timer refresh mixins (keyboard layout, nightlight, VPN, battery, …)."""
 import os
 import subprocess
 import threading

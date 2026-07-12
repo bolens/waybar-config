@@ -81,7 +81,8 @@ brightness_resolve_target() {
     return 0
   fi
 
-  # 2) Heuristic: internal panels → backlight; external → DDC
+  # 2) Heuristic: laptop/internal panels (eDP/LVDS/DSI) use backlight sysfs;
+  #    external monitors use the first detected DDC display id (or output_map pin).
   case "$_out" in
     eDP* | EDP* | LVDS* | lvds* | DSI*)
       _bl=$(brightnessctl --class=backlight -m 2>/dev/null | head -n1 | cut -d, -f1 || true)
@@ -109,7 +110,7 @@ brightness_resolve_target() {
     fi
   fi
 
-  # 3) Legacy average / first-available path
+  # 3) legacy averages / first-available when per-output targeting is off or unknown
   printf 'legacy\n'
 }
 

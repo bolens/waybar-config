@@ -27,7 +27,7 @@ open_settings_app() {
 }
 
 refresh_privacy() {
-  pkill -x -RTMIN+17 waybar >/dev/null 2>&1 || true
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" privacy
   if [ -x "$script_dir/privacy-status.sh" ]; then
     local tmp_cache="$cache_file.tmp.$$"
     "$script_dir/privacy-status.sh" --refresh >"$tmp_cache" 2>/dev/null || true

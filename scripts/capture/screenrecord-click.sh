@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Screenrecord click actions (select / full / window); signals screenrecord module.
 # shellcheck disable=SC2154 # cache_dir / screenrecord_* assigned in capture-lib.sh (ShellCheck misses top-level assigns there)
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"

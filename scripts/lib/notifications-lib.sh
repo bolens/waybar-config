@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Shared helpers for compositor-aware notification modules.
+# Shared helpers for compositor-aware notification modules (Plasma DND / history).
+# Signals Waybar via signals.notifications (see waybar-signal.sh).
 
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 signal_waybar() {
-  pkill -x -RTMIN+10 waybar >/dev/null 2>&1 || true
+  # Prefer signals.notifications from settings (default 10).
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" notifications
 }
 
 kde_notifications_inhibited() {

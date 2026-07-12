@@ -8,8 +8,9 @@ script_dir="${0%/*}"
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 
 signal_waybar() {
+  # Prefer signals.mic from settings (default 7).
   rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/waybar/mic-status.json" 2>/dev/null || true
-  pkill -x -RTMIN+7 waybar >/dev/null 2>&1 || true
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" mic
 }
 
 timeout 2 wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle || true

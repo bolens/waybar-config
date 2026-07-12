@@ -27,6 +27,7 @@ if dock_windows_per_output_enabled && [ -n "${WAYBAR_OUTPUT_NAME:-}" ]; then
   suffix="$(dock_windows_cache_suffix "$WAYBAR_OUTPUT_NAME")"
 fi
 list_cache="$cache_dir/dock-windows-list${suffix}.json"
+# 1s cache keeps all dock slots consistent within one Waybar refresh cycle.
 ttl=1
 
 active_title=""
@@ -42,6 +43,7 @@ fi
 active_title=$(printf '%s' "$active_title" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
 
 title_is_focused() {
+  # Fuzzy contains both ways: KWin/Hypr titles truncate differently than dock titles.
   local title="$1"
   local tn an
   tn=$(printf '%s' "$title" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')

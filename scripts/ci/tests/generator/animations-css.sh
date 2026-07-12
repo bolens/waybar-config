@@ -15,29 +15,30 @@ if ! waybar_test_gen_modules; then
 fi
 
 anim="$TEST_DIR/theme/animations.generated.css"
+# Emitted by scripts/generate/generate-animations-css.sh from visual.animations.*.
 if [ ! -f "$anim" ]; then
-  echo "FAIL: theme/animations.generated.css missing after generate" >&2
+  echo "FAIL: theme/animations.generated.css missing after generate (see generate-animations-css.sh)" >&2
   fail=1
 fi
 if ! grep -q 'waybar-workspace-pulse' "$anim"; then
-  echo "FAIL: expected workspace_pulse keyframes" >&2
+  echo "FAIL: expected workspace_pulse keyframes (visual.animations.workspace_pulse → generate-animations-css.sh)" >&2
   fail=1
 fi
 if ! grep -q 'waybar-critical-breathe' "$anim"; then
-  echo "FAIL: expected critical_breathe keyframes" >&2
+  echo "FAIL: expected critical_breathe keyframes (visual.animations.critical_breathe → generate-animations-css.sh)" >&2
   fail=1
 fi
 # GTK3: multi-percentage keyframe selectors crash Waybar (use from/to + alternate).
 if grep -E '^[[:space:]]*[0-9]+%[[:space:]]*,[[:space:]]*[0-9]+%' "$anim"; then
-  echo "FAIL: animations.generated.css multi-percentage keyframes are not GTK3-safe" >&2
+  echo "FAIL: animations.generated.css multi-percentage keyframes are not GTK3-safe (fix generate-animations-css.sh)" >&2
   fail=1
 fi
 if ! grep -qE '^[[:space:]]*(from|to)[[:space:]]*\{' "$anim"; then
-  echo "FAIL: expected from/to keyframes for GTK3 compatibility" >&2
+  echo "FAIL: expected from/to keyframes for GTK3 compatibility (generate-animations-css.sh)" >&2
   fail=1
 fi
 if grep -q 'waybar-idle-glow' "$anim"; then
-  echo "FAIL: idle_glow should be absent when disabled" >&2
+  echo "FAIL: idle_glow should be absent when visual.animations.idle_glow is false" >&2
   fail=1
 fi
 if ! grep -q 'animations.generated.css' "$TEST_DIR/../" 2>/dev/null; then
@@ -67,7 +68,7 @@ if ! waybar_test_gen_modules; then
   fail=1
 fi
 if ! grep -q 'waybar-idle-glow' "$TEST_DIR/theme/animations.generated.css"; then
-  echo "FAIL: expected idle_glow keyframes when enabled" >&2
+  echo "FAIL: expected idle_glow keyframes when visual.animations.idle_glow is true (generate-animations-css.sh)" >&2
   fail=1
 fi
 
@@ -80,7 +81,7 @@ if ! waybar_test_gen_modules; then
   fail=1
 fi
 if grep -qE 'waybar-workspace-pulse|waybar-critical-breathe|waybar-idle-glow' "$TEST_DIR/theme/animations.generated.css"; then
-  echo "FAIL: no keyframes expected when all flags false" >&2
+  echo "FAIL: no keyframes expected when all visual.animations flags are false" >&2
   fail=1
 fi
 

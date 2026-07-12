@@ -10,7 +10,8 @@ waybar_test_gen_sandbox
 
 echo "Verifying resilience against missing settings file..."
 rm -f "$TEST_DIR/data/waybar-settings.jsonc" "$TEST_DIR/data/waybar-settings.json"
-if ! waybar_test_gen_modules >/dev/null 2>&1; then
+# Keep stderr so waybar_test_gen_modules can dump generator output on failure.
+if ! waybar_test_gen_modules >/dev/null; then
   echo "FAIL: generate crashed when waybar-settings.jsonc was missing" >&2
   exit 1
 fi
