@@ -55,6 +55,12 @@ cat >"$stub/streamdeck" <<'EOF'
 printf 'LAUNCHED\n' >"${STREAMDECK_LAUNCHED:?}"
 EOF
 chmod +x "$stub/streamdeck"
+# Force launch path: no existing process, no focus backends, no desktop helpers.
+cat >"$stub/pgrep" <<'EOF'
+#!/bin/sh
+exit 1
+EOF
+chmod +x "$stub/pgrep"
 # Replace app-open with a recorder that execs argv.
 cat >"$TEST_DIR/scripts/tools/app-open.sh" <<'EOF'
 #!/bin/sh
@@ -62,6 +68,11 @@ printf '%s\n' "$*" >"${STREAMDECK_APP_OPEN_ARGS:?}"
 exec "$@"
 EOF
 chmod +x "$TEST_DIR/scripts/tools/app-open.sh"
+# Avoid host compositor focus paths aborting the suite (qdbus/KWin).
+cat >"$TEST_DIR/scripts/lib/compositor-session.sh" <<'EOF'
+#!/usr/bin/env bash
+detect_compositor() { printf 'unknown\n'; }
+EOF
 
 launched=$(mktemp)
 args_file=$(mktemp)
