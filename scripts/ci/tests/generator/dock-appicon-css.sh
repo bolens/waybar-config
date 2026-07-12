@@ -37,6 +37,10 @@ if ! grep -q 'min-width: 28px' "$css"; then
   echo "FAIL: dock-appicons.generated.css should use icons.appicon.size" >&2
   exit 1
 fi
+if ! grep -q 'background-size: 28px 28px' "$css"; then
+  echo "FAIL: dock-appicons.generated.css should set exact background-size" >&2
+  exit 1
+fi
 if ! grep -q 'url("dock-appicons/browser")' "$css"; then
   echo "FAIL: expected browser dock-appicon CSS rule" >&2
   exit 1
@@ -45,8 +49,12 @@ if ! grep -q '#dock-apps label.appicon' "$css"; then
   echo "FAIL: expected shared label.appicon rules" >&2
   exit 1
 fi
-if ! grep -q 'label.appicon' "$ROOT_DIR/user-style/dock.css"; then
-  echo "FAIL: user-style/dock.css must hide glyphs for label.appicon" >&2
+if ! grep -q 'font-size: 0' "$ROOT_DIR/user-style/dock.css"; then
+  echo "FAIL: user-style/dock.css must collapse glyph metrics for label.appicon" >&2
+  exit 1
+fi
+if ! grep -q ':not(\.appicon)' "$ROOT_DIR/theme/accents/dock.css"; then
+  echo "FAIL: accents/dock.css must skip .appicon for glyph color/hover" >&2
   exit 1
 fi
 

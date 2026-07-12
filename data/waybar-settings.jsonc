@@ -301,7 +301,7 @@
     "appicon": {
       "enabled": true, // make install-appicon; glyph fallback if binary missing
       "theme": "dark", // dark | light (SVGL / pack variant hint)
-      "size": 24
+      "size": 18
     }
   },
 

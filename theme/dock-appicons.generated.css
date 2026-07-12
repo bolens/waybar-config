@@ -1,10 +1,9 @@
 /* Generated from icons.appicon — do not edit by hand */
-/* Relative url("dock-appicons/<id>"); dock-launcher / prefetch maintain symlinks. */
-/* Glyph hide lives in user-style/dock.css (loads after accents). */
+/* Exact NxN PNGs in theme/dock-appicons/ (GTK3 often ignores background-size). */
 #dock-apps label.appicon {
-    min-width: 24px;
-    min-height: 24px;
-    background-size: contain;
+    min-width: 18px;
+    min-height: 18px;
+    background-size: 18px 18px;
     background-repeat: no-repeat;
     background-position: center;
 }

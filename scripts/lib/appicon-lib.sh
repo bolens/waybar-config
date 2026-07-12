@@ -35,12 +35,42 @@ waybar_appicon_enabled() {
   esac
 }
 
-# Resolve size for crisp PNGs (CSS may display smaller via icons.appicon.size).
-waybar_appicon_resolve_size() {
-  local display="${1:-22}"
-  if [ "$display" -lt 48 ] 2>/dev/null; then
-    printf '48\n'
+# GTK3/Waybar often ignores background-size — materialize exact NxN PNGs.
+waybar_appicon_materialize() {
+  local src="$1"
+  local dest="$2"
+  local size="$3"
+  local tmp png
+
+  [ -f "$src" ] || return 1
+  [ -n "$size" ] || size=18
+  png="${dest}.png"
+  tmp="${png}.tmp.$$"
+
+  if command -v magick >/dev/null 2>&1; then
+    if ! magick "$src" -resize "${size}x${size}" -background none -gravity center \
+      -extent "${size}x${size}" "png32:$tmp" 2>/dev/null; then
+      rm -f "$tmp"
+      return 1
+    fi
+  elif command -v convert >/dev/null 2>&1; then
+    if ! convert "$src" -resize "${size}x${size}" -background none -gravity center \
+      -extent "${size}x${size}" "png32:$tmp" 2>/dev/null; then
+      rm -f "$tmp"
+      return 1
+    fi
+  elif command -v rsvg-convert >/dev/null 2>&1 && [[ "$src" == *.svg || "$src" == *.SVG ]]; then
+    if ! rsvg-convert -w "$size" -h "$size" -o "$tmp" "$src" 2>/dev/null; then
+      rm -f "$tmp"
+      return 1
+    fi
   else
-    printf '%s\n' "$display"
+    # Last resort: symlink original (may be oversized in GTK).
+    ln -sfn "$src" "$dest" 2>/dev/null || return 1
+    return 0
   fi
+
+  mv -f "$tmp" "$png"
+  ln -sfn "$(basename "$png")" "$dest" 2>/dev/null || ln -sfn "$png" "$dest" 2>/dev/null || true
+  [ -e "$dest" ] || [ -f "$png" ]
 }

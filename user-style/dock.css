@@ -22,19 +22,30 @@
     border-bottom-left-radius: 6px;
 }
 
-#dock-apps > .running {
+#dock-apps > .running:not(.appicon) {
     color: #00e5ff;
     text-shadow: 0 0 5px rgba(0, 229, 255, 0.8), 0 0 10px rgba(0, 229, 255, 0.4);
 }
 
-/* appicon PNG proof: hide glyphs (accents set #custom-dock-* color; this loads last) */
+/* appicon PNGs: collapse glyph metrics; accents skip .appicon (see theme/accents/dock.css) */
 #dock-apps label.appicon,
 #dock-apps label.appicon:hover,
 #dock-apps label.appicon.running {
+    font-size: 0;
     color: transparent;
     text-shadow: none;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+#dock-apps label.appicon:hover {
+    box-shadow: 0 0 6px rgba(0, 229, 255, 0.45);
 }
 
 #dock-apps label.appicon.running {
     box-shadow: 0 0 6px rgba(0, 229, 255, 0.7);
+}
+
+#dock-apps label.appicon.running:hover {
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.85);
 }

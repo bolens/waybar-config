@@ -22,10 +22,10 @@ run_detached() {
   "$@" >/dev/null 2>&1 &
 }
 
-# Resolve a PNG via appicon when icons.appicon.enabled; symlink for CSS background-image.
+# Resolve a PNG via appicon when icons.appicon.enabled; materialize exact-size file for CSS.
 # Glyph fallback when disabled, binary missing, or resolve fails. Never embeds SVGL URLs.
 dock_appicon_prepare() {
-  local query path link_dir link_path display_size resolve_size theme bin
+  local query path link_dir link_path display_size theme bin
   classes_extra=()
 
   if [ ! -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ] \
@@ -40,9 +40,8 @@ dock_appicon_prepare() {
   waybar_appicon_enabled || return 0
   bin="$(waybar_appicon_bin)" || return 0
 
-  display_size="$(waybar_settings_get '.icons.appicon.size' '22')"
+  display_size="$(waybar_settings_get '.icons.appicon.size' '18')"
   theme="$(waybar_settings_get '.icons.appicon.theme' 'dark')"
-  resolve_size="$(waybar_appicon_resolve_size "$display_size")"
   query="$(jq -r --arg id "$app_id" '
     .[$id]
     | if . == null then empty
@@ -57,7 +56,7 @@ dock_appicon_prepare() {
   ' "$manifest")"
   [ -n "$query" ] || query="$app_id"
 
-  path="$("$bin" resolve --format png --size "$resolve_size" --theme "$theme" "$query" 2>/dev/null || true)"
+  path="$("$bin" resolve --format png --size "$display_size" --theme "$theme" "$query" 2>/dev/null || true)"
   if [ -z "$path" ] || [ ! -f "$path" ]; then
     return 0
   fi
@@ -65,8 +64,7 @@ dock_appicon_prepare() {
   link_dir="$WAYBAR_HOME/theme/dock-appicons"
   link_path="$link_dir/$app_id"
   mkdir -p "$link_dir"
-  ln -sfn "$path" "$link_path" 2>/dev/null || true
-  if [ -e "$link_path" ]; then
+  if waybar_appicon_materialize "$path" "$link_path" "$display_size"; then
     classes_extra=(appicon)
   fi
 }

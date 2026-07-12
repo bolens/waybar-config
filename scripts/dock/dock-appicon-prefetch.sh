@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prefetch dock app icons via appicon and refresh CSS symlinks (glyph fallback stays in dock-launcher).
+# Prefetch dock app icons via appicon and materialize exact-size PNGs for GTK/Waybar.
 set -euo pipefail
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -23,9 +23,8 @@ bin="$(waybar_appicon_bin)" || {
 [ -f "$manifest" ] || exit 0
 mkdir -p "$link_dir"
 
-display_size="$(waybar_settings_get '.icons.appicon.size' '22')"
+display_size="$(waybar_settings_get '.icons.appicon.size' '18')"
 theme="$(waybar_settings_get '.icons.appicon.theme' 'dark')"
-resolve_size="$(waybar_appicon_resolve_size "$display_size")"
 
 ok=0
 fail=0
@@ -44,14 +43,13 @@ while IFS= read -r id; do
       end
   ' "$manifest")"
   [ -n "$query" ] || query="$id"
-  path="$("$bin" resolve --format png --size "$resolve_size" --theme "$theme" "$query" 2>/dev/null || true)"
-  if [ -n "$path" ] && [ -f "$path" ]; then
-    ln -sfn "$path" "$link_dir/$id"
+  path="$("$bin" resolve --format png --size "$display_size" --theme "$theme" "$query" 2>/dev/null || true)"
+  if [ -n "$path" ] && [ -f "$path" ] && waybar_appicon_materialize "$path" "$link_dir/$id" "$display_size"; then
     ok=$((ok + 1))
   else
-    rm -f "$link_dir/$id" 2>/dev/null || true
+    rm -f "$link_dir/$id" "$link_dir/$id.png" 2>/dev/null || true
     fail=$((fail + 1))
   fi
 done < <(jq -r 'keys[]' "$manifest")
 
-echo "dock-appicon prefetch: $ok ok, $fail missing (bin=$bin size=$resolve_size)"
+echo "dock-appicon prefetch: $ok ok, $fail missing (bin=$bin size=$display_size)"

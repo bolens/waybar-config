@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Generate theme/dock-appicons.generated.css from icons.appicon + dock-apps.json.
-# Runtime symlinks under theme/dock-appicons/<id> are maintained by dock-launcher.sh.
+# Runtime files under theme/dock-appicons/<id> are maintained by dock-launcher/prefetch.
 set -euo pipefail
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -13,10 +13,10 @@ out="$WAYBAR_HOME/theme/dock-appicons.generated.css"
 mkdir -p "$WAYBAR_HOME/theme"
 
 enabled=false
-size=22
+size=18
 if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
   enabled="$(jq -r '.icons.appicon.enabled // false' "$settings")"
-  size="$(jq -r '.icons.appicon.size // 22' "$settings")"
+  size="$(jq -r '.icons.appicon.size // 18' "$settings")"
 fi
 
 case "$enabled" in
@@ -34,25 +34,22 @@ fi
 
 {
   printf '%s\n' '/* Generated from icons.appicon — do not edit by hand */'
-  printf '%s\n' '/* Relative url("dock-appicons/<id>"); dock-launcher / prefetch maintain symlinks. */'
-  printf '%s\n' '/* Glyph hide lives in user-style/dock.css (loads after accents). */'
+  printf '%s\n' '/* Exact NxN PNGs in theme/dock-appicons/ (GTK3 often ignores background-size). */'
   printf '#dock-apps label.appicon {\n'
   printf '    min-width: %spx;\n' "$size"
   printf '    min-height: %spx;\n' "$size"
-  printf '    background-size: contain;\n'
+  printf '    background-size: %spx %spx;\n' "$size" "$size"
   printf '    background-repeat: no-repeat;\n'
   printf '    background-position: center;\n'
   printf '}\n'
   jq -r 'keys[]' "$manifest" | while read -r id; do
     [ -n "$id" ] || continue
-    # CSS identifiers: dock ids are [a-z0-9-]+ in this repo.
     printf '\n#custom-dock-%s.appicon {\n' "$id"
     printf '    background-image: url("dock-appicons/%s");\n' "$id"
     printf '}\n'
   done
 } >"$out"
 
-# Warm symlinks so the first Waybar paint has backgrounds ready.
 if [ -x "$WAYBAR_SCRIPTS/dock/dock-appicon-prefetch.sh" ]; then
   "$WAYBAR_SCRIPTS/dock/dock-appicon-prefetch.sh" || true
 fi
