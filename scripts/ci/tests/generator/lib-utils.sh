@@ -242,5 +242,104 @@ if ! printf '%s' "$rofi_row" | grep -q 'Label:'; then
   fail=1
 fi
 
+echo "Testing waybar_threshold_class / write_cache_and_exit / emit_disconnected..."
+thresh=$(
+  WAYBAR_HOME="$TEST_DIR" bash -c '
+    . "'"$TEST_DIR"'/scripts/lib/waybar-cache-helpers.sh"
+    waybar_threshold_class 50 60 85; printf "|"
+    waybar_threshold_class 70 60 85; printf "|"
+    waybar_threshold_class 90 60 85; printf "|"
+    waybar_threshold_class 50 60 85 90 60 85
+  '
+)
+if [ "$thresh" != "normal|warning|critical|critical" ]; then
+  echo "FAIL: waybar_threshold_class got: $thresh" >&2
+  fail=1
+fi
+
+cache_out=$(
+  WAYBAR_HOME="$TEST_DIR" bash -c '
+    . "'"$TEST_DIR"'/scripts/lib/waybar-cache-helpers.sh"
+    cache_file="'"$TEST_DIR"'/data/helper-cache.json"
+    write_cache_and_exit "$(emit_waybar_json "hi" "tip" "normal")"
+  '
+) || true
+if ! printf '%s' "$cache_out" | jq -e '.text == "hi"' >/dev/null 2>&1; then
+  echo "FAIL: write_cache_and_exit stdout: $cache_out" >&2
+  fail=1
+fi
+if ! jq -e '.text == "hi"' "$TEST_DIR/data/helper-cache.json" >/dev/null 2>&1; then
+  echo "FAIL: write_cache_and_exit did not write cache file" >&2
+  fail=1
+fi
+
+disc_out=$(
+  WAYBAR_HOME="$TEST_DIR" bash -c '
+    . "'"$TEST_DIR"'/scripts/lib/waybar-cache-helpers.sh"
+    cache_file="'"$TEST_DIR"'/data/helper-disc.json"
+    emit_disconnected "gone"
+  '
+) || true
+if ! printf '%s' "$disc_out" | jq -e '.class == "disconnected" and .text == ""' >/dev/null 2>&1; then
+  echo "FAIL: emit_disconnected: $disc_out" >&2
+  fail=1
+fi
+
+echo "Testing settings-bool + gauge helpers..."
+bool_out=$(
+  WAYBAR_HOME="$TEST_DIR" bash -c '
+    . "'"$TEST_DIR"'/scripts/lib/settings-bool-lib.sh"
+    waybar_is_false false && printf "f0|"
+    waybar_is_truthy true && printf "t1|"
+    waybar_is_false maybe; printf "f$?|"
+    . "'"$TEST_DIR"'/scripts/lib/gauge-lib.sh"
+    gauges_enabled=false gauge_width=4
+    gauge_or_pct 42; printf "|"
+    gauges_enabled=true
+    gauge_status_text "X" 50 4
+  '
+)
+case "$bool_out" in
+  f0\|t1\|f1\|" 42%"\|"X "*) ;;
+  *)
+    echo "FAIL: bool/gauge helpers got: $bool_out" >&2
+    fail=1
+    ;;
+esac
+
+echo "Testing theme-colors-lib resolve..."
+theme_colors=$(
+  WAYBAR_HOME="$TEST_DIR" bash -c '
+    . "'"$TEST_DIR"'/scripts/lib/theme-colors-lib.sh"
+    settings="'"$TEST_DIR"'/data/waybar-settings.json"
+    waybar_theme_resolve_mode "$settings"; printf "|"
+    waybar_theme_color_rgb_csv "#ff00aa"; printf "|"
+    waybar_theme_color_with_alpha "#ff00aa" "0.5"
+  '
+)
+case "$theme_colors" in
+  *\|"255, 0, 170"\|"rgba(255, 0, 170, 0.5)") ;;
+  *)
+    echo "FAIL: theme-colors helpers got: $theme_colors" >&2
+    fail=1
+    ;;
+esac
+
+echo "Testing waybar_test_patch_settings..."
+waybar_test_patch_settings '.theme.font_size = 99'
+waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" \
+  '.theme.font_size == 99' \
+  "patch_settings should set theme.font_size"
+
+echo "Testing shared jsonc_util.py..."
+jsonc_py=$(
+  PYTHONPATH="$TEST_DIR/scripts/lib" python3 -c \
+    'from jsonc_util import loads_jsonc; print(loads_jsonc("{ /*c*/ \"a\": 1 }")["a"], end="")'
+)
+if [ "$jsonc_py" != "1" ]; then
+  echo "FAIL: jsonc_util.loads_jsonc got: $jsonc_py" >&2
+  fail=1
+fi
+
 # Verify behavior when waybar-settings.jsonc is missing
 waybar_test_end

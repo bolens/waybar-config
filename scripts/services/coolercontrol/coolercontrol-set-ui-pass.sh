@@ -110,24 +110,19 @@ write_secrets() {
       CC_UI_USER="$user" \
       CC_UI_PASS="$pass" \
       CC_TOKEN="$token" \
+      WAYBAR_SCRIPTS="$WAYBAR_SCRIPTS" \
       python3 <<'PY'
 import json, os, re, sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(os.environ["WAYBAR_SCRIPTS"]) / "lib"))
+from jsonc_util import load_jsonc
 
 secrets_path = Path(os.environ["CC_SECRETS_PATH"])
 example = Path(os.environ.get("CC_SECRETS_EXAMPLE", ""))
 user = os.environ.get("CC_UI_USER", "CCAdmin").strip() or "CCAdmin"
 password = os.environ.get("CC_UI_PASS", "").strip()
 token = os.environ.get("CC_TOKEN", "").strip()
-
-def load_jsonc(path: Path):
-    if not path.is_file():
-        return {}
-    raw = path.read_text()
-    raw = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
-    raw = re.sub(r"(?<!:)//.*", "", raw)
-    raw = raw.strip()
-    return json.loads(raw) if raw else {}
 
 data = {}
 if secrets_path.is_file():

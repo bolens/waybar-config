@@ -23,19 +23,6 @@ if [ "${1:-}" != "--refresh" ]; then
   exit 0
 fi
 
-write_cache_and_exit() {
-  json="$1"
-  printf '%s\n' "$json"
-  tmp_cache="$cache_file.tmp.$$"
-  if printf '%s\n' "$json" >"$tmp_cache" 2>/dev/null; then
-    mv -f "$tmp_cache" "$cache_file" 2>/dev/null || rm -f "$tmp_cache" 2>/dev/null || true
-  fi
-  exit 0
-}
-
-emit_disconnected() {
-  write_cache_and_exit "$(emit_waybar_json "" "$1" "disconnected")"
-}
 
 resolve_asusctl() {
   if [ -n "${WAYBAR_ASUSCTL_BIN:-}" ]; then

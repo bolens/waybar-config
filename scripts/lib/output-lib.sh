@@ -2,6 +2,8 @@
 # Output / monitor helpers for Waybar (list, CSS class, scroll-per-output).
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
+# shellcheck source=settings-bool-lib.sh
+. "$WAYBAR_SCRIPTS/lib/settings-bool-lib.sh"
 
 # Print one output name per line. Probe backends in order until one yields names.
 # When WAYBAR_TEST_OUTPUTS is set (comma-separated), it wins — hermetic CI fixtures.
@@ -62,8 +64,8 @@ waybar_scroll_per_output_enabled() {
         _ "$WAYBAR_HOME" "$WAYBAR_SCRIPTS" 2>/dev/null || printf 'true'
     )
   fi
-  case "$_val" in
-    false | False | FALSE | 0 | no | No | NO | null | off | Off | OFF) return 1 ;;
-    *) return 0 ;;
-  esac
+  if waybar_is_false "$_val"; then
+    return 1
+  fi
+  return 0
 }

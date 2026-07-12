@@ -51,19 +51,7 @@ swap_total_gib="${5:-0.0}"
 tooltip=$(printf 'Memory: %s/%s GiB (%s%%)\nSwap: %s/%s GiB\n\nLeft: system monitor · Right: btop · Middle: Plasma system monitor' \
   "$mem_used_gib" "$mem_total_gib" "$mem_pct" "$swap_used_gib" "$swap_total_gib")
 
-class="normal"
-if [ "$mem_pct" -ge "$mem_crit" ] 2>/dev/null; then
-  class="critical"
-elif [ "$mem_pct" -ge "$mem_warn" ] 2>/dev/null; then
-  class="warning"
-fi
+class="$(waybar_threshold_class "$mem_pct" "$mem_warn" "$mem_crit")"
 
-case "$gauges_enabled" in
-  false | False | FALSE | 0 | no | No | NO | null | off | Off | OFF)
-    text=$(printf '󰘚 %3d%%' "$mem_pct")
-    ;;
-  *)
-    text=$(printf '󰘚 %s %3d%%' "$(gauge_bar "$mem_pct" "$gauge_width")" "$mem_pct")
-    ;;
-esac
+text="$(gauge_status_text "󰘚" "$mem_pct")"
 emit_waybar_json "$text" "$tooltip" "$class"

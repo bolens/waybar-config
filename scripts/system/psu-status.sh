@@ -119,15 +119,9 @@ $(awk -v p12="$power_12v_raw" -v p5="$power_5v_raw" -v p33="$power_33v_raw" \
 EOF
 
 # Determine styling class based on VRM temp
-class="normal"
 vrm_int=${temp_vrm%.*}
 case_int=${temp_case%.*}
-
-if [ -n "$vrm_int" ] && [ "$vrm_int" -ge "$psu_temp_crit" ] 2>/dev/null; then
-  class="critical"
-elif [ -n "$vrm_int" ] && [ "$vrm_int" -ge "$psu_temp_warn" ] 2>/dev/null; then
-  class="warning"
-fi
+class="$(waybar_threshold_class "${vrm_int:-}" "$psu_temp_warn" "$psu_temp_crit")"
 
 vrm_formatted="N/A"
 if [ -n "$vrm_int" ]; then

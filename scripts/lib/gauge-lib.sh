@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 # Unicode block gauge helpers for Waybar status text.
+: "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
+: "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
+# shellcheck source=settings-bool-lib.sh
+. "$WAYBAR_SCRIPTS/lib/settings-bool-lib.sh"
 
 # gauge_bar PCT [WIDTH]
 # PCT: 0–100 integer (clamped). WIDTH: bar length, default 8 (empty → 8).
@@ -52,4 +56,26 @@ gauge_bar() {
     _i=$((_i + 1))
   done
   printf '%s' "$_out"
+}
+
+# gauge_or_pct PCT [WIDTH] [ENABLED]
+# When ENABLED is false-ish (or $gauges_enabled if omitted): " 42%"
+# Otherwise: "<bar>  42%". WIDTH defaults to $gauge_width or 8.
+gauge_or_pct() {
+  _pct="${1:-0}"
+  _width="${2:-${gauge_width:-8}}"
+  _enabled="${3:-${gauges_enabled:-true}}"
+  if waybar_is_false "$_enabled"; then
+    printf '%3d%%' "$_pct"
+  else
+    printf '%s %3d%%' "$(gauge_bar "$_pct" "$_width")" "$_pct"
+  fi
+}
+
+# gauge_status_text ICON PCT [WIDTH] [ENABLED]
+# e.g. "󰍛 ▁▂▃▄▅▆▇█  42%" or "󰍛  42%" when gauges off.
+gauge_status_text() {
+  _icon="$1"
+  _pct="${2:-0}"
+  printf '%s %s' "$_icon" "$(gauge_or_pct "$_pct" "${3:-}" "${4:-}")"
 }

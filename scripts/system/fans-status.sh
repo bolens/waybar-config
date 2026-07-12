@@ -212,12 +212,7 @@ fi
 tooltip=$(printf '%s\n\nLeft: nvtop · Right: btop · Middle: refresh' "$tooltip")
 
 # Style classes based on RPM/percentage limits
-class="normal"
-if [ "$cpu_fan" -ge "$fan_cpu_crit" ] 2>/dev/null || [ "$gpu_fan" -ge "$fan_gpu_crit" ] 2>/dev/null; then
-  class="critical"
-elif [ "$cpu_fan" -ge "$fan_cpu_warn" ] 2>/dev/null || [ "$gpu_fan" -ge "$fan_gpu_warn" ] 2>/dev/null; then
-  class="warning"
-fi
+class="$(waybar_threshold_class "$cpu_fan" "$fan_cpu_warn" "$fan_cpu_crit" "$gpu_fan" "$fan_gpu_warn" "$fan_gpu_crit")"
 
 json=$(emit_waybar_json "$text" "$tooltip" "$class")
 

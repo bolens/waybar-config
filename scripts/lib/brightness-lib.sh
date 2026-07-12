@@ -9,6 +9,8 @@ brightness_cache_file="$brightness_cache_dir/brightness-status.json"
 # Settings helpers: callers (bash) may already provide waybar_settings_get.
 # Under plain sh, resolve via a short bash helper to avoid sourcing bashisms.
 _brightness_lib_dir="${WAYBAR_SCRIPTS:-${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts}/lib}"
+# shellcheck source=settings-bool-lib.sh
+. "$_brightness_lib_dir/settings-bool-lib.sh"
 if ! type waybar_css_class_for_output >/dev/null 2>&1; then
   if [ -f "$_brightness_lib_dir/output-lib.sh" ]; then
     # shellcheck source=output-lib.sh
@@ -35,10 +37,10 @@ _brightness_settings_get() {
 
 brightness_per_output_enabled() {
   _val=$(_brightness_settings_get '.brightness.per_output' 'true')
-  case "$_val" in
-    false | False | FALSE | 0 | no | No | NO | null | off | Off | OFF) return 1 ;;
-    *) return 0 ;;
-  esac
+  if waybar_is_false "$_val"; then
+    return 1
+  fi
+  return 0
 }
 
 # Set brightness_cache_file (and related pending paths via BRIGHTNESS_OUTPUT_SAFE) for an output.

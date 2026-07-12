@@ -27,19 +27,6 @@ fi
 temp_warn=$(waybar_settings_get '.thresholds.nvme.temp.warning' '60')
 temp_crit=$(waybar_settings_get '.thresholds.nvme.temp.critical' '75')
 
-write_cache_and_exit() {
-  json="$1"
-  printf '%s\n' "$json"
-  tmp_cache="$cache_file.tmp.$$"
-  if printf '%s\n' "$json" >"$tmp_cache" 2>/dev/null; then
-    mv -f "$tmp_cache" "$cache_file" 2>/dev/null || rm -f "$tmp_cache" 2>/dev/null || true
-  fi
-  exit 0
-}
-
-emit_disconnected() {
-  write_cache_and_exit "$(emit_waybar_json "" "$1" "disconnected")"
-}
 
 # Fixture hook for tests: directory of fake hwmon trees (each with name + temp*_input).
 scan_root="${WAYBAR_NVME_HWMON_ROOT:-/sys/class/hwmon}"
@@ -111,12 +98,7 @@ if [ "$found" -eq 0 ] || [ "$hottest_c" -lt 0 ]; then
   emit_disconnected "No NVMe temperature sensors"
 fi
 
-class="normal"
-if [ "$hottest_c" -ge "$temp_crit" ] 2>/dev/null; then
-  class="critical"
-elif [ "$hottest_c" -ge "$temp_warn" ] 2>/dev/null; then
-  class="warning"
-fi
+class="$(waybar_threshold_class "$hottest_c" "$temp_warn" "$temp_crit")"
 
 hottest_fmt=$(format_locale_temp "$hottest_c" short | tr -d '\n')
 text=$(printf '󰋊 %s' "$hottest_fmt")

@@ -6,6 +6,7 @@ set -euo pipefail
 
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 . "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
+. "$WAYBAR_SCRIPTS/lib/theme-colors-lib.sh"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
 # Keep literal $WAYBAR_HOME so generated modules stay portable (match other generators).
 scripts='$WAYBAR_HOME/scripts'
@@ -22,28 +23,7 @@ theme_dir="$WAYBAR_HOME/theme"
 mkdir -p "$mod_dir" "$theme_dir"
 
 # Resolve theme colors (preset merge when mode=preset) for calendar pango spans.
-colors_json="$(jq -c '.theme.colors // {}' "$settings")"
-mode="$(jq -r '.theme.mode // "static"' "$settings")"
-case "$mode" in
-  static | wallpaper | preset) ;;
-  *) mode="static" ;;
-esac
-if [ "$mode" = "preset" ]; then
-  preset_name="$(jq -r '.theme.preset // "cyberpunk"' "$settings")"
-  for cand in \
-    "$WAYBAR_HOME/data/themes/${preset_name}.jsonc" \
-    "$WAYBAR_HOME/data/themes/${preset_name}.json"; do
-    if [ -f "$cand" ]; then
-      preset_colors="$(
-        sed -E 's://.*$::g' "$cand" | jq -c '.colors // .' 2>/dev/null || true
-      )"
-      if [ -n "$preset_colors" ] && [ "$preset_colors" != "null" ]; then
-        colors_json="$(jq -cn --argjson p "$preset_colors" --argjson o "$colors_json" '$p + $o')"
-      fi
-      break
-    fi
-  done
-fi
+colors_json="$(waybar_theme_resolve_colors "$settings")"
 
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
   --arg hour_format "$hour_format" \

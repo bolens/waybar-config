@@ -64,7 +64,9 @@ waybar_test_secrets_sandbox() {
   mkdir -p "$TEST_DIR/data" \
     "$TEST_DIR/scripts"/{lib,services/{i2pd,coolercontrol,sync,apps,security,devices},ci,tools,workspaces,system,notifications} \
     "$TEST_DIR/i2pd" "$TEST_DIR/varlib"
-  cp "$root/scripts/lib/waybar-settings.sh" "$root/scripts/lib/capture-lib.sh" "$TEST_DIR/scripts/lib/"
+  cp "$root/scripts/lib/waybar-settings.sh" "$root/scripts/lib/capture-lib.sh" \
+    "$root/scripts/lib/settings-bool-lib.sh" "$root/scripts/lib/jsonc_util.py" \
+    "$TEST_DIR/scripts/lib/"
   cp "$root/scripts/services/i2pd/i2pd-set-console-pass.sh" "$TEST_DIR/scripts/services/i2pd/"
   cp "$root/scripts/services/coolercontrol/coolercontrol-set-ui-pass.sh" "$TEST_DIR/scripts/services/coolercontrol/"
   cp "$root/scripts/ci/validate-generated-config.sh" "$TEST_DIR/scripts/ci/"

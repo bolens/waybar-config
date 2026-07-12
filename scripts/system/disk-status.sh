@@ -40,21 +40,9 @@ avail="${3:-0}"
 pct="${4:-0%}"
 
 percent_num=$(printf '%s' "$pct" | tr -d '%')
-class="normal"
-if [ "$percent_num" -ge "$disk_crit" ] 2>/dev/null; then
-  class="critical"
-elif [ "$percent_num" -ge "$disk_warn" ] 2>/dev/null; then
-  class="warning"
-fi
+class="$(waybar_threshold_class "$percent_num" "$disk_warn" "$disk_crit")"
 
-case "$gauges_enabled" in
-  false | False | FALSE | 0 | no | No | NO | null | off | Off | OFF)
-    text=$(printf '󰋊 %3d%%' "$percent_num")
-    ;;
-  *)
-    text=$(printf '󰋊 %s %3d%%' "$(gauge_bar "$percent_num" "$gauge_width")" "$percent_num")
-    ;;
-esac
+text="$(gauge_status_text "󰋊" "$percent_num")"
 tooltip=$(printf 'Disk Space (%s)\nTotal: %s\nUsed: %s\nAvailable: %s\nUsage: %s\n\nLeft: file manager · Right: btop · Middle: refresh' "$disk_path" "$size" "$used" "$avail" "$pct")
 
 json=$(emit_waybar_json "$text" "$tooltip" "$class")

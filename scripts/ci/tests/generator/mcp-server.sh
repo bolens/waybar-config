@@ -59,26 +59,9 @@ run_mcp_stderr() {
   { WAYBAR_HOME="$TEST_DIR" printf '%s\n' "$@" | python3 "$MCP_PY" >/dev/null; } 2>&1
 }
 
-assert_contains() {
-  local hay="$1" needle="$2" msg="$3"
-  if [[ "$hay" != *"$needle"* ]]; then
-    waybar_test_fail "$msg (missing: $needle)"
-  fi
-}
-
-assert_not_contains() {
-  local hay="$1" needle="$2" msg="$3"
-  if [[ "$hay" == *"$needle"* ]]; then
-    waybar_test_fail "$msg (unexpected: $needle)"
-  fi
-}
-
-assert_file_exists() {
-  local f="$1" msg="$2"
-  if [[ ! -f "$f" ]]; then
-    waybar_test_fail "$msg"
-  fi
-}
+assert_contains() { waybar_test_assert_contains "$@"; }
+assert_not_contains() { waybar_test_assert_not_contains "$@"; }
+assert_file_exists() { waybar_test_assert_file_exists "$@"; }
 
 # --- initialize / capabilities ---
 resp=$(run_mcp '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}')

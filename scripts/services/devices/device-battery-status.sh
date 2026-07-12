@@ -28,15 +28,6 @@ if [ "${1:-}" != "--refresh" ]; then
   exit 0
 fi
 
-write_cache_and_exit() {
-  json="$1"
-  printf '%s\n' "$json"
-  tmp_cache="$cache_file.tmp.$$"
-  printf '%s\n' "$json" >"$tmp_cache"
-  mv -f "$tmp_cache" "$cache_file"
-  exit 0
-}
-
 pick_icon() {
   case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
     *mouse* | *g502* | *g903* | *g305* | *g603* | *g703* | *g900* | *viper* | *deathadder* | *basilisk* | *trackball*)

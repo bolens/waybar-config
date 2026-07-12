@@ -33,19 +33,6 @@ match=$(waybar_settings_get '.liquidctl.match' '')
 pick=$(waybar_settings_get '.liquidctl.pick' '')
 skip_psu=$(waybar_settings_get '.liquidctl.skip_corsair_psu_if_hwmon' 'true')
 
-write_cache_and_exit() {
-  json="$1"
-  printf '%s\n' "$json"
-  tmp_cache="$cache_file.tmp.$$"
-  if printf '%s\n' "$json" >"$tmp_cache" 2>/dev/null; then
-    mv -f "$tmp_cache" "$cache_file" 2>/dev/null || rm -f "$tmp_cache" 2>/dev/null || true
-  fi
-  exit 0
-}
-
-emit_disconnected() {
-  write_cache_and_exit "$(emit_waybar_json "" "$1" "disconnected")"
-}
 
 resolve_liquidctl() {
   if [ -n "${WAYBAR_LIQUIDCTL_BIN:-}" ]; then
@@ -304,15 +291,11 @@ max_temp="$(printf '%s' "$parsed" | jq -r '
   | if length == 0 then empty else max end
 ')"
 
-class="normal"
+temp_int=""
 if [ -n "${max_temp:-}" ]; then
   temp_int="${max_temp%.*}"
-  if [ -n "$temp_int" ] && [ "$temp_int" -ge "$temp_crit" ] 2>/dev/null; then
-    class="critical"
-  elif [ -n "$temp_int" ] && [ "$temp_int" -ge "$temp_warn" ] 2>/dev/null; then
-    class="warning"
-  fi
 fi
+class="$(waybar_threshold_class "${temp_int:-}" "$temp_warn" "$temp_crit")"
 
 text="󰖌 --"
 case "$punit" in

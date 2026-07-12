@@ -80,9 +80,13 @@ import_secrets_from_conf() {
       I2PD_CONF_PATH="$ETC_CONF" \
       I2PD_SECRETS_PATH="$SECRETS_JSONC" \
       I2PD_SECRETS_EXAMPLE="$SECRETS_EXAMPLE" \
+      WAYBAR_SCRIPTS="$WAYBAR_SCRIPTS" \
       python3 <<'PY'
 import json, os, re, sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(os.environ["WAYBAR_SCRIPTS"]) / "lib"))
+from jsonc_util import load_jsonc
 
 conf = Path(os.environ["I2PD_CONF_PATH"])
 secrets_path = Path(os.environ["I2PD_SECRETS_PATH"])
@@ -100,15 +104,6 @@ user = (um.group(1).strip() if um else "i2pd")
 if not password:
     print("FAIL: no [http] pass in i2pd.conf to import", file=sys.stderr)
     sys.exit(1)
-
-def load_jsonc(path: Path):
-    if not path.is_file():
-        return {}
-    raw = path.read_text()
-    raw = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
-    raw = re.sub(r"(?<!:)//.*", "", raw)
-    raw = raw.strip()
-    return json.loads(raw) if raw else {}
 
 data = {}
 if secrets_path.is_file():

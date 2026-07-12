@@ -36,19 +36,6 @@ prefer_presence=$(waybar_settings_get '.services.openlinkhub.prefer_presence' 't
 temp_warn=$(waybar_settings_get '.thresholds.openlinkhub.temp.warning' '60')
 temp_crit=$(waybar_settings_get '.thresholds.openlinkhub.temp.critical' '75')
 
-write_cache_and_exit() {
-  json="$1"
-  printf '%s\n' "$json"
-  tmp_cache="$cache_file.tmp.$$"
-  if printf '%s\n' "$json" >"$tmp_cache" 2>/dev/null; then
-    mv -f "$tmp_cache" "$cache_file" 2>/dev/null || rm -f "$tmp_cache" 2>/dev/null || true
-  fi
-  exit 0
-}
-
-emit_disconnected() {
-  write_cache_and_exit "$(emit_waybar_json "" "$1" "disconnected")"
-}
 
 has_corsairpsu_hwmon() {
   case "${WAYBAR_CORSAIRPSU_PRESENT:-}" in

@@ -13,22 +13,13 @@ if ! waybar_test_gen_default >/dev/null; then
 fi
 
 # Ensure toggles are on (SoT defaults already true; force for clarity).
-python3 - "$TEST_DIR/data/waybar-settings.jsonc" <<'PY'
-import json, pathlib, re, sys
-path = pathlib.Path(sys.argv[1])
-text = path.read_text(encoding="utf-8")
-stripped = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
-stripped = re.sub(r"(?<!:)//.*", "", stripped)
-data = json.loads(stripped)
+waybar_test_patch_settings_py <<'PY'
 data.setdefault("active_window", {})["per_output"] = True
 data.setdefault("brightness", {})["per_output"] = True
 data.setdefault("capture", {})["per_output"] = True
 data.setdefault("window_switcher", {})["per_output"] = True
 data.setdefault("dock_windows", {})["per_output"] = True
-path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
-
-waybar_test_compile_settings
 "$TEST_DIR/scripts/generate/generate-active-window-modules.sh"
 "$TEST_DIR/scripts/generate/generate-utilities-modules.sh"
 "$TEST_DIR/scripts/generate/generate-dock-windows-modules.sh" 2>/dev/null || true
@@ -86,16 +77,11 @@ if [ -f "$dock" ]; then
 fi
 
 # Off toggle: per_output false → no output arg
-python3 - "$TEST_DIR/data/waybar-settings.jsonc" <<'PY'
-import json, pathlib, sys
-path = pathlib.Path(sys.argv[1])
-data = json.loads(path.read_text(encoding="utf-8"))
+waybar_test_patch_settings_py <<'PY'
 data["active_window"]["per_output"] = False
 data["brightness"]["per_output"] = False
 data["capture"]["per_output"] = False
-path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
-waybar_test_compile_settings
 "$TEST_DIR/scripts/generate/generate-active-window-modules.sh"
 "$TEST_DIR/scripts/generate/generate-utilities-modules.sh"
 
@@ -136,14 +122,9 @@ else
   echo "PASS: submap_per_output off → stub CSS"
 fi
 
-python3 - "$TEST_DIR/data/waybar-settings.jsonc" <<'PY'
-import json, pathlib, sys
-path = pathlib.Path(sys.argv[1])
-data = json.loads(path.read_text(encoding="utf-8"))
+waybar_test_patch_settings_py <<'PY'
 data.setdefault("hypr_tools", {})["submap_per_output"] = True
-path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
-waybar_test_compile_settings
 "$TEST_DIR/scripts/generate/generate-submap-css.sh"
 if ! grep -qE 'window\.[A-Za-z0-9_-]+ #submap' "$submap_css"; then
   echo "FAIL: enabled submap_per_output should emit window.<OUTPUT> #submap selectors" >&2

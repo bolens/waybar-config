@@ -64,12 +64,7 @@ if [ "$temp" -gt 0 ]; then
   formatted_temp=$(format_locale_temp "$temp")
 fi
 
-class="normal"
-if [ "${temp:-0}" -ge "$gpu_temp_crit" ] 2>/dev/null || [ "${util:-0}" -ge "$gpu_crit" ] 2>/dev/null; then
-  class="critical"
-elif [ "${temp:-0}" -ge "$gpu_temp_warn" ] 2>/dev/null || [ "${util:-0}" -ge "$gpu_warn" ] 2>/dev/null; then
-  class="warning"
-fi
+class="$(waybar_threshold_class "${util:-0}" "$gpu_warn" "$gpu_crit" "${temp:-0}" "$gpu_temp_warn" "$gpu_temp_crit")"
 
 # AMD hwmon often lacks a true util % — show temp-forward text when util is a soft watt hint
 if [ "$vendor" = "amd" ] && [ "${util:-0}" -lt 5 ] && [ "${temp:-0}" -gt 0 ]; then

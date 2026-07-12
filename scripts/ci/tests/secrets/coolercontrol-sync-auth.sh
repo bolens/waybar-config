@@ -14,7 +14,10 @@ echo "Testing coolercontrol-set-ui-pass sudo-home and auth paths..."
 # Simulated sudo home resolution (CC_TEST_SUDO_HOME)
 SUDO_FAKE="$TEST_DIR/sudohome"
 mkdir -p "$SUDO_FAKE/.config/waybar"/{data,scripts/{lib,services/coolercontrol}}
-cp "$TEST_DIR/scripts/lib/waybar-settings.sh" "$SUDO_FAKE/.config/waybar/scripts/lib/"
+cp "$TEST_DIR/scripts/lib/waybar-settings.sh" \
+  "$TEST_DIR/scripts/lib/settings-bool-lib.sh" \
+  "$TEST_DIR/scripts/lib/jsonc_util.py" \
+  "$SUDO_FAKE/.config/waybar/scripts/lib/"
 cp "$CC_SYNC" "$SUDO_FAKE/.config/waybar/scripts/services/coolercontrol/"
 cp "$TEST_DIR/data/waybar-settings.jsonc" "$SUDO_FAKE/.config/waybar/data/"
 cp "$TEST_DIR/data/waybar-secrets.example.jsonc" "$SUDO_FAKE/.config/waybar/data/"

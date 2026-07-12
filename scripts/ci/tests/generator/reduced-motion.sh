@@ -11,7 +11,7 @@ waybar_test_gen_sandbox
 mkdir -p "$TEST_DIR/scripts/lib" "$TEST_DIR/scripts/generate" "$TEST_DIR/theme"
 cp "$ROOT_DIR/scripts/lib/reduced-motion-lib.sh" "$TEST_DIR/scripts/lib/"
 cp "$ROOT_DIR/scripts/generate/generate-reduced-motion-css.sh" "$TEST_DIR/scripts/generate/"
-cp "$ROOT_DIR/scripts/lib/waybar-settings.sh" "$TEST_DIR/scripts/lib/"
+cp "$ROOT_DIR/scripts/lib/waybar-settings.sh" "$ROOT_DIR/scripts/lib/settings-bool-lib.sh" "$TEST_DIR/scripts/lib/"
 chmod +x "$TEST_DIR/scripts/generate/generate-reduced-motion-css.sh"
 
 if ! grep -q 'reduced-motion.generated.css' "$ROOT_DIR/theme.css"; then
@@ -39,9 +39,7 @@ if ! grep -q 'active: false' "$rm_css"; then
 fi
 
 echo "Testing force mode emits animation: none override..."
-perl -0pi -e 's/"reduced_motion":\s*"[^"]*"/"reduced_motion": "force"/' "$TEST_DIR/data/waybar-settings.jsonc" \
-  || perl -0pi -e 's/("idle_glow":\s*(?:true|false))/$1,\n      "reduced_motion": "force"/' "$TEST_DIR/data/waybar-settings.jsonc"
-waybar_test_compile_settings
+waybar_test_patch_settings '.visual.animations.reduced_motion = "force"'
 if ! WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
   bash "$TEST_DIR/scripts/generate/generate-reduced-motion-css.sh"; then
   echo "FAIL: generate-reduced-motion-css.sh failed under force" >&2
@@ -53,8 +51,7 @@ if ! grep -q 'active: true' "$rm_css" || ! grep -q 'animation: none' "$rm_css"; 
 fi
 
 echo "Testing env override WAYBAR_REDUCED_MOTION=1..."
-perl -0pi -e 's/"reduced_motion":\s*"force"/"reduced_motion": "off"/' "$TEST_DIR/data/waybar-settings.jsonc"
-waybar_test_compile_settings
+waybar_test_patch_settings '.visual.animations.reduced_motion = "off"'
 WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" WAYBAR_REDUCED_MOTION=1 \
   bash "$TEST_DIR/scripts/generate/generate-reduced-motion-css.sh"
 # generate script forces WAYBAR_REDUCED_MOTION=0 for non-force unless GENERATE_LIVE

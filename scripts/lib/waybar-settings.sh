@@ -12,6 +12,26 @@ WAYBAR_SETTINGS_JSONC="${WAYBAR_SETTINGS_JSONC:-${WAYBAR_SETTINGS}c}"
 WAYBAR_SECRETS="${WAYBAR_SECRETS:-$WAYBAR_HOME/data/waybar-secrets.json}"
 WAYBAR_SECRETS_JSONC="${WAYBAR_SECRETS_JSONC:-${WAYBAR_SECRETS}c}"
 WAYBAR_SERVICES_LEGACY="${WAYBAR_HOME}/data/waybar-services.json"
+WAYBAR_SCRIPTS="${WAYBAR_SCRIPTS:-$WAYBAR_HOME/scripts}"
+
+if [[ -f "$WAYBAR_SCRIPTS/lib/settings-bool-lib.sh" ]]; then
+  # shellcheck source=settings-bool-lib.sh
+  . "$WAYBAR_SCRIPTS/lib/settings-bool-lib.sh"
+else
+  # Fallback when a partial sandbox only copied this file.
+  waybar_is_false() {
+    case "${1:-}" in
+      false | False | FALSE | 0 | no | No | NO | null | off | Off | OFF) return 0 ;;
+      *) return 1 ;;
+    esac
+  }
+  waybar_is_truthy() {
+    if waybar_is_false "${1:-}"; then
+      return 1
+    fi
+    return 0
+  }
+fi
 
 strip_jsonc_comments() {
   local input_file="$1"
@@ -96,6 +116,16 @@ waybar_settings_get() {
   [[ -n "$merged" ]] || merged="{}"
 
   printf '%s' "$merged" | jq -r --arg default "$default" "if ($path != null) then $path else \$default end" 2>/dev/null || printf '%s' "$default"
+}
+
+# Return 0 if settings path is truthy (default true when unset).
+# Usage: waybar_settings_bool '.visual.gauges.enabled' [DEFAULT]
+waybar_settings_bool() {
+  local path="$1"
+  local default="${2:-true}"
+  local val
+  val="$(waybar_settings_get "$path" "$default")"
+  waybar_is_truthy "$val"
 }
 
 waybar_services_nut_target() {

@@ -10,11 +10,7 @@ waybar_test_gen_sandbox
 
 echo "Testing album art disabled..."
 # Hermetic: force-disable regardless of SoT default.
-perl -0pi -e 's/"album_art":\s*\{\s*"enabled":\s*true/"album_art": { "enabled": false/' \
-  "$TEST_DIR/data/waybar-settings.jsonc"
-perl -0pi -e 's/"album_art":\s*\{\s*"enabled":\s*false/"album_art": { "enabled": false/' \
-  "$TEST_DIR/data/waybar-settings.jsonc"
-waybar_test_compile_settings
+waybar_test_patch_settings '.visual.album_art.enabled = false'
 if ! waybar_test_gen_modules; then
   echo "FAIL: generate failed before album-art checks" >&2
   fail=1
@@ -30,15 +26,11 @@ if [ ! -x "$TEST_DIR/scripts/media/album-art-status.sh" ]; then
   echo "FAIL: album-art-status.sh missing or not executable" >&2
   fail=1
 fi
-if ! bash -n "$TEST_DIR/scripts/media/album-art-status.sh"; then
-  echo "FAIL: album-art-status.sh failed bash -n" >&2
-  fail=1
-fi
+waybar_test_assert_bash_n "$TEST_DIR/scripts/media/album-art-status.sh" \
+  "album-art-status.sh failed bash -n"
 
 echo "Testing album art enabled..."
-perl -0pi -e 's/"album_art":\s*\{\s*"enabled":\s*false/"album_art": { "enabled": true/' \
-  "$TEST_DIR/data/waybar-settings.jsonc"
-waybar_test_compile_settings
+waybar_test_patch_settings '.visual.album_art.enabled = true'
 if ! waybar_test_gen_modules; then
   echo "FAIL: generate failed with album_art enabled" >&2
   fail=1

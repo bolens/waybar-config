@@ -190,3 +190,43 @@ emit_waybar_json() {
     --arg class "$class" \
     '{text:$text, tooltip:$tooltip, class:$class}'
 }
+
+# Atomic cache write + stdout + exit 0.
+# Usage: write_cache_and_exit JSON [CACHE_FILE]
+# CACHE_FILE defaults to $cache_file (must be set in caller scope).
+write_cache_and_exit() {
+  _json="$1"
+  _dest="${2:-${cache_file:?write_cache_and_exit: cache_file unset}}"
+  printf '%s\n' "$_json"
+  _tmp="$_dest.tmp.$$"
+  if printf '%s\n' "$_json" >"$_tmp" 2>/dev/null; then
+    mv -f "$_tmp" "$_dest" 2>/dev/null || rm -f "$_tmp" 2>/dev/null || true
+  fi
+  exit 0
+}
+
+# Emit empty-text disconnected status, cache, and exit.
+# Usage: emit_disconnected TOOLTIP [CACHE_FILE]
+emit_disconnected() {
+  write_cache_and_exit "$(emit_waybar_json "" "$1" "disconnected")" "${2:-}"
+}
+
+# Map numeric value(s) to Waybar class.
+# Usage: waybar_threshold_class VALUE WARN CRIT [VALUE WARN CRIT ...]
+# Any triple at/above CRIT → critical; else any at/above WARN → warning; else normal.
+# Non-numeric values are ignored for that triple.
+waybar_threshold_class() {
+  _class=normal
+  while [ "$#" -ge 3 ]; do
+    _v="$1"
+    _w="$2"
+    _c="$3"
+    shift 3
+    if [ "$_v" -ge "$_c" ] 2>/dev/null; then
+      _class=critical
+    elif [ "$_class" != critical ] && [ "$_v" -ge "$_w" ] 2>/dev/null; then
+      _class=warning
+    fi
+  done
+  printf '%s' "$_class"
+}

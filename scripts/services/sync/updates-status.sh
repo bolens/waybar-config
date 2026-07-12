@@ -129,12 +129,7 @@ perform_checks_and_output() {
   total=$((repo_count + aur_count + flatpak_count))
   total_text=$(printf '%3d' "$total")
 
-  class="normal"
-  if [ "$total" -ge "$updates_crit" ]; then
-    class="critical"
-  elif [ "$total" -ge "$updates_warn" ]; then
-    class="warning"
-  fi
+  class="$(waybar_threshold_class "$total" "$updates_warn" "$updates_crit")"
 
   if [ "$backend" = "arch" ]; then
     tooltip=$(printf '%s updates: %s\nAUR updates: %s\nFlatpak updates: %s\nTotal updates: %s\nBackend: %s' \

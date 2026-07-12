@@ -26,11 +26,16 @@ Project docs hub: **[docs/README.md](../docs/README.md)** ([architecture](../doc
 
 | File / package | Role |
 |----------------|------|
-| `waybar-cache-helpers.sh` | Intervals, cache/locks, `serve_*`, `emit_waybar_json` |
+| `waybar-cache-helpers.sh` | Intervals, cache/locks, `serve_*`, `emit_waybar_json`, `write_cache_and_exit`, `emit_disconnected`, `waybar_threshold_class` |
+| `settings-bool-lib.sh` | Portable `waybar_is_false` / `waybar_is_truthy` |
+| `gauge-lib.sh` | `gauge_bar`, `gauge_or_pct`, `gauge_status_text` |
+| `theme-colors-lib.sh` | Preset color merge + hex/rgba helpers for generators |
+| `jsonc_util.py` | Shared JSONC load/dump/merge (MCP re-exports; pass scripts import) |
+| `output-lib.sh` | Monitor list, CSS class, scroll-per-output |
 | `waybar-locale-lib.sh` | `detect_*` clock/date/weather + `format_locale_*` (`WAYBAR_WEATHER_UNIT` pins unit for CI) |
 | `locale_temp.py` | Python twin of `format_locale_temp` (CoolerControl etc.) |
 | `waybar-systemd-scan-lib.sh` | `check_systemd_scan_service` (libredefender / chkrootkit) |
-| `waybar-settings.sh` | Settings compile / getters |
+| `waybar-settings.sh` | Settings compile / getters / `waybar_settings_bool` |
 | `rofi-popup-lib.sh` | Shared Rofi header/hints rows + `center_text` |
 | `network-ip-lib.sh` | `get_public_ip` (multi-endpoint curl/wget) |
 | `xdg-applications.sh` / `xdg-icons-lib.sh` | Desktop dirs + icon map / `guess_icon` |
@@ -112,7 +117,7 @@ make install-hooks   # secrets pre-commit symlink
 | `ci/lib/waybar-test-harness.sh` | Entrypoint — sources the focused modules below |
 | `ci/lib/waybar-test-core.sh` | `begin` / `end` / `fail` / root / chmod |
 | `ci/lib/waybar-test-sandbox.sh` | Tree populate, generator + secrets sandboxes |
-| `ci/lib/waybar-test-assert.sh` | JSONC read, secrets write, jq/mode asserts |
+| `ci/lib/waybar-test-assert.sh` | JSONC read (via `jsonc_util`), secrets write, jq/mode asserts, `waybar_test_patch_settings[_py]`, contains/file/`bash -n` asserts |
 | `ci/lib/waybar-test-stubs.sh` | PATH/script stubs + tracked `mktemp` |
 | `ci/lib/waybar-test-validate.sh` | Generated-config validators (drawer/module contracts) |
 | `ci/lib/fixtures/` | Shared fixtures (settings JSONC, bin/script stubs) |

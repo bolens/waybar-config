@@ -11,7 +11,7 @@
 # Modules (edit these, not this file, for most changes):
 #   waybar-test-core.sh      begin/end/fail/root
 #   waybar-test-sandbox.sh   tree populate, generator + secrets sandboxes
-#   waybar-test-assert.sh    JSONC/jq/mode/secrets write helpers
+#   waybar-test-assert.sh    JSONC/jq/mode/secrets write + patch/assert helpers
 #   waybar-test-stubs.sh     PATH/script stubs + tracked mktemp
 #   waybar-test-validate.sh  generated-config validators (generator suites)
 #

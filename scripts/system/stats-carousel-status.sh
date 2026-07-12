@@ -80,18 +80,6 @@ mod=$(printf '%s\n' "$modules" | sed -n "$((idx + 1))p")
 
 metrics="$("$WAYBAR_SCRIPTS/infra/system-metrics-collector.sh" 2>/dev/null || true)"
 
-gauge_or_pct() {
-  _pct="$1"
-  case "$gauges_enabled" in
-    false | False | FALSE | 0 | no | No | NO | null | off | Off | OFF)
-      printf '%3d%%' "$_pct"
-      ;;
-    *)
-      printf '%s %3d%%' "$(gauge_bar "$_pct" "$gauge_width")" "$_pct"
-      ;;
-  esac
-}
-
 emit_cpu() {
   if [ -z "$metrics" ]; then
     emit_waybar_json "󰍛 --" "CPU telemetry unavailable" "disabled"
@@ -101,12 +89,7 @@ emit_cpu() {
   temp=$(printf '%s' "$metrics" | jq -r '.cpu.temp // 0')
   cpu_warn=$(waybar_settings_get '.thresholds.cpu.usage.warning' '60')
   cpu_crit=$(waybar_settings_get '.thresholds.cpu.usage.critical' '85')
-  class=normal
-  if [ "$usage" -ge "$cpu_crit" ] 2>/dev/null; then
-    class=critical
-  elif [ "$usage" -ge "$cpu_warn" ] 2>/dev/null; then
-    class=warning
-  fi
+  class="$(waybar_threshold_class "$usage" "$cpu_warn" "$cpu_crit")"
   text=$(printf '󰍛 %s' "$(gauge_or_pct "$usage")")
   tip=$(printf 'CPU %s%% · temp %s\nScroll: cycle stats (%s/%s)' "$usage" "$temp" "$((idx + 1))" "$mod_count")
   emit_waybar_json "$text" "$tip" "$class"
@@ -122,12 +105,7 @@ emit_memory() {
   total=$(printf '%s' "$metrics" | jq -r '.memory.mem_total_gib // "0"')
   mem_warn=$(waybar_settings_get '.thresholds.memory.warning' '70')
   mem_crit=$(waybar_settings_get '.thresholds.memory.critical' '85')
-  class=normal
-  if [ "$pct" -ge "$mem_crit" ] 2>/dev/null; then
-    class=critical
-  elif [ "$pct" -ge "$mem_warn" ] 2>/dev/null; then
-    class=warning
-  fi
+  class="$(waybar_threshold_class "$pct" "$mem_warn" "$mem_crit")"
   text=$(printf '󰘚 %s' "$(gauge_or_pct "$pct")")
   tip=$(printf 'Memory %s / %s GiB\nScroll: cycle stats (%s/%s)' "$used" "$total" "$((idx + 1))" "$mod_count")
   emit_waybar_json "$text" "$tip" "$class"
@@ -142,12 +120,7 @@ emit_disk() {
   percent_num=$(printf '%s' "$pct" | tr -d '%')
   disk_warn=$(waybar_settings_get '.thresholds.disk.warning' '75')
   disk_crit=$(waybar_settings_get '.thresholds.disk.critical' '90')
-  class=normal
-  if [ "$percent_num" -ge "$disk_crit" ] 2>/dev/null; then
-    class=critical
-  elif [ "$percent_num" -ge "$disk_warn" ] 2>/dev/null; then
-    class=warning
-  fi
+  class="$(waybar_threshold_class "$percent_num" "$disk_warn" "$disk_crit")"
   text=$(printf '󰋊 %s' "$(gauge_or_pct "$percent_num")")
   tip=$(printf 'Disk %s (%s used of %s)\nScroll: cycle stats (%s/%s)' "$disk_path" "$used" "$size" "$((idx + 1))" "$mod_count")
   emit_waybar_json "$text" "$tip" "$class"
@@ -168,12 +141,7 @@ emit_gpu() {
   name=$(printf '%s' "$metrics" | jq -r '.gpu.name // "GPU"')
   gpu_warn=$(waybar_settings_get '.thresholds.gpu.util.warning' '70')
   gpu_crit=$(waybar_settings_get '.thresholds.gpu.util.critical' '90')
-  class=normal
-  if [ "$util" -ge "$gpu_crit" ] 2>/dev/null; then
-    class=critical
-  elif [ "$util" -ge "$gpu_warn" ] 2>/dev/null; then
-    class=warning
-  fi
+  class="$(waybar_threshold_class "$util" "$gpu_warn" "$gpu_crit")"
   text=$(printf '󰢮 %s' "$(gauge_or_pct "$util")")
   tip=$(printf '%s · %s%% · temp %s\nScroll: cycle stats (%s/%s)' "$name" "$util" "$temp" "$((idx + 1))" "$mod_count")
   emit_waybar_json "$text" "$tip" "$class"

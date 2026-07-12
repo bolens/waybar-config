@@ -6,6 +6,8 @@ set -euo pipefail
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+. "$WAYBAR_SCRIPTS/lib/theme-colors-lib.sh"
+. "$WAYBAR_SCRIPTS/lib/settings-bool-lib.sh"
 config="${WAYBAR_HOME}/data/workspace-bar.json"
 settings="${WAYBAR_HOME}/data/waybar-settings.json"
 out="$WAYBAR_HOME/theme/workspaces.generated.css"
@@ -65,31 +67,11 @@ glyph_pad_h="$(read_config glyph_pad_h 6)"
 border_radius="$(read_config border_radius 8)"
 glyph_offset="$(read_config glyph_offset 0)"
 bar_spacing_override="$(read_config bar_spacing "")"
-workspace_active="$(jq -r '.theme.colors.workspace_active // "rgba(255, 42, 127, 0.32)"' "$settings" 2>/dev/null || echo 'rgba(255, 42, 127, 0.32)')"
-# When theme.mode=preset, merge preset colors (match generate-theme-tokens).
+colors_json="{}"
 if [[ -f "$settings" ]]; then
-  mode="$(jq -r '.theme.mode // "static"' "$settings" 2>/dev/null || echo static)"
-  if [[ "$mode" == "preset" ]]; then
-    preset_name="$(jq -r '.theme.preset // "cyberpunk"' "$settings" 2>/dev/null || echo cyberpunk)"
-    for cand in \
-      "$WAYBAR_HOME/data/themes/${preset_name}.jsonc" \
-      "$WAYBAR_HOME/data/themes/${preset_name}.json"; do
-      if [[ -f "$cand" ]]; then
-        preset_wa="$(
-          sed -E 's://.*$::g' "$cand" | jq -r '.colors.workspace_active // empty' 2>/dev/null || true
-        )"
-        if [[ -n "$preset_wa" ]]; then
-          # Settings override still wins when explicitly set on theme.colors.
-          settings_wa="$(jq -r '.theme.colors.workspace_active // empty' "$settings" 2>/dev/null || true)"
-          if [[ -z "$settings_wa" ]]; then
-            workspace_active="$preset_wa"
-          fi
-        fi
-        break
-      fi
-    done
-  fi
+  colors_json="$(waybar_theme_resolve_colors "$settings")"
 fi
+workspace_active="$(waybar_theme_color_get "$colors_json" "workspace_active" "rgba(255, 42, 127, 0.32)")"
 
 if [[ -n "$bar_spacing_override" && "$bar_spacing_override" != "null" ]]; then
   bar_spacing="$bar_spacing_override"
@@ -98,19 +80,16 @@ fi
 # Waybar inserts `spacing` px between every module in a group; cancel it in CSS.
 slot_margin=$((glyph_gap - bar_spacing))
 
-case "$fit_content" in
-  false | False | FALSE | 0 | no | No | NO | off | Off | OFF)
-    fit_content=0
-    glyph_pad=$(((glyph_width - font_size) / 2))
-    if [[ "$glyph_pad" -lt 0 ]]; then
-      glyph_pad=0
-    fi
-    ;;
-  *)
-    fit_content=1
-    glyph_pad="$glyph_pad_h"
-    ;;
-esac
+if waybar_is_false "$fit_content"; then
+  fit_content=0
+  glyph_pad=$(((glyph_width - font_size) / 2))
+  if [[ "$glyph_pad" -lt 0 ]]; then
+    glyph_pad=0
+  fi
+else
+  fit_content=1
+  glyph_pad="$glyph_pad_h"
+fi
 
 hit_sels="$(ws_selectors "$slot_count" '.ws-hit')"
 label_sels="$(ws_selectors "$slot_count" '.ws-hit label')"

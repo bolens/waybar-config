@@ -116,17 +116,7 @@ rm -rf "$stub" "$launched" "$args_file"
 
 echo "Testing streamdeck-click restart uses .streamdeck.service_name..."
 svc_name="app-streamdeck-ui@test-suite.service"
-python3 - "$TEST_DIR/data/waybar-settings.jsonc" <<PY
-import json, pathlib, re, sys
-path = pathlib.Path(sys.argv[1])
-text = path.read_text(encoding="utf-8")
-stripped = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
-stripped = re.sub(r"(?<!:)//.*", "", stripped)
-data = json.loads(stripped)
-data.setdefault("streamdeck", {})["service_name"] = "$svc_name"
-path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-PY
-waybar_test_compile_settings
+waybar_test_patch_settings ".streamdeck.service_name = \"$svc_name\""
 
 sysctl_stub=$(mktemp -d)
 sysctl_log=$(mktemp)

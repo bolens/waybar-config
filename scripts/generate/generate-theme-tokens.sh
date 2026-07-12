@@ -5,6 +5,7 @@ set -euo pipefail
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+. "$WAYBAR_SCRIPTS/lib/theme-colors-lib.sh"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
 
 [ -f "$settings" ] || exit 0
@@ -18,59 +19,11 @@ if [ ! -f "$wall_stub" ]; then
   printf '%s\n' '/* Wallpaper overlay — written by theme-apply-wallpaper.sh; do not edit by hand */' >"$wall_stub"
 fi
 
-mode="$(jq -r '.theme.mode // "static"' "$settings")"
 # Unknown modes fail soft → static (no preset merge, no wallpaper import).
-case "$mode" in
-  static | wallpaper | preset) ;;
-  *) mode="static" ;;
-esac
-colors_json="$(jq -c '.theme.colors // {}' "$settings")"
-
-if [ "$mode" = "preset" ]; then
-  preset_name="$(jq -r '.theme.preset // "cyberpunk"' "$settings")"
-  for cand in \
-    "$WAYBAR_HOME/data/themes/${preset_name}.jsonc" \
-    "$WAYBAR_HOME/data/themes/${preset_name}.json"; do
-    if [ -f "$cand" ]; then
-      # Strip // comments for jsonc, then merge: preset base, settings colors override.
-      preset_colors="$(
-        sed -E 's://.*$::g' "$cand" | jq -c '.colors // .' 2>/dev/null || true
-      )"
-      if [ -n "$preset_colors" ] && [ "$preset_colors" != "null" ]; then
-        colors_json="$(jq -cn --argjson p "$preset_colors" --argjson o "$colors_json" '$p + $o')"
-      fi
-      break
-    fi
-  done
-fi
-
-# hex/rgba → "r, g, b"; empty if unparseable.
-color_rgb_csv() {
-  local c="$1"
-  if [[ "$c" =~ ^#([0-9a-fA-F]{6})$ ]]; then
-    local h="${BASH_REMATCH[1]}"
-    printf '%d, %d, %d' "0x${h:0:2}" "0x${h:2:2}" "0x${h:4:2}"
-  elif [[ "$c" =~ ^#([0-9a-fA-F]{3})$ ]]; then
-    local h="${BASH_REMATCH[1]}"
-    printf '%d, %d, %d' "0x${h:0:1}${h:0:1}" "0x${h:1:1}${h:1:1}" "0x${h:2:1}${h:2:1}"
-  elif [[ "$c" =~ rgba?\(\ *([0-9.]+)\ *,\ *([0-9.]+)\ *,\ *([0-9.]+) ]]; then
-    printf '%d, %d, %d' "${BASH_REMATCH[1]%.*}" "${BASH_REMATCH[2]%.*}" "${BASH_REMATCH[3]%.*}"
-  else
-    printf ''
-  fi
-}
-
-# Produce rgba(r,g,b,a); if unparseable, echo the solid color as-is.
-color_with_alpha() {
-  local c="$1" a="$2"
-  local rgb
-  rgb="$(color_rgb_csv "$c")"
-  if [[ -n "$rgb" ]]; then
-    printf 'rgba(%s, %s)' "$rgb" "$a"
-  else
-    printf '%s' "$c"
-  fi
-}
+mode="$(waybar_theme_resolve_mode "$settings")"
+colors_json="$(waybar_theme_resolve_colors "$settings")"
+color_rgb_csv() { waybar_theme_color_rgb_csv "$@"; }
+color_with_alpha() { waybar_theme_color_with_alpha "$@"; }
 
 fg="$(jq -rn --argjson c "$colors_json" '$c.foreground // "#c8f6ff"')"
 accent="$(jq -rn --argjson c "$colors_json" '$c.accent // "#00e5ff"')"
