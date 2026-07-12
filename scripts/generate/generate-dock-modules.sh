@@ -53,6 +53,8 @@ mapfile -t app_ids < <(
     "return-type": "json",
     "interval": "${interval}",
     "signal": ${dock_signal},
+    "tooltip": true,
+    "escape": true,
     "exec": "${scripts}/dock/dock-launcher.sh ${id} status",
     "on-click": "${scripts}/dock/dock-launcher.sh ${id} click on-click",
     "on-click-right": "${scripts}/dock/dock-launcher.sh ${id} click on-click-right",

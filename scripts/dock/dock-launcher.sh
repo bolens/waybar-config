@@ -71,24 +71,39 @@ dock_appicon_prepare() {
 
 case "$action" in
   status)
-    # Extract properties in a single jq process (tsv format: icon, tooltip, process_names)
-    IFS=$'\t' read -r icon tooltip proc_list < <(jq -r --arg id "$app_id" '
+    # icon, display name, full tooltip, process_names
+    IFS=$'\t' read -r icon name tooltip proc_list < <(jq -r --arg id "$app_id" '
       .[$id]
       | if . == null then empty
-        else [
-          (.icon // ""),
-          (.tooltip // ""),
-          ((.process_names // []) | join(","))
-        ] | @tsv
+        else
+          (
+            .name
+            // ((.tooltip // "") | split(" — ") | .[0] | split(" - ") | .[0])
+            // $id
+          ) as $name
+          | (
+              ((.tooltip // "") | split(" — ") | if length > 1 then .[1:] | join(" — ") else "" end)
+            ) as $detail
+          | [
+              (.icon // ""),
+              $name,
+              (if $detail == "" then $name else ($name + "\n" + $detail) end),
+              ((.process_names // []) | join(","))
+            ] | @tsv
         end
     ' "$manifest")
+
+    # Ensure tooltip always has at least the app name.
+    if [ -z "${tooltip:-}" ] || [ "$tooltip" = "null" ]; then
+      tooltip="${name:-$app_id}"
+    fi
 
     is_running="false"
     if [ -n "$proc_list" ] && [ "$proc_list" != "null" ]; then
       # Split comma-separated process names
       IFS=',' read -ra proc_arr <<<"$proc_list"
-      for name in "${proc_arr[@]}"; do
-        if [ -n "$name" ] && pgrep -x "$name" >/dev/null 2>&1; then
+      for name_proc in "${proc_arr[@]}"; do
+        if [ -n "$name_proc" ] && pgrep -x "$name_proc" >/dev/null 2>&1; then
           is_running="true"
           break
         fi
