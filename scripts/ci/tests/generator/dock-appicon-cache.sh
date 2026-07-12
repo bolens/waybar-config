@@ -121,6 +121,52 @@ else
   echo "PASS: bin_miss_clear"
 fi
 
+# waybar_appicon_ready: enabled + bin available
+waybar_test_patch_settings '.icons.appicon.enabled = true'
+waybar_appicon_bin_miss_clear
+export APPICON_BIN=""
+PATH_SAVE="$PATH"
+export PATH="/usr/bin:/bin" HOME="$TEST_DIR/empty-home"
+if waybar_appicon_ready; then
+  echo "FAIL: ready should be false without binary" >&2
+  fail=1
+else
+  echo "PASS: ready false without binary"
+fi
+export HOME="$HOME_SAVE" PATH="$PATH_SAVE"
+waybar_appicon_bin_miss_clear
+waybar_test_install_path_stubs
+waybar_test_write_bin_stub appicon <<'EOF'
+#!/usr/bin/env sh
+exit 0
+EOF
+export APPICON_BIN="$TEST_DIR/bin/appicon" PATH="$TEST_DIR/bin:$PATH"
+if ! waybar_appicon_ready; then
+  echo "FAIL: ready should be true with enabled + APPICON_BIN" >&2
+  fail=1
+else
+  echo "PASS: ready true with enabled + bin"
+fi
+waybar_test_patch_settings '.icons.appicon.enabled = false'
+if waybar_appicon_ready; then
+  echo "FAIL: ready should be false when icons.appicon disabled" >&2
+  fail=1
+else
+  echo "PASS: ready false when disabled"
+fi
+waybar_test_patch_settings '.icons.appicon.enabled = true'
+
+# Launch script wires bin-miss clear + background prefetch (peer warm like cava).
+if ! grep -Fq 'waybar_appicon_bin_miss_clear' "$ROOT_DIR/scripts/infra/waybar-launch.sh"; then
+  echo "FAIL: waybar-launch must clear appicon bin-miss on start" >&2
+  fail=1
+elif ! grep -Fq 'dock-appicon-prefetch.sh' "$ROOT_DIR/scripts/infra/waybar-launch.sh"; then
+  echo "FAIL: waybar-launch must prefetch when appicon ready" >&2
+  fail=1
+else
+  echo "PASS: waybar-launch appicon peer warm wiring"
+fi
+
 # --- resolve online vs offline ---
 waybar_test_install_path_stubs
 waybar_test_write_bin_stub appicon <<'EOF'
