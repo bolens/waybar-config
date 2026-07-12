@@ -114,6 +114,7 @@ essential_files=(
   "theme/drawers.generated.css"
   "theme/groups.generated.css"
   "theme/dock-windows.generated.css"
+  "theme/dock-appicons.generated.css"
   "theme/workspaces.generated.css"
   "theme/animations.generated.css"
   "theme/reduced-motion.generated.css"

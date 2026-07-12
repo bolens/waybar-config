@@ -13,7 +13,7 @@ SECRETS_TESTS := $(sort $(wildcard scripts/ci/tests/secrets/*.sh))
 	check-generator check-secrets check-systemd check-suite-inventory \
 	check-docs-index check-drift check-shfmt check-gitleaks check-stylelint \
 	check-gtk-css check-markdownlint check-settings-schema validate generate \
-	profile-minimal fmt-shell install-hooks help
+	profile-minimal fmt-shell install-hooks install-appicon help
 
 help:
 	@printf '%s\n' \
@@ -39,7 +39,8 @@ help:
 		'make fmt-shell          - shfmt -w scripts/' \
 		'make generate           - regenerate settings/modules/css from data/' \
 		'make profile-minimal    - merge data/profiles/minimal-groups.jsonc + generate' \
-		'make install-hooks      - symlink secrets pre-commit hook'
+		'make install-hooks      - symlink secrets pre-commit hook' \
+		'make install-appicon    - download pinned appicon CLI to ~/.local/bin'
 
 check: check-syntax check-contracts check-suite-inventory check-docs-index \
 	check-generator check-secrets validate check-drift check-systemd \
@@ -136,3 +137,6 @@ profile-minimal:
 
 install-hooks:
 	bash scripts/ci/install-hooks.sh
+
+install-appicon:
+	bash scripts/infra/install-appicon.sh

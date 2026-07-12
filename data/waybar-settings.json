@@ -294,6 +294,17 @@
   "dock": {
     "section_order": ["web", "dev", "misc"]
   },
+  
+  
+  
+  "icons": {
+    "appicon": {
+      "enabled": false,
+      "theme": "dark", 
+      "size": 22
+    }
+  },
+
   "workspaces": {
     "slot_count": 5, 
     "scroll_per_output": true 

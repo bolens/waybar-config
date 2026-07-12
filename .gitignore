@@ -34,6 +34,10 @@ node_modules/
 /theme/album-art.*
 !/theme/album-art.generated.css
 
+# Runtime dock PNG symlinks (relative url("dock-appicons/<id>") next to generated CSS)
+/theme/dock-appicons/
+!/theme/dock-appicons.generated.css
+
 # Exclude the dry-run folder with large tarballs
 dry-run/
 

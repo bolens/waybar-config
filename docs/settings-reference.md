@@ -17,6 +17,7 @@ Optional overlay: `data/waybar-secrets.jsonc` (gitignored). Never put credential
 | `layouts` | `top` / `bottom` → `modules_left` / `modules_center` / `modules_right` |
 | `groups` | Named strips/drawers and their module id lists |
 | `dock` | Dock section ordering |
+| `icons` | Optional `appicon` dock PNG proof (`enabled` / `theme` / `size`) — requires `make install-appicon` |
 | `workspaces` | Slot count, scroll-per-output |
 | `dock_windows` | Per-window dock slots (enable, slot_count, per_output, …) |
 | `window_switcher` | Output filtering for the switcher |

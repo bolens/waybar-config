@@ -7,7 +7,7 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `lib/` | Shared helpers — see table below |
 | `generate/` | Config generators (`generate-*.sh`); `generate-settings.sh` orchestrates network/dock/domain emitters |
 | `ci/` | Contract checks, unit tests, validate, pre-commit hook |
-| `infra/` | Launch, healthcheck, listener-ctl, metrics collector |
+| `infra/` | Launch, healthcheck, listener-ctl, metrics collector, `install-appicon.sh` |
 | `listeners/` | Long-running watchers — see table below |
 | `dock/` | Dock launcher + dock-windows |
 | `workspaces/` | Workspaces, active window, keybind hints |
@@ -134,6 +134,7 @@ make check-settings-schema  # unknown top-level settings keys
 make profile-minimal # merge data/profiles/minimal-groups.jsonc + generate
 make fmt-shell       # shfmt -w
 make install-hooks   # secrets pre-commit symlink
+make install-appicon # pinned appicon CLI → ~/.local/bin (dock PNG icons)
 ```
 
 ### CI test layout

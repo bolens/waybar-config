@@ -72,6 +72,10 @@ See [Dependencies](#dependencies) for core packages and optional tools (media, n
 
    # Block accidental secret commits
    make install-hooks
+
+   # Optional: brand/desktop icons for the dock (bolens/appicon)
+   make install-appicon
+   # then set icons.appicon.enabled=true in data/waybar-settings.jsonc and re-run make generate
    ```
 
 3. Enable the systemd user units (recommended):

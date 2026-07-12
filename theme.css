@@ -10,6 +10,7 @@
 @import "theme/workspaces.generated.css";
 @import "theme/dock-windows.css";
 @import "theme/dock-windows.generated.css";
+@import "theme/dock-appicons.generated.css";
 @import "theme/semantic-colors.generated.css";
 @import "theme/animations.generated.css";
 @import "theme/album-art.generated.css";

@@ -21,6 +21,7 @@ github
 groups
 homelab
 hypr_tools
+icons
 kdeconnect
 keyboard
 layouts

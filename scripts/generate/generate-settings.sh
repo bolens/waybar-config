@@ -492,6 +492,7 @@ for _gen in \
   generate-center-extras-modules.sh \
   generate-dock-windows-modules.sh \
   generate-dock-windows-css.sh \
+  generate-dock-appicon-css.sh \
   generate-tray-modules.sh \
   generate-hypr-tools-modules.sh \
   generate-theme-tokens.sh \

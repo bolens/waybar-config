@@ -294,6 +294,17 @@
   "dock": {
     "section_order": ["web", "dev", "misc"]
   },
+  // Optional brand/desktop icons via bolens/appicon (make install-appicon).
+  // When enabled, dock-launcher resolves PNGs and theme/dock-appicons.generated.css
+  // paints them; glyph icons remain the fallback if the binary is missing or resolve fails.
+  "icons": {
+    "appicon": {
+      "enabled": false,
+      "theme": "dark", // dark | light (SVGL / pack variant hint)
+      "size": 22
+    }
+  },
+
   "workspaces": {
     "slot_count": 5, // Desktop indicator slots (1–10), independent of monitor count
     "scroll_per_output": true // Honor $WAYBAR_OUTPUT_NAME on scroll (default on)
