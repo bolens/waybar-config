@@ -25,7 +25,9 @@ clean_audio_polish=$(waybar_test_read_jsonc "$TEST_DIR/modules/audio.generated.j
 waybar_test_assert_jq "$clean_utils_polish" '."custom/github"."on-click" | test("github.polish/notifications")' "polish default github left-click should use apps.github_notifications"
 waybar_test_assert_jq "$clean_utils_polish" '."custom/github"."on-click-right" | test("github.polish/home")' "polish default github right-click should use apps.github_home"
 waybar_test_assert_jq "$clean_utils_polish" '."custom/github"."on-click-middle" | test("github-status.sh --refresh")' "polish default github middle-click should refresh"
-waybar_test_assert_jq "$clean_utils_polish" '."custom/streamdeck"."on-click-right" | test("POLISH_STREAMDECK")' "polish default streamdeck right-click should use streamdeck.service_name"
+waybar_test_assert_jq "$clean_utils_polish" '."custom/streamdeck"."on-click" | test("streamdeck-click\\.sh open")' "polish default streamdeck left-click should open UI"
+waybar_test_assert_jq "$clean_utils_polish" '."custom/streamdeck"."on-click-right" | test("streamdeck-click\\.sh restart")' "polish default streamdeck right-click should restart via click helper"
+
 waybar_test_assert_jq "$clean_sys_polish" '."custom/syncthing"."on-click-right" | test("POLISH_SYNCTHING")' "polish default syncthing right-click should use services.syncthing.service_name"
 waybar_test_assert_jq "$clean_sys_polish" '."custom/libredefender"."on-click-right" | test("POLISH_TERM")' "polish default libredefender journalctl should use apps.terminal"
 waybar_test_assert_jq "$clean_audio_polish" '."custom/media-prev"."on-click-right" == "playerctl position 41-"' "polish default seek_back_sec not applied"

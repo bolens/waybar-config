@@ -1,0 +1,16 @@
+{
+  // One Dark palette adapted for Waybar token keys
+  "colors": {
+    "foreground": "#abb2bf",
+    "background": "rgba(40, 44, 52, 0.92)",
+    "border": "rgba(97, 175, 239, 0.40)",
+    "accent": "rgba(198, 120, 221, 0.35)",
+    "warning": "#e5c07b",
+    "critical": "#e06c75",
+    "tooltip_background": "#282c34",
+    "tooltip_border": "#3e4452",
+    "workspace_active": "rgba(97, 175, 239, 0.40)",
+    "workspace_inactive": "rgba(171, 178, 191, 0.40)",
+    "workspace_visible": "#61afef"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  // Everforest Dark palette adapted for Waybar token keys
+  "colors": {
+    "foreground": "#d3c6aa",
+    "background": "rgba(45, 52, 54, 0.92)",
+    "border": "rgba(167, 192, 128, 0.40)",
+    "accent": "rgba(230, 152, 117, 0.35)",
+    "warning": "#dbbc7f",
+    "critical": "#e67e80",
+    "tooltip_background": "#2d353b",
+    "tooltip_border": "#475258",
+    "workspace_active": "rgba(167, 192, 128, 0.40)",
+    "workspace_inactive": "rgba(211, 198, 170, 0.40)",
+    "workspace_visible": "#a7c080"
+  }
+}

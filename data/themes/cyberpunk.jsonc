@@ -1,0 +1,16 @@
+{
+  // Current default palette (matches theme.colors in waybar-settings)
+  "colors": {
+    "foreground": "#c8f6ff",
+    "background": "rgba(6, 7, 14, 0.92)",
+    "border": "rgba(0, 229, 255, 0.25)",
+    "accent": "rgba(255, 42, 127, 0.32)",
+    "warning": "#ffe600",
+    "critical": "#ff2a7f",
+    "tooltip_background": "#06070e",
+    "tooltip_border": "#005c66",
+    "workspace_active": "rgba(255, 42, 127, 0.32)",
+    "workspace_inactive": "rgba(200, 246, 255, 0.45)",
+    "workspace_visible": "#00e5ff"
+  }
+}

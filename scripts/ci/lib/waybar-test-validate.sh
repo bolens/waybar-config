@@ -104,6 +104,7 @@ essential_files=(
   "modules/drawers.generated.jsonc"
   "modules/workspaces.generated.jsonc"
   "modules/dock-windows.generated.jsonc"
+  "modules/groups-dock-windows.generated.jsonc"
   "modules/hypr-tools.generated.jsonc"
   "modules/utilities.generated.jsonc"
   "theme/tokens.generated.css"

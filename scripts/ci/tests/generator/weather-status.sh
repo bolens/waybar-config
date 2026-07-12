@@ -120,6 +120,45 @@ waybar_test_assert_jq "$wx_f" '.text | test("69°F")' "weather F text expected 6
 waybar_test_assert_jq "$wx_f" '.tooltip | test("69°F \\(21°C\\)")' "weather F tooltip dual temp: $wx_f"
 waybar_test_assert_jq "$wx_f" '.tooltip | test("7 mph")' "weather F prefers imperial wind: $wx_f"
 
+# Open-Meteo provider path (coords + forecast fixture)
+OM_FIX="$TEST_DIR/open-meteo-fixture.json"
+cat >"$OM_FIX" <<'JSON'
+{
+  "current": {
+    "temperature_2m": 18.4,
+    "relative_humidity_2m": 55,
+    "weather_code": 0,
+    "wind_speed_10m": 10.0,
+    "precipitation": 0.0
+  },
+  "daily": {
+    "weather_code": [0, 3, 61],
+    "temperature_2m_max": [22.0, 19.0, 17.0],
+    "temperature_2m_min": [12.0, 11.0, 10.0]
+  }
+}
+JSON
+waybar_test_compile_settings
+jq '.weather.provider = "open-meteo" | .weather.latitude = 40.0 | .weather.longitude = -105.0' \
+  "$TEST_DIR/data/waybar-settings.json" >"$TEST_DIR/data/waybar-settings.json.tmp"
+mv -f "$TEST_DIR/data/waybar-settings.json.tmp" "$TEST_DIR/data/waybar-settings.json"
+cp -f "$TEST_DIR/data/waybar-settings.json" "$TEST_DIR/data/waybar-settings.jsonc"
+waybar_test_write_bin_stub curl <<EOF
+#!/usr/bin/env sh
+cat "$OM_FIX"
+EOF
+wx_om=$(
+  PATH="$TEST_DIR/bin:$PATH" \
+    WAYBAR_HOME="$TEST_DIR" \
+    WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+    XDG_CACHE_HOME="$TEST_DIR/wx-cache-om" \
+    WAYBAR_WEATHER_UNIT=C \
+    "$TEST_DIR/scripts/services/apps/weather-status.sh" --refresh
+)
+waybar_test_assert_jq "$wx_om" '.text | test("18°C")' "open-meteo C text expected 18°C: $wx_om"
+waybar_test_assert_jq "$wx_om" '.tooltip | test("Open-Meteo") and test("12°C - 22°C")' "open-meteo tooltip forecast: $wx_om"
+waybar_test_assert_jq "$wx_om" '.class == "normal"' "open-meteo class normal: $wx_om"
+
 # Locale lib + Python twin stay aligned for CoolerControl path.
 locale_sh=$(
   WAYBAR_WEATHER_UNIT=C bash -c '

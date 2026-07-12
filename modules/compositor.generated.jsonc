@@ -3,8 +3,8 @@
     "format": "{}",
     "return-type": "json",
     "escape": true,
-    "exec": "$WAYBAR_HOME/scripts/workspaces/active-window-scroll.sh",
+    "exec": "$WAYBAR_HOME/scripts/workspaces/active-window-scroll.sh \"$WAYBAR_OUTPUT_NAME\"",
     "tooltip": true,
-    "on-click": "$WAYBAR_HOME/scripts/workspaces/window-switcher.sh"
+    "on-click": "$WAYBAR_HOME/scripts/workspaces/window-switcher.sh \"$WAYBAR_OUTPUT_NAME\""
   }
 }

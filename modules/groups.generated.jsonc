@@ -9,6 +9,7 @@
     },
     "modules": [
       "custom/power-drawer",
+      "custom/power-menu",
       "custom/lock",
       "custom/logout",
       "custom/suspend",
@@ -51,7 +52,9 @@
     },
     "modules": [
       "custom/media-drawer",
+      "custom/cava",
       "custom/media-prev",
+      "custom/album-art",
       "custom/mpris",
       "custom/media-next",
       "pulseaudio",
@@ -96,7 +99,8 @@
       "custom/colorpicker",
       "custom/rgb",
       "custom/discord",
-      "custom/weather"
+      "custom/weather",
+      "custom/pomodoro"
     ]
   },
   "group/top-status": {
@@ -146,6 +150,7 @@
     },
     "modules": [
       "custom/infra-drawer",
+      "custom/homelab",
       "custom/docker",
       "custom/syncthing",
       "custom/sunshine",

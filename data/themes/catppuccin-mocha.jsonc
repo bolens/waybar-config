@@ -1,0 +1,16 @@
+{
+  // Catppuccin Mocha palette adapted for Waybar token keys
+  "colors": {
+    "foreground": "#cdd6f4",
+    "background": "rgba(30, 30, 46, 0.92)",
+    "border": "rgba(137, 180, 250, 0.35)",
+    "accent": "rgba(203, 166, 247, 0.35)",
+    "warning": "#f9e2af",
+    "critical": "#f38ba8",
+    "tooltip_background": "#1e1e2e",
+    "tooltip_border": "#45475a",
+    "workspace_active": "rgba(203, 166, 247, 0.35)",
+    "workspace_inactive": "rgba(205, 214, 244, 0.40)",
+    "workspace_visible": "#89b4fa"
+  }
+}

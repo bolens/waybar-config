@@ -1,0 +1,78 @@
+{
+  // Paste/merge into data/waybar-settings.jsonc for a laptop / fork-friendly bar.
+  // Then: make generate && systemctl --user restart waybar
+  //
+  // Keeps: workspaces, media, net, notifications, clock, cpu/mem/disk, updates, weather, power menu, pomodoro
+  // Drops: CoolerControl, liquidctl, OpenLinkHub, ASUS, Stream Deck, i2pd, security scanners, dock hardware extras
+  "groups": {
+    "power": {
+      "drawer": "left",
+      "modules": ["custom/power-drawer", "custom/power-menu", "custom/lock", "custom/logout", "custom/suspend", "custom/reboot", "custom/shutdown"]
+    },
+    "desk-controls": {
+      "drawer": "right",
+      "modules": [
+        "custom/desk-drawer",
+        "custom/notifications",
+        "custom/powerprofiles",
+        "custom/brightness",
+        "bluetooth",
+        "idle_inhibitor",
+        "custom/keyboard-layout",
+        "custom/kdeconnect",
+        "custom/clipboard"
+      ]
+    },
+    "media": {
+      "drawer": "right",
+      "modules": ["custom/media-drawer", "custom/media-prev", "custom/mpris", "custom/media-next", "pulseaudio", "custom/mic"]
+    },
+    "net": {
+      "drawer": "right",
+      "modules": [
+        "custom/net-drawer",
+        "network#bandwidthUpBytes",
+        "network#bandwidthDownBytes",
+        "custom/vpnstatus",
+        "custom/tailscale",
+        "@network.interfaces"
+      ]
+    },
+    "tools": {
+      "drawer": "left",
+      "modules": [
+        "custom/tools-drawer",
+        "custom/screenshot",
+        "custom/screenrecord",
+        "custom/nightlight",
+        "custom/clipboard",
+        "custom/weather",
+        "custom/pomodoro"
+      ]
+    },
+    "infra": {
+      "drawer": "left",
+      "modules": [
+        "custom/infra-drawer",
+        "custom/updates",
+        "custom/github",
+        "custom/uptime"
+      ]
+    },
+    "hardware": {
+      "drawer": "left",
+      "modules": ["custom/hardware-drawer", "custom/cpu", "custom/memory", "custom/disk"]
+    },
+    "security": {
+      "drawer": "left",
+      "modules": ["custom/security-drawer"]
+    }
+  },
+  "homelab": {
+    "targets": []
+  },
+  // Optional: cava.bars / cava.framerate (requires `cava` package; module hides if absent)
+  "cava": {
+    "bars": 8
+  }
+}

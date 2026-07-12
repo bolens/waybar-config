@@ -1,0 +1,16 @@
+{
+  // Muted mono accents — soft grays with a quiet cyan
+  "colors": {
+    "foreground": "#c8cdd4",
+    "background": "rgba(18, 18, 20, 0.92)",
+    "border": "rgba(160, 168, 176, 0.22)",
+    "accent": "rgba(120, 160, 170, 0.28)",
+    "warning": "#c4b46a",
+    "critical": "#c47878",
+    "tooltip_background": "#121214",
+    "tooltip_border": "#3a4048",
+    "workspace_active": "rgba(120, 160, 170, 0.32)",
+    "workspace_inactive": "rgba(160, 168, 176, 0.35)",
+    "workspace_visible": "#88b0b8"
+  }
+}

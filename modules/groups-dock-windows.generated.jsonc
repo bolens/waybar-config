@@ -1,0 +1,19 @@
+{
+  "group/dock-windows": {
+    "orientation": "inherit",
+    "modules": [
+      "custom/dock-win-0",
+      "custom/dock-win-1",
+      "custom/dock-win-2",
+      "custom/dock-win-3",
+      "custom/dock-win-4",
+      "custom/dock-win-5",
+      "custom/dock-win-6",
+      "custom/dock-win-7",
+      "custom/dock-win-8",
+      "custom/dock-win-9",
+      "custom/dock-win-10",
+      "custom/dock-win-11"
+    ]
+  }
+}

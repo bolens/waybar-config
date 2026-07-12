@@ -62,6 +62,28 @@ if ! printf '%s' "$desk_tip" | grep -q 'Notifications'; then
   fail=1
 fi
 
+# Pango: bare & in tooltip-format crashes Gtk tooltip markup (Media & volume).
+media_tip=$(echo "$clean_drawers" | jq -r '."custom/media-drawer"."tooltip-format"')
+if printf '%s' "$media_tip" | grep -qF 'Media & volume'; then
+  echo "FAIL: media-drawer tooltip must Pango-escape ampersand: $media_tip" >&2
+  fail=1
+fi
+if ! printf '%s' "$media_tip" | grep -qF 'Media &amp; volume'; then
+  echo "FAIL: media-drawer tooltip expected Media &amp; volume: $media_tip" >&2
+  fail=1
+fi
+
+# Any drawer tooltip with a bare & (not an entity) will break Waybar tooltips.
+while IFS= read -r tip; do
+  [ -n "$tip" ] || continue
+  # Strip known safe entities, then reject remaining &.
+  stripped=$(printf '%s' "$tip" | sed -e 's/&amp;/ /g' -e 's/&lt;/ /g' -e 's/&gt;/ /g' -e 's/&#[0-9]*;//g')
+  if printf '%s' "$stripped" | grep -q '&'; then
+    echo "FAIL: drawer tooltip has unescaped ampersand: $tip" >&2
+    fail=1
+  fi
+done < <(echo "$clean_drawers" | jq -r 'to_entries[] | select(.key|test("drawer")) | .value["tooltip-format"] // empty')
+
 # Side-info retirement: summary tabs must stay off the infra drawer / system modules.
 waybar_test_assert_json_file_jq \
   "$TEST_DIR/modules/groups.generated.jsonc" \
@@ -196,10 +218,17 @@ if grep -q 'modules/workspaces.jsonc"' "$TEST_DIR/includes/modules.jsonc"; then
   fail=1
 fi
 
-# dock-windows disabled → not on bottom bar; active-window remains center
-waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '.dock_windows.enabled == false' "expected dock_windows.enabled == false in default settings"
-if jq -e '.["modules-left"] | index("custom/dock-windows")' "$TEST_DIR/layouts/bottom.generated.jsonc" >/dev/null 2>&1; then
-  echo "FAIL: custom/dock-windows should not be on bottom modules-left when disabled" >&2
+# dock-windows enabled by default → bottom center group; active-window remains center
+waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '.dock_windows.enabled == true' "expected dock_windows.enabled == true in default settings"
+waybar_test_assert_json_file_jq "$TEST_DIR/layouts/bottom.generated.jsonc" \
+  '.["modules-center"] | index("group/dock-windows")' \
+  "group/dock-windows missing from bottom modules-center (default enabled)"
+if jq -e '.["modules-left"] | index("group/dock-windows")' "$TEST_DIR/layouts/bottom.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: group/dock-windows should not be on bottom modules-left" >&2
+  fail=1
+fi
+if jq -e '.["modules-center"] | index("custom/dock-windows")' "$TEST_DIR/layouts/bottom.generated.jsonc" >/dev/null 2>&1; then
+  echo "FAIL: legacy custom/dock-windows should not be on bottom center" >&2
   fail=1
 fi
 waybar_test_assert_json_file_jq "$TEST_DIR/layouts/bottom.generated.jsonc" '.["modules-center"] | index("custom/active-window")' "custom/active-window missing from bottom modules-center"

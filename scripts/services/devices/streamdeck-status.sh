@@ -62,16 +62,17 @@ if [ "$process_active" -eq 1 ] && command -v ps >/dev/null 2>&1; then
 fi
 
 # Define display state
+hint="Left: open UI · Right: restart service · Middle: refresh"
 if [ "$process_active" -eq 0 ]; then
   text="󰓎 Off"
   class="offline"
-  tooltip=$(printf 'Stream Deck UI\n\nDaemon: Offline\nConnected Hardware: %s\n\nLeft: start daemon · Right: open settings UI · Middle: refresh' \
-    "$([ -n "$devices" ] && printf '%s' "$devices" || printf 'None')")
+  tooltip=$(printf 'Stream Deck UI\n\nDaemon: Offline\nConnected Hardware: %s\n\n%s' \
+    "$([ -n "$devices" ] && printf '%s' "$devices" || printf 'None')" "$hint")
 elif [ "$device_count" -eq 0 ]; then
   text="󰓎 No Dev"
   class="warning"
-  tooltip=$(printf 'Stream Deck UI\n\nDaemon: Active (PID: %s)\nConnected Hardware: None\nCPU: %s | Memory: %s\n\nLeft: open configuration UI · Right: restart service · Middle: refresh' \
-    "$pid" "$cpu_usage" "$mem_usage")
+  tooltip=$(printf 'Stream Deck UI\n\nDaemon: Active (PID: %s)\nConnected Hardware: None\nCPU: %s | Memory: %s\n\n%s' \
+    "$pid" "$cpu_usage" "$mem_usage" "$hint")
 else
   # Shorten device text for status bar if possible
   dev_short="On"
@@ -84,8 +85,8 @@ else
   fi
   text="󰓎 $dev_short"
   class="normal"
-  tooltip=$(printf 'Stream Deck UI\n\nDaemon: Active (PID: %s)\nConnected Hardware: %s\nCPU: %s | Memory: %s\n\nLeft: open configuration UI · Right: restart service · Middle: refresh' \
-    "$pid" "$devices" "$cpu_usage" "$mem_usage")
+  tooltip=$(printf 'Stream Deck UI\n\nDaemon: Active (PID: %s)\nConnected Hardware: %s\nCPU: %s | Memory: %s\n\n%s' \
+    "$pid" "$devices" "$cpu_usage" "$mem_usage" "$hint")
 fi
 
 json=$(emit_waybar_json "$text" "$tooltip" "$class")

@@ -50,6 +50,7 @@ jq -n --slurpfile s "$settings" \
       "custom/device-battery": "Device battery",
       "custom/media-prev": "Previous",
       "custom/mpris": "Now playing",
+      "custom/album-art": "Album art",
       "custom/media-next": "Next",
       "pulseaudio": "Volume",
       "custom/mic": "Microphone",
@@ -68,6 +69,9 @@ jq -n --slurpfile s "$settings" \
       "custom/rgb": "RGB",
       "custom/discord": "Discord",
       "custom/weather": "Weather",
+      "custom/pomodoro": "Pomodoro",
+      "custom/cava": "Visualizer",
+      "custom/homelab": "Homelab",
       "custom/docker": "Docker",
       "custom/syncthing": "Syncthing",
       "custom/sunshine": "Sunshine",
@@ -81,6 +85,7 @@ jq -n --slurpfile s "$settings" \
       "custom/gpu": "GPU",
       "custom/memory": "Memory",
       "custom/disk": "Disk",
+      "custom/stats-carousel": "Stats",
       "custom/nvme": "NVMe",
       "custom/psu": "PSU",
       "custom/fans": "Fans",
@@ -88,6 +93,7 @@ jq -n --slurpfile s "$settings" \
       "custom/coolercontrol": "CoolerControl",
       "custom/openlinkhub": "OpenLinkHub",
       "custom/lock": "Lock",
+      "custom/power-menu": "Power menu",
       "custom/logout": "Logout",
       "custom/suspend": "Suspend",
       "custom/reboot": "Reboot",
@@ -108,6 +114,56 @@ jq -n --slurpfile s "$settings" \
       | gsub("-"; " ")
     );
 
+  def insert_album_art($mods):
+    if (($s[0].visual.album_art.enabled // false) == true) then
+      if (($mods | index("custom/album-art")) != null) then $mods
+      else
+        ($mods | index("custom/mpris")) as $i
+        | if $i != null then
+            ($mods[:$i] + ["custom/album-art"] + $mods[$i:])
+          else
+            ($mods | index("mpris")) as $j
+            | if $j != null then
+                ($mods[:$j] + ["custom/album-art"] + $mods[$j:])
+              else
+                $mods + ["custom/album-art"]
+              end
+          end
+      end
+    else
+      $mods
+    end;
+
+  def apply_cava_placement($mods):
+    (($s[0].cava.placement // "drawer") | tostring) as $place
+    | if ($mods | index("custom/cava")) == null then $mods
+      elif $place == "inline" then
+        (["custom/cava"] + ($mods | map(select(. != "custom/cava"))))
+      else
+        $mods
+      end;
+
+  def apply_stats_carousel($mods):
+    if (($s[0].visual.stats_carousel.enabled // false) != true) then $mods
+    else
+      ["custom/cpu", "custom/memory", "custom/disk", "custom/gpu"] as $hw
+      | ($mods | map(select($hw | index(.) != null)) | length) as $n
+      | if $n == 0 then $mods
+        else
+          ($mods | to_entries | map(select(.value as $v | $hw | index($v) != null)) | .[0].key // 0) as $at
+          | ($mods[:$at] | map(select($hw | index(.) == null)))
+            + ["custom/stats-carousel"]
+            + ($mods[$at:] | map(select($hw | index(.) == null)))
+        end
+    end;
+
+  def group_modules($g):
+    ($s[0].groups[$g].modules // []) as $mods
+    | if $g == "media" then apply_cava_placement(insert_album_art($mods))
+      elif $g == "hardware" then apply_stats_carousel($mods)
+      else $mods
+      end;
+
   def drawer_contents($key):
     if $key == "dock" then
       if ($dock | length) > 0 then
@@ -117,7 +173,7 @@ jq -n --slurpfile s "$settings" \
       end
     else
       (drawer_group($key) as $g
-        | ($s[0].groups[$g].modules // [])
+        | group_modules($g)
         | map(select(. != ("custom/" + $key + "-drawer")))
         | map(
             if . == "@network.interfaces" then
@@ -148,6 +204,10 @@ jq -n --slurpfile s "$settings" \
         + ["Click to toggle"]
       ) | join("\n");
 
+  # Waybar tooltips use Pango markup — bare & breaks parsing (Gtk-WARNING).
+  def pango_escape:
+    gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;");
+
   def drawer($key; $module):
     ($s[0].drawers.icons[$key].format // "") as $icon
     | drawer_tooltip($key) as $tip
@@ -158,7 +218,7 @@ jq -n --slurpfile s "$settings" \
           # Put copy in tooltip-format so it shows; escape braces for fmt::format.
           format: $icon,
           tooltip: true,
-          "tooltip-format": ($tip | gsub("\\{"; "{{") | gsub("\\}"; "}}"))
+          "tooltip-format": ($tip | pango_escape | gsub("\\{"; "{{") | gsub("\\}"; "}}"))
         }
       };
 

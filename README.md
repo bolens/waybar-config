@@ -11,6 +11,7 @@ License: [MIT](LICENSE).
 - **Declarative Code Generation**: Generates Waybar layouts, modules, and theme tokens dynamically from a single central JSONC file (`data/waybar-settings.jsonc`).
 - **Smart Caching & Background Refresh**: Employs a zero-lag background-refresh caching mechanism via `scripts/lib/waybar-cache-helpers.sh` (using `serve_cache_or_refresh`). Serves cached UI state instantly on poll, then asynchronously runs updates in the background, preventing CPU stampedes and sluggish updates.
 - **Rich Cyberpunk Aesthetics**: High-refresh-rate-friendly pill containers, responsive icons, subtle hover micro-animations, and dynamic sliders.
+- **Optional audio visualizer**: `custom/cava` in the media drawer (requires [`cava`](https://github.com/karlstav/cava); hides when missing or silent).
 
 ## File Structure
 
@@ -216,6 +217,100 @@ CI workflows (as of 2026-07): main `CI` (path-filtered suites + generated drift 
 
 ShellCheck runs at **warning** severity (see `.shellcheckrc`).
 
+## Module catalog
+
+| Module | Group | Binary / dep | Notes |
+|--------|-------|--------------|-------|
+| `custom/cpu` `gpu` `memory` `disk` `nvme` | hardware | sysfs / `nvidia-smi` | Threshold CSS: `.warning` / `.critical` |
+| `custom/psu` `fans` `liquidctl` `coolercontrol` `openlinkhub` | hardware | optional daemons | Hide when absent |
+| `custom/cava` | media | **`cava` (optional)** | Continuous bars; hides when silent/missing — see [Dependencies](#optional-telemetry--integrations) |
+| `mpris` / `custom/mpris` / pulse / mic | media | playerctl / PipeWire | |
+| `custom/pomodoro` | tools | none | Click toggle · right reset · middle skip |
+| `custom/weather` | tools | `curl` | Open-Meteo (default) → wttr.in fallback |
+| `custom/power-menu` | power | `rofi` | Grid menu; individuals still available |
+| `custom/homelab` | infra | `curl` | `homelab.targets[]` in settings; hidden if empty |
+| `custom/github` | infra | `gh` | Notifications + review-requested PRs |
+| `custom/updates` | infra | pacman/apt/dnf | Review → “Upgrade System Now” in terminal |
+| `custom/dock-windows` | bottom center | `qdbus6` (Plasma) / `hyprctl` | **On by default**; set `dock_windows.enabled: false` to hide. Plasma: install `qt6-tools`. |
+| `custom/album-art` | media | `playerctl` | Opt-in via `visual.album_art.enabled` |
+| `custom/stats-carousel` | hardware | metrics collector | Opt-in via `visual.stats_carousel.enabled` |
+| `hyprland/submap` | desk-hypr | Hyprland | Native overlay; shows active submap name |
+| Privacy / VPN / Tailscale / i2pd | privacy / net | PipeWire / daemons | |
+
+### Minimal / laptop profile
+
+For forks that do not want CoolerControl / liquidctl / ASUS / security scanners, merge the group overrides from [`data/profiles/minimal-groups.jsonc`](data/profiles/minimal-groups.jsonc) into `data/waybar-settings.jsonc`, then `make generate`.
+
+### Homelab health
+
+```jsonc
+"homelab": {
+  "timeout_sec": 3,
+  "targets": [
+    { "name": "Caddy", "url": "https://example.com/health", "expect": "2xx" },
+    { "name": "Uptime Kuma", "url": "http://127.0.0.1:3001", "expect": "2xx" }
+  ]
+}
+```
+
+### Dock windows
+
+**Enabled by default** on the bottom bar center (next to active-window).
+
+#### What you should see
+
+- One **app icon per open window** (up to `dock_windows.slot_count`, default 12), like the workspace switcher.
+- The focused window’s glyph is highlighted; others are dimmed.
+- Tooltip on each glyph shows that window’s title (full title lives in the active-window module).
+
+#### Clicks
+
+- Left: focus that window.
+- Right: close that window.
+- Middle: cycle focus.
+- No rofi picker here — use the active-window module for that.
+
+**Per-monitor** (`dock_windows.per_output`, default on): when the compositor exposes screen metadata, each bar only lists windows on that output; otherwise both bars show the full list (Plasma WindowsRunner often lacks screen props today).
+
+Set `dock_windows.enabled: false` to hide. Plasma needs `qt6-tools` (`qdbus6`).
+
+### Theming
+
+Colors come from `theme` in `data/waybar-settings.jsonc` (then `make generate`):
+
+| `theme.mode` | Behavior |
+|--------------|----------|
+| `static` | Use `theme.colors.*` (default cyberpunk) |
+| `preset` | Load `data/themes/<theme.preset>.jsonc`, then optional `theme.colors` overrides |
+| `wallpaper` | Auto matugen → wallust → pywal; default `scope: per_output` styles each monitor. Run `scripts/tools/theme-apply-wallpaper.sh` after wallpaper changes. |
+
+**Bundled presets:** `cyberpunk`, `glass-cyber`, `minimal`, `nord`, `dracula`, `catppuccin-mocha`, `catppuccin-macchiato`, `gruvbox`, `tokyo-night`, `rose-pine`, `everforest`, `solarized-dark`, `one-dark`.
+
+Example:
+
+```jsonc
+"theme": {
+  "mode": "preset",
+  "preset": "nord"
+}
+```
+
+Floating glass bars: set `bars.floating: true` (margins + non-exclusive). Optional `bars.glass_opacity` / `bars.chrome_radius`. On Hyprland, add blur with the snippet from `scripts/tools/print-hypr-waybar-blur.sh` (not auto-applied).
+
+### Per-monitor modules
+
+With `bars.output: ["*"]`, bars already appear on every monitor. These honor `$WAYBAR_OUTPUT_NAME` when their `*.per_output` toggle is on (defaults on for most):
+
+- Workspace scroll (`workspaces.scroll_per_output`)
+- Active window, brightness, capture full-screen, dock-windows, window switcher
+- Wallpaper tokens when `theme.mode=wallpaper` and `theme.wallpaper.scope=per_output`
+
+`workspaces.slot_count` is the number of **desktop slots**, not monitors.
+
+### Visual polish
+
+Under `visual` in settings: unicode gauges (`visual.gauges`), album art, stats carousel, CSS animations (`workspace_pulse`, `critical_breathe`, `idle_glow`). Cava: `cava.placement` `drawer` | `inline`.
+
 ## Dependencies
 
 Modules that wrap optional tools **hide** (Waybar `disconnected`) when the binary/daemon is missing or inactive. Install only what you use.
@@ -249,6 +344,7 @@ sudo dnf install jq socat qt6-qttools wireplumber rofi cliphist
 | Module / feature | Arch / CachyOS | Debian / Ubuntu | Fedora | Notes |
 |------------------|----------------|-----------------|--------|-------|
 | NetworkManager status | `networkmanager` | `network-manager` | `NetworkManager` | |
+| Audio visualizer (`custom/cava`) | `cava` | `cava` | `cava` | **Optional.** Media drawer bars; module hides when binary missing or output silent. Config: `cava.bars` / `cava.framerate` in settings. |
 | Brightness | `brightnessctl` | `brightnessctl` | `brightnessctl` | |
 | External monitor DDC | `ddcutil` | `ddcutil` | `ddcutil` | |
 | Docker / containers | `docker` | `docker.io` | `docker` | |
@@ -298,6 +394,9 @@ sudo pacman -S jq socat qt6-tools wireplumber rofi cliphist \
   networkmanager brightnessctl ddcutil upower solaar nut liquidctl \
   openrgb ckb-next lm_sensors
 
+# Optional: media visualizer for custom/cava
+# sudo pacman -S cava
+
 # Optional AUR / community (yay/paru) — pick what you own
 yay -S coolercontrol-bin openlinkhub-bin   # or coolercontrol / openlinkhub
 # asusctl: prefer asus-linux g14 repo, or AUR asusctl
@@ -319,6 +418,9 @@ sudo apt install jq socat qt6-tools wireplumber rofi cliphist \
   network-manager brightnessctl ddcutil upower solaar nut-client liquidctl \
   openrgb lm-sensors
 
+# Optional: media visualizer for custom/cava
+# sudo apt install cava
+
 # CoolerControl — https://docs.coolercontrol.org/installation/debian.html
 curl -1sLf 'https://dl.cloudsmith.io/public/coolercontrol/coolercontrol/setup.deb.sh' | sudo -E bash
 sudo apt update && sudo apt install coolercontrol
@@ -334,6 +436,9 @@ sudo systemctl enable --now openlinkhub
 sudo dnf install jq socat qt6-qttools wireplumber rofi cliphist \
   NetworkManager brightnessctl ddcutil upower solaar nut liquidctl \
   openrgb lm_sensors
+
+# Optional: media visualizer for custom/cava
+# sudo dnf install cava
 
 # CoolerControl — https://docs.coolercontrol.org/installation/fedora.html
 sudo dnf install dnf-plugins-core
@@ -361,6 +466,7 @@ Scripts resolve config via `WAYBAR_HOME` → `$XDG_CONFIG_HOME/waybar` → `~/.c
 | `WAYBAR_SCREENSHOT_DIR` / `WAYBAR_SCREENRECORD_DIR` | Override capture dirs (wins over settings) |
 | `WAYBAR_UPDATES_BACKEND` | Force `arch` / `apt` / `dnf` / `none` |
 | `WAYBAR_UPDATES_ENABLE_AUR` | `1`/`0` overrides `updates.enable_aur` (Arch only) |
+| `WAYBAR_CAVA_BIN` | Override `cava` binary path for `custom/cava` (tests / custom installs) |
 
 **Updates backends** (`custom/updates`): prefer `checkupdates` (Arch) → `apt` → `dnf`; Flatpak is additive. AUR/`paru` only on the Arch path when `enable_aur` is set — never hard-required. Review click uses `apps.paru_update` / `apt_update` / `dnf_update` when set, else a terminal with the matching upgrade command.
 

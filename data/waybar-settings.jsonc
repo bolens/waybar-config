@@ -10,7 +10,16 @@
     "reload_style_on_change": true,
     "height": 44,
     "spacing": 6,
-    "tooltip": true
+    "tooltip": true,
+    // Floating island geometry (default off = exclusive edge-to-edge). When floating:
+    // exclusive becomes false and margin_* apply. glass_opacity/chrome_radius tune chrome.
+    "floating": false,
+    "margin_top": 8,
+    "margin_right": 12,
+    "margin_bottom": 0,
+    "margin_left": 12,
+    "glass_opacity": null, // null = keep theme.colors.background alpha; else 0–1
+    "chrome_radius": null // null = theme.border_radius; floating capsules use this
   },
   "drawers": {
     "click_to_reveal": true,
@@ -86,7 +95,12 @@
     "syncthing": "once",
     "sunshine": 30,
     "streamdeck": "once",
-    "i2pd": "once"
+    "i2pd": "once",
+    "pomodoro": 1,
+    "homelab": 60,
+    "cava": 0,
+    "album_art": 5,
+    "stats_carousel": 2
   },
   "signals": {
     "notifications": 10,
@@ -117,7 +131,10 @@
     "coolercontrol": 27,
     "asusctl": 28,
     "openlinkhub": 29,
-    "rgb": 30
+    "rgb": 30,
+    "pomodoro": 31,
+    "homelab": 33,
+    "stats_carousel": 32
   },
   "layouts": {
     "top": {
@@ -139,6 +156,7 @@
       "drawer": "left",
       "modules": [
         "custom/power-drawer",
+        "custom/power-menu",
         "custom/lock",
         "custom/logout",
         "custom/suspend",
@@ -167,7 +185,7 @@
     },
     "media": {
       "drawer": "right",
-      "modules": ["custom/media-drawer", "custom/media-prev", "custom/mpris", "custom/media-next", "pulseaudio", "custom/mic"]
+      "modules": ["custom/media-drawer", "custom/cava", "custom/media-prev", "custom/mpris", "custom/media-next", "pulseaudio", "custom/mic"]
     },
     "net": {
       "drawer": "right",
@@ -193,7 +211,8 @@
         "custom/colorpicker",
         "custom/rgb",
         "custom/discord",
-        "custom/weather"
+        "custom/weather",
+        "custom/pomodoro"
       ]
     },
     "top-status": {
@@ -218,6 +237,7 @@
       "drawer": "left",
       "modules": [
         "custom/infra-drawer",
+        "custom/homelab",
         "custom/docker",
         "custom/syncthing",
         "custom/sunshine",
@@ -249,19 +269,48 @@
     "section_order": ["web", "dev", "misc"]
   },
   "workspaces": {
-    "slot_count": 5 // Number of workspace indicator slots (integer between 1 and 10)
+    "slot_count": 5, // Desktop indicator slots (1–10), independent of monitor count
+    "scroll_per_output": true // Honor $WAYBAR_OUTPUT_NAME on scroll (default on)
   },
   "dock_windows": {
-    "enabled": false, // Keep false unless you want custom/dock-windows on the bar (active-window is the center title)
-    "min_length": 64,
-    "max_length": 160,
+    // Appends group/dock-windows (per-window slots) to bottom modules_center.
+    // Plasma needs qt6-tools/qdbus6. Click a glyph to focus; right-click closes that window.
+    "enabled": true,
+    "display": "icons", // icons (slot glyphs) | titles (unused for slots; kept for tooling)
+    "slot_count": 12, // Max window buttons (like workspaces.slot_count)
+    "per_output": true, // Filter windows to this bar's monitor when metadata allows
+    "min_length": 8,
+    "max_length": 48,
     "expand": true,
     "align": 0.5
+  },
+  "window_switcher": {
+    "per_output": true // Filter switcher to windows on invoking bar's output
+  },
+  "cava": {
+    // Optional dep: install `cava` (Arch/Debian/Fedora package of the same name).
+    // Module hides when the binary is missing or the visualizer is silent.
+    "bars": 8, // Frequency bars (4–32)
+    "framerate": 30,
+    "placement": "drawer" // drawer | inline (keep cava in open media strip)
+  },
+  "pomodoro": {
+    "work_min": 25,
+    "short_break_min": 5,
+    "long_break_min": 15,
+    "long_break_every": 4 // Long break after this many completed work sessions
+  },
+  "homelab": {
+    // HTTP health probes for infra drawer. Empty targets → module hidden.
+    // Example: [{ "name": "Caddy", "url": "https://bolens.dev/health", "expect": "2xx" }]
+    "timeout_sec": 3,
+    "targets": []
   },
   "active_window": {
     "zscroll": true, // Enable continuous scrolling text using zscroll (requires zscroll installed)
     "max_length": 40, // Maximum length of the window title in the bar
-    "scroll_delay": 0.3 // Delay in seconds between scroll steps
+    "scroll_delay": 0.3, // Delay in seconds between scroll steps
+    "per_output": true // Show focused window for this bar's monitor
   },
   "capture": {
     // Defaults resolve via capture-lib to $XDG_PICTURES_DIR/Screenshots and
@@ -269,7 +318,8 @@
     // WAYBAR_SCREENSHOT_DIR / WAYBAR_SCREENRECORD_DIR. Year subdirectory is appended.
     "screenshot_dir": null,
     "screenrecord_dir": null,
-    "screenrecord_fps": 60 // Default FPS (override with WAYBAR_SCREENREC_FPS env)
+    "screenrecord_fps": 60, // Default FPS (override with WAYBAR_SCREENREC_FPS env)
+    "per_output": true // Wire WAYBAR_OUTPUT_NAME; full-screen targets that output
   },
   "disk": {
     "path": "/" // Mountpoint monitored by the disk module
@@ -286,6 +336,7 @@
   },
   "github": {
     "preview_limit": 5, // Max notifications listed in the GitHub tooltip
+    "show_reviews": true, // Also count open PRs requesting your review
     "on_click": null, // Override left-click (default: apps.github_notifications)
     "on_click_right": null, // Override right-click (default: apps.github_home)
     "on_click_middle": null // Override middle-click (default: refresh)
@@ -356,7 +407,9 @@
     "step_down": 5,
     "step_up": 5,
     "middle_set": 80,
-    "hide_on_compositor": "hyprland"
+    "hide_on_compositor": "hyprland",
+    "per_output": true, // Map laptop backlight vs DDC by output; scroll adjusts that display
+    "output_map": {} // Optional pins: { "DP-1": "ddc:2", "eDP-1": "backlight:intel_backlight" }
   },
   "audio": {
     "mpris_zscroll": true, // Enable continuous scrolling for custom music module (requires zscroll installed)
@@ -401,6 +454,18 @@
     }
   },
   "theme": {
+    "mode": "static", // static | wallpaper | preset
+    // Presets in data/themes/: cyberpunk, glass-cyber, minimal, nord, dracula,
+    // catppuccin-mocha, catppuccin-macchiato, gruvbox, tokyo-night, rose-pine,
+    // everforest, solarized-dark, one-dark
+    "preset": "cyberpunk", // data/themes/<preset>.jsonc when mode=preset
+    "wallpaper": {
+      "backend": "auto", // auto | matugen | wallust | pywal
+      "scope": "per_output", // per_output | global — styles every connected monitor
+      "image": null, // global fallback path when detection fails
+      "outputs": {}, // sparse pins only: { "DP-1": "/path/wall.jpg" }
+      "reload_style": true
+    },
     "font_family": "JetBrainsMono Nerd Font",
     "font_size": 13,
     "tooltip_font_size": 12,
@@ -411,6 +476,8 @@
       "background": "rgba(6, 7, 14, 0.92)",
       "border": "rgba(0, 229, 255, 0.25)",
       "accent": "rgba(255, 42, 127, 0.32)",
+      "warning": "#ffe600",
+      "critical": "#ff2a7f",
       "tooltip_background": "#06070e",
       "tooltip_border": "#005c66",
       "workspace_active": "rgba(255, 42, 127, 0.32)",
@@ -418,17 +485,35 @@
       "workspace_visible": "#00e5ff"
     }
   },
+  "visual": {
+    "gauges": { "enabled": true, "width": 8 },
+    "album_art": { "enabled": true, "size": 22 },
+    "stats_carousel": {
+      "enabled": false,
+      "modules": ["cpu", "memory", "disk", "gpu"]
+    },
+    "animations": {
+      "workspace_pulse": true,
+      "critical_breathe": true,
+      "idle_glow": false
+    }
+  },
   "hypr_tools": {
     "hyprwhspr_record": "/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh record",
     "hyprwhspr_restart": "/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh restart",
     "hyprnotify_click": "hyprnotify show",
     "hyprlight_click": "hyprlight osd",
-    "keybinds_config": null // Hyprland conf for keybindhint (null = $HYPRLAND_CONFIG or ~/.config/hypr/hyprland.conf)
+    "keybinds_config": null, // Hyprland conf for keybindhint (null = $HYPRLAND_CONFIG or ~/.config/hypr/hyprland.conf)
+    "submap_per_output": false, // Submaps are session-global; optional CSS/empty cues only
+    "empty_desktop_per_output": true
   },
   "weather": {
+    "provider": "auto", // "open-meteo" | "wttr" | "auto" (Open-Meteo then wttr.in fallback)
     "unit": "auto", // Temperature unit: "F" (Fahrenheit), "C" (Celsius), or "auto" (detect from locale)
-    "location": "auto", // Location query for wttr.in (e.g. "Paris", "New York", "Munich") or "auto" (auto-IP geo-location)
-    "on_click": null, // Override click action (default: wttr.in URL)
+    "location": "auto", // City name for geocoding / wttr (e.g. "Paris") or "auto"
+    "latitude": null, // Optional Open-Meteo coords (skip geocode when both set)
+    "longitude": null,
+    "on_click": null, // Override click action (default: provider homepage)
     "on_click_right": null, // Override right-click action (default: weather.com URL)
     "on_click_middle": null // Override middle-click action (default: trigger status script --refresh)
   },

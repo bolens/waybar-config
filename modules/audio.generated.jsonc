@@ -70,6 +70,25 @@
     "on-click-right": "$WAYBAR_HOME/scripts/media/audio-click.sh manage",
     "on-click-middle": "$WAYBAR_HOME/scripts/media/mic-toggle.sh"
   },
+  "custom/cava": {
+    "format": "{}",
+    "return-type": "json",
+    "exec": "$WAYBAR_HOME/scripts/media/cava-status.sh",
+    "restart-interval": 2,
+    "tooltip": true,
+    "hide-empty-text": true
+  },
+  "custom/album-art": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": 5,
+    "exec": "$WAYBAR_HOME/scripts/media/album-art-status.sh",
+    "tooltip": true,
+    "hide-empty-text": true,
+    "on-click": "playerctl play-pause",
+    "on-click-right": "playerctl next",
+    "on-click-middle": "playerctl previous"
+  },
   "bluetooth": {
     "format": "󰂯",
     "format-disabled": "󰂲",

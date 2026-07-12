@@ -8,8 +8,21 @@ script_dir="${0%/*}"
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 # shellcheck source=capture-lib.sh
 . "$WAYBAR_SCRIPTS/lib/capture-lib.sh"
+# shellcheck source=waybar-settings.sh
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 
 mode="$(normalize_capture_mode "${1:-select}")"
+out_name="${2:-${WAYBAR_OUTPUT_NAME:-}}"
+if [ -n "$out_name" ]; then
+  export WAYBAR_OUTPUT_NAME="$out_name"
+fi
+
+capture_per_output=0
+_cpo=$(waybar_settings_get '.capture.per_output' 'true')
+case "$_cpo" in false | False | FALSE | 0 | no | No | NO | off | Off | OFF) ;; *)
+  [ -n "${WAYBAR_OUTPUT_NAME:-}" ] && capture_per_output=1
+  ;;
+esac
 
 compositor="$(detect_compositor)"
 output_tag="$(capture_output_tag "$compositor")"
@@ -27,7 +40,10 @@ case "$compositor" in
       outfile="$(capture_build_screenshot_path "$mode" "$output_tag" "spectacle" "png")"
       case "$mode" in
         selection) spectacle -b -n -r -o "$outfile" ;;
-        screen) spectacle -b -n -f -o "$outfile" ;;
+        screen)
+          # Best-effort: spectacle has no reliable -o output pin; full screen.
+          spectacle -b -n -f -o "$outfile"
+          ;;
         window) spectacle -b -n -a -o "$outfile" ;;
         *) spectacle -b -n -r -o "$outfile" ;;
       esac
@@ -43,7 +59,14 @@ case "$compositor" in
       outfile="$(capture_build_screenshot_path "$mode" "$output_tag" "grimblast" "png")"
       case "$mode" in
         selection) grimblast --freeze copysave area "$outfile" ;;
-        screen) grim "$outfile" && capture_copy_image "$outfile" ;;
+        screen)
+          if [ "$capture_per_output" -eq 1 ] && [ -n "${WAYBAR_OUTPUT_NAME:-}" ]; then
+            # Target the bar's output explicitly (grimblast "output" follows focus).
+            grim -o "$WAYBAR_OUTPUT_NAME" "$outfile" && capture_copy_image "$outfile"
+          else
+            grim "$outfile" && capture_copy_image "$outfile"
+          fi
+          ;;
         window) grimblast copysave active "$outfile" ;;
         *) grimblast --freeze copysave area "$outfile" ;;
       esac
@@ -86,7 +109,11 @@ case "$mode" in
     fi
     ;;
   screen)
-    grim "$outfile"
+    if [ "$capture_per_output" -eq 1 ] && [ -n "${WAYBAR_OUTPUT_NAME:-}" ]; then
+      grim -o "$WAYBAR_OUTPUT_NAME" "$outfile"
+    else
+      grim "$outfile"
+    fi
     ;;
   *)
     grim "$outfile"

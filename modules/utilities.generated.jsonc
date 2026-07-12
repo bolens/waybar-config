@@ -26,9 +26,9 @@
     "return-type": "json",
     "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/capture/screenshot-status.sh",
-    "on-click": "$WAYBAR_HOME/scripts/capture/screenshot-click.sh select",
-    "on-click-right": "$WAYBAR_HOME/scripts/capture/screenshot-click.sh full",
-    "on-click-middle": "$WAYBAR_HOME/scripts/capture/screenshot-click.sh window"
+    "on-click": "$WAYBAR_HOME/scripts/capture/screenshot-click.sh select \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click-right": "$WAYBAR_HOME/scripts/capture/screenshot-click.sh full \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click-middle": "$WAYBAR_HOME/scripts/capture/screenshot-click.sh window \"$WAYBAR_OUTPUT_NAME\""
   },
   "custom/screenrecord": {
     "format": "{}",
@@ -36,9 +36,9 @@
     "signal": 6,
     "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/capture/screenrecord-status.sh",
-    "on-click": "$WAYBAR_HOME/scripts/capture/screenrecord-click.sh select",
-    "on-click-right": "$WAYBAR_HOME/scripts/capture/screenrecord-click.sh full",
-    "on-click-middle": "$WAYBAR_HOME/scripts/capture/screenrecord-click.sh window"
+    "on-click": "$WAYBAR_HOME/scripts/capture/screenrecord-click.sh select \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click-right": "$WAYBAR_HOME/scripts/capture/screenrecord-click.sh full \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click-middle": "$WAYBAR_HOME/scripts/capture/screenrecord-click.sh window \"$WAYBAR_OUTPUT_NAME\""
   },
   "custom/nightlight": {
     "format": "{}",
@@ -72,12 +72,12 @@
     "return-type": "json",
     "signal": 8,
     "interval": "once",
-    "exec": "$WAYBAR_HOME/scripts/lib/compositor-gate.sh --hide hyprland -- $WAYBAR_HOME/scripts/system/brightness-status.sh",
-    "on-click": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust -5",
-    "on-click-right": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust +5",
-    "on-click-middle": "$WAYBAR_HOME/scripts/system/brightness-control.sh set 80",
-    "on-scroll-up": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust +5",
-    "on-scroll-down": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust -5"
+    "exec": "$WAYBAR_HOME/scripts/lib/compositor-gate.sh --hide hyprland -- $WAYBAR_HOME/scripts/system/brightness-status.sh \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust -5 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click-right": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust +5 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click-middle": "$WAYBAR_HOME/scripts/system/brightness-control.sh set 80 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-up": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust +5 \"$WAYBAR_OUTPUT_NAME\"",
+    "on-scroll-down": "$WAYBAR_HOME/scripts/system/brightness-control.sh adjust -5 \"$WAYBAR_OUTPUT_NAME\""
   },
   "custom/powerprofiles": {
     "format": "{}",
@@ -117,6 +117,11 @@
     "format": "",
     "tooltip": "Lock screen",
     "on-click": "$WAYBAR_HOME/scripts/system/power-click.sh lock"
+  },
+  "custom/power-menu": {
+    "format": "󰐦",
+    "tooltip": "Power menu (rofi grid)\nLock · Logout · Suspend · Reboot · Shutdown",
+    "on-click": "$WAYBAR_HOME/scripts/system/power-click.sh menu"
   },
   "custom/logout": {
     "format": "󰍃",
@@ -196,9 +201,19 @@
     "return-type": "json",
     "interval": 1800,
     "exec": "$WAYBAR_HOME/scripts/services/apps/weather-status.sh",
-    "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://wttr.in/",
+    "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://open-meteo.com/",
     "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open.sh xdg-open https://weather.com/",
     "on-click-middle": "$WAYBAR_HOME/scripts/services/apps/weather-status.sh --refresh"
+  },
+  "custom/pomodoro": {
+    "format": "{}",
+    "return-type": "json",
+    "signal": 31,
+    "interval": 1,
+    "exec": "$WAYBAR_HOME/scripts/tools/pomodoro-status.sh",
+    "on-click": "$WAYBAR_HOME/scripts/tools/pomodoro-click.sh toggle",
+    "on-click-right": "$WAYBAR_HOME/scripts/tools/pomodoro-click.sh reset",
+    "on-click-middle": "$WAYBAR_HOME/scripts/tools/pomodoro-click.sh skip"
   },
   "custom/systemd": {
     "format": "{}",
@@ -233,8 +248,8 @@
     "interval": "once",
     "tooltip": true,
     "exec": "$WAYBAR_HOME/scripts/services/devices/streamdeck-status.sh",
-    "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh streamdeck",
-    "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open.sh systemctl --user restart app-streamdeck-ui@autostart.service",
-    "on-click-middle": "$WAYBAR_HOME/scripts/services/devices/streamdeck-status.sh --refresh"
+    "on-click": "$WAYBAR_HOME/scripts/services/devices/streamdeck-click.sh open",
+    "on-click-right": "$WAYBAR_HOME/scripts/services/devices/streamdeck-click.sh restart",
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/devices/streamdeck-click.sh refresh"
   }
 }

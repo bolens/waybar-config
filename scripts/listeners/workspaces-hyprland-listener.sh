@@ -51,19 +51,57 @@ for candidate in \
 done
 [ -n "$socket" ] || exit 0
 
+normalize_aw_title() {
+  local title="$1"
+  title="${title//$'\n'/ }"
+  title="${title//$'\t'/ }"
+  title="$(printf '%s' "$title" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+  title="$(printf '%s' "$title" | sed -E 's/(.*) - Mozilla Firefox/\1/; s/(.*) - Zen Browser/\1/; s/(.*) - Google Chrome/\1/; s/(.*) - Floorp/\1/; s/(.*) - Chromium/\1/; s/(.*) - Brave/\1/; s/(.*) - Vivaldi/\1/')"
+  printf '%s' "$title"
+}
+
+write_aw_raw() {
+  local path="$1"
+  local title="$2"
+  local tmp="${path}.tmp.$$"
+  printf '%s' "$title" >"$tmp"
+  mv -f "$tmp" "$path"
+}
+
 update_active_window_cache() {
-  if command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
-    local title
-    title="$(hyprctl activewindow -j 2>/dev/null | jq -r '.title // empty' || true)"
-    title="${title//$'\n'/ }"
-    title="${title//$'\t'/ }"
-    title="$(printf '%s' "$title" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
-    title="$(printf '%s' "$title" | sed -E 's/(.*) - Mozilla Firefox/\1/; s/(.*) - Zen Browser/\1/; s/(.*) - Google Chrome/\1/; s/(.*) - Floorp/\1/; s/(.*) - Chromium/\1/; s/(.*) - Brave/\1/; s/(.*) - Vivaldi/\1/')"
-    local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
-    mkdir -p "$cache_dir"
-    echo "$title" >"$cache_dir/active-window-title.raw.tmp"
-    mv -f "$cache_dir/active-window-title.raw.tmp" "$cache_dir/active-window-title.raw"
+  if ! command -v hyprctl >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
+    return 0
   fi
+  local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
+  mkdir -p "$cache_dir"
+
+  # Global (focused) window — keeps non-per-output consumers working.
+  local title
+  title="$(hyprctl activewindow -j 2>/dev/null | jq -r '.title // empty' || true)"
+  title="$(normalize_aw_title "$title")"
+  write_aw_raw "$cache_dir/active-window-title.raw" "$title"
+
+  # Per-monitor titles for active_window.per_output / empty_desktop_per_output bars.
+  local clients_json monitors_json
+  clients_json="$(hyprctl clients -j 2>/dev/null || echo '[]')"
+  monitors_json="$(hyprctl monitors -j 2>/dev/null || echo '[]')"
+  local mon_name mon_id mon_title safe
+  while IFS=$'\t' read -r mon_id mon_name; do
+    [ -n "$mon_name" ] || continue
+    mon_title=$(
+      printf '%s' "$clients_json" | jq -r --argjson mid "$mon_id" '
+        [.[] | select(.monitor == $mid and ((.mapped // true) == true))]
+        | sort_by(.focusHistoryID // 9999)
+        | .[0].title // empty
+      ' 2>/dev/null || true
+    )
+    mon_title="$(normalize_aw_title "$mon_title")"
+    safe=$(printf '%s' "$mon_name" | sed 's/[^A-Za-z0-9_-]/_/g')
+    [ -n "$safe" ] || safe="out_${mon_id}"
+    write_aw_raw "$cache_dir/active-window-title-${safe}.raw" "$mon_title"
+  done <<EOF
+$(printf '%s' "$monitors_json" | jq -r '.[] | "\(.id)\t\(.name)"' 2>/dev/null || true)
+EOF
 }
 
 # Connect to Hyprland's broadcast event stream using socat:

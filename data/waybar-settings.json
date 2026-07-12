@@ -10,7 +10,16 @@
     "reload_style_on_change": true,
     "height": 44,
     "spacing": 6,
-    "tooltip": true
+    "tooltip": true,
+    
+    
+    "floating": false,
+    "margin_top": 8,
+    "margin_right": 12,
+    "margin_bottom": 0,
+    "margin_left": 12,
+    "glass_opacity": null, 
+    "chrome_radius": null 
   },
   "drawers": {
     "click_to_reveal": true,
@@ -86,7 +95,12 @@
     "syncthing": "once",
     "sunshine": 30,
     "streamdeck": "once",
-    "i2pd": "once"
+    "i2pd": "once",
+    "pomodoro": 1,
+    "homelab": 60,
+    "cava": 0,
+    "album_art": 5,
+    "stats_carousel": 2
   },
   "signals": {
     "notifications": 10,
@@ -117,7 +131,10 @@
     "coolercontrol": 27,
     "asusctl": 28,
     "openlinkhub": 29,
-    "rgb": 30
+    "rgb": 30,
+    "pomodoro": 31,
+    "homelab": 33,
+    "stats_carousel": 32
   },
   "layouts": {
     "top": {
@@ -139,6 +156,7 @@
       "drawer": "left",
       "modules": [
         "custom/power-drawer",
+        "custom/power-menu",
         "custom/lock",
         "custom/logout",
         "custom/suspend",
@@ -167,7 +185,7 @@
     },
     "media": {
       "drawer": "right",
-      "modules": ["custom/media-drawer", "custom/media-prev", "custom/mpris", "custom/media-next", "pulseaudio", "custom/mic"]
+      "modules": ["custom/media-drawer", "custom/cava", "custom/media-prev", "custom/mpris", "custom/media-next", "pulseaudio", "custom/mic"]
     },
     "net": {
       "drawer": "right",
@@ -193,7 +211,8 @@
         "custom/colorpicker",
         "custom/rgb",
         "custom/discord",
-        "custom/weather"
+        "custom/weather",
+        "custom/pomodoro"
       ]
     },
     "top-status": {
@@ -218,6 +237,7 @@
       "drawer": "left",
       "modules": [
         "custom/infra-drawer",
+        "custom/homelab",
         "custom/docker",
         "custom/syncthing",
         "custom/sunshine",
@@ -249,19 +269,48 @@
     "section_order": ["web", "dev", "misc"]
   },
   "workspaces": {
-    "slot_count": 5 
+    "slot_count": 5, 
+    "scroll_per_output": true 
   },
   "dock_windows": {
-    "enabled": false, 
-    "min_length": 64,
-    "max_length": 160,
+    
+    
+    "enabled": true,
+    "display": "icons", 
+    "slot_count": 12, 
+    "per_output": true, 
+    "min_length": 8,
+    "max_length": 48,
     "expand": true,
     "align": 0.5
+  },
+  "window_switcher": {
+    "per_output": true 
+  },
+  "cava": {
+    
+    
+    "bars": 8, 
+    "framerate": 30,
+    "placement": "drawer" 
+  },
+  "pomodoro": {
+    "work_min": 25,
+    "short_break_min": 5,
+    "long_break_min": 15,
+    "long_break_every": 4 
+  },
+  "homelab": {
+    
+    
+    "timeout_sec": 3,
+    "targets": []
   },
   "active_window": {
     "zscroll": true, 
     "max_length": 40, 
-    "scroll_delay": 0.3 
+    "scroll_delay": 0.3, 
+    "per_output": true 
   },
   "capture": {
     
@@ -269,7 +318,8 @@
     
     "screenshot_dir": null,
     "screenrecord_dir": null,
-    "screenrecord_fps": 60 
+    "screenrecord_fps": 60, 
+    "per_output": true 
   },
   "disk": {
     "path": "/" 
@@ -286,6 +336,7 @@
   },
   "github": {
     "preview_limit": 5, 
+    "show_reviews": true, 
     "on_click": null, 
     "on_click_right": null, 
     "on_click_middle": null 
@@ -356,7 +407,9 @@
     "step_down": 5,
     "step_up": 5,
     "middle_set": 80,
-    "hide_on_compositor": "hyprland"
+    "hide_on_compositor": "hyprland",
+    "per_output": true, 
+    "output_map": {} 
   },
   "audio": {
     "mpris_zscroll": true, 
@@ -401,6 +454,18 @@
     }
   },
   "theme": {
+    "mode": "static", 
+    
+    
+    
+    "preset": "cyberpunk", 
+    "wallpaper": {
+      "backend": "auto", 
+      "scope": "per_output", 
+      "image": null, 
+      "outputs": {}, 
+      "reload_style": true
+    },
     "font_family": "JetBrainsMono Nerd Font",
     "font_size": 13,
     "tooltip_font_size": 12,
@@ -411,6 +476,8 @@
       "background": "rgba(6, 7, 14, 0.92)",
       "border": "rgba(0, 229, 255, 0.25)",
       "accent": "rgba(255, 42, 127, 0.32)",
+      "warning": "#ffe600",
+      "critical": "#ff2a7f",
       "tooltip_background": "#06070e",
       "tooltip_border": "#005c66",
       "workspace_active": "rgba(255, 42, 127, 0.32)",
@@ -418,16 +485,34 @@
       "workspace_visible": "#00e5ff"
     }
   },
+  "visual": {
+    "gauges": { "enabled": true, "width": 8 },
+    "album_art": { "enabled": true, "size": 22 },
+    "stats_carousel": {
+      "enabled": false,
+      "modules": ["cpu", "memory", "disk", "gpu"]
+    },
+    "animations": {
+      "workspace_pulse": true,
+      "critical_breathe": true,
+      "idle_glow": false
+    }
+  },
   "hypr_tools": {
     "hyprwhspr_record": "/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh record",
     "hyprwhspr_restart": "/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh restart",
     "hyprnotify_click": "hyprnotify show",
     "hyprlight_click": "hyprlight osd",
-    "keybinds_config": null 
+    "keybinds_config": null, 
+    "submap_per_output": false, 
+    "empty_desktop_per_output": true
   },
   "weather": {
+    "provider": "auto", 
     "unit": "auto", 
     "location": "auto", 
+    "latitude": null, 
+    "longitude": null,
     "on_click": null, 
     "on_click_right": null, 
     "on_click_middle": null 

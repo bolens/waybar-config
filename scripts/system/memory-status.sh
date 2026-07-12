@@ -7,6 +7,7 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
 
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
+. "$WAYBAR_SCRIPTS/lib/gauge-lib.sh"
 
 cached_file="$cache_dir/memory-icon.json"
 
@@ -18,6 +19,8 @@ fi
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 mem_warn=$(waybar_settings_get '.thresholds.memory.warning' '70')
 mem_crit=$(waybar_settings_get '.thresholds.memory.critical' '85')
+gauges_enabled=$(waybar_settings_get '.visual.gauges.enabled' 'true')
+gauge_width=$(waybar_settings_get '.visual.gauges.width' '8')
 
 # 3. Hard fallback for the first launch if cache does not exist yet
 metrics="$("$WAYBAR_SCRIPTS/infra/system-metrics-collector.sh" 2>/dev/null || true)"
@@ -55,4 +58,12 @@ elif [ "$mem_pct" -ge "$mem_warn" ] 2>/dev/null; then
   class="warning"
 fi
 
-emit_waybar_json "$(printf '󰘚 %3d%%' "$mem_pct")" "$tooltip" "$class"
+case "$gauges_enabled" in
+  false | False | FALSE | 0 | no | No | NO | null | off | Off | OFF)
+    text=$(printf '󰘚 %3d%%' "$mem_pct")
+    ;;
+  *)
+    text=$(printf '󰘚 %s %3d%%' "$(gauge_bar "$mem_pct" "$gauge_width")" "$mem_pct")
+    ;;
+esac
+emit_waybar_json "$text" "$tooltip" "$class"

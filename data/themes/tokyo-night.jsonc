@@ -1,0 +1,16 @@
+{
+  // Tokyo Night palette adapted for Waybar token keys
+  "colors": {
+    "foreground": "#c0caf5",
+    "background": "rgba(26, 27, 38, 0.92)",
+    "border": "rgba(122, 162, 247, 0.40)",
+    "accent": "rgba(187, 154, 247, 0.35)",
+    "warning": "#e0af68",
+    "critical": "#f7768e",
+    "tooltip_background": "#1a1b26",
+    "tooltip_border": "#414868",
+    "workspace_active": "rgba(122, 162, 247, 0.40)",
+    "workspace_inactive": "rgba(192, 202, 245, 0.40)",
+    "workspace_visible": "#7aa2f7"
+  }
+}

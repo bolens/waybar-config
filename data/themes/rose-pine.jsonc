@@ -1,0 +1,16 @@
+{
+  // Rose Pine palette adapted for Waybar token keys
+  "colors": {
+    "foreground": "#e0def4",
+    "background": "rgba(25, 23, 36, 0.92)",
+    "border": "rgba(196, 167, 231, 0.40)",
+    "accent": "rgba(235, 111, 146, 0.35)",
+    "warning": "#f6c177",
+    "critical": "#eb6f92",
+    "tooltip_background": "#191724",
+    "tooltip_border": "#403d52",
+    "workspace_active": "rgba(196, 167, 231, 0.40)",
+    "workspace_inactive": "rgba(224, 222, 244, 0.40)",
+    "workspace_visible": "#c4a7e7"
+  }
+}

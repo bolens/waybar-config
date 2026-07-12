@@ -21,6 +21,12 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def sig($k): ($s[0].signals[$k] // null);
   def app($k): ($s[0].apps[$k] // "");
   def app_open: ($scripts + "/tools/app-open.sh");
+  def brightness_out:
+    ((($s[0].brightness // {}).per_output) as $p | if $p == false then false else true end)
+    | if . then " \"$WAYBAR_OUTPUT_NAME\"" else "" end;
+  def capture_out:
+    ((($s[0].capture // {}).per_output) as $p | if $p == false then false else true end)
+    | if . then " \"$WAYBAR_OUTPUT_NAME\"" else "" end;
 
   {
     "custom/notifications": {
@@ -50,9 +56,9 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "return-type": "json",
       interval: iv("screenshot"),
       exec: ($scripts + "/capture/screenshot-status.sh"),
-      "on-click": ($scripts + "/capture/screenshot-click.sh select"),
-      "on-click-right": ($scripts + "/capture/screenshot-click.sh full"),
-      "on-click-middle": ($scripts + "/capture/screenshot-click.sh window")
+      "on-click": ($scripts + "/capture/screenshot-click.sh select" + capture_out),
+      "on-click-right": ($scripts + "/capture/screenshot-click.sh full" + capture_out),
+      "on-click-middle": ($scripts + "/capture/screenshot-click.sh window" + capture_out)
     },
     "custom/screenrecord": {
       format: "{}",
@@ -60,9 +66,9 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       signal: sig("screenrecord"),
       interval: iv("screenrecord"),
       exec: ($scripts + "/capture/screenrecord-status.sh"),
-      "on-click": ($scripts + "/capture/screenrecord-click.sh select"),
-      "on-click-right": ($scripts + "/capture/screenrecord-click.sh full"),
-      "on-click-middle": ($scripts + "/capture/screenrecord-click.sh window")
+      "on-click": ($scripts + "/capture/screenrecord-click.sh select" + capture_out),
+      "on-click-right": ($scripts + "/capture/screenrecord-click.sh full" + capture_out),
+      "on-click-middle": ($scripts + "/capture/screenrecord-click.sh window" + capture_out)
     },
     "custom/nightlight": {
       format: "{}",
@@ -100,12 +106,13 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
         $scripts + "/lib/compositor-gate.sh --hide "
         + ($s[0].brightness.hide_on_compositor // "hyprland")
         + " -- " + $scripts + "/system/brightness-status.sh"
+        + brightness_out
       ),
-      "on-click": ($scripts + "/system/brightness-control.sh adjust -" + (($s[0].brightness.step_down // 5) | tostring)),
-      "on-click-right": ($scripts + "/system/brightness-control.sh adjust +" + (($s[0].brightness.step_up // 5) | tostring)),
-      "on-click-middle": ($scripts + "/system/brightness-control.sh set " + (($s[0].brightness.middle_set // 80) | tostring)),
-      "on-scroll-up": ($scripts + "/system/brightness-control.sh adjust +" + (($s[0].brightness.step_up // 5) | tostring)),
-      "on-scroll-down": ($scripts + "/system/brightness-control.sh adjust -" + (($s[0].brightness.step_down // 5) | tostring))
+      "on-click": ($scripts + "/system/brightness-control.sh adjust -" + (($s[0].brightness.step_down // 5) | tostring) + brightness_out),
+      "on-click-right": ($scripts + "/system/brightness-control.sh adjust +" + (($s[0].brightness.step_up // 5) | tostring) + brightness_out),
+      "on-click-middle": ($scripts + "/system/brightness-control.sh set " + (($s[0].brightness.middle_set // 80) | tostring) + brightness_out),
+      "on-scroll-up": ($scripts + "/system/brightness-control.sh adjust +" + (($s[0].brightness.step_up // 5) | tostring) + brightness_out),
+      "on-scroll-down": ($scripts + "/system/brightness-control.sh adjust -" + (($s[0].brightness.step_down // 5) | tostring) + brightness_out)
     },
     "custom/powerprofiles": {
       format: "{}",
@@ -145,6 +152,11 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       format: "",
       tooltip: "Lock screen",
       "on-click": ($scripts + "/system/power-click.sh lock")
+    },
+    "custom/power-menu": {
+      format: "󰐦",
+      tooltip: "Power menu (rofi grid)\nLock · Logout · Suspend · Reboot · Shutdown",
+      "on-click": ($scripts + "/system/power-click.sh menu")
     },
     "custom/logout": {
       format: "󰍃",
@@ -224,9 +236,19 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "return-type": "json",
       interval: iv("weather"),
       exec: ($scripts + "/services/apps/weather-status.sh"),
-      "on-click": ($s[0].weather.on_click // (app_open + " xdg-open https://wttr.in/")),
+      "on-click": ($s[0].weather.on_click // (app_open + " xdg-open https://open-meteo.com/")),
       "on-click-right": ($s[0].weather.on_click_right // (app_open + " xdg-open https://weather.com/")),
       "on-click-middle": ($s[0].weather.on_click_middle // ($scripts + "/services/apps/weather-status.sh --refresh"))
+    },
+    "custom/pomodoro": {
+      format: "{}",
+      "return-type": "json",
+      signal: sig("pomodoro"),
+      interval: iv("pomodoro"),
+      exec: ($scripts + "/tools/pomodoro-status.sh"),
+      "on-click": ($scripts + "/tools/pomodoro-click.sh toggle"),
+      "on-click-right": ($scripts + "/tools/pomodoro-click.sh reset"),
+      "on-click-middle": ($scripts + "/tools/pomodoro-click.sh skip")
     },
     "custom/systemd": {
       format: "{}",
@@ -261,9 +283,9 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       interval: iv("streamdeck"),
       tooltip: true,
       exec: ($scripts + "/services/devices/streamdeck-status.sh"),
-      "on-click": ((($s[0].streamdeck // {}).on_click) // (app_open + " streamdeck")),
-      "on-click-right": ((($s[0].streamdeck // {}).on_click_right) // (app_open + " systemctl --user restart " + ((($s[0].streamdeck // {}).service_name) // "app-streamdeck-ui@autostart.service"))),
-      "on-click-middle": ((($s[0].streamdeck // {}).on_click_middle) // ($scripts + "/services/devices/streamdeck-status.sh --refresh"))
+      "on-click": ((($s[0].streamdeck // {}).on_click) // ($scripts + "/services/devices/streamdeck-click.sh open")),
+      "on-click-right": ((($s[0].streamdeck // {}).on_click_right) // ($scripts + "/services/devices/streamdeck-click.sh restart")),
+      "on-click-middle": ((($s[0].streamdeck // {}).on_click_middle) // ($scripts + "/services/devices/streamdeck-click.sh refresh"))
     }
   } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/utilities.generated.jsonc"

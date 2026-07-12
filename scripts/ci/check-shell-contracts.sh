@@ -2,7 +2,8 @@
 # Prevent CI regressions from shell portability mismatches.
 #
 # Ubuntu runners use dash as /bin/sh. Footguns this suite guards:
-# 1. Scripts with a `sh` shebang that source bash-only waybar-settings.sh
+# 1. Scripts with a `sh` shebang that *source* bash-only waybar-settings.sh
+#    (bash -c helpers that mention the path are OK)
 # 2. Listener lock acquisition that relies on `. file arg` (dash ignores args)
 # 3. listener-ctl + status scripts failing silently under dash/minimal PATH
 set -euo pipefail
@@ -18,13 +19,18 @@ trap 'rm -rf "$WORK"' EXIT
 
 echo "=== Shell contract checks ==="
 
+# Match only a real source/dot of waybar-settings.sh (not bash -c string refs).
+_waybar_settings_sourced() {
+  grep -nE '^[[:space:]]*(\.|source)[[:space:]].*waybar-settings\.sh' "$1" >/dev/null 2>&1
+}
+
 # --- 1) sh shebang must not source bash-only settings helpers ---
 while IFS= read -r -d '' file; do
   sheb="$(head -1 "$file" || true)"
   case "$sheb" in
     '#!/usr/bin/env sh' | '#!/bin/sh')
-      if grep -q 'waybar-settings\.sh' "$file"; then
-        echo "FAIL: $file uses sh shebang but sources/references waybar-settings.sh (bash-only under dash)" >&2
+      if _waybar_settings_sourced "$file"; then
+        echo "FAIL: $file uses sh shebang but sources waybar-settings.sh (bash-only under dash)" >&2
         fail=1
       fi
       ;;
@@ -48,20 +54,19 @@ for must_bash in \
   esac
 done
 
-# Meta-test: detector must flag a synthetic sh+settings offender
+# Meta-test: detector must flag direct source, not bash -c path mentions
 bad_sample="$WORK/bad-settings-consumer.sh"
+ok_sample="$WORK/ok-settings-via-bash.sh"
 printf '%s\n' '#!/usr/bin/env sh' '. "$(dirname "$0")/waybar-settings.sh"' >"$bad_sample"
-if ! grep -q 'waybar-settings\.sh' "$bad_sample" || ! head -1 "$bad_sample" | grep -q 'env sh'; then
-  echo "FAIL: could not build synthetic offender for detector self-test" >&2
+printf '%s\n' '#!/usr/bin/env sh' 'bash -c '"'"'. "$1/lib/waybar-settings.sh"'"'"' _ "$WAYBAR_SCRIPTS"' >"$ok_sample"
+if ! _waybar_settings_sourced "$bad_sample"; then
+  echo "FAIL: shebang/settings detector self-test missed direct source" >&2
+  fail=1
+elif _waybar_settings_sourced "$ok_sample"; then
+  echo "FAIL: shebang/settings detector self-test falsely flagged bash -c reference" >&2
   fail=1
 else
-  # Inline the same rule used above
-  if head -1 "$bad_sample" | grep -qE 'env sh|/bin/sh' && grep -q 'waybar-settings\.sh' "$bad_sample"; then
-    echo "PASS: shebang/settings detector self-test"
-  else
-    echo "FAIL: shebang/settings detector self-test did not match" >&2
-    fail=1
-  fi
+  echo "PASS: shebang/settings detector self-test"
 fi
 
 # --- 2) Listener lock must be dash-safe (env var, not `. file arg` only) ---

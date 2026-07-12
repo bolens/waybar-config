@@ -1,0 +1,16 @@
+{
+  // Catppuccin Macchiato palette adapted for Waybar token keys
+  "colors": {
+    "foreground": "#cad3f5",
+    "background": "rgba(36, 39, 58, 0.92)",
+    "border": "rgba(138, 173, 244, 0.35)",
+    "accent": "rgba(198, 160, 246, 0.35)",
+    "warning": "#eed49f",
+    "critical": "#ed8796",
+    "tooltip_background": "#24273a",
+    "tooltip_border": "#494d64",
+    "workspace_active": "rgba(198, 160, 246, 0.35)",
+    "workspace_inactive": "rgba(202, 211, 245, 0.40)",
+    "workspace_visible": "#8aadf4"
+  }
+}

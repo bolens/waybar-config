@@ -2,7 +2,8 @@
   "name": "bottom",
   "position": "bottom",
   "modules-center": [
-    "custom/active-window"
+    "custom/active-window",
+    "group/dock-windows"
   ],
   "modules-right": [
     "group/tools",

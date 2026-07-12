@@ -11,8 +11,8 @@ SECRETS_TESTS := $(sort $(wildcard scripts/ci/tests/secrets/*.sh))
 
 .PHONY: check check-fast check-syntax check-python check-ruff check-contracts \
 	check-generator check-secrets check-systemd check-suite-inventory \
-	check-drift check-shfmt check-gitleaks check-stylelint check-markdownlint \
-	validate generate fmt-shell install-hooks help
+	check-drift check-shfmt check-gitleaks check-stylelint check-gtk-css \
+	check-markdownlint validate generate fmt-shell install-hooks help
 
 help:
 	@printf '%s\n' \
@@ -30,6 +30,7 @@ help:
 		'make check-shfmt        - shfmt -d on scripts/' \
 		'make check-gitleaks     - secret scan (git-aware)' \
 		'make check-stylelint    - CSS lint' \
+		'make check-gtk-css      - GTK3/Waybar CSS crash guards' \
 		'make check-markdownlint - Markdown lint' \
 		'make validate' \
 		'make fmt-shell          - shfmt -w scripts/' \
@@ -38,7 +39,7 @@ help:
 
 check: check-syntax check-contracts check-suite-inventory check-generator \
 	check-secrets validate check-drift check-systemd check-python check-ruff \
-	check-shfmt check-gitleaks check-stylelint check-markdownlint
+	check-shfmt check-gitleaks check-stylelint check-gtk-css check-markdownlint
 
 check-fast: check-syntax check-contracts check-suite-inventory validate \
 	check-systemd check-python
@@ -96,6 +97,9 @@ check-gitleaks:
 
 check-stylelint:
 	bash scripts/ci/check-stylelint.sh
+
+check-gtk-css:
+	bash scripts/ci/check-gtk-css.sh
 
 check-markdownlint:
 	bash scripts/ci/check-markdownlint.sh

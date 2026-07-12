@@ -1,0 +1,16 @@
+{
+  // Gruvbox Dark Hard palette adapted for Waybar token keys
+  "colors": {
+    "foreground": "#ebdbb2",
+    "background": "rgba(29, 32, 33, 0.92)",
+    "border": "rgba(215, 153, 33, 0.40)",
+    "accent": "rgba(211, 134, 155, 0.35)",
+    "warning": "#fabd2f",
+    "critical": "#fb4934",
+    "tooltip_background": "#1d2021",
+    "tooltip_border": "#504945",
+    "workspace_active": "rgba(215, 153, 33, 0.40)",
+    "workspace_inactive": "rgba(235, 219, 178, 0.40)",
+    "workspace_visible": "#d79921"
+  }
+}

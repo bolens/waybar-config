@@ -10,6 +10,7 @@ on:
       - "pnpm-lock.yaml"
       - ".github/workflows/stylelint.yml"
       - "scripts/ci/check-stylelint.sh"
+      - "scripts/ci/check-gtk-css.sh"
       - "scripts/ci/ensure-pnpm.sh"
   pull_request:
     branches: [main]
@@ -20,6 +21,7 @@ on:
       - "pnpm-lock.yaml"
       - ".github/workflows/stylelint.yml"
       - "scripts/ci/check-stylelint.sh"
+      - "scripts/ci/check-gtk-css.sh"
       - "scripts/ci/ensure-pnpm.sh"
   workflow_dispatch:
 
@@ -50,3 +52,5 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Lint CSS
         run: bash scripts/ci/check-stylelint.sh
+      - name: GTK3 / Waybar CSS compat
+        run: bash scripts/ci/check-gtk-css.sh

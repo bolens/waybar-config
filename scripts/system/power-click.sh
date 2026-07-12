@@ -67,49 +67,144 @@ confirm_action() {
   return 0
 }
 
-case "$action" in
-  lock)
-    case "$compositor" in
-      hyprland)
-        if command -v hyprlock >/dev/null 2>&1; then
-          hyprlock
-        elif command -v swaylock >/dev/null 2>&1; then
-          swaylock -f
-        else
-          loginctl lock-session
-        fi
-        ;;
-      kde)
+do_lock() {
+  case "$compositor" in
+    hyprland)
+      if command -v hyprlock >/dev/null 2>&1; then
+        hyprlock
+      elif command -v swaylock >/dev/null 2>&1; then
+        swaylock -f
+      else
         loginctl lock-session
-        ;;
-      *)
-        loginctl lock-session || swaylock -f || hyprlock
-        ;;
-    esac
+      fi
+      ;;
+    kde)
+      loginctl lock-session
+      ;;
+    *)
+      loginctl lock-session || swaylock -f || hyprlock
+      ;;
+  esac
+}
+
+do_logout() {
+  confirm_action "logout" || exit 0
+  case "$compositor" in
+    hyprland)
+      if command -v hyprctl >/dev/null 2>&1; then
+        hyprctl dispatch exit || loginctl terminate-session "${XDG_SESSION_ID:-}"
+      else
+        loginctl terminate-session "${XDG_SESSION_ID:-}"
+      fi
+      ;;
+    kde)
+      if command -v qdbus6 >/dev/null 2>&1; then
+        qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout || loginctl terminate-session "${XDG_SESSION_ID:-}"
+      elif command -v qdbus >/dev/null 2>&1; then
+        qdbus org.kde.Shutdown /Shutdown org.kde.Shutdown.logout || loginctl terminate-session "${XDG_SESSION_ID:-}"
+      else
+        loginctl terminate-session "${XDG_SESSION_ID:-}"
+      fi
+      ;;
+    *)
+      loginctl terminate-session "${XDG_SESSION_ID:-}"
+      ;;
+  esac
+}
+
+show_power_menu() {
+  if ! command -v rofi >/dev/null 2>&1; then
+    notify-send "Power" "rofi is required for the power menu" 2>/dev/null || true
+    exit 1
+  fi
+
+  # wlogout-style grid: icon + label per cell
+  local theme='
+    window {
+      width: 520px;
+      location: center;
+      anchor: center;
+      border: 2px;
+      border-color: #ff2a7f;
+      border-radius: 12px;
+      background-color: #090b12f2;
+      padding: 18px;
+    }
+    mainbox {
+      spacing: 14px;
+      children: [ message, listview ];
+      background-color: transparent;
+    }
+    message {
+      padding: 4px;
+      background-color: transparent;
+      text-color: #c8f6ff;
+    }
+    listview {
+      lines: 1;
+      columns: 5;
+      fixed-height: true;
+      spacing: 10px;
+      background-color: transparent;
+    }
+    element {
+      padding: 16px 10px;
+      border-radius: 8px;
+      background-color: #0d111c;
+      text-color: #d6f7ff;
+      orientation: vertical;
+    }
+    element selected {
+      background-color: #ff2a7f;
+      text-color: #ffffff;
+    }
+    element-text {
+      font: "JetBrainsMono Nerd Font 14";
+      background-color: transparent;
+      text-color: inherit;
+      horizontal-align: 0.5;
+      vertical-align: 0.5;
+    }
+  '
+  local choice
+  choice=$(
+    printf '%s\n' \
+      "  Lock" \
+      "󰍃  Logout" \
+      "󰤄  Suspend" \
+      "󰜉  Reboot" \
+      "󰐥  Shutdown" \
+      | rofi -dmenu -i -markup -theme-str "$theme" -p "Power" \
+        -mesg "<span font='13'>Session controls</span>"
+  ) || exit 0
+
+  case "$choice" in
+    *"Lock"*) do_lock ;;
+    *"Logout"*) do_logout ;;
+    *"Suspend"*)
+      confirm_action "suspend" || exit 0
+      systemctl suspend
+      ;;
+    *"Reboot"*)
+      confirm_action "reboot" || exit 0
+      systemctl reboot
+      ;;
+    *"Shutdown"*)
+      confirm_action "shutdown" || exit 0
+      systemctl poweroff
+      ;;
+  esac
+}
+
+case "$action" in
+  menu)
+    show_power_menu
+    ;;
+  lock)
+    do_lock
     ;;
   logout)
-    confirm_action "logout" || exit 0
-    case "$compositor" in
-      hyprland)
-        if command -v hyprctl >/dev/null 2>&1; then
-          hyprctl dispatch exit || loginctl terminate-session "${XDG_SESSION_ID:-}"
-        else
-          loginctl terminate-session "${XDG_SESSION_ID:-}"
-        fi
-        ;;
-      kde)
-        if command -v qdbus6 >/dev/null 2>&1; then
-          qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout || loginctl terminate-session "${XDG_SESSION_ID:-}"
-        elif command -v qdbus >/dev/null 2>&1; then
-          qdbus org.kde.Shutdown /Shutdown org.kde.Shutdown.logout || loginctl terminate-session "${XDG_SESSION_ID:-}"
-        else
-          loginctl terminate-session "${XDG_SESSION_ID:-}"
-        fi
-        ;;
-      *)
-        loginctl terminate-session "${XDG_SESSION_ID:-}"
-        ;;
-    esac
+    do_logout
     ;;
   suspend)
     confirm_action "suspend" || exit 0
@@ -124,7 +219,7 @@ case "$action" in
     systemctl poweroff
     ;;
   *)
-    echo "Usage: $0 {lock|logout|suspend|reboot|shutdown}" >&2
+    echo "Usage: $0 {menu|lock|logout|suspend|reboot|shutdown}" >&2
     exit 1
     ;;
 esac

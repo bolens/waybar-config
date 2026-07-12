@@ -3,36 +3,71 @@ set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
-script_dir="${0%/*}"
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 # shellcheck source=compositor-session.sh
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 
 layout=""
 variant=""
+tip_layout=""
 comp="$(detect_compositor)"
 
-qdbus_cmd() {
+qdbus_bin() {
   if command -v qdbus6 >/dev/null 2>&1; then
-    qdbus6 "$@"
+    command -v qdbus6
   elif command -v qdbus >/dev/null 2>&1; then
-    qdbus "$@"
+    command -v qdbus
   else
     return 1
   fi
 }
 
+qdbus_cmd() {
+  _bin="$(qdbus_bin)" || return 1
+  "$_bin" "$@"
+}
+
+# Plasma KeyboardLayouts API (current): getLayout() → index; getLayoutsList() → a(sss).
+# Older string-returning layout getters were removed; using their error text as a label
+# produced bar text like SIGNATURE with empty quotes.
+plasma_layout() {
+  _bin="$(qdbus_bin)" || return 1
+  idx="$("$_bin" org.kde.keyboard /Layouts org.kde.KeyboardLayouts.getLayout 2>/dev/null || true)"
+  case "$idx" in
+    '' | *[!0-9]*) return 1 ;;
+  esac
+  command -v python3 >/dev/null 2>&1 || return 1
+
+  parsed="$(
+    "$_bin" --literal org.kde.keyboard /Layouts org.kde.KeyboardLayouts.getLayoutsList 2>/dev/null \
+      | python3 -c '
+import re, sys
+idx = int(sys.argv[1])
+raw = sys.stdin.read()
+entries = re.findall(r"\(sss\)\s*\"([^\"]*)\",\s*\"([^\"]*)\",\s*\"([^\"]*)\"", raw)
+if not entries or idx < 0 or idx >= len(entries):
+    sys.exit(1)
+short, var, display = entries[idx]
+print(short or "")
+print(var or "")
+print(display or short or "??")
+' "$idx" 2>/dev/null || true
+  )"
+  [ -n "$parsed" ] || return 1
+
+  short="$(printf '%s\n' "$parsed" | sed -n '1p')"
+  var="$(printf '%s\n' "$parsed" | sed -n '2p')"
+  display="$(printf '%s\n' "$parsed" | sed -n '3p')"
+  tip_layout="${display:-$short}"
+  layout="${short:-$display}"
+  variant="$var"
+  [ -n "$layout" ] || return 1
+  return 0
+}
+
 case "$comp" in
   kde)
-    # Plasma Wayland: org.kde.keyboard (setxkbmap is X11-only).
-    current="$(qdbus_cmd org.kde.keyboard /Layouts org.kde.KeyboardLayouts.getCurrentLayout 2>/dev/null || true)"
-    if [ -n "$current" ]; then
-      layout="$current"
-    fi
-    if [ -z "$layout" ]; then
-      layout="$(qdbus_cmd org.kde.keyboard /Layouts org.kde.KeyboardLayouts.getLayoutsList 2>/dev/null \
-        | head -n1 | sed 's/,.*//' || true)"
-    fi
+    plasma_layout || true
     ;;
   hyprland)
     if command -v hyprctl >/dev/null 2>&1; then
@@ -60,7 +95,16 @@ EOF
     ;;
 esac
 
-[ -n "$layout" ] || layout="??"
+# Never surface DBus/error blobs as layout labels.
+case "$layout" in
+  '' | Error:* | *"No such method"* | *"signature"*)
+    layout="??"
+    tip_layout=""
+    ;;
+esac
+
+[ -n "$tip_layout" ] || tip_layout="$layout"
+
 label="$(printf '%s' "$layout" | tr '[:lower:]' '[:upper:]')"
 # Keep labels short for the bar (e.g. "English (US)" → parenthetical / first token).
 case "$label" in
@@ -73,7 +117,11 @@ case "$label" in
     fi
     ;;
 esac
-tooltip="Keyboard layout: ${layout}"
+
+tooltip="Keyboard layout: ${tip_layout}"
 [ -n "$variant" ] && [ "$variant" != "None" ] && tooltip="${tooltip} (${variant})"
 
-emit_waybar_json "$label" "$tooltip" "$layout"
+class="$(printf '%s' "$label" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '_' | cut -c1-32)"
+[ -n "$class" ] || class="unknown"
+
+emit_waybar_json "$label" "$tooltip" "$class"

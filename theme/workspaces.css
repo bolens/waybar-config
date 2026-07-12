@@ -5,6 +5,8 @@
     border: none;
     box-shadow: none;
     margin: 4px 2px;
+    /* Let slots size to their glyphs — do not force a fixed strip width */
+    min-width: 0;
 }
 
 #custom-ws-0.ws-hit,
@@ -96,6 +98,8 @@
 #custom-ws-9.ws-inactive:hover {
     color: #00e5ff;
     opacity: 1;
+    /* Match drawer-toggle hover fill footprint (padding: 0 12px) */
+    background-color: rgba(0, 229, 255, 0.10);
 }
 
 #custom-ws-0.ws-active:hover,

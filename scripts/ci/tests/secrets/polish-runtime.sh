@@ -127,10 +127,16 @@ out=$(
     "$TEST_DIR/scripts/services/apps/github-status.sh" --refresh 2>/dev/null | tail -n 1
 )
 waybar_test_assert_jq "$out" '.tooltip | test("and 2 more")' "github.preview_limit=3 should leave 2 more. out=$out"
-# count preview lines with "- [o/" — should be 3
-preview_lines=$(echo "$out" | jq -r '.tooltip' | grep -c '^- \[o/' || true)
+# With default show_reviews, stub returns 2 review requests → text includes 2r
+waybar_test_assert_jq "$out" '(.text | test("2r")) and (.tooltip | test("Review requests: 2"))' \
+  "github status should include review count from search stub. out=$out"
+# Notification preview lines only (exclude "PRs awaiting review" section)
+preview_lines=$(
+  echo "$out" | jq -r '.tooltip' \
+    | awk '/Latest notifications:/{p=1; next} /PRs awaiting review:/{p=0} p && /^- \[/{c++} END{print c+0}'
+)
 if [[ "$preview_lines" -ne 3 ]]; then
-  echo "FAIL: expected 3 github preview lines, got $preview_lines. out=$out" >&2
+  echo "FAIL: expected 3 github notification preview lines, got $preview_lines. out=$out" >&2
   fail=1
 fi
 

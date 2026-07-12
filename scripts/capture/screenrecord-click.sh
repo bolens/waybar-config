@@ -11,6 +11,19 @@ script_dir="${0%/*}"
 . "$WAYBAR_SCRIPTS/lib/capture-lib.sh"
 
 mode="$(normalize_capture_mode "${1:-select}")"
+out_name="${2:-${WAYBAR_OUTPUT_NAME:-}}"
+if [ -n "$out_name" ]; then
+  export WAYBAR_OUTPUT_NAME="$out_name"
+fi
+
+# shellcheck source=../lib/waybar-settings.sh
+. "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+capture_per_output=0
+_cpo=$(waybar_settings_get '.capture.per_output' 'true')
+case "$_cpo" in false | False | FALSE | 0 | no | No | NO | off | Off | OFF) ;; *)
+  [ -n "${WAYBAR_OUTPUT_NAME:-}" ] && capture_per_output=1
+  ;;
+esac
 
 mkdir -p "$cache_dir"
 
@@ -120,10 +133,18 @@ start_wf_recording() {
       fi
       ;;
     screen)
-      wf-recorder -r "$record_fps" -f "$outfile" >/dev/null 2>&1 &
+      if [ "$capture_per_output" -eq 1 ] && [ -n "${WAYBAR_OUTPUT_NAME:-}" ]; then
+        wf-recorder -r "$record_fps" -o "$WAYBAR_OUTPUT_NAME" -f "$outfile" >/dev/null 2>&1 &
+      else
+        wf-recorder -r "$record_fps" -f "$outfile" >/dev/null 2>&1 &
+      fi
       ;;
     *)
-      wf-recorder -r "$record_fps" -f "$outfile" >/dev/null 2>&1 &
+      if [ "$capture_per_output" -eq 1 ] && [ -n "${WAYBAR_OUTPUT_NAME:-}" ] && [ "$mode" = "screen" ]; then
+        wf-recorder -r "$record_fps" -o "$WAYBAR_OUTPUT_NAME" -f "$outfile" >/dev/null 2>&1 &
+      else
+        wf-recorder -r "$record_fps" -f "$outfile" >/dev/null 2>&1 &
+      fi
       ;;
   esac
 

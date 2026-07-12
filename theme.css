@@ -4,6 +4,9 @@
 @import "theme/drawers.css";
 @import "theme/workspaces.css";
 @import "theme/workspaces.generated.css";
+@import "theme/dock-windows.css";
+@import "theme/animations.generated.css";
+@import "theme/album-art.generated.css";
 
 /* Group containers (HyDE-style pill clusters) — non-drawer groups only */
 #center,

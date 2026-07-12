@@ -51,8 +51,12 @@ class ActiveWindowMixin:
 
     def handle_method_call(self, conn, sender, path, interface, method, params, invocation):
         if method == "update":
-            title, app = params.unpack()
-            self.update_active_window(title, app)
+            unpacked = params.unpack()
+            title = unpacked[0] if len(unpacked) > 0 else ""
+            app = unpacked[1] if len(unpacked) > 1 else ""
+            # Output is resolved in flush via KWin.activeOutputName (KWin
+            # callDBus with a 3rd string arg was silently failing on Plasma).
+            self.update_active_window(title, app, "")
             invocation.return_value(None)
         elif method == "windowsChanged":
             if self.windows_changed_timeout_id != 0:
@@ -64,16 +68,80 @@ class ActiveWindowMixin:
             self.update_kde_desktops(mapping_json)
             invocation.return_value(None)
 
-    def update_active_window(self, title, app):
+    @staticmethod
+    def _safe_output_name(name: str) -> str:
+        import re
+
+        safe = re.sub(r"[^A-Za-z0-9_-]", "_", name or "")
+        return safe or "unknown"
+
+    @staticmethod
+    def _ensure_writable(path: str) -> None:
+        """Drop root-/other-owned or mode-locked cache files that block writes."""
+        try:
+            if not os.path.exists(path):
+                return
+            writable = os.access(path, os.W_OK)
+            mode = os.stat(path).st_mode
+            owner_write = bool(mode & 0o200)
+            # Root passes access(W_OK) even on 0444; still require owner-write bit.
+            if writable and owner_write:
+                return
+            os.remove(path)
+        except OSError:
+            pass
+
+    def update_active_window(self, title, app, output=""):
         self.pending_title = title
         self.pending_app = app
+        self.pending_output = output or ""
         if self.active_window_timeout_id != 0:
             GLib.source_remove(self.active_window_timeout_id)
         self.active_window_timeout_id = GLib.timeout_add(150, self.flush_active_window_update)
 
+    def _resolve_active_output(self, output: str) -> str:
+        """Prefer KWin-script output; fall back to KWin.activeOutputName()."""
+        if output:
+            return output
+        try:
+            res = subprocess.run(
+                [
+                    "qdbus6",
+                    "org.kde.KWin",
+                    "/KWin",
+                    "org.kde.KWin.activeOutputName",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=1,
+                check=False,
+            )
+            name = (res.stdout or "").strip()
+            if name:
+                return name
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+        return ""
+
+    def _known_output_names(self) -> list[str]:
+        """Outputs that already have (or need) per-output title caches."""
+        names: list[str] = []
+        prefix = "active-window-title-"
+        suffix = ".raw"
+        try:
+            for fname in os.listdir(self.cache_dir):
+                if fname.startswith(prefix) and fname.endswith(suffix):
+                    mid = fname[len(prefix) : -len(suffix)]
+                    if mid and mid != "unknown":
+                        names.append(mid)
+        except OSError:
+            pass
+        return names
+
     def flush_active_window_update(self):
         self.active_window_timeout_id = 0
         title = self.pending_title
+        output = self._resolve_active_output(getattr(self, "pending_output", "") or "")
 
         trimmed = trim_title(title)
         if not title:
@@ -89,20 +157,55 @@ class ActiveWindowMixin:
                 "class": "active"
             }
 
-        tmp_file = self.cache_file + ".tmp"
-        with open(tmp_file, "w") as f:
-            json.dump(data, f)
-        os.replace(tmp_file, self.cache_file)
-
-        # Write raw title to active-window-title.raw for scrolling module
-        raw_title_file = os.path.join(self.cache_dir, "active-window-title.raw")
         cleaned_title = clean_title(title) if title else ""
+
+        def write_json(path: str, payload: dict) -> None:
+            self._ensure_writable(path)
+            tmp_file = path + ".tmp"
+            with open(tmp_file, "w", encoding="utf-8") as f:
+                json.dump(payload, f)
+            os.replace(tmp_file, path)
+
+        def write_raw(path: str, text: str) -> None:
+            self._ensure_writable(path)
+            try:
+                with open(path + ".tmp", "w", encoding="utf-8") as f:
+                    f.write(text)
+                os.replace(path + ".tmp", path)
+            except OSError:
+                pass
+
+        def write_output_caches(safe: str) -> None:
+            try:
+                write_json(os.path.join(self.cache_dir, f"active-window-{safe}.json"), data)
+            except OSError as e:
+                print(f"Error writing active-window-{safe}.json: {e}", file=sys.stderr)
+            write_raw(
+                os.path.join(self.cache_dir, f"active-window-title-{safe}.raw"),
+                cleaned_title,
+            )
+
+        # Global caches (non-per-output consumers + fallback).
         try:
-            with open(raw_title_file + ".tmp", "w") as f:
-                f.write(cleaned_title)
-            os.replace(raw_title_file + ".tmp", raw_title_file)
-        except Exception:
-            pass
+            write_json(self.cache_file, data)
+        except OSError as e:
+            print(f"Error writing active-window.json: {e}", file=sys.stderr)
+        write_raw(os.path.join(self.cache_dir, "active-window-title.raw"), cleaned_title)
+
+        # Per-output caches watched by active-window-scroll when per_output is on.
+        # KWin scripts often omit win.output; activeOutputName() fills that gap.
+        # If we still cannot resolve an output, mirror to every known per-output raw
+        # so zscroll keeps updating instead of freezing on a stale empty file.
+        if output:
+            write_output_caches(self._safe_output_name(output))
+        else:
+            for name in self._known_output_names():
+                write_output_caches(self._safe_output_name(name))
+
+        # Refresh dock-window slot active highlight when focus changes.
+        signal_script = os.path.join(waybar_scripts_dir(), "dock", "dock-windows-signal.sh")
+        if os.path.exists(signal_script):
+            subprocess.run([signal_script], stderr=subprocess.DEVNULL)
 
         return False
 
@@ -150,10 +253,20 @@ class ActiveWindowMixin:
     def load_kwin_script(self):
         script_content = """
         var currentConn = null;
+        function activeWin() {
+            try {
+                if (workspace.activeWindow) return workspace.activeWindow;
+            } catch (e) {}
+            try {
+                if (workspace.activeClient) return workspace.activeClient;
+            } catch (e2) {}
+            return null;
+        }
         function notifyActiveWindow() {
-            var win = workspace.activeWindow;
-            var title = win ? win.caption : "";
+            var win = activeWin();
+            var title = win ? (win.caption || "") : "";
             var app = (win && win.resourceClass) ? win.resourceClass.toString() : "";
+            // Two-string callDBus only — a third arg broke updates on Plasma.
             callDBus(
                 "org.waybar.activewindow",
                 "/ActiveWindow",
@@ -165,18 +278,30 @@ class ActiveWindowMixin:
             notifyDesktops();
         }
 
-        workspace.windowActivated.connect(function(client) {
+        function onActivated(client) {
             if (currentConn) {
                 try {
                     currentConn.captionChanged.disconnect(notifyActiveWindow);
                 } catch(e) {}
             }
-            currentConn = client;
-            if (client) {
-                client.captionChanged.connect(notifyActiveWindow);
+            currentConn = client || activeWin();
+            if (currentConn) {
+                try {
+                    currentConn.captionChanged.connect(notifyActiveWindow);
+                } catch(e2) {}
             }
             notifyActiveWindow();
-        });
+        }
+
+        if (workspace.windowActivated) {
+            workspace.windowActivated.connect(onActivated);
+        }
+        if (workspace.clientActivated) {
+            workspace.clientActivated.connect(onActivated);
+        }
+        if (workspace.activeWindowChanged) {
+            workspace.activeWindowChanged.connect(notifyActiveWindow);
+        }
 
         workspace.windowAdded.connect(function() {
             callDBus(
@@ -263,6 +388,7 @@ class ActiveWindowMixin:
             workspace.desktopChanged.connect(notifyDesktops);
         }
         notifyDesktops();
+        notifyActiveWindow();
         """
 
         script_path = "/tmp/active_window_watcher.js"

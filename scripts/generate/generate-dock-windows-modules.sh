@@ -1,40 +1,62 @@
 #!/usr/bin/env bash
-# Domain module emitter (split from former generate-module-configs.sh).
+# Generate dock-windows slot modules + group (workspace-switcher pattern).
 set -euo pipefail
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
-# Keep literal $WAYBAR_HOME so generated modules stay portable (match other generators).
 scripts='$WAYBAR_HOME/scripts'
 
 [ -f "$settings" ] || exit 0
 command -v jq >/dev/null 2>&1 || exit 1
 
 mod_dir="$WAYBAR_HOME/modules"
-theme_dir="$WAYBAR_HOME/theme"
-mkdir -p "$mod_dir" "$theme_dir"
+mkdir -p "$mod_dir"
 
-jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
-  def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
-  def sig($k): ($s[0].signals[$k] // null);
+slot_count="$(jq -r '.dock_windows.slot_count // 12' "$settings" 2>/dev/null || echo 12)"
+if [ "$slot_count" -lt 1 ] 2>/dev/null; then
+  slot_count=12
+fi
+if [ "$slot_count" -gt 16 ] 2>/dev/null; then
+  slot_count=16
+fi
 
-  {
-    "custom/dock-windows": {
-      format: "{}",
-      "return-type": "json",
-      "min-length": ($s[0].dock_windows.min_length // 64),
-      "max-length": ($s[0].dock_windows.max_length // 160),
-      expand: (if $s[0].dock_windows.expand != null then $s[0].dock_windows.expand else true end),
-      align: ($s[0].dock_windows.align // 0.5),
-      signal: sig("dock_windows"),
-      interval: iv("dock_windows"),
-      exec: ($scripts + "/dock/dock-windows-status.sh"),
-      "on-click": ($scripts + "/dock/dock-windows-click.sh activate"),
-      "on-click-right": ($scripts + "/dock/dock-windows-click.sh close-focused"),
-      "on-click-middle": ($scripts + "/dock/dock-windows-click.sh cycle"),
-      tooltip: true
-    }
-  } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
-' | jq '.' >"$mod_dir/dock-windows.generated.jsonc"
+sig="$(jq -r '.signals.dock_windows // 11' "$settings" 2>/dev/null || echo 11)"
+iv="$(jq -r '.module_intervals.dock_windows // .poll_intervals.dock_windows // "once"' "$settings" 2>/dev/null || echo once)"
+
+jq -n --arg scripts "$scripts" --argjson count "$slot_count" --argjson sig "$sig" --arg iv "$iv" '
+  def slot($i):
+    {
+      ("custom/dock-win-" + ($i|tostring)): {
+        format: "{text}",
+        "return-type": "json",
+        signal: $sig,
+        interval: (if $iv == "once" then "once" else ($iv|tonumber? // 1) end),
+        "hide-empty-text": true,
+        "exec-on-event": true,
+        exec: ($scripts + "/dock/dock-windows-slot-status.sh " + ($i|tostring) + " \"$WAYBAR_OUTPUT_NAME\""),
+        "on-click": ($scripts + "/dock/dock-windows-click.sh focus " + ($i|tostring) + " \"$WAYBAR_OUTPUT_NAME\""),
+        "on-click-right": ($scripts + "/dock/dock-windows-click.sh close " + ($i|tostring) + " \"$WAYBAR_OUTPUT_NAME\""),
+        "on-click-middle": ($scripts + "/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\""),
+        tooltip: true
+      }
+    };
+  reduce range(0; $count) as $i ({}; . + slot($i))
+' >"$mod_dir/dock-windows.generated.jsonc"
+
+# Group listing the slots (layout references group/dock-windows).
+{
+  printf '{\n  "group/dock-windows": {\n'
+  printf '    "orientation": "inherit",\n'
+  printf '    "modules": [\n'
+  i=0
+  while [ "$i" -lt "$slot_count" ]; do
+    if [ "$i" -gt 0 ]; then
+      printf ',\n'
+    fi
+    printf '      "custom/dock-win-%s"' "$i"
+    i=$((i + 1))
+  done
+  printf '\n    ]\n  }\n}\n'
+} >"$mod_dir/groups-dock-windows.generated.jsonc"

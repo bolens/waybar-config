@@ -13,11 +13,11 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `workspaces/` | Workspaces, active window, keybind hints |
 | `system/` | CPU/mem/disk/gpu/nvme/fans/liquidctl/asusctl/rgb/power/brightness/… |
 | `network/` | Wi‑Fi, VPN, ethernet, Tailscale, … |
-| `media/` | Audio, mic, MPRIS |
+| `media/` | Audio, mic, MPRIS; optional `cava-status.sh` visualizer ([`cava`](https://github.com/karlstav/cava) — see [Dependencies](../README.md#optional-telemetry--integrations)) |
 | `notifications/` | Notifications + clipboard |
 | `capture/` | Screenshot / screenrecord / color picker |
 | `services/` | Third-party integrations (see subfolders below) |
-| `tools/` | Small UX helpers (`app-open`, `calendar-popup`) |
+| `tools/` | Small UX helpers (`app-open`, `calendar-popup`, `pomodoro-*`) |
 
 ### `lib/` helpers
 
@@ -55,6 +55,7 @@ Sibling scripts (also invoked from Makefile / launch): `generate-compositor-modu
 | `i2pd/` | i2pd status + console-pass helper |
 | `coolercontrol/` | CoolerControl status/click + API helper + UI-pass sync + dumps ([deps](../README.md#dependencies)) |
 | `openlinkhub/` | OpenLinkHub status (hides when service/API down; PSU prefers corsairpsu — [deps](../README.md#dependencies)) |
+| `homelab/` | HTTP health probes from `homelab.targets` |
 | `hypr/` | hypr-bar modules, hyprwhspr wrapper |
 | `desktop/` | nightlight |
 

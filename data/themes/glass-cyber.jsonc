@@ -1,0 +1,16 @@
+{
+  // Glass variant: lower opacity background, softer borders
+  "colors": {
+    "foreground": "#c8f6ff",
+    "background": "rgba(6, 7, 14, 0.55)",
+    "border": "rgba(0, 229, 255, 0.14)",
+    "accent": "rgba(255, 42, 127, 0.22)",
+    "warning": "#ffe600",
+    "critical": "#ff2a7f",
+    "tooltip_background": "rgba(6, 7, 14, 0.82)",
+    "tooltip_border": "rgba(0, 92, 102, 0.55)",
+    "workspace_active": "rgba(255, 42, 127, 0.24)",
+    "workspace_inactive": "rgba(200, 246, 255, 0.28)",
+    "workspace_visible": "#00e5ff"
+  }
+}

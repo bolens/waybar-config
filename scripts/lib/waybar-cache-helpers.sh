@@ -52,6 +52,19 @@ cleanup_stale_tmp_files() {
   find "$dir" -maxdepth 1 -name '*.tmp.*' -mtime +0 -delete 2>/dev/null || true
 }
 
+# Drop cache files the current user cannot overwrite (e.g. root-owned leftovers).
+# Also drop owner-without-write modes (0444): root still passes test -w on those.
+ensure_cache_writable() {
+  file="$1"
+  [ -e "$file" ] || return 0
+  if [ -w "$file" ]; then
+    case "$(stat -c %A "$file" 2>/dev/null || true)" in
+      ?w*) return 0 ;;
+    esac
+  fi
+  rm -f "$file" 2>/dev/null || true
+}
+
 cleanup_stale_lock_dir() {
   lock_dir="$1"
   stale_lock_ttl="${2:-30}"

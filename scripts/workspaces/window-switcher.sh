@@ -19,6 +19,19 @@ script_dir="$(CDPATH='' cd -- "$(dirname "$0")" && pwd)"
 session="$(detect_compositor)"
 tab=$'\t'
 
+# Optional output from active-window on-click / WAYBAR_OUTPUT_NAME.
+out_name="${1:-${WAYBAR_OUTPUT_NAME:-}}"
+if [ -n "$out_name" ]; then
+  export WAYBAR_OUTPUT_NAME="$out_name"
+fi
+
+filter_output=0
+_wspo=$(waybar_settings_get '.window_switcher.per_output' 'true')
+case "$_wspo" in false | False | FALSE | 0 | no | No | NO | off | Off | OFF) ;; *)
+  [ -n "${WAYBAR_OUTPUT_NAME:-}" ] && filter_output=1
+  ;;
+esac
+
 switcher_theme=$(waybar_settings_get '.rofi.switcher.width' '') # Theme file is retrieved in the execution block if needed, but we check width here
 switcher_theme_file=$(waybar_settings_get '.rofi.theme' '')
 switcher_theme_file="${switcher_theme_file/\$WAYBAR_HOME/$WAYBAR_HOME}"
@@ -145,6 +158,12 @@ if [ "$session" = "hyprland" ]; then
     exit 1
   fi
   clients="$(hyprctl clients -j)"
+  if [ "$filter_output" -eq 1 ]; then
+    mid=$(hyprctl monitors -j 2>/dev/null | jq -r --arg n "$WAYBAR_OUTPUT_NAME" '.[] | select(.name == $n) | .id' | head -n1 || true)
+    if [ -n "$mid" ]; then
+      clients="$(printf '%s' "$clients" | jq --argjson mid "$mid" '[.[] | select(.monitor == $mid)]')"
+    fi
+  fi
   count="$(echo "$clients" | jq 'length')"
   if [ "$count" -eq 0 ]; then
     notify-send "Window Switcher" "No open windows found"

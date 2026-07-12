@@ -43,6 +43,13 @@ network_interface_modules() {
 }
 
 build_groups_json() {
+  # Media / hardware module lists are post-processed from settings:
+  # - cava.placement=inline → move custom/cava to the front so it stays visible as the
+  #   drawer head (always shown); remaining modules are drawer children. Prefer cava.bars
+  #   12–16 when using inline. placement=drawer keeps settings order (handle then cava…).
+  # - visual.album_art.enabled → insert custom/album-art before custom/mpris (or mpris).
+  # - visual.stats_carousel.enabled → replace custom/{cpu,memory,disk,gpu} with one
+  #   custom/stats-carousel entry in group/hardware.
   jq -n \
     --slurpfile settings "$settings" \
     --slurpfile network "$network_manifest" \
@@ -82,6 +89,61 @@ build_groups_json() {
         end
       );
 
+    def insert_album_art($mods):
+      if (($settings[0].visual.album_art.enabled // false) == true) then
+        if (($mods | index("custom/album-art")) != null) then $mods
+        else
+          ($mods | index("custom/mpris")) as $i
+          | if $i != null then
+              ($mods[:$i] + ["custom/album-art"] + $mods[$i:])
+            else
+              ($mods | index("mpris")) as $j
+              | if $j != null then
+                  ($mods[:$j] + ["custom/album-art"] + $mods[$j:])
+                else
+                  $mods + ["custom/album-art"]
+                end
+            end
+        end
+      else
+        $mods
+      end;
+
+    def apply_cava_placement($mods):
+      (($settings[0].cava.placement // "drawer") | tostring) as $place
+      | if ($mods | index("custom/cava")) == null then $mods
+        elif $place == "inline" then
+          # Always-visible head: cava first; media-drawer + controls reveal as children.
+          (["custom/cava"] + ($mods | map(select(. != "custom/cava"))))
+        else
+          $mods
+        end;
+
+    def apply_stats_carousel($mods):
+      if (($settings[0].visual.stats_carousel.enabled // false) != true) then $mods
+      else
+        ["custom/cpu", "custom/memory", "custom/disk", "custom/gpu"] as $hw
+        | ($mods | map(select($hw | index(.) == null))) as $rest
+        | ($mods | map(select($hw | index(.) != null)) | length) as $n
+        | if $n == 0 then $mods
+          else
+            # Insert carousel where the first hardware metric was.
+            ($mods | to_entries | map(select(.value as $v | $hw | index($v) != null)) | .[0].key // 0) as $at
+            | ($mods[:$at] | map(select($hw | index(.) == null)))
+              + ["custom/stats-carousel"]
+              + ($mods[$at:] | map(select($hw | index(.) == null)))
+          end
+      end;
+
+    def transform_modules($key; $mods):
+      if $key == "media" then
+        apply_cava_placement(insert_album_art($mods))
+      elif $key == "hardware" then
+        apply_stats_carousel($mods)
+      else
+        $mods
+      end;
+
     ($settings[0].groups // {}) | to_entries | map(
       .key as $key
       | ("group/" + $key) as $group_id
@@ -92,7 +154,7 @@ build_groups_json() {
               orientation: "inherit"
             }
             + (if .value.drawer? then { drawer: drawer_for(.value.drawer) } else {} end)
-            + { modules: expand_modules(.value.modules // []) }
+            + { modules: transform_modules($key; expand_modules(.value.modules // [])) }
           )
         }
     ) | from_entries
@@ -208,6 +270,19 @@ build_system_json() {
         "on-click-right": click_app("btop"),
         "on-click-middle": ($scripts + "/system/disk-status.sh --refresh")
       },
+      "custom/stats-carousel": {
+        format: "{}",
+        "return-type": "json",
+        tooltip: true,
+        interval: interval("stats_carousel"),
+        signal: signal("stats_carousel"),
+        exec: ($scripts + "/system/stats-carousel-status.sh"),
+        "on-click": click_app("system_monitor"),
+        "on-click-right": click_app("btop"),
+        "on-click-middle": ($scripts + "/system/stats-carousel-status.sh --refresh"),
+        "on-scroll-up": ($scripts + "/system/stats-carousel-status.sh --prev"),
+        "on-scroll-down": ($scripts + "/system/stats-carousel-status.sh --next")
+      },
       "custom/nvme": {
         format: "{}",
         "return-type": "json",
@@ -312,6 +387,25 @@ build_system_json() {
         "on-click-right": ($settings[0].services.syncthing.on_click_right // ($app_open + " systemctl --user restart " + ($settings[0].services.syncthing.service_name // $syncthing_service))),
         "on-click-middle": ($scripts + "/services/sync/syncthing-status.sh --refresh")
       },
+      "custom/homelab": {
+        format: "{}",
+        "return-type": "json",
+        tooltip: true,
+        interval: interval("homelab"),
+        signal: signal("homelab"),
+        exec: ($scripts + "/services/homelab/homelab-status.sh"),
+        "on-click": (
+          ($settings[0].homelab.on_click)
+          // (
+            if (($settings[0].homelab.targets // []) | length) > 0 then
+              ($app_open + " xdg-open " + ($settings[0].homelab.targets[0].url // "about:blank"))
+            else
+              ($scripts + "/services/homelab/homelab-status.sh --refresh")
+            end
+          )
+        ),
+        "on-click-middle": ($scripts + "/services/homelab/homelab-status.sh --refresh")
+      },
       "custom/sunshine": {
         format: "{}",
         "return-type": "json",
@@ -327,7 +421,22 @@ build_system_json() {
     '
 }
 
-jq '.bars' "$settings" >"$bar_defaults_out"
+jq '
+  .bars as $b
+  | ($b.floating == true) as $float
+  | ($b
+    | if $float then
+        .exclusive = false
+        | .["margin-top"] = (.margin_top // 8)
+        | .["margin-right"] = (.margin_right // 12)
+        | .["margin-bottom"] = (.margin_bottom // 0)
+        | .["margin-left"] = (.margin_left // 12)
+      else
+        .exclusive = (.exclusive // true)
+      end
+    | del(.floating, .margin_top, .margin_right, .margin_bottom, .margin_left, .glass_opacity, .chrome_radius)
+  )
+' "$settings" >"$bar_defaults_out"
 
 layout_keys_jq='
   if .modules_center then . + {"modules-center": .modules_center} | del(.modules_center) else . end
@@ -337,7 +446,21 @@ layout_keys_jq='
 
 jq ".layouts.top | $layout_keys_jq" "$settings" >"$top_layout_out"
 
-jq ".layouts.bottom | $layout_keys_jq" "$settings" >"$bottom_layout_out"
+jq "
+  . as \$root
+  | \$root.layouts.bottom
+  | if (\$root.dock_windows.enabled == true) then
+      .modules_center = (
+        (.modules_center // []) as \$c
+        | if (\$c | index(\"group/dock-windows\")) then \$c
+          elif (\$c | index(\"custom/dock-windows\")) then
+            [\$c[] | if . == \"custom/dock-windows\" then \"group/dock-windows\" else . end]
+          else \$c + [\"group/dock-windows\"] end
+      )
+    else .
+    end
+  | $layout_keys_jq
+" "$settings" >"$bottom_layout_out"
 
 build_groups_json | jq '.' >"$groups_out"
 
@@ -363,7 +486,8 @@ for _gen in \
   generate-dock-windows-modules.sh \
   generate-tray-modules.sh \
   generate-hypr-tools-modules.sh \
-  generate-theme-tokens.sh; do
+  generate-theme-tokens.sh \
+  generate-animations-css.sh; do
   if [ -x "$WAYBAR_SCRIPTS/generate/$_gen" ]; then
     "$WAYBAR_SCRIPTS/generate/$_gen"
   elif [ -f "$WAYBAR_SCRIPTS/generate/$_gen" ]; then

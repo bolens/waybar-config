@@ -6,17 +6,33 @@ set -eu
 script_dir="${0%/*}"
 mode="${1:-adjust}"
 value="${2:-+5}"
+# Optional third arg or WAYBAR_OUTPUT_NAME selects the display when brightness.per_output.
+out_name="${3:-${WAYBAR_OUTPUT_NAME:-}}"
+
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 state_file="$cache_dir/brightness-ddc-displays"
-pending_adjust_file="$cache_dir/brightness-pending-adjust"
-pending_set_file="$cache_dir/brightness-pending-set"
-queue_lock_dir="$cache_dir/brightness-queue.lock"
-worker_lock_dir="$cache_dir/brightness-worker.lock"
 
-mkdir -p "$cache_dir"
-
+# shellcheck source=../lib/brightness-lib.sh
+. "$WAYBAR_SCRIPTS/lib/brightness-lib.sh"
 # shellcheck source=ddcutil-lock.sh
 . "$WAYBAR_SCRIPTS/lib/ddcutil-lock.sh"
+
+brightness_bind_output "$out_name"
+BRIGHTNESS_TARGET=$(brightness_resolve_target "$out_name")
+
+if [ -n "${BRIGHTNESS_OUTPUT_SAFE:-}" ]; then
+  pending_adjust_file="$cache_dir/brightness-pending-adjust-${BRIGHTNESS_OUTPUT_SAFE}"
+  pending_set_file="$cache_dir/brightness-pending-set-${BRIGHTNESS_OUTPUT_SAFE}"
+  queue_lock_dir="$cache_dir/brightness-queue-${BRIGHTNESS_OUTPUT_SAFE}.lock"
+  worker_lock_dir="$cache_dir/brightness-worker-${BRIGHTNESS_OUTPUT_SAFE}.lock"
+else
+  pending_adjust_file="$cache_dir/brightness-pending-adjust"
+  pending_set_file="$cache_dir/brightness-pending-set"
+  queue_lock_dir="$cache_dir/brightness-queue.lock"
+  worker_lock_dir="$cache_dir/brightness-worker.lock"
+fi
+
+mkdir -p "$cache_dir"
 
 clamp() {
   val="$1"
@@ -30,7 +46,7 @@ clamp() {
 }
 
 refresh_waybar() {
-  rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/waybar/brightness-status.json" 2>/dev/null || true
+  rm -f "$brightness_cache_file" 2>/dev/null || true
   pkill -x -RTMIN+8 waybar >/dev/null 2>&1 || true
 }
 
@@ -105,7 +121,18 @@ drain_request() {
 # Attempts to write to internal laptop backlight controls using brightnessctl.
 # If no backlight interfaces are found, returns 1 to trigger DDC fallbacks.
 apply_backlight() {
-  backlights=$(brightnessctl --class=backlight -m 2>/dev/null || true)
+  bl_dev=""
+  case "${BRIGHTNESS_TARGET:-}" in
+    backlight:*) bl_dev="${BRIGHTNESS_TARGET#backlight:}" ;;
+    backlight) bl_dev="" ;;
+    ddc:*) return 1 ;;
+  esac
+
+  if [ -n "$bl_dev" ]; then
+    backlights=$(brightnessctl --class=backlight -d "$bl_dev" -m 2>/dev/null || true)
+  else
+    backlights=$(brightnessctl --class=backlight -m 2>/dev/null || true)
+  fi
   [ -n "$backlights" ] || return 1
   case "$mode" in
     adjust)
@@ -114,11 +141,19 @@ apply_backlight() {
         -* | +*) ;;
         *) delta="+$delta" ;;
       esac
-      brightnessctl --class=backlight set "${delta}%" >/dev/null 2>&1
+      if [ -n "$bl_dev" ]; then
+        brightnessctl --class=backlight -d "$bl_dev" set "${delta}%" >/dev/null 2>&1
+      else
+        brightnessctl --class=backlight set "${delta}%" >/dev/null 2>&1
+      fi
       ;;
     set)
       target=$(clamp "$value")
-      brightnessctl --class=backlight set "${target}%" >/dev/null 2>&1
+      if [ -n "$bl_dev" ]; then
+        brightnessctl --class=backlight -d "$bl_dev" set "${target}%" >/dev/null 2>&1
+      else
+        brightnessctl --class=backlight set "${target}%" >/dev/null 2>&1
+      fi
       ;;
   esac
 }
@@ -129,15 +164,20 @@ apply_backlight() {
 apply_ddc() {
   command -v ddcutil >/dev/null 2>&1 || return 1
 
-  # Display detection takes ~1-2 seconds. We cache discovered display indices
-  # inside $state_file to avoid slow detection queries on scroll/keypress events.
   display_ids=""
-  if [ -f "$state_file" ]; then
-    display_ids=$(cat "$state_file")
-  fi
-  if [ -z "$display_ids" ]; then
-    display_ids=$(with_ddcutil_lock ddcutil detect --brief 2>/dev/null | sed -n 's/^Display \([0-9][0-9]*\)$/\1/p' | xargs 2>/dev/null || true)
-  fi
+  case "${BRIGHTNESS_TARGET:-}" in
+    ddc:*)
+      display_ids="${BRIGHTNESS_TARGET#ddc:}"
+      ;;
+    *)
+      if [ -f "$state_file" ]; then
+        display_ids=$(cat "$state_file")
+      fi
+      if [ -z "$display_ids" ]; then
+        display_ids=$(with_ddcutil_lock ddcutil detect --brief 2>/dev/null | sed -n 's/^Display \([0-9][0-9]*\)$/\1/p' | xargs 2>/dev/null || true)
+      fi
+      ;;
+  esac
   [ -n "$display_ids" ] || return 1
 
   for display_id in $display_ids; do
@@ -192,9 +232,21 @@ start_worker() {
       mode="$request_mode"
       value="$request_value"
 
-      if ! apply_backlight; then
-        apply_ddc || true
-      fi
+      case "${BRIGHTNESS_TARGET:-legacy}" in
+        ddc:*)
+          apply_ddc || true
+          ;;
+        backlight | backlight:*)
+          if ! apply_backlight; then
+            apply_ddc || true
+          fi
+          ;;
+        *)
+          if ! apply_backlight; then
+            apply_ddc || true
+          fi
+          ;;
+      esac
 
       refresh_waybar
 

@@ -90,6 +90,31 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "on-click-right": ($scripts + "/media/audio-click.sh manage"),
       "on-click-middle": ($scripts + "/media/mic-toggle.sh")
     },
+    "custom/cava": {
+      format: "{}",
+      "return-type": "json",
+      exec: ($scripts + "/media/cava-status.sh"),
+      "restart-interval": 2,
+      tooltip: true,
+      "hide-empty-text": true
+    },
+    "custom/album-art": (
+      if (($s[0].visual.album_art.enabled // false) == true) then
+        {
+          format: "{}",
+          "return-type": "json",
+          interval: iv("album_art"),
+          exec: ($scripts + "/media/album-art-status.sh"),
+          tooltip: true,
+          "hide-empty-text": true,
+          "on-click": "playerctl play-pause",
+          "on-click-right": "playerctl next",
+          "on-click-middle": "playerctl previous"
+        }
+      else
+        null
+      end
+    ),
     bluetooth: {
       format: "󰂯",
       "format-disabled": "󰂲",
@@ -104,3 +129,23 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
     }
   } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/audio.generated.jsonc"
+
+# Optional album-art sizing / cover background when enabled.
+# Cover file is cached by album-art-status.sh at $XDG_CACHE_HOME/waybar/album-art.
+if jq -e '.visual.album_art.enabled == true' "$settings" >/dev/null 2>&1; then
+  size=$(jq -r '.visual.album_art.size // 22' "$settings")
+  case "$size" in '' | *[!0-9]*) size=22 ;; esac
+  cache_art="${XDG_CACHE_HOME:-$HOME/.cache}/waybar/album-art"
+  cat >"$theme_dir/album-art.generated.css" <<EOF
+/* Generated from visual.album_art — do not edit by hand */
+#custom-album-art {
+    min-width: ${size}px;
+    min-height: ${size}px;
+}
+#custom-album-art.album-art {
+    background-image: url("file://${cache_art}");
+}
+EOF
+else
+  printf '%s\n' '/* visual.album_art disabled */' >"$theme_dir/album-art.generated.css"
+fi

@@ -14,7 +14,9 @@ read_config() {
   local key="$1"
   local default="$2"
   if [[ -f "$config" ]]; then
-    jq -r --arg key "$key" --arg default "$default" '.[$key] // $default' "$config"
+    # Use has() — jq's // treats JSON false as missing.
+    jq -r --arg key "$key" --arg default "$default" \
+      'if has($key) then (.[$key] | tostring) else $default end' "$config"
   else
     printf '%s' "$default"
   fi
@@ -25,6 +27,7 @@ if [[ -f "$settings" ]]; then
   bar_spacing="$(jq -r '.bars.spacing // 6' "$settings" 2>/dev/null || echo 6)"
 fi
 
+fit_content="$(read_config fit_content true)"
 slot_width="$(read_config slot_width 44)"
 slot_gap="$(read_config slot_gap 10)"
 glyph_width="$(read_config glyph_width "$slot_width")"
@@ -33,6 +36,7 @@ pill_width="$(read_config pill_width "$glyph_width")"
 padding_h="$(read_config padding_h 10)"
 padding_v="$(read_config padding_v 4)"
 font_size="$(read_config font_size 16)"
+glyph_pad_h="$(read_config glyph_pad_h 6)"
 border_radius="$(read_config border_radius 8)"
 glyph_offset="$(read_config glyph_offset 0)"
 bar_spacing_override="$(read_config bar_spacing "")"
@@ -44,10 +48,20 @@ fi
 
 # Waybar inserts `spacing` px between every module in a group; cancel it in CSS.
 slot_margin=$((glyph_gap - bar_spacing))
-glyph_pad=$(((glyph_width - font_size) / 2))
-if [[ "$glyph_pad" -lt 0 ]]; then
-  glyph_pad=0
-fi
+
+case "$fit_content" in
+  false | False | FALSE | 0 | no | No | NO | off | Off | OFF)
+    fit_content=0
+    glyph_pad=$(((glyph_width - font_size) / 2))
+    if [[ "$glyph_pad" -lt 0 ]]; then
+      glyph_pad=0
+    fi
+    ;;
+  *)
+    fit_content=1
+    glyph_pad="$glyph_pad_h"
+    ;;
+esac
 
 {
   cat <<EOF
@@ -68,9 +82,23 @@ fi
 #custom-ws-7.ws-hit,
 #custom-ws-8.ws-hit,
 #custom-ws-9.ws-hit {
+EOF
+
+  if [[ "$fit_content" -eq 1 ]]; then
+    cat <<EOF
+    min-width: 0;
+    padding: 0 ${glyph_pad}px;
+    border-radius: ${border_radius}px;
+EOF
+  else
+    cat <<EOF
     min-width: ${glyph_width}px;
     padding: 0 ${glyph_pad}px;
     border-radius: ${border_radius}px;
+EOF
+  fi
+
+  cat <<EOF
 }
 
 #custom-ws-0.ws-hit label,
@@ -115,10 +143,22 @@ fi
     padding: 0 ${glyph_pad}px;
     background-color: transparent;
     background-image: linear-gradient(90deg, ${workspace_active} 0%, ${workspace_active} 100%);
+EOF
+
+  if [[ "$fit_content" -eq 1 ]]; then
+    cat <<EOF
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+EOF
+  else
+    cat <<EOF
     background-size: ${pill_width}px 100%;
     background-position: center;
     background-repeat: no-repeat;
 }
-
 EOF
+  fi
+
 } >"$out"

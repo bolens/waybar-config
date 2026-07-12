@@ -17,7 +17,7 @@
   "custom/media-drawer": {
     "format": "󰝚",
     "tooltip": true,
-    "tooltip-format": "Media & volume\nContains: Previous · Now playing · Next · Volume · Microphone\nClick to toggle"
+    "tooltip-format": "Media &amp; volume\nContains: Visualizer · Previous · Album art · Now playing · Next · Volume · Microphone\nClick to toggle"
   },
   "custom/net-drawer": {
     "format": "󰖩",
@@ -27,12 +27,12 @@
   "custom/tools-drawer": {
     "format": "󰒓",
     "tooltip": true,
-    "tooltip-format": "Quick tools\nContains: Screenshot · Screen record · Night light · Clipboard · Color picker · RGB · Discord · Weather\nClick to toggle"
+    "tooltip-format": "Quick tools\nContains: Screenshot · Screen record · Night light · Clipboard · Color picker · RGB · Discord · Weather · Pomodoro\nClick to toggle"
   },
   "custom/infra-drawer": {
     "format": "󰒍",
     "tooltip": true,
-    "tooltip-format": "Infrastructure\nContains: Docker · Syncthing · Sunshine · Runtimes · Updates · UPS · Systemd · GitHub · Uptime\nClick to toggle"
+    "tooltip-format": "Infrastructure\nContains: Homelab · Docker · Syncthing · Sunshine · Runtimes · Updates · UPS · Systemd · GitHub · Uptime\nClick to toggle"
   },
   "custom/hardware-drawer": {
     "format": "󰻠",
@@ -42,7 +42,7 @@
   "custom/power-drawer": {
     "format": "",
     "tooltip": true,
-    "tooltip-format": "Power menu\nContains: Lock · Logout · Suspend · Reboot · Shutdown\nClick to toggle"
+    "tooltip-format": "Power menu\nContains: Power menu · Lock · Logout · Suspend · Reboot · Shutdown\nClick to toggle"
   },
   "custom/privacy-drawer": {
     "format": "󰕥",

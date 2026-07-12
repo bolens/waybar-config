@@ -15,6 +15,7 @@
     "$WAYBAR_HOME/modules/drawers.generated.jsonc",
     "$WAYBAR_HOME/modules/system.generated.jsonc",
     "$WAYBAR_HOME/modules/dock-windows.generated.jsonc",
+    "$WAYBAR_HOME/modules/groups-dock-windows.generated.jsonc",
     "$WAYBAR_HOME/modules/dock.generated.jsonc",
     "$WAYBAR_HOME/modules/groups-dock.generated.jsonc",
     "$WAYBAR_HOME/modules/tray.generated.jsonc",

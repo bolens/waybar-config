@@ -71,10 +71,39 @@
 #custom-privacy-audio-out,
 #custom-privacy-location,
 #custom-lock,
+#custom-power-menu,
 #custom-logout,
 #custom-suspend,
 #custom-reboot,
-#custom-shutdown {
+#custom-shutdown,
+#custom-cava,
+#custom-pomodoro,
+#custom-homelab {
+    padding: 0 10px;
+    margin: 4px 0;
+    border-radius: 6px;
+    background: rgba(0, 229, 255, 0.06);
+    border: 1px solid rgba(0, 229, 255, 0.12);
+    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+}
+
+/* Wider tracking helps cava bars read as discrete columns */
+#custom-cava {
+    letter-spacing: 0.12em;
+}
+
+#custom-album-art {
+    padding: 0;
+    margin: 4px 2px;
+    border-radius: 4px;
+    min-width: 22px;
+    min-height: 22px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+#custom-stats-carousel {
     padding: 0 10px;
     margin: 4px 0;
     border-radius: 6px;
@@ -167,10 +196,15 @@
 #custom-privacy-audio-out:hover,
 #custom-privacy-location:hover,
 #custom-lock:hover,
+#custom-power-menu:hover,
 #custom-logout:hover,
 #custom-suspend:hover,
 #custom-reboot:hover,
-#custom-shutdown:hover {
+#custom-shutdown:hover,
+#custom-cava:hover,
+#custom-pomodoro:hover,
+#custom-homelab:hover,
+#custom-stats-carousel:hover {
     background: rgba(0, 229, 255, 0.12);
     border-color: rgba(0, 229, 255, 0.4);
     box-shadow: 0 0 10px rgba(0, 229, 255, 0.22);
@@ -183,10 +217,64 @@
 #custom-keybindhint.hidden,
 #custom-gamemode.hidden,
 #custom-touchpad.hidden,
-#custom-active-window.hidden {
+#custom-active-window.hidden,
+#custom-cava.hidden,
+#custom-homelab.hidden,
+#custom-album-art.hidden {
     min-width: 0;
     padding: 0;
     margin: 0;
     border: none;
     background: transparent;
 }
+
+/* Threshold classes emitted by hardware / infra status scripts */
+#custom-cpu.warning,
+#custom-gpu.warning,
+#custom-memory.warning,
+#custom-disk.warning,
+#custom-nvme.warning,
+#custom-stats-carousel.warning,
+#custom-psu.warning,
+#custom-fans.warning,
+#custom-liquidctl.warning,
+#custom-coolercontrol.warning,
+#custom-openlinkhub.warning,
+#custom-ups.warning,
+#custom-updates.warning,
+#custom-device-battery.warning,
+#custom-homelab.warning,
+#custom-github.warning,
+#custom-pomodoro.work {
+    color: #ffe600;
+    border-color: rgba(255, 230, 0, 0.45);
+    background: rgba(255, 230, 0, 0.08);
+}
+
+#custom-cpu.critical,
+#custom-gpu.critical,
+#custom-memory.critical,
+#custom-disk.critical,
+#custom-nvme.critical,
+#custom-psu.critical,
+#custom-fans.critical,
+#custom-liquidctl.critical,
+#custom-coolercontrol.critical,
+#custom-openlinkhub.critical,
+#custom-stats-carousel.critical,
+#custom-ups.critical,
+#custom-updates.critical,
+#custom-device-battery.critical,
+#custom-homelab.critical,
+#custom-systemd.critical {
+    color: #ff2a7f;
+    border-color: rgba(255, 42, 127, 0.55);
+    background: rgba(255, 42, 127, 0.1);
+    box-shadow: 0 0 8px rgba(255, 42, 127, 0.25);
+}
+
+#custom-pomodoro.break {
+    color: #00e5ff;
+    border-color: rgba(0, 229, 255, 0.4);
+}
+

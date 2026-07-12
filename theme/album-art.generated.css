@@ -1,0 +1,8 @@
+/* Generated from visual.album_art — do not edit by hand */
+#custom-album-art {
+    min-width: 22px;
+    min-height: 22px;
+}
+#custom-album-art.album-art {
+    background-image: url("file:///home/panda/.cache/waybar/album-art");
+}

@@ -1,0 +1,16 @@
+{
+  // Dracula palette adapted for Waybar token keys
+  "colors": {
+    "foreground": "#f8f8f2",
+    "background": "rgba(40, 42, 54, 0.92)",
+    "border": "rgba(189, 147, 249, 0.40)",
+    "accent": "rgba(255, 121, 198, 0.35)",
+    "warning": "#f1fa8c",
+    "critical": "#ff5555",
+    "tooltip_background": "#282a36",
+    "tooltip_border": "#6272a4",
+    "workspace_active": "rgba(189, 147, 249, 0.40)",
+    "workspace_inactive": "rgba(248, 248, 242, 0.40)",
+    "workspace_visible": "#bd93f9"
+  }
+}

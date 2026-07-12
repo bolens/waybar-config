@@ -8,6 +8,7 @@ script_dir="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts"
 
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 . "$WAYBAR_SCRIPTS/lib/waybar-locale-lib.sh"
+. "$WAYBAR_SCRIPTS/lib/gauge-lib.sh"
 
 cached_file="$cache_dir/cpu-icon.json"
 
@@ -21,6 +22,8 @@ cpu_warn=$(waybar_settings_get '.thresholds.cpu.usage.warning' '60')
 cpu_crit=$(waybar_settings_get '.thresholds.cpu.usage.critical' '85')
 cpu_temp_warn=$(waybar_settings_get '.thresholds.cpu.temp.warning' '75')
 cpu_temp_crit=$(waybar_settings_get '.thresholds.cpu.temp.critical' '85')
+gauges_enabled=$(waybar_settings_get '.visual.gauges.enabled' 'true')
+gauge_width=$(waybar_settings_get '.visual.gauges.width' '8')
 
 # 3. Hard fallback for the first launch if cache does not exist yet
 metrics="$("$WAYBAR_SCRIPTS/infra/system-metrics-collector.sh" 2>/dev/null || true)"
@@ -77,4 +80,12 @@ elif [ "$usage" -ge "$cpu_warn" ] 2>/dev/null || [ "$temp" -ge "$cpu_temp_warn" 
   class="warning"
 fi
 
-emit_waybar_json "$(printf '󰍛 %3d%%' "$usage")" "$tooltip" "$class"
+case "$gauges_enabled" in
+  false | False | FALSE | 0 | no | No | NO | null | off | Off | OFF)
+    text=$(printf '󰍛 %3d%%' "$usage")
+    ;;
+  *)
+    text=$(printf '󰍛 %s %3d%%' "$(gauge_bar "$usage" "$gauge_width")" "$usage")
+    ;;
+esac
+emit_waybar_json "$text" "$tooltip" "$class"

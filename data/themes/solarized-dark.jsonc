@@ -1,0 +1,16 @@
+{
+  // Solarized Dark palette adapted for Waybar token keys
+  "colors": {
+    "foreground": "#839496",
+    "background": "rgba(0, 43, 54, 0.92)",
+    "border": "rgba(38, 139, 210, 0.40)",
+    "accent": "rgba(211, 54, 130, 0.35)",
+    "warning": "#b58900",
+    "critical": "#dc322f",
+    "tooltip_background": "#002b36",
+    "tooltip_border": "#073642",
+    "workspace_active": "rgba(38, 139, 210, 0.40)",
+    "workspace_inactive": "rgba(131, 148, 150, 0.45)",
+    "workspace_visible": "#268bd2"
+  }
+}

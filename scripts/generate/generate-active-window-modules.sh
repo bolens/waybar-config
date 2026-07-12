@@ -19,15 +19,20 @@ mkdir -p "$mod_dir" "$theme_dir"
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
   def sig($k): ($s[0].signals[$k] // null);
+  def per_out:
+    (($s[0].active_window // {}).per_output) as $p
+    | if $p == false then false else true end;
+  def out_arg:
+    if per_out then " \"$WAYBAR_OUTPUT_NAME\"" else "" end;
 
   {
     "custom/active-window": {
       format: "{}",
       "return-type": "json",
       escape: true,
-      exec: ($scripts + "/workspaces/active-window-scroll.sh"),
+      exec: ($scripts + "/workspaces/active-window-scroll.sh" + out_arg),
       tooltip: true,
-      "on-click": ($scripts + "/workspaces/window-switcher.sh")
+      "on-click": ($scripts + "/workspaces/window-switcher.sh" + out_arg)
     }
   } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq '.' >"$mod_dir/compositor.generated.jsonc"

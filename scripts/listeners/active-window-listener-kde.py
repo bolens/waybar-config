@@ -57,6 +57,7 @@ class ActiveWindowServer(
 
         self.pending_title = None
         self.pending_app = None
+        self.pending_output = ""
         self.active_window_timeout_id = 0
         self.windows_changed_timeout_id = 0
 

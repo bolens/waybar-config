@@ -1,0 +1,16 @@
+{
+  // Nord palette adapted for Waybar token keys
+  "colors": {
+    "foreground": "#d8dee9",
+    "background": "rgba(46, 52, 64, 0.92)",
+    "border": "rgba(136, 192, 208, 0.35)",
+    "accent": "rgba(129, 161, 193, 0.40)",
+    "warning": "#ebcb8b",
+    "critical": "#bf616a",
+    "tooltip_background": "#2e3440",
+    "tooltip_border": "#4c566a",
+    "workspace_active": "rgba(136, 192, 208, 0.35)",
+    "workspace_inactive": "rgba(216, 222, 233, 0.45)",
+    "workspace_visible": "#88c0d0"
+  }
+}

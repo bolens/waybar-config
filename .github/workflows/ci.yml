@@ -263,6 +263,9 @@ jobs:
           - settings-overrides-modules
           - settings-overrides-polish
           - settings-overrides-layout-theme
+          - bars-floating-geometry
+          - theme-mode-pipeline
+          - theme-wallpaper-per-output
           - lib-utils
           - generator-resilience
           - path-edge-cases
@@ -274,6 +277,24 @@ jobs:
           - hw-rgb-fans
           - weather-status
           - portability
+          - power-menu
+          - pomodoro
+          - homelab-status
+          - cava-status
+          - cava-placement
+          - album-art-wiring
+          - keyboard-layout-plasma
+          - streamdeck-module
+          - stats-carousel
+          - animations-css
+          - gtk-css-compat
+          - dock-windows-hypr
+          - dock-windows-plasma
+          - active-window-kde-cache
+          - github-status
+          - per-output-core
+          - per-output-modules
+          - visual-gauges
     steps:
       - uses: actions/checkout@v7
       - name: Install jq + dash
