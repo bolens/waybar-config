@@ -303,7 +303,7 @@
       "theme": "dark", // dark | light (SVGL / pack variant hint)
       "size": 18, // PNG pixel size + CSS min box
       "gap": 12, // margin between bordered dock icon boxes
-      "pad": 6 // horizontal padding inside each box around the icon
+      "pad": 8 // padding inside each box (also room for running glow; keep ≥ glow blur)
     }
   },
 

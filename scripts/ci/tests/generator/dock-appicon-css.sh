@@ -47,8 +47,8 @@ if ! grep -q 'margin-right: 12px' "$css"; then
   echo "FAIL: dock-appicons.generated.css should use icons.appicon.gap" >&2
   exit 1
 fi
-if ! grep -q 'padding: 0 8px' "$css"; then
-  echo "FAIL: dock-appicons.generated.css should use icons.appicon.pad" >&2
+if ! grep -q 'padding: 8px' "$css"; then
+  echo "FAIL: dock-appicons.generated.css should use icons.appicon.pad on all sides" >&2
   exit 1
 fi
 # Layout must apply without .appicon so glyph fallbacks keep the same gaps.

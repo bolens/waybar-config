@@ -16,12 +16,12 @@ mkdir -p "$WAYBAR_HOME/theme"
 enabled=false
 size=18
 gap=12
-pad=6
+pad=8
 if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
   enabled="$(jq -r '.icons.appicon.enabled // false' "$settings")"
   size="$(jq -r '.icons.appicon.size // 18' "$settings")"
   gap="$(jq -r '.icons.appicon.gap // 12' "$settings")"
-  pad="$(jq -r '.icons.appicon.pad // 6' "$settings")"
+  pad="$(jq -r '.icons.appicon.pad // 8' "$settings")"
 fi
 
 case "$enabled" in
@@ -65,7 +65,8 @@ mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
     fi
   done
   printf ' {\n'
-  printf '    padding: 0 %spx;\n' "$pad"
+  # Equal padding so running/hover box-shadow is not clipped at the widget edge (GTK).
+  printf '    padding: %spx;\n' "$pad"
   printf '    margin-top: 4px;\n'
   printf '    margin-bottom: 4px;\n'
   printf '    margin-left: 0;\n'
@@ -74,6 +75,7 @@ mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
   printf '    min-height: %spx;\n' "$size"
   printf '    border-right: 1px solid rgba(0, 229, 255, 0.12);\n'
   printf '    border-radius: 6px;\n'
+  printf '    overflow: visible;\n'
   printf '}\n'
 
   # Last launcher in the drawer still needs a right margin for visual rhythm, or
@@ -96,7 +98,7 @@ mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
     printf '    color: transparent;\n'
     printf '    text-shadow: none;\n'
     printf '    font-size: 0;\n'
-    printf '    padding: 0 %spx;\n' "$pad"
+    printf '    padding: %spx;\n' "$pad"
     printf '    margin-right: %spx;\n' "$gap"
     printf '}\n'
     printf '#custom-dock-%s.appicon:hover {\n' "$id"
@@ -104,7 +106,8 @@ mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
     printf '    background-image: url("%s");\n' "$url"
     printf '}\n'
     printf '#custom-dock-%s.appicon.running {\n' "$id"
-    printf '    box-shadow: 0 0 6px rgba(0, 229, 255, 0.7);\n'
+    # Keep blur ≤ pad so GTK does not clip the glow at the widget edge.
+    printf '    box-shadow: 0 0 %spx rgba(0, 229, 255, 0.7);\n' "$pad"
     printf '}\n\n'
   done
 } >"$out"

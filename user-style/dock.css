@@ -3,7 +3,8 @@
  * when icons.appicon.enabled (even gaps for glyph + PNG launchers). */
 
 #dock-apps {
-    padding: 0 3px;
+    padding: 4px 6px;
+    overflow: visible;
 }
 
 #dock-apps > .running:not(.appicon) {
