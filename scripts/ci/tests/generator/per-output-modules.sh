@@ -123,4 +123,36 @@ assert_field_lacks_output "$aw_off" '."custom/active-window".exec' "active-windo
 assert_field_lacks_output "$util_off" '."custom/brightness".exec' "brightness omits output when per_output=false"
 assert_field_lacks_output "$util_off" '."custom/screenshot"."on-click"' "screenshot omits output when per_output=false"
 
+echo "Testing hypr_tools.submap_per_output CSS generator..."
+submap_css="$TEST_DIR/theme/submap-per-output.generated.css"
+"$TEST_DIR/scripts/generate/generate-submap-css.sh"
+if [ ! -f "$submap_css" ]; then
+  echo "FAIL: submap-per-output.generated.css missing after generate" >&2
+  fail=1
+elif ! grep -q 'submap_per_output is off' "$submap_css"; then
+  echo "FAIL: expected stub CSS when submap_per_output is off" >&2
+  fail=1
+else
+  echo "PASS: submap_per_output off → stub CSS"
+fi
+
+python3 - "$TEST_DIR/data/waybar-settings.jsonc" <<'PY'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data.setdefault("hypr_tools", {})["submap_per_output"] = True
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+waybar_test_compile_settings
+"$TEST_DIR/scripts/generate/generate-submap-css.sh"
+if ! grep -qE 'window\.[A-Za-z0-9_-]+ #submap' "$submap_css"; then
+  echo "FAIL: enabled submap_per_output should emit window.<OUTPUT> #submap selectors" >&2
+  fail=1
+elif grep -q 'submap_per_output is off' "$submap_css"; then
+  echo "FAIL: enabled submap_per_output still emits stub" >&2
+  fail=1
+else
+  echo "PASS: submap_per_output on → per-output #submap CSS"
+fi
+
 waybar_test_end

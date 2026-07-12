@@ -88,7 +88,57 @@ fi
 
 rm -rf "$stub" "$launched" "$args_file"
 
+echo "Testing streamdeck-click restart uses .streamdeck.service_name..."
+svc_name="app-streamdeck-ui@test-suite.service"
+python3 - "$TEST_DIR/data/waybar-settings.jsonc" <<PY
+import json, pathlib, re, sys
+path = pathlib.Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+stripped = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+stripped = re.sub(r"(?<!:)//.*", "", stripped)
+data = json.loads(stripped)
+data.setdefault("streamdeck", {})["service_name"] = "$svc_name"
+path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+waybar_test_compile_settings
+
+sysctl_stub=$(mktemp -d)
+sysctl_log=$(mktemp)
+cat >"$sysctl_stub/systemctl" <<EOF
+#!/bin/sh
+printf '%s\n' "\$*" >>"${sysctl_log:?}"
+exit 0
+EOF
+chmod +x "$sysctl_stub/systemctl"
+# Avoid real signal/status side effects
+cat >"$TEST_DIR/scripts/lib/waybar-signal.sh" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+chmod +x "$TEST_DIR/scripts/lib/waybar-signal.sh"
+cat >"$TEST_DIR/scripts/services/devices/streamdeck-status.sh" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+chmod +x "$TEST_DIR/scripts/services/devices/streamdeck-status.sh"
+
+PATH="$sysctl_stub:$PATH" \
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  XDG_CACHE_HOME="$TEST_DIR/cache" \
+  "$click" restart >/dev/null 2>&1 || true
+
+if ! grep -qE -- "--user[[:space:]]+restart[[:space:]]+$svc_name" "$sysctl_log" \
+  && ! grep -qE "restart[[:space:]]+$svc_name" "$sysctl_log"; then
+  echo "FAIL: streamdeck-click restart did not systemctl --user restart $svc_name (log=$(cat "$sysctl_log"))" >&2
+  fail=1
+else
+  echo "PASS: restart uses configured streamdeck.service_name"
+fi
+rm -rf "$sysctl_stub" "$sysctl_log"
+
 echo "Testing status tooltip documents left=open UI..."
+# Re-copy status from source tree — sandbox stub above replaced it.
+cp -a "$ROOT_DIR/scripts/services/devices/streamdeck-status.sh" "$status"
 if [ -x "$status" ] && ! grep -q 'Left: open UI' "$status"; then
   echo "FAIL: streamdeck-status.sh tooltip should say Left: open UI" >&2
   fail=1

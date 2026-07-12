@@ -11,6 +11,7 @@ on:
       - ".github/workflows/stylelint.yml"
       - "scripts/ci/check-stylelint.sh"
       - "scripts/ci/check-gtk-css.sh"
+      - "scripts/ci/lib/gtk3-css-property-allowlist.txt"
       - "scripts/ci/ensure-pnpm.sh"
   pull_request:
     branches: [main]
@@ -22,6 +23,7 @@ on:
       - ".github/workflows/stylelint.yml"
       - "scripts/ci/check-stylelint.sh"
       - "scripts/ci/check-gtk-css.sh"
+      - "scripts/ci/lib/gtk3-css-property-allowlist.txt"
       - "scripts/ci/ensure-pnpm.sh"
   workflow_dispatch:
 
@@ -50,6 +52,10 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
+      - name: Install GTK3 PyGObject (CssProvider probe)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq python3-gi gir1.2-gtk-3.0
       - name: Lint CSS
         run: bash scripts/ci/check-stylelint.sh
       - name: GTK3 / Waybar CSS compat

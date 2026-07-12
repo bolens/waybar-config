@@ -304,6 +304,7 @@ With `bars.output: ["*"]`, bars already appear on every monitor. These honor `$W
 - Workspace scroll (`workspaces.scroll_per_output`)
 - Active window, brightness, capture full-screen, dock-windows, window switcher
 - Wallpaper tokens when `theme.mode=wallpaper` and `theme.wallpaper.scope=per_output`
+- Optional Hyprland submap chrome (`hypr_tools.submap_per_output`): scopes `#submap` under each `window.<OUTPUT>` — presentation only; submap state stays session-global
 
 `workspaces.slot_count` is the number of **desktop slots**, not monitors.
 

@@ -94,5 +94,26 @@ if bash "$ROOT_DIR/scripts/ci/check-gtk-css.sh" "$bad_root" >/dev/null 2>&1; the
 fi
 rm -rf "$bad_root"
 
+echo "Testing allowlist rejects unknown property names..."
+unk_root=$(mktemp -d)
+mkdir -p "$unk_root/theme"
+cat >"$unk_root/theme/unknown-prop.css" <<'EOF'
+#probe {
+    totally-fake-property: 1;
+}
+EOF
+if bash "$ROOT_DIR/scripts/ci/check-gtk-css.sh" "$unk_root" >/dev/null 2>&1; then
+  echo "FAIL: check-gtk-css.sh should reject properties absent from GTK3 allowlist" >&2
+  fail=1
+else
+  echo "PASS: allowlist rejects unknown property names"
+fi
+rm -rf "$unk_root"
+
+if [ ! -f "$ROOT_DIR/scripts/ci/lib/gtk3-css-property-allowlist.txt" ]; then
+  echo "FAIL: missing scripts/ci/lib/gtk3-css-property-allowlist.txt" >&2
+  fail=1
+fi
+
 echo "PASS: gtk-css-compat"
 waybar_test_end
