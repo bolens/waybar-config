@@ -41,8 +41,23 @@ if ! grep -q 'url("dock-appicons/browser")' "$css"; then
   echo "FAIL: expected browser dock-appicon CSS rule" >&2
   exit 1
 fi
-if ! grep -q '#dock-apps > .appicon' "$css"; then
-  echo "FAIL: expected shared .appicon rules" >&2
+if ! grep -q '#dock-apps label.appicon' "$css"; then
+  echo "FAIL: expected shared label.appicon rules" >&2
+  exit 1
+fi
+if ! grep -q 'label.appicon' "$ROOT_DIR/user-style/dock.css"; then
+  echo "FAIL: user-style/dock.css must hide glyphs for label.appicon" >&2
+  exit 1
+fi
+
+if [ ! -x "$TEST_DIR/scripts/dock/dock-appicon-prefetch.sh" ]; then
+  echo "FAIL: dock-appicon-prefetch.sh missing or not executable" >&2
+  exit 1
+fi
+waybar_test_assert_bash_n "$TEST_DIR/scripts/dock/dock-appicon-prefetch.sh" \
+  "dock-appicon-prefetch.sh failed bash -n"
+if [ ! -f "$TEST_DIR/scripts/lib/appicon-lib.sh" ]; then
+  echo "FAIL: appicon-lib.sh missing" >&2
   exit 1
 fi
 

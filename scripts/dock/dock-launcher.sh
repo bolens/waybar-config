@@ -25,36 +25,39 @@ run_detached() {
 # Resolve a PNG via appicon when icons.appicon.enabled; symlink for CSS background-image.
 # Glyph fallback when disabled, binary missing, or resolve fails. Never embeds SVGL URLs.
 dock_appicon_prepare() {
-  local query path link_dir link_path size theme enabled
-  classes_extra=""
+  local query path link_dir link_path display_size resolve_size theme bin
+  classes_extra=()
 
-  if [ ! -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ]; then
+  if [ ! -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ] \
+    || [ ! -f "$WAYBAR_SCRIPTS/lib/appicon-lib.sh" ]; then
     return 0
   fi
   # shellcheck source=../lib/waybar-settings.sh
   . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+  # shellcheck source=../lib/appicon-lib.sh
+  . "$WAYBAR_SCRIPTS/lib/appicon-lib.sh"
 
-  enabled="$(waybar_settings_get '.icons.appicon.enabled' 'false')"
-  case "$enabled" in
-    true | True | TRUE | 1 | yes | Yes | YES | on | On | ON) ;;
-    *) return 0 ;;
-  esac
+  waybar_appicon_enabled || return 0
+  bin="$(waybar_appicon_bin)" || return 0
 
-  if ! command -v appicon >/dev/null 2>&1; then
-    return 0
-  fi
-
-  size="$(waybar_settings_get '.icons.appicon.size' '22')"
+  display_size="$(waybar_settings_get '.icons.appicon.size' '22')"
   theme="$(waybar_settings_get '.icons.appicon.theme' 'dark')"
+  resolve_size="$(waybar_appicon_resolve_size "$display_size")"
   query="$(jq -r --arg id "$app_id" '
     .[$id]
     | if . == null then empty
-      else (.appicon // .launch // $id)
+      else (
+        .appicon
+        // .launch
+        // (.process_names[0] // empty)
+        // (.wm_classes[0] // empty)
+        // $id
+      )
       end
   ' "$manifest")"
   [ -n "$query" ] || query="$app_id"
 
-  path="$(appicon resolve --format png --size "$size" --theme "$theme" "$query" 2>/dev/null || true)"
+  path="$("$bin" resolve --format png --size "$resolve_size" --theme "$theme" "$query" 2>/dev/null || true)"
   if [ -z "$path" ] || [ ! -f "$path" ]; then
     return 0
   fi
@@ -64,7 +67,7 @@ dock_appicon_prepare() {
   mkdir -p "$link_dir"
   ln -sfn "$path" "$link_path" 2>/dev/null || true
   if [ -e "$link_path" ]; then
-    classes_extra="appicon"
+    classes_extra=(appicon)
   fi
 }
 
@@ -99,17 +102,24 @@ case "$action" in
       class="running"
     fi
 
-    classes_extra=""
+    classes_extra=()
     dock_appicon_prepare
-    if [ -n "${classes_extra:-}" ]; then
-      class="$class $classes_extra"
-    fi
 
-    jq -cn \
-      --arg text "${icon:-}" \
-      --arg tooltip "${tooltip:-}" \
-      --arg class "$class" \
-      '{text:$text, tooltip:$tooltip, class:$class}'
+    # Waybar applies class as one token unless it is a JSON array.
+    if [ "${#classes_extra[@]}" -gt 0 ]; then
+      jq -cn \
+        --arg text "${icon:-}" \
+        --arg tooltip "${tooltip:-}" \
+        --arg base "$class" \
+        --argjson extra "$(printf '%s\n' "${classes_extra[@]}" | jq -R . | jq -s -c .)" \
+        '{text:$text, tooltip:$tooltip, class:([$base] + $extra)}'
+    else
+      jq -cn \
+        --arg text "${icon:-}" \
+        --arg tooltip "${tooltip:-}" \
+        --arg class "$class" \
+        '{text:$text, tooltip:$tooltip, class:$class}'
+    fi
     ;;
   click)
     field="${3:-on-click}"

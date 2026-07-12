@@ -299,9 +299,9 @@
   
   "icons": {
     "appicon": {
-      "enabled": false,
+      "enabled": true, 
       "theme": "dark", 
-      "size": 22
+      "size": 24
     }
   },
 

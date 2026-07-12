@@ -56,6 +56,12 @@ export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
+# Ensure ~/.local/bin is on PATH (appicon and other user tools; systemd PATH is minimal).
+case ":${PATH}:" in
+  *:"$HOME/.local/bin":*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
+
 # shellcheck source=waybar-settings.sh
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
 

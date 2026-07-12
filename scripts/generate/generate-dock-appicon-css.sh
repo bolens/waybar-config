@@ -34,18 +34,14 @@ fi
 
 {
   printf '%s\n' '/* Generated from icons.appicon — do not edit by hand */'
-  printf '%s\n' '/* Relative url("dock-appicons/<id>") next to this file; dock-launcher.sh maintains symlinks. */'
-  printf '#dock-apps > .appicon {\n'
+  printf '%s\n' '/* Relative url("dock-appicons/<id>"); dock-launcher / prefetch maintain symlinks. */'
+  printf '%s\n' '/* Glyph hide lives in user-style/dock.css (loads after accents). */'
+  printf '#dock-apps label.appicon {\n'
   printf '    min-width: %spx;\n' "$size"
   printf '    min-height: %spx;\n' "$size"
   printf '    background-size: contain;\n'
   printf '    background-repeat: no-repeat;\n'
   printf '    background-position: center;\n'
-  printf '    color: transparent;\n'
-  printf '    text-shadow: none;\n'
-  printf '}\n'
-  printf '#dock-apps > .appicon.running {\n'
-  printf '    box-shadow: 0 0 6px rgba(0, 229, 255, 0.7);\n'
   printf '}\n'
   jq -r 'keys[]' "$manifest" | while read -r id; do
     [ -n "$id" ] || continue
@@ -55,3 +51,8 @@ fi
     printf '}\n'
   done
 } >"$out"
+
+# Warm symlinks so the first Waybar paint has backgrounds ready.
+if [ -x "$WAYBAR_SCRIPTS/dock/dock-appicon-prefetch.sh" ]; then
+  "$WAYBAR_SCRIPTS/dock/dock-appicon-prefetch.sh" || true
+fi

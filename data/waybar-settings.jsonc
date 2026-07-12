@@ -299,9 +299,9 @@
   // paints them; glyph icons remain the fallback if the binary is missing or resolve fails.
   "icons": {
     "appicon": {
-      "enabled": false,
+      "enabled": true, // make install-appicon; glyph fallback if binary missing
       "theme": "dark", // dark | light (SVGL / pack variant hint)
-      "size": 22
+      "size": 24
     }
   },
 
