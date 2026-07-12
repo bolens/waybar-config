@@ -221,6 +221,9 @@ PY
     python3 - "$ROOT" "${css_files[@]}" <<'PY'
 import sys
 from pathlib import Path
+import os
+import re
+import tempfile
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
@@ -243,16 +246,36 @@ for rel in sys.argv[2:]:
     except Exception as exc:
         errors.append(f"{rel}: {exc}")
 
-# Waybar entry: full import chain with correct relative resolution.
+# Waybar entry: full import chain. Optional absolute imports (hyprwhspr, etc.)
+# are skipped when missing so CI runners without those packages still validate
+# the repo CSS chain (theme + accents + user-style).
 entry = root / "style.css"
 if not entry.is_file():
     entry = root / "theme.css"
-if entry.is_file():
+smoke_path = None
+if entry is not None and entry.is_file():
+    raw = entry.read_text(encoding="utf-8", errors="ignore")
+    def keep_import(m):
+        path = m.group(1)
+        if path.startswith("/") and not Path(path).is_file():
+            return f"/* skipped missing optional import: {path} */\n"
+        return m.group(0)
+    filtered = re.sub(r'^@import\s+"([^"]+)";[ \t]*\n?', keep_import, raw, flags=re.M)
+    if filtered != raw:
+        # Keep beside style.css so relative @imports still resolve from WAYBAR_HOME.
+        fd, smoke_path = tempfile.mkstemp(prefix=".gtk-css-check-", suffix=".css", dir=str(root))
+        os.close(fd)
+        Path(smoke_path).write_text(filtered, encoding="utf-8")
+        entry = Path(smoke_path)
     provider = Gtk.CssProvider()
     try:
         provider.load_from_path(str(entry))
     except Exception as exc:
-        errors.append(f"{entry.name} (import chain): {exc}")
+        name = "style.css" if smoke_path else entry.name
+        errors.append(f"{name} (import chain): {exc}")
+    finally:
+        if smoke_path:
+            Path(smoke_path).unlink(missing_ok=True)
 
 if errors:
     print("\n".join(errors))

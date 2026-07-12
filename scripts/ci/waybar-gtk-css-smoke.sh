@@ -11,7 +11,10 @@ if ! python3 -c 'import gi; gi.require_version("Gtk","3.0"); from gi.repository 
 fi
 
 python3 - "$ROOT" <<'PY'
+import os
+import re
 import sys
+import tempfile
 from pathlib import Path
 import gi
 gi.require_version("Gtk", "3.0")
@@ -25,10 +28,11 @@ if target is None:
     sys.exit(0)
 
 # Static denylist (no Gtk needed for these — catch even if import chain is huge).
-import re
 bad = []
 for path in root.rglob("*.css"):
     if "theme/rofi" in path.as_posix() or "node_modules" in path.as_posix():
+        continue
+    if path.name.startswith(".gtk-css-"):
         continue
     raw = path.read_text(errors="ignore")
     # GTK treats "/ *" inside a comment as nested comment start (e.g. theme/*.css globs).
@@ -52,10 +56,31 @@ if bad:
     print("\n".join(bad), file=sys.stderr)
     sys.exit(1)
 
+raw = target.read_text(encoding="utf-8", errors="ignore")
+
+def keep_import(m):
+    path = m.group(1)
+    if path.startswith("/") and not Path(path).is_file():
+        return f"/* skipped missing optional import: {path} */\n"
+    return m.group(0)
+
+filtered = re.sub(r'^@import\s+"([^"]+)";[ \t]*\n?', keep_import, raw, flags=re.M)
+smoke_path = None
+load_target = target
+if filtered != raw:
+    fd, smoke_path = tempfile.mkstemp(prefix=".gtk-css-smoke-", suffix=".css", dir=str(root))
+    os.close(fd)
+    Path(smoke_path).write_text(filtered, encoding="utf-8")
+    load_target = Path(smoke_path)
+
 provider = Gtk.CssProvider()
 try:
-    provider.load_from_path(str(target))
+    provider.load_from_path(str(load_target))
 except Exception as exc:
     print(f"Gtk.CssProvider rejected {target.name}: {exc}", file=sys.stderr)
+    if smoke_path:
+        Path(smoke_path).unlink(missing_ok=True)
     sys.exit(1)
+if smoke_path:
+    Path(smoke_path).unlink(missing_ok=True)
 PY

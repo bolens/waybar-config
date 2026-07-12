@@ -14,6 +14,14 @@ cp "$ROOT_DIR/scripts/services/homelab/homelab-status.sh" "$TEST_DIR/scripts/ser
 cp "$ROOT_DIR/scripts/services/homelab/homelab-click.sh" "$TEST_DIR/scripts/services/homelab/"
 chmod +x "$TEST_DIR/scripts/services/homelab/homelab-status.sh" \
   "$TEST_DIR/scripts/services/homelab/homelab-click.sh"
+
+# Repo settings may define live targets; start from empty so empty-wiring asserts hold.
+waybar_test_compile_settings
+jq '.homelab = {timeout_sec: 2, targets: []}' \
+  "$TEST_DIR/data/waybar-settings.json" >"$TEST_DIR/data/waybar-settings.json.tmp"
+mv -f "$TEST_DIR/data/waybar-settings.json.tmp" "$TEST_DIR/data/waybar-settings.json"
+cp -f "$TEST_DIR/data/waybar-settings.json" "$TEST_DIR/data/waybar-settings.jsonc"
+
 if ! waybar_test_gen_modules; then
   echo "FAIL: generate failed before homelab checks" >&2
   fail=1

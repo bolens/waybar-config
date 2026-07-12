@@ -49,3 +49,7 @@ data/waybar-secrets.jsonc
 /config.json
 /dashboard.json
 /display.json
+
+# Transient GTK CSS smoke entries (optional absolute @imports stripped for CI)
+.gtk-css-check-*.css
+.gtk-css-smoke-*.css
