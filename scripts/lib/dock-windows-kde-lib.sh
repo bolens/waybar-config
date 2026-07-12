@@ -297,27 +297,72 @@ dock_windows_appicon_key_for() {
   done
 
   case "$title_lower" in
-    *discord* | *vesktop* | *webcord*) printf 'discord'; return 0 ;;
-    *heroic*) printf 'heroic'; return 0 ;;
-    *lutris*) printf 'lutris'; return 0 ;;
-    *obsidian*) printf 'obsidian'; return 0 ;;
-    *krita*) printf 'krita'; return 0 ;;
-    *dolphin* | *thunar* | *nautilus*) printf 'files'; return 0 ;;
-    *cursor*) printf 'cursor'; return 0 ;;
-    *code-insiders* | *code*insiders*) printf 'vscode'; return 0 ;;
-    *helium*) printf 'helium'; return 0 ;;
-    *floorp*) printf 'floorp'; return 0 ;;
-    *zen* | *firefox*) printf 'browser'; return 0 ;;
-    *ghostty* | *kitty* | *konsole* | *foot*) printf 'terminal'; return 0 ;;
-    *zed* | *zeditor*) printf 'zed'; return 0 ;;
+    *discord* | *vesktop* | *webcord*)
+      printf 'discord'
+      return 0
+      ;;
+    *heroic*)
+      printf 'heroic'
+      return 0
+      ;;
+    *lutris*)
+      printf 'lutris'
+      return 0
+      ;;
+    *obsidian*)
+      printf 'obsidian'
+      return 0
+      ;;
+    *krita*)
+      printf 'krita'
+      return 0
+      ;;
+    *dolphin* | *thunar* | *nautilus*)
+      printf 'files'
+      return 0
+      ;;
+    *cursor*)
+      printf 'cursor'
+      return 0
+      ;;
+    *code-insiders* | *code*insiders*)
+      printf 'vscode'
+      return 0
+      ;;
+    *helium*)
+      printf 'helium'
+      return 0
+      ;;
+    *floorp*)
+      printf 'floorp'
+      return 0
+      ;;
+    *zen* | *firefox*)
+      printf 'browser'
+      return 0
+      ;;
+    *ghostty* | *kitty* | *konsole* | *foot*)
+      printf 'terminal'
+      return 0
+      ;;
+    *zed*)
+      printf 'zed'
+      return 0
+      ;;
   esac
 
   # Exact Steam client title/class only (not steam_app_*).
   case "$key" in
-    steam | steamwebhelper) printf 'steam'; return 0 ;;
+    steam | steamwebhelper)
+      printf 'steam'
+      return 0
+      ;;
   esac
   case "$title_lower" in
-    steam | steam\ -\ *) printf 'steam'; return 0 ;;
+    steam | steam\ -\ *)
+      printf 'steam'
+      return 0
+      ;;
   esac
 
   # Unknown app class → sanitized key for runtime CSS (if resolvable).

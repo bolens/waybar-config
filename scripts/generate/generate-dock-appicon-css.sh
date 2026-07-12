@@ -43,7 +43,8 @@ fi
 
 css_url_for() {
   local id="$1"
-  printf 'file://%s/%s.png' "$icon_dir" "$id"
+  # Relative to theme/*.css (same dir as dock-appicons/) — portable across hosts/CI.
+  printf 'dock-appicons/%s.png' "$id"
 }
 
 mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")

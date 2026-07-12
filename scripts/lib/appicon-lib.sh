@@ -50,8 +50,8 @@ waybar_appicon_miss_mark() {
   local key="$1" dir
   [ -n "$key" ] || return 0
   dir="$(waybar_appicon_miss_dir)"
-  mkdir -p "$dir"
-  : >"${dir}/${key}"
+  mkdir -p "$dir" 2>/dev/null || return 0
+  : >"${dir}/${key}" 2>/dev/null || true
 }
 
 # Return 0 when a recent miss stamp exists (skip resolve). TTL default 300s.

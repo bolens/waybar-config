@@ -35,7 +35,7 @@
 #custom-dock-anyrun.appicon:active,
 #custom-dock-anyrun.appicon.ready,
 #custom-dock-anyrun.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/anyrun.png");
+    background-image: url("dock-appicons/anyrun.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -48,7 +48,7 @@
 }
 #custom-dock-anyrun.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/anyrun.png");
+    background-image: url("dock-appicons/anyrun.png");
 }
 #custom-dock-anyrun.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -59,7 +59,7 @@
 #custom-dock-browser.appicon:active,
 #custom-dock-browser.appicon.ready,
 #custom-dock-browser.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/browser.png");
+    background-image: url("dock-appicons/browser.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -72,7 +72,7 @@
 }
 #custom-dock-browser.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/browser.png");
+    background-image: url("dock-appicons/browser.png");
 }
 #custom-dock-browser.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -83,7 +83,7 @@
 #custom-dock-cursor.appicon:active,
 #custom-dock-cursor.appicon.ready,
 #custom-dock-cursor.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/cursor.png");
+    background-image: url("dock-appicons/cursor.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -96,7 +96,7 @@
 }
 #custom-dock-cursor.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/cursor.png");
+    background-image: url("dock-appicons/cursor.png");
 }
 #custom-dock-cursor.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -107,7 +107,7 @@
 #custom-dock-discord.appicon:active,
 #custom-dock-discord.appicon.ready,
 #custom-dock-discord.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/discord.png");
+    background-image: url("dock-appicons/discord.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -120,7 +120,7 @@
 }
 #custom-dock-discord.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/discord.png");
+    background-image: url("dock-appicons/discord.png");
 }
 #custom-dock-discord.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -131,7 +131,7 @@
 #custom-dock-files.appicon:active,
 #custom-dock-files.appicon.ready,
 #custom-dock-files.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/files.png");
+    background-image: url("dock-appicons/files.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -144,7 +144,7 @@
 }
 #custom-dock-files.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/files.png");
+    background-image: url("dock-appicons/files.png");
 }
 #custom-dock-files.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -155,7 +155,7 @@
 #custom-dock-floorp.appicon:active,
 #custom-dock-floorp.appicon.ready,
 #custom-dock-floorp.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/floorp.png");
+    background-image: url("dock-appicons/floorp.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -168,7 +168,7 @@
 }
 #custom-dock-floorp.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/floorp.png");
+    background-image: url("dock-appicons/floorp.png");
 }
 #custom-dock-floorp.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -179,7 +179,7 @@
 #custom-dock-helium.appicon:active,
 #custom-dock-helium.appicon.ready,
 #custom-dock-helium.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/helium.png");
+    background-image: url("dock-appicons/helium.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -192,7 +192,7 @@
 }
 #custom-dock-helium.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/helium.png");
+    background-image: url("dock-appicons/helium.png");
 }
 #custom-dock-helium.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -203,7 +203,7 @@
 #custom-dock-heroic.appicon:active,
 #custom-dock-heroic.appicon.ready,
 #custom-dock-heroic.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/heroic.png");
+    background-image: url("dock-appicons/heroic.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -216,7 +216,7 @@
 }
 #custom-dock-heroic.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/heroic.png");
+    background-image: url("dock-appicons/heroic.png");
 }
 #custom-dock-heroic.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -227,7 +227,7 @@
 #custom-dock-kitty.appicon:active,
 #custom-dock-kitty.appicon.ready,
 #custom-dock-kitty.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/kitty.png");
+    background-image: url("dock-appicons/kitty.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -240,7 +240,7 @@
 }
 #custom-dock-kitty.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/kitty.png");
+    background-image: url("dock-appicons/kitty.png");
 }
 #custom-dock-kitty.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -251,7 +251,7 @@
 #custom-dock-krita.appicon:active,
 #custom-dock-krita.appicon.ready,
 #custom-dock-krita.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/krita.png");
+    background-image: url("dock-appicons/krita.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -264,7 +264,7 @@
 }
 #custom-dock-krita.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/krita.png");
+    background-image: url("dock-appicons/krita.png");
 }
 #custom-dock-krita.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -275,7 +275,7 @@
 #custom-dock-lutris.appicon:active,
 #custom-dock-lutris.appicon.ready,
 #custom-dock-lutris.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/lutris.png");
+    background-image: url("dock-appicons/lutris.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -288,7 +288,7 @@
 }
 #custom-dock-lutris.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/lutris.png");
+    background-image: url("dock-appicons/lutris.png");
 }
 #custom-dock-lutris.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -299,7 +299,7 @@
 #custom-dock-obsidian.appicon:active,
 #custom-dock-obsidian.appicon.ready,
 #custom-dock-obsidian.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/obsidian.png");
+    background-image: url("dock-appicons/obsidian.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -312,7 +312,7 @@
 }
 #custom-dock-obsidian.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/obsidian.png");
+    background-image: url("dock-appicons/obsidian.png");
 }
 #custom-dock-obsidian.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -323,7 +323,7 @@
 #custom-dock-orcaslicer.appicon:active,
 #custom-dock-orcaslicer.appicon.ready,
 #custom-dock-orcaslicer.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/orcaslicer.png");
+    background-image: url("dock-appicons/orcaslicer.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -336,7 +336,7 @@
 }
 #custom-dock-orcaslicer.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/orcaslicer.png");
+    background-image: url("dock-appicons/orcaslicer.png");
 }
 #custom-dock-orcaslicer.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -347,7 +347,7 @@
 #custom-dock-pear.appicon:active,
 #custom-dock-pear.appicon.ready,
 #custom-dock-pear.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/pear.png");
+    background-image: url("dock-appicons/pear.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -360,7 +360,7 @@
 }
 #custom-dock-pear.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/pear.png");
+    background-image: url("dock-appicons/pear.png");
 }
 #custom-dock-pear.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -371,7 +371,7 @@
 #custom-dock-steam.appicon:active,
 #custom-dock-steam.appicon.ready,
 #custom-dock-steam.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/steam.png");
+    background-image: url("dock-appicons/steam.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -384,7 +384,7 @@
 }
 #custom-dock-steam.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/steam.png");
+    background-image: url("dock-appicons/steam.png");
 }
 #custom-dock-steam.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -395,7 +395,7 @@
 #custom-dock-terminal.appicon:active,
 #custom-dock-terminal.appicon.ready,
 #custom-dock-terminal.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/terminal.png");
+    background-image: url("dock-appicons/terminal.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -408,7 +408,7 @@
 }
 #custom-dock-terminal.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/terminal.png");
+    background-image: url("dock-appicons/terminal.png");
 }
 #custom-dock-terminal.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -419,7 +419,7 @@
 #custom-dock-vscode.appicon:active,
 #custom-dock-vscode.appicon.ready,
 #custom-dock-vscode.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/vscode.png");
+    background-image: url("dock-appicons/vscode.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -432,7 +432,7 @@
 }
 #custom-dock-vscode.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/vscode.png");
+    background-image: url("dock-appicons/vscode.png");
 }
 #custom-dock-vscode.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
@@ -443,7 +443,7 @@
 #custom-dock-zed.appicon:active,
 #custom-dock-zed.appicon.ready,
 #custom-dock-zed.appicon.running {
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/zed.png");
+    background-image: url("dock-appicons/zed.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
@@ -456,7 +456,7 @@
 }
 #custom-dock-zed.appicon:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/zed.png");
+    background-image: url("dock-appicons/zed.png");
 }
 #custom-dock-zed.appicon.running {
     box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);

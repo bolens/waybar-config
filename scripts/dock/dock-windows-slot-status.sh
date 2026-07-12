@@ -13,7 +13,8 @@ output_arg="${2:-}"
 # shellcheck source=../lib/dock-windows-kde-lib.sh
 . "$WAYBAR_SCRIPTS/lib/dock-windows-kde-lib.sh"
 
-export WAYBAR_OUTPUT_NAME="$(dock_windows_resolve_output "$output_arg")"
+WAYBAR_OUTPUT_NAME="$(dock_windows_resolve_output "$output_arg")"
+export WAYBAR_OUTPUT_NAME
 
 if [ -z "$slot" ] || ! [[ "$slot" =~ ^[0-9]+$ ]]; then
   printf '{"text":"","tooltip":"","class":["hidden"]}\n'
@@ -125,7 +126,7 @@ dock_windows_appicon_prepare() {
     if waybar_appicon_materialize "$path" "$link_path" "$display_size"; then
       waybar_appicon_miss_clear "$app_key" || true
       if [ "$known" != 1 ]; then
-        url="file://${dest_dir}/${app_key}.png"
+        url="dock-win-icons/${app_key}.png"
         dock_windows_ensure_runtime_css "$app_key" "$url" "$display_size" "$pad" || true
       fi
     else

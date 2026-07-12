@@ -29,8 +29,8 @@ cp "$ROOT_DIR/scripts/lib/dock-windows-kde-lib.sh" \
   "$ROOT_DIR/scripts/lib/waybar-settings.sh" \
   "$TEST_DIR/scripts/lib/"
 cp "$ROOT_DIR/scripts/generate/generate-dock-windows-modules.sh" "$TEST_DIR/scripts/generate/"
-cp "$ROOT_DIR/scripts/generate/generate-dock-windows-css.sh" "$TEST_DIR/scripts/generate/" 2>/dev/null || \
-  cp "$ROOT_DIR/scripts/generate/generate-dock-windows-css.sh" "$TEST_DIR/scripts/generate/"
+cp "$ROOT_DIR/scripts/generate/generate-dock-windows-css.sh" "$TEST_DIR/scripts/generate/" 2>/dev/null \
+  || cp "$ROOT_DIR/scripts/generate/generate-dock-windows-css.sh" "$TEST_DIR/scripts/generate/"
 # css generator deps
 mkdir -p "$TEST_DIR/scripts/lib"
 cp "$ROOT_DIR/scripts/lib/css-selectors-lib.sh" "$TEST_DIR/scripts/lib/" 2>/dev/null || true

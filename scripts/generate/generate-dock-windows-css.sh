@@ -11,8 +11,6 @@ set -euo pipefail
 settings="${WAYBAR_HOME}/data/waybar-settings.json"
 manifest="${WAYBAR_HOME}/data/dock-apps.json"
 out="$WAYBAR_HOME/theme/dock-windows.generated.css"
-launcher_icon_dir="$WAYBAR_HOME/theme/dock-appicons"
-win_icon_dir="$WAYBAR_HOME/theme/dock-win-icons"
 mkdir -p "$WAYBAR_HOME/theme"
 
 # Match generate-dock-windows-modules.sh: clamp 1–16, default 12.
@@ -88,8 +86,9 @@ EOF
     for id in "${app_ids[@]}"; do
       [ -n "$id" ] || continue
       # Prefer launcher materializations; fall back to dock-win-icons/<id>.png.
-      url="file://${launcher_icon_dir}/${id}.png"
-      alt_url="file://${win_icon_dir}/${id}.png"
+      # Relative URLs (next to this CSS under theme/) stay portable for CI drift.
+      url="dock-appicons/${id}.png"
+      alt_url="dock-win-icons/${id}.png"
       # Slot list for this app class
       first=1
       for ((i = 0; i < slot_count; i++)); do
@@ -148,3 +147,7 @@ EOF
     done
   fi
 } >"$out"
+
+# Portable stub — unknown-app rules are appended at runtime with relative urls.
+printf '%s\n' '/* Runtime dock-windows appicon rules — do not edit by hand */' \
+  >"$WAYBAR_HOME/theme/dock-win-runtime.generated.css"

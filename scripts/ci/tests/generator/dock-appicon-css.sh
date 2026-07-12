@@ -56,8 +56,8 @@ if ! grep -qE '^#custom-dock-[a-z0-9-]+,' "$css"; then
   echo "FAIL: expected shared #custom-dock-* layout rules without requiring .appicon" >&2
   exit 1
 fi
-if ! grep -q 'url("file://.*/theme/dock-appicons/browser.png")' "$css"; then
-  echo "FAIL: expected file:// browser.png dock-appicon CSS rule" >&2
+if ! grep -q 'url("dock-appicons/browser.png")' "$css"; then
+  echo "FAIL: expected relative dock-appicons/browser.png CSS rule" >&2
   exit 1
 fi
 if ! grep -q '#custom-dock-browser.appicon:hover' "$css"; then
@@ -105,8 +105,8 @@ if ! grep -q 'appicon-browser' "$win_css"; then
   echo "FAIL: expected appicon-browser CSS when icons.appicon.enabled" >&2
   exit 1
 fi
-if ! grep -q 'url("file://.*/theme/dock-appicons/browser.png")' "$win_css"; then
-  echo "FAIL: expected dock-windows CSS to reuse dock-appicons/browser.png" >&2
+if ! grep -q 'url("dock-appicons/browser.png")' "$win_css"; then
+  echo "FAIL: expected dock-windows CSS to reuse relative dock-appicons/browser.png" >&2
   exit 1
 fi
 if grep -q 'dock-win-icons/slot-0' "$win_css"; then

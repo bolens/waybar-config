@@ -33,7 +33,8 @@ esac
 . "$WAYBAR_SCRIPTS/lib/compositor-session.sh"
 
 # on-click does not get WAYBAR_OUTPUT_NAME from Waybar — resolve via argv/env/active output.
-export WAYBAR_OUTPUT_NAME="$(dock_windows_resolve_output "$output_arg")"
+WAYBAR_OUTPUT_NAME="$(dock_windows_resolve_output "$output_arg")"
+export WAYBAR_OUTPUT_NAME
 
 state_dir="${XDG_RUNTIME_DIR:-/tmp}/waybar-dock"
 state_file="$state_dir/index"
