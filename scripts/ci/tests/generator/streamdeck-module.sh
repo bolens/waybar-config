@@ -55,12 +55,27 @@ cat >"$stub/streamdeck" <<'EOF'
 printf 'LAUNCHED\n' >"${STREAMDECK_LAUNCHED:?}"
 EOF
 chmod +x "$stub/streamdeck"
-# Force launch path: no existing process, no focus backends, no desktop helpers.
+# Force launch path: no existing process / no focus backends.
 cat >"$stub/pgrep" <<'EOF'
 #!/bin/sh
 exit 1
 EOF
 chmod +x "$stub/pgrep"
+# Host may have streamdeck-ui.desktop + kioclient; prefer those over raw binary.
+# Stub so we never exec the real Plasma helper (can abort in CI/sandbox).
+for helper in kioclient gtk-launch; do
+  cat >"$stub/$helper" <<'EOF'
+#!/bin/sh
+printf 'LAUNCHED\n' >"${STREAMDECK_LAUNCHED:?}"
+exit 0
+EOF
+  chmod +x "$stub/$helper"
+done
+cat >"$stub/systemctl" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+chmod +x "$stub/systemctl"
 # Replace app-open with a recorder that execs argv.
 cat >"$TEST_DIR/scripts/tools/app-open.sh" <<'EOF'
 #!/bin/sh
@@ -68,7 +83,7 @@ printf '%s\n' "$*" >"${STREAMDECK_APP_OPEN_ARGS:?}"
 exec "$@"
 EOF
 chmod +x "$TEST_DIR/scripts/tools/app-open.sh"
-# Avoid host compositor focus paths aborting the suite (qdbus/KWin).
+# Avoid host compositor focus paths (qdbus/KWin).
 cat >"$TEST_DIR/scripts/lib/compositor-session.sh" <<'EOF'
 #!/usr/bin/env bash
 detect_compositor() { printf 'unknown\n'; }
@@ -84,11 +99,11 @@ PATH="$stub:$PATH" \
   "$click" open >/dev/null 2>&1 || true
 
 if [ ! -s "$launched" ]; then
-  echo "FAIL: streamdeck-click open did not launch streamdeck binary" >&2
+  echo "FAIL: streamdeck-click open did not launch UI helper/binary (args=$(cat "$args_file" 2>/dev/null))" >&2
   fail=1
 fi
-if ! grep -q 'streamdeck' "$args_file" 2>/dev/null; then
-  echo "FAIL: streamdeck-click open did not go through app-open.sh streamdeck (args=$(cat "$args_file" 2>/dev/null))" >&2
+if ! grep -qiE 'streamdeck' "$args_file" 2>/dev/null; then
+  echo "FAIL: streamdeck-click open did not go through app-open with streamdeck (args=$(cat "$args_file" 2>/dev/null))" >&2
   fail=1
 fi
 # Writable cache log path must be preferred over ~/.streamdeck_ui.log
