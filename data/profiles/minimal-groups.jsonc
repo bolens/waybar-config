@@ -1,6 +1,7 @@
 {
-  // Paste/merge into data/waybar-settings.jsonc for a laptop / fork-friendly bar.
-  // Then: make generate && systemctl --user restart waybar
+  // Laptop / fork-friendly bar profile.
+  // Apply with: make profile-minimal
+  //   (or: bash scripts/tools/apply-profile.sh minimal-groups)
   //
   // Keeps: workspaces, media, net, notifications, clock, cpu/mem/disk, updates, weather, power menu, pomodoro
   // Drops: CoolerControl, liquidctl, OpenLinkHub, ASUS, Stream Deck, i2pd, security scanners, dock hardware extras

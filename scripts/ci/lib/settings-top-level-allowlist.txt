@@ -1,0 +1,45 @@
+# Allowed top-level keys in data/waybar-settings.json(c).
+# One key per line; # comments and blank lines ignored.
+# Keep in sync with the compiled settings schema (unknown keys fail validate).
+active_window
+apps
+audio
+bars
+bluetooth
+brightness
+capture
+cava
+clocks
+colorpicker
+device_notifier
+disk
+dock
+dock_windows
+drawers
+gamemode
+github
+groups
+homelab
+hypr_tools
+kdeconnect
+keyboard
+layouts
+liquidctl
+module_intervals
+network
+nightlight
+pomodoro
+rofi
+services
+signals
+streamdeck
+theme
+thresholds
+touchpad
+tray
+updates
+vaults
+visual
+weather
+window_switcher
+workspaces

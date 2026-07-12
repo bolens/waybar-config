@@ -18,6 +18,9 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `capture/` | Screenshot / screenrecord / color picker |
 | `services/` | Third-party integrations (see subfolders below) |
 | `tools/` | Small UX helpers (`app-open`, `calendar-popup`, `pomodoro-*`) |
+| `mcp/` | Stdlib MCP server for AI agents (`waybar-mcp.py`) — [docs/mcp.md](../docs/mcp.md) |
+
+Project docs hub: **[docs/README.md](../docs/README.md)** ([architecture](../docs/architecture.md), [settings](../docs/settings-reference.md), [contributing](../CONTRIBUTING.md), [agents](../AGENTS.md), …).
 
 ### `lib/` helpers
 
@@ -39,7 +42,7 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 
 `generate-settings.sh` runs network + dock generators, then these domain scripts (no pass-through orchestrator):
 
-`generate-utilities-modules.sh`, `generate-audio-modules.sh`, `generate-clock-modules.sh`, `generate-drawers-modules.sh`, `generate-network-custom-modules.sh`, `generate-privacy-modules.sh`, `generate-active-window-modules.sh`, `generate-center-extras-modules.sh`, `generate-dock-windows-modules.sh`, `generate-tray-modules.sh`, `generate-hypr-tools-modules.sh`, `generate-theme-tokens.sh`.
+`generate-utilities-modules.sh`, `generate-audio-modules.sh`, `generate-clock-modules.sh`, `generate-drawers-modules.sh`, `generate-network-custom-modules.sh`, `generate-privacy-modules.sh`, `generate-active-window-modules.sh`, `generate-center-extras-modules.sh`, `generate-dock-windows-modules.sh`, `generate-tray-modules.sh`, `generate-hypr-tools-modules.sh`, `generate-theme-tokens.sh`, `generate-animations-css.sh`, `generate-reduced-motion-css.sh`, `generate-submap-css.sh`.
 
 Sibling scripts (also invoked from Makefile / launch): `generate-compositor-modules.sh`, `generate-workspaces-css.sh`, `generate-dock-modules.sh`, `generate-network-modules.sh`.
 
@@ -54,8 +57,8 @@ Sibling scripts (also invoked from Makefile / launch): `generate-compositor-modu
 | `sync/` | updates, syncthing |
 | `i2pd/` | i2pd status + console-pass helper |
 | `coolercontrol/` | CoolerControl status/click + API helper + UI-pass sync + dumps ([deps](../README.md#dependencies)) |
-| `openlinkhub/` | OpenLinkHub status (hides when service/API down; PSU prefers corsairpsu — [deps](../README.md#dependencies)) |
-| `homelab/` | HTTP health probes from `homelab.targets` |
+| `openlinkhub/` | OpenLinkHub status + restart click (hides when service/API down; PSU prefers corsairpsu — [deps](../README.md#dependencies)) |
+| `homelab/` | HTTP health probes + multi-target picker (`homelab-click.sh`) |
 | `hypr/` | hypr-bar modules, hyprwhspr wrapper |
 | `desktop/` | nightlight |
 
@@ -77,7 +80,7 @@ Sibling scripts (also invoked from Makefile / launch): `generate-compositor-modu
 1. Put a new feature’s status/click/popup scripts in the matching domain folder.
 2. Shared code goes in `lib/`.
 3. Long-running watchers go in `listeners/`.
-4. Codegen goes in `generate/`; tests/hooks in `ci/`; ops in `infra/`.
+4. Codegen goes in `generate/`; tests/hooks in `ci/`; ops in `infra/`; AI MCP surface in `mcp/`.
 5. If a domain grows past ~20 files, split it further (as with `services/<concern>/`).
 
 ## Local checks
@@ -94,7 +97,10 @@ make check-systemd   # unit path smoke
 make check-generator # scripts/ci/tests/generator/*.sh (CI matrix shards these)
 make check-secrets   # scripts/ci/tests/secrets/*.sh
 make check-suite-inventory
+make check-docs-index  # docs/README.md ↔ docs/*.md + hub backlinks
 make check-drift     # regenerate + git diff
+make check-settings-schema  # unknown top-level settings keys
+make profile-minimal # merge data/profiles/minimal-groups.jsonc + generate
 make fmt-shell       # shfmt -w
 make install-hooks   # secrets pre-commit symlink
 ```

@@ -81,5 +81,6 @@ fi
 tooltip=$(printf '%s\nUtil: %s%%\nTemp: %s\nVRAM: %s/%s MiB (%s%%)' \
   "$name" "$util" "$formatted_temp" "$mem_used" "$mem_total" "$vram_pct")
 [ -n "$vendor" ] && tooltip=$(printf '%s\nVendor: %s' "$tooltip" "$vendor")
+tooltip=$(printf '%s\n\nLeft: system monitor · Right: nvtop · Middle: nvidia-smi' "$tooltip")
 
 emit_waybar_json "$text" "$tooltip" "$class"

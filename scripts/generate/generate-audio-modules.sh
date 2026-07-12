@@ -21,6 +21,11 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def sig($k): ($s[0].signals[$k] // null);
   def app($k): ($s[0].apps[$k] // "");
   def app_open: ($scripts + "/tools/app-open.sh");
+  def mixer_label:
+    (($s[0].apps.audio_mixer // "audio mixer") | tostring) as $m
+    | if ($m | test("goxlr"; "i")) then "GoXLR"
+      else ($m | split(" ")[0] | sub("-launcher$"; ""))
+      end;
 
   {
     mpris: {
@@ -64,7 +69,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
     pulseaudio: {
       format: "{icon} {volume:3}%",
       "format-muted": "󰝟 {volume:3}%",
-      "tooltip-format": "{desc}\nVolume: {volume}%\nLeft: open GoXLR · Right: audio menu · Middle: mute",
+      "tooltip-format": ("{desc}\nVolume: {volume}%\nLeft: open " + mixer_label + " · Right: audio menu · Middle: mute"),
       "format-icons": {
         headphone: "󰋋",
         "hands-free": "󰋎",

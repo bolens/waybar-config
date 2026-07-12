@@ -24,7 +24,7 @@ if ! pgrep -x plasmashell >/dev/null 2>&1; then
 fi
 
 if kde_notifications_inhibited; then
-  printf '{"text":"","class":"dnd-none","alt":"dnd-none","tooltip":"Do not disturb"}\n'
+  printf '{"text":"","class":"dnd-none","alt":"dnd-none","tooltip":"Do not disturb\n\nLeft: open · Right: DND · Middle: settings"}\n'
 else
-  printf '{"text":"","class":"none","alt":"none","tooltip":"Notifications"}\n'
+  printf '{"text":"","class":"none","alt":"none","tooltip":"Notifications\n\nLeft: open · Right: DND · Middle: settings"}\n'
 fi

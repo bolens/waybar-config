@@ -133,7 +133,7 @@ brightness_emit_output() {
   if [ -n "$tooltip_lines" ]; then
     tooltip_lines=$(printf '\n%s' "$tooltip_lines")
   fi
-  tooltip=$(printf 'Brightness source: %s\nAverage brightness: %s%%%s' "$source_name" "$percent" "$tooltip_lines")
+  tooltip=$(printf 'Brightness source: %s\nAverage brightness: %s%%%s\n\nLeft: dim · Right: brighten · Middle: 80%%' "$source_name" "$percent" "$tooltip_lines")
   pct_text=$(printf '%3d' "$percent")
   jq -cn \
     --arg text "$icon ${pct_text}%" \

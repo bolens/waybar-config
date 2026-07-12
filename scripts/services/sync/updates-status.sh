@@ -156,6 +156,8 @@ perform_checks_and_output() {
     tooltip=$(printf '%s\n\nFlatpak preview:\n%s' "$tooltip" "$flatpak_preview")
   fi
 
+  tooltip=$(printf '%s\n\nLeft: update · Right: review · Middle: refresh' "$tooltip")
+
   json=$(emit_waybar_json "󰚰 ${total_text}" "$tooltip" "$class")
 
   # Save cache

@@ -6,6 +6,16 @@ get_anim_frame() {
   anim_name="$1"
   frame_index="$2"
 
+  # Honor compositor/desktop reduced-motion when the helper is available.
+  if [ -f "${WAYBAR_SCRIPTS:-}/lib/reduced-motion-lib.sh" ]; then
+    # shellcheck disable=SC1091
+    . "${WAYBAR_SCRIPTS}/lib/reduced-motion-lib.sh"
+    if waybar_reduced_motion_active >/dev/null 2>&1; then
+      # Static first frame (no spinner motion).
+      frame_index=0
+    fi
+  fi
+
   case "$anim_name" in
     dots)
       # 10 frames
@@ -65,6 +75,15 @@ animate_command() {
   if [ "${WAYBAR_BACKGROUND:-0}" = "1" ]; then
     "$@"
     return $?
+  fi
+
+  if [ -f "${WAYBAR_SCRIPTS:-}/lib/reduced-motion-lib.sh" ]; then
+    # shellcheck disable=SC1091
+    . "${WAYBAR_SCRIPTS}/lib/reduced-motion-lib.sh"
+    if waybar_reduced_motion_active >/dev/null 2>&1; then
+      "$@"
+      return $?
+    fi
   fi
 
   # Unique files for concurrent modules

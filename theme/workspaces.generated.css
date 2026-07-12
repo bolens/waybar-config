@@ -9,12 +9,7 @@
 #custom-ws-1.ws-hit,
 #custom-ws-2.ws-hit,
 #custom-ws-3.ws-hit,
-#custom-ws-4.ws-hit,
-#custom-ws-5.ws-hit,
-#custom-ws-6.ws-hit,
-#custom-ws-7.ws-hit,
-#custom-ws-8.ws-hit,
-#custom-ws-9.ws-hit {
+#custom-ws-4.ws-hit {
     min-width: 0;
     padding: 0 12px;
     border-radius: 8px;
@@ -24,12 +19,7 @@
 #custom-ws-1.ws-hit label,
 #custom-ws-2.ws-hit label,
 #custom-ws-3.ws-hit label,
-#custom-ws-4.ws-hit label,
-#custom-ws-5.ws-hit label,
-#custom-ws-6.ws-hit label,
-#custom-ws-7.ws-hit label,
-#custom-ws-8.ws-hit label,
-#custom-ws-9.ws-hit label {
+#custom-ws-4.ws-hit label {
     font-size: 16px;
 }
 
@@ -40,12 +30,7 @@
 #custom-ws-1.ws-hit:not(.hidden),
 #custom-ws-2.ws-hit:not(.hidden),
 #custom-ws-3.ws-hit:not(.hidden),
-#custom-ws-4.ws-hit:not(.hidden),
-#custom-ws-5.ws-hit:not(.hidden),
-#custom-ws-6.ws-hit:not(.hidden),
-#custom-ws-7.ws-hit:not(.hidden),
-#custom-ws-8.ws-hit:not(.hidden),
-#custom-ws-9.ws-hit:not(.hidden) {
+#custom-ws-4.ws-hit:not(.hidden) {
     margin-left: 0px;
 }
 
@@ -53,12 +38,7 @@
 #custom-ws-1.ws-active,
 #custom-ws-2.ws-active,
 #custom-ws-3.ws-active,
-#custom-ws-4.ws-active,
-#custom-ws-5.ws-active,
-#custom-ws-6.ws-active,
-#custom-ws-7.ws-active,
-#custom-ws-8.ws-active,
-#custom-ws-9.ws-active {
+#custom-ws-4.ws-active {
     padding: 0 12px;
     background-color: transparent;
     background-image: linear-gradient(90deg, rgba(255, 42, 127, 0.32) 0%, rgba(255, 42, 127, 0.32) 100%);

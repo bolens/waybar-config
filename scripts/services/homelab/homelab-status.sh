@@ -77,7 +77,12 @@ elif [ "$fail" -gt 0 ]; then
 fi
 
 text="󰒍 ${ok}/${count}"
-tooltip=$(printf 'Homelab health\n%s\n\nLeft: open first URL · Middle: refresh' "$lines")
+if [ "$count" -eq 1 ]; then
+  hint='Left: open URL · Middle: refresh'
+else
+  hint='Left: pick target · Right: open first · Middle: refresh'
+fi
+tooltip=$(printf 'Homelab health\n%s\n\n%s' "$lines" "$hint")
 
 json=$(emit_waybar_json "$text" "$tooltip" "$class")
 printf '%s\n' "$json"

@@ -14,6 +14,17 @@ stale_lock_ttl=90
 
 mkdir -p "$cache_dir"
 
+mixer=$(jq -r '.apps.audio_mixer // "audio mixer"' "$WAYBAR_HOME/data/waybar-settings.json" 2>/dev/null || printf 'audio mixer')
+[ -n "$mixer" ] || mixer="audio mixer"
+mixer_lc=$(printf '%s' "$mixer" | tr '[:upper:]' '[:lower:]')
+case "$mixer_lc" in
+  *goxlr*) mixer_label="GoXLR" ;;
+  *)
+    mixer_label=${mixer%% *}
+    mixer_label=${mixer_label%-launcher}
+    ;;
+esac
+
 collect_json() {
   v=$(timeout 2 wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null || true)
   if [ -z "$v" ]; then
@@ -81,9 +92,9 @@ collect_json() {
 
   if printf '%s' "$v" | rg -Fq MUTED; then
     if [ -n "$mic_users" ]; then
-      tooltip=$(printf 'Input: %s\nLevel: 0%%\nStatus: muted\nIn use by:\n%s\n\nLeft: GoXLR · Right: audio menu · Middle: toggle mute' "$source_label" "$mic_users")
+      tooltip=$(printf 'Input: %s\nLevel: 0%%\nStatus: muted\nIn use by:\n%s\n\nLeft: %s · Right: audio menu · Middle: toggle mute' "$source_label" "$mic_users" "$mixer_label")
     else
-      tooltip=$(printf 'Input: %s\nLevel: 0%%\nStatus: muted\n\nLeft: GoXLR · Right: audio menu · Middle: toggle mute' "$source_label")
+      tooltip=$(printf 'Input: %s\nLevel: 0%%\nStatus: muted\n\nLeft: %s · Right: audio menu · Middle: toggle mute' "$source_label" "$mixer_label")
     fi
     printf '{"text":"󰍭","class":"muted","tooltip":"%s"}\n' "$(json_escape "$tooltip")"
     return 0
@@ -91,9 +102,9 @@ collect_json() {
 
   pct=$(printf '%s' "$v" | awk '{printf "%d", $2*100}')
   if [ -n "$mic_users" ]; then
-    tooltip=$(printf 'Input: %s\nLevel: %s%%\nStatus: live\nIn use by:\n%s\n\nLeft: GoXLR · Right: audio menu · Middle: toggle mute' "$source_label" "$pct" "$mic_users")
+    tooltip=$(printf 'Input: %s\nLevel: %s%%\nStatus: live\nIn use by:\n%s\n\nLeft: %s · Right: audio menu · Middle: toggle mute' "$source_label" "$pct" "$mic_users" "$mixer_label")
   else
-    tooltip=$(printf 'Input: %s\nLevel: %s%%\nStatus: live\n\nLeft: GoXLR · Right: audio menu · Middle: toggle mute' "$source_label" "$pct")
+    tooltip=$(printf 'Input: %s\nLevel: %s%%\nStatus: live\n\nLeft: %s · Right: audio menu · Middle: toggle mute' "$source_label" "$pct" "$mixer_label")
   fi
   printf '{"text":"󰍬 %3d%%","class":"active","tooltip":"%s"}\n' "$pct" "$(json_escape "$tooltip")"
 }

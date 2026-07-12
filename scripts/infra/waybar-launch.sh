@@ -170,6 +170,41 @@ if [ "$need_regen" -eq 1 ]; then
   fi
 fi
 
+# Honor desktop/compositor reduced-motion every launch (GTK3 has no CSS media query).
+if [ -f "$WAYBAR_SCRIPTS/lib/reduced-motion-lib.sh" ]; then
+  # shellcheck source=../lib/reduced-motion-lib.sh
+  . "$WAYBAR_SCRIPTS/lib/reduced-motion-lib.sh"
+  waybar_apply_reduced_motion_css
+fi
+
+# Refuse to exec Waybar with CSS Gtk will reject (avoids crash-loops from :root/var()/bad props).
+waybar_gtk_css_smoke() {
+  local smoke="$WAYBAR_SCRIPTS/ci/waybar-gtk-css-smoke.sh"
+  [ -x "$smoke" ] || return 0
+  bash "$smoke" "$WAYBAR_HOME"
+}
+
+if ! waybar_gtk_css_smoke; then
+  echo "waybar-launch: CSS failed GTK smoke; regenerating theme CSS once..." >&2
+  for _gen in \
+    generate-theme-tokens.sh \
+    generate-workspaces-css.sh \
+    generate-animations-css.sh \
+    generate-submap-css.sh; do
+    if [ -x "$WAYBAR_SCRIPTS/generate/$_gen" ]; then
+      "$WAYBAR_SCRIPTS/generate/$_gen" || true
+    fi
+  done
+  if [ -f "$WAYBAR_SCRIPTS/lib/reduced-motion-lib.sh" ]; then
+    . "$WAYBAR_SCRIPTS/lib/reduced-motion-lib.sh"
+    waybar_apply_reduced_motion_css || true
+  fi
+  if ! waybar_gtk_css_smoke; then
+    echo "waybar-launch: CSS still invalid after regen; refusing to start (prevents crash-loop)" >&2
+    exit 1
+  fi
+fi
+
 # Prime a smaller critical set asynchronously; remaining modules refresh on interval/signal.
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 cleanup_stale_tmp_files "$XDG_CACHE_HOME/waybar"

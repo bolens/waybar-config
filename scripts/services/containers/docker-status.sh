@@ -137,6 +137,7 @@ if [ "$unhealthy" -gt 0 ]; then
   tooltip=$(printf '%s\nUnhealthy containers present (open lazydocker for details)' "$tooltip")
 fi
 tooltip=$(printf '%b' "$tooltip" | escape_markup)
+tooltip=$(printf '%s\n\nLeft: lazydocker · Right: Portainer · Middle: docker ps' "$tooltip")
 
 text=$(printf '󰡨 %s/%s' "$running" "$containers")
 

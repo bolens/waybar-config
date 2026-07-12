@@ -11,8 +11,9 @@ SECRETS_TESTS := $(sort $(wildcard scripts/ci/tests/secrets/*.sh))
 
 .PHONY: check check-fast check-syntax check-python check-ruff check-contracts \
 	check-generator check-secrets check-systemd check-suite-inventory \
-	check-drift check-shfmt check-gitleaks check-stylelint check-gtk-css \
-	check-markdownlint validate generate fmt-shell install-hooks help
+	check-docs-index check-drift check-shfmt check-gitleaks check-stylelint \
+	check-gtk-css check-markdownlint check-settings-schema validate generate \
+	profile-minimal fmt-shell install-hooks help
 
 help:
 	@printf '%s\n' \
@@ -25,6 +26,7 @@ help:
 		'make check-generator    - scripts/ci/tests/generator/*.sh' \
 		'make check-secrets      - scripts/ci/tests/secrets/*.sh' \
 		'make check-suite-inventory - CI matrix ↔ on-disk suites' \
+		'make check-docs-index   - docs/README.md ↔ docs/*.md + hub backlinks' \
 		'make check-drift        - make generate then git diff artifacts' \
 		'make check-systemd      - systemd unit templates point at real scripts' \
 		'make check-shfmt        - shfmt -d on scripts/' \
@@ -32,17 +34,20 @@ help:
 		'make check-stylelint    - CSS lint' \
 		'make check-gtk-css      - GTK3/Waybar CSS crash guards' \
 		'make check-markdownlint - Markdown lint' \
+		'make check-settings-schema - unknown top-level settings keys' \
 		'make validate' \
 		'make fmt-shell          - shfmt -w scripts/' \
 		'make generate           - regenerate settings/modules/css from data/' \
+		'make profile-minimal    - merge data/profiles/minimal-groups.jsonc + generate' \
 		'make install-hooks      - symlink secrets pre-commit hook'
 
-check: check-syntax check-contracts check-suite-inventory check-generator \
-	check-secrets validate check-drift check-systemd check-python check-ruff \
-	check-shfmt check-gitleaks check-stylelint check-gtk-css check-markdownlint
+check: check-syntax check-contracts check-suite-inventory check-docs-index \
+	check-generator check-secrets validate check-drift check-systemd \
+	check-python check-ruff check-shfmt check-gitleaks check-stylelint \
+	check-gtk-css check-markdownlint
 
-check-fast: check-syntax check-contracts check-suite-inventory validate \
-	check-systemd check-python
+check-fast: check-syntax check-contracts check-suite-inventory check-docs-index \
+	validate check-systemd check-python
 
 check-syntax:
 	@set -euo pipefail; \
@@ -64,6 +69,9 @@ check-contracts:
 
 check-suite-inventory:
 	bash scripts/ci/check-suite-inventory.sh
+
+check-docs-index:
+	bash scripts/ci/check-docs-index.sh
 
 check-generator:
 	@set -euo pipefail; \
@@ -104,8 +112,12 @@ check-gtk-css:
 check-markdownlint:
 	bash scripts/ci/check-markdownlint.sh
 
+check-settings-schema:
+	bash scripts/ci/check-settings-schema.sh
+
 validate:
 	bash scripts/ci/validate-generated-config.sh
+	bash scripts/ci/check-settings-schema.sh
 
 fmt-shell:
 	bash scripts/ci/check-shfmt.sh --write
@@ -114,6 +126,9 @@ generate:
 	bash scripts/generate/generate-settings.sh
 	bash scripts/generate/generate-compositor-modules.sh
 	bash scripts/generate/generate-workspaces-css.sh
+
+profile-minimal:
+	bash scripts/tools/apply-profile.sh minimal-groups
 
 install-hooks:
 	bash scripts/ci/install-hooks.sh

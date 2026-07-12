@@ -22,9 +22,34 @@ read_config() {
   fi
 }
 
+# Emit comma-separated #custom-ws-N$suffix selectors for 0..count-1.
+ws_selectors() {
+  local count="$1"
+  local suffix="$2"
+  local i
+  for ((i = 0; i < count; i++)); do
+    if [[ "$i" -gt 0 ]]; then
+      printf ',\n'
+    fi
+    printf '#custom-ws-%s%s' "$i" "$suffix"
+  done
+}
+
 bar_spacing="6"
 if [[ -f "$settings" ]]; then
   bar_spacing="$(jq -r '.bars.spacing // 6' "$settings" 2>/dev/null || echo 6)"
+fi
+
+# workspaces.slot_count: clamp 1–10, default 5 (match compositor modules).
+slot_count=5
+if [[ -f "$settings" ]]; then
+  slot_count="$(jq -r '.workspaces.slot_count // 5' "$settings" 2>/dev/null || echo 5)"
+fi
+if [[ "$slot_count" -lt 1 ]] 2>/dev/null; then
+  slot_count=5
+fi
+if [[ "$slot_count" -gt 10 ]] 2>/dev/null; then
+  slot_count=10
 fi
 
 fit_content="$(read_config fit_content true)"
@@ -41,6 +66,30 @@ border_radius="$(read_config border_radius 8)"
 glyph_offset="$(read_config glyph_offset 0)"
 bar_spacing_override="$(read_config bar_spacing "")"
 workspace_active="$(jq -r '.theme.colors.workspace_active // "rgba(255, 42, 127, 0.32)"' "$settings" 2>/dev/null || echo 'rgba(255, 42, 127, 0.32)')"
+# When theme.mode=preset, merge preset colors (match generate-theme-tokens).
+if [[ -f "$settings" ]]; then
+  mode="$(jq -r '.theme.mode // "static"' "$settings" 2>/dev/null || echo static)"
+  if [[ "$mode" == "preset" ]]; then
+    preset_name="$(jq -r '.theme.preset // "cyberpunk"' "$settings" 2>/dev/null || echo cyberpunk)"
+    for cand in \
+      "$WAYBAR_HOME/data/themes/${preset_name}.jsonc" \
+      "$WAYBAR_HOME/data/themes/${preset_name}.json"; do
+      if [[ -f "$cand" ]]; then
+        preset_wa="$(
+          sed -E 's://.*$::g' "$cand" | jq -r '.colors.workspace_active // empty' 2>/dev/null || true
+        )"
+        if [[ -n "$preset_wa" ]]; then
+          # Settings override still wins when explicitly set on theme.colors.
+          settings_wa="$(jq -r '.theme.colors.workspace_active // empty' "$settings" 2>/dev/null || true)"
+          if [[ -z "$settings_wa" ]]; then
+            workspace_active="$preset_wa"
+          fi
+        fi
+        break
+      fi
+    done
+  fi
+fi
 
 if [[ -n "$bar_spacing_override" && "$bar_spacing_override" != "null" ]]; then
   bar_spacing="$bar_spacing_override"
@@ -63,6 +112,10 @@ case "$fit_content" in
     ;;
 esac
 
+hit_sels="$(ws_selectors "$slot_count" '.ws-hit')"
+label_sels="$(ws_selectors "$slot_count" '.ws-hit label')"
+active_sels="$(ws_selectors "$slot_count" '.ws-active')"
+
 {
   cat <<EOF
 /* Generated from data/workspace-bar.json — do not edit by hand */
@@ -72,16 +125,7 @@ esac
     padding: ${padding_v}px ${padding_h}px;
 }
 
-#custom-ws-0.ws-hit,
-#custom-ws-1.ws-hit,
-#custom-ws-2.ws-hit,
-#custom-ws-3.ws-hit,
-#custom-ws-4.ws-hit,
-#custom-ws-5.ws-hit,
-#custom-ws-6.ws-hit,
-#custom-ws-7.ws-hit,
-#custom-ws-8.ws-hit,
-#custom-ws-9.ws-hit {
+${hit_sels} {
 EOF
 
   if [[ "$fit_content" -eq 1 ]]; then
@@ -101,45 +145,33 @@ EOF
   cat <<EOF
 }
 
-#custom-ws-0.ws-hit label,
-#custom-ws-1.ws-hit label,
-#custom-ws-2.ws-hit label,
-#custom-ws-3.ws-hit label,
-#custom-ws-4.ws-hit label,
-#custom-ws-5.ws-hit label,
-#custom-ws-6.ws-hit label,
-#custom-ws-7.ws-hit label,
-#custom-ws-8.ws-hit label,
-#custom-ws-9.ws-hit label {
+${label_sels} {
     font-size: ${font_size}px;
 }
 
 #custom-ws-0.ws-hit:not(.hidden) {
     margin-left: ${glyph_offset}px;
 }
+EOF
 
-#custom-ws-1.ws-hit:not(.hidden),
-#custom-ws-2.ws-hit:not(.hidden),
-#custom-ws-3.ws-hit:not(.hidden),
-#custom-ws-4.ws-hit:not(.hidden),
-#custom-ws-5.ws-hit:not(.hidden),
-#custom-ws-6.ws-hit:not(.hidden),
-#custom-ws-7.ws-hit:not(.hidden),
-#custom-ws-8.ws-hit:not(.hidden),
-#custom-ws-9.ws-hit:not(.hidden) {
+  if [[ "$slot_count" -gt 1 ]]; then
+    printf '\n'
+    for ((i = 1; i < slot_count; i++)); do
+      if [[ "$i" -gt 1 ]]; then
+        printf ',\n'
+      fi
+      printf '#custom-ws-%s.ws-hit:not(.hidden)' "$i"
+    done
+    cat <<EOF
+ {
     margin-left: ${slot_margin}px;
 }
+EOF
+  fi
 
-#custom-ws-0.ws-active,
-#custom-ws-1.ws-active,
-#custom-ws-2.ws-active,
-#custom-ws-3.ws-active,
-#custom-ws-4.ws-active,
-#custom-ws-5.ws-active,
-#custom-ws-6.ws-active,
-#custom-ws-7.ws-active,
-#custom-ws-8.ws-active,
-#custom-ws-9.ws-active {
+  cat <<EOF
+
+${active_sels} {
     padding: 0 ${glyph_pad}px;
     background-color: transparent;
     background-image: linear-gradient(90deg, ${workspace_active} 0%, ${workspace_active} 100%);

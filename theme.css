@@ -5,9 +5,11 @@
 @import "theme/workspaces.css";
 @import "theme/workspaces.generated.css";
 @import "theme/dock-windows.css";
+@import "theme/semantic-colors.generated.css";
 @import "theme/animations.generated.css";
 @import "theme/album-art.generated.css";
 @import "theme/submap-per-output.generated.css";
+@import "theme/reduced-motion.generated.css";
 
 /* Group containers (HyDE-style pill clusters) — non-drawer groups only */
 #center,

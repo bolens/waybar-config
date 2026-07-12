@@ -94,6 +94,72 @@ if bash "$ROOT_DIR/scripts/ci/check-gtk-css.sh" "$bad_root" >/dev/null 2>&1; the
 fi
 rm -rf "$bad_root"
 
+echo "Testing scanner rejects :root / var() / custom properties..."
+modern_root=$(mktemp -d)
+mkdir -p "$modern_root/theme"
+cat >"$modern_root/theme/modern-css-fixture.css" <<'EOF'
+:root {
+    --wb-text: #e0e0e0;
+}
+#workspaces button {
+    color: var(--wb-text);
+}
+EOF
+if bash "$ROOT_DIR/scripts/ci/check-gtk-css.sh" "$modern_root" >/dev/null 2>&1; then
+  echo "FAIL: check-gtk-css.sh should reject :root / var() / custom properties" >&2
+  fail=1
+else
+  echo "PASS: :root / var() rejected"
+fi
+rm -rf "$modern_root"
+
+echo "Testing comment mentions of :root do not false-positive..."
+ok_root=$(mktemp -d)
+mkdir -p "$ok_root/theme"
+cat >"$ok_root/theme/comment-ok.css" <<'EOF'
+/* Docs: do not use :root or var(--x) — bake colors. */
+#waybar {
+    color: #e0e0e0;
+}
+EOF
+if ! bash "$ROOT_DIR/scripts/ci/check-gtk-css.sh" "$ok_root" >/dev/null 2>&1; then
+  echo "FAIL: check-gtk-css.sh should allow comments that mention :root / var()" >&2
+  fail=1
+else
+  echo "PASS: comments mentioning :root are ignored"
+fi
+rm -rf "$ok_root"
+
+echo "Testing sandbox CSS has no :root / var() after generate..."
+if ! python3 - "$TEST_DIR" <<'PY'
+import re, sys
+from pathlib import Path
+root = Path(sys.argv[1])
+bad = []
+for path in root.rglob("*.css"):
+    if "rofi" in path.parts:
+        continue
+    text = re.sub(r"/\*.*?\*/", "", path.read_text(errors="ignore"), flags=re.S)
+    if re.search(r"(^|[\s,}])(:root)(\s*[,{])", text, re.M) or re.search(r"\bvar\s*\(", text):
+        bad.append(str(path.relative_to(root)))
+if bad:
+    print("\n".join(bad))
+    sys.exit(1)
+PY
+then
+  echo "FAIL: sandbox CSS still contains :root or var()" >&2
+  fail=1
+else
+  echo "PASS: sandbox CSS free of :root / var()"
+fi
+
+if [ -x "$ROOT_DIR/scripts/ci/waybar-gtk-css-smoke.sh" ] && { [ -f "$TEST_DIR/theme.css" ] || [ -f "$TEST_DIR/style.css" ]; }; then
+  if ! bash "$ROOT_DIR/scripts/ci/waybar-gtk-css-smoke.sh" "$TEST_DIR"; then
+    echo "FAIL: waybar-gtk-css-smoke.sh rejected sandbox CSS" >&2
+    fail=1
+  fi
+fi
+
 echo "Testing allowlist rejects unknown property names..."
 unk_root=$(mktemp -d)
 mkdir -p "$unk_root/theme"

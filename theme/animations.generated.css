@@ -15,11 +15,6 @@
 #custom-ws-2.ws-active,
 #custom-ws-3.ws-active,
 #custom-ws-4.ws-active,
-#custom-ws-5.ws-active,
-#custom-ws-6.ws-active,
-#custom-ws-7.ws-active,
-#custom-ws-8.ws-active,
-#custom-ws-9.ws-active,
 #workspaces button.active {
     animation: waybar-workspace-pulse 2.4s ease-in-out infinite alternate;
 }

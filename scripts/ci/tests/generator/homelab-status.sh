@@ -11,7 +11,9 @@ waybar_test_gen_sandbox
 echo "Testing homelab module wiring and status script..."
 mkdir -p "$TEST_DIR/scripts/services/homelab"
 cp "$ROOT_DIR/scripts/services/homelab/homelab-status.sh" "$TEST_DIR/scripts/services/homelab/"
-chmod +x "$TEST_DIR/scripts/services/homelab/homelab-status.sh"
+cp "$ROOT_DIR/scripts/services/homelab/homelab-click.sh" "$TEST_DIR/scripts/services/homelab/"
+chmod +x "$TEST_DIR/scripts/services/homelab/homelab-status.sh" \
+  "$TEST_DIR/scripts/services/homelab/homelab-click.sh"
 if ! waybar_test_gen_modules; then
   echo "FAIL: generate failed before homelab checks" >&2
   fail=1
@@ -23,6 +25,9 @@ waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" \
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" \
   '."custom/homelab".signal == 33 and ."custom/homelab".interval == 60' \
   "custom/homelab signal/interval expected 33 / 60"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" \
+  '."custom/homelab"."on-click" | test("homelab-status\\.sh --refresh$")' \
+  "empty targets on-click should refresh via homelab-status.sh"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" \
   '."group/infra".modules | index("custom/homelab")' \
   "custom/homelab missing from group/infra"
@@ -34,12 +39,18 @@ if ! bash -n "$TEST_DIR/scripts/services/homelab/homelab-status.sh"; then
   echo "FAIL: homelab-status.sh failed bash -n" >&2
   fail=1
 fi
+if ! bash -n "$TEST_DIR/scripts/services/homelab/homelab-click.sh"; then
+  echo "FAIL: homelab-click.sh failed bash -n" >&2
+  fail=1
+fi
 
 empty=$(
   WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" XDG_CACHE_HOME="$TEST_DIR/hl-empty" \
     "$TEST_DIR/scripts/services/homelab/homelab-status.sh" --refresh
 )
-waybar_test_assert_jq "$empty" '.class == "hidden" and .text == ""' "empty targets should hide: $empty"
+waybar_test_assert_jq "$empty" \
+  '.class == "hidden" and .text == "" and (.tooltip | test("no targets"; "i"))' \
+  "empty targets should hide: $empty"
 
 # Configure two targets via compiled settings (inline JSONC comments break naive python strip).
 waybar_test_compile_settings
@@ -54,6 +65,18 @@ jq '
 ' "$TEST_DIR/data/waybar-settings.json" >"$TEST_DIR/data/waybar-settings.json.tmp"
 mv -f "$TEST_DIR/data/waybar-settings.json.tmp" "$TEST_DIR/data/waybar-settings.json"
 cp -f "$TEST_DIR/data/waybar-settings.json" "$TEST_DIR/data/waybar-settings.jsonc"
+
+# Re-generate so multi-target click wiring is reflected in modules.
+if ! waybar_test_gen_modules; then
+  echo "FAIL: generate failed after configuring homelab targets" >&2
+  fail=1
+fi
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" \
+  '."custom/homelab"."on-click" | test("homelab-click\\.sh menu$")' \
+  "multi-target on-click should use homelab-click.sh menu"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" \
+  '."custom/homelab"."on-click-right" | test("homelab-click\\.sh open-first$")' \
+  "multi-target on-click-right should use homelab-click.sh open-first"
 
 mkdir -p "$TEST_DIR/bin"
 waybar_test_write_bin_stub curl <<'EOF'
@@ -78,8 +101,8 @@ mixed=$(
     "$TEST_DIR/scripts/services/homelab/homelab-status.sh" --refresh
 )
 waybar_test_assert_jq "$mixed" \
-  '.class == "warning" and (.text | test("1/2")) and (.tooltip | test("Up")) and (.tooltip | test("Down"))' \
-  "mixed targets expected warning 1/2: $mixed"
+  '.class == "warning" and (.text | test("1/2")) and (.tooltip | test("Up")) and (.tooltip | test("Down")) and (.tooltip | test("pick target"))' \
+  "mixed targets expected warning 1/2 with pick-target hint: $mixed"
 
 # All up → normal
 jq '

@@ -21,12 +21,56 @@ mod_dir="$WAYBAR_HOME/modules"
 theme_dir="$WAYBAR_HOME/theme"
 mkdir -p "$mod_dir" "$theme_dir"
 
+# Resolve theme colors (preset merge when mode=preset) for calendar pango spans.
+colors_json="$(jq -c '.theme.colors // {}' "$settings")"
+mode="$(jq -r '.theme.mode // "static"' "$settings")"
+case "$mode" in
+  static | wallpaper | preset) ;;
+  *) mode="static" ;;
+esac
+if [ "$mode" = "preset" ]; then
+  preset_name="$(jq -r '.theme.preset // "cyberpunk"' "$settings")"
+  for cand in \
+    "$WAYBAR_HOME/data/themes/${preset_name}.jsonc" \
+    "$WAYBAR_HOME/data/themes/${preset_name}.json"; do
+    if [ -f "$cand" ]; then
+      preset_colors="$(
+        sed -E 's://.*$::g' "$cand" | jq -c '.colors // .' 2>/dev/null || true
+      )"
+      if [ -n "$preset_colors" ] && [ "$preset_colors" != "null" ]; then
+        colors_json="$(jq -cn --argjson p "$preset_colors" --argjson o "$colors_json" '$p + $o')"
+      fi
+      break
+    fi
+  done
+fi
+
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" \
   --arg hour_format "$hour_format" \
   --arg date_format "$date_format" \
-  --argjson first_day "$first_day" '
+  --argjson first_day "$first_day" \
+  --argjson theme_colors "$colors_json" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
-  def calfmt: ($s[0].clocks.calendar.format // {});
+
+  # Calendar format is always rebuilt from colors (clocks.calendar.colors // theme).
+  # Static format spans in settings are ignored so presets recolor the calendar.
+  def cal_colors:
+    ($s[0].clocks.calendar.colors // {}) as $cc
+    | {
+        months: ($cc.months // $theme_colors.critical // "#ff2a7f"),
+        weekdays: ($cc.weekdays // $theme_colors.warning // "#ffe600"),
+        days: ($cc.days // $theme_colors.foreground // "#c8f6ff"),
+        today: ($cc.today // $theme_colors.accent // $theme_colors.workspace_visible // "#00e5ff")
+      };
+
+  def calfmt:
+    cal_colors as $c
+    | {
+        months: ("<span color=\"" + $c.months + "\"><b>{}</b></span>"),
+        weekdays: ("<span color=\"" + $c.weekdays + "\"><b>{}</b></span>"),
+        days: ("<span color=\"" + $c.days + "\">{}</span>"),
+        today: ("<span color=\"" + $c.today + "\"><b><u>{}</u></b></span>")
+      };
 
   def default_bottom_format:
     if $hour_format == "12" then

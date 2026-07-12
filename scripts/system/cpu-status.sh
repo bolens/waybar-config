@@ -70,7 +70,7 @@ if [ "$temp" -gt 0 ]; then
   formatted_temp=$(format_locale_temp "$temp")
 fi
 
-tooltip=$(printf 'CPU Utilization: %s%%\nTopology: %s cores / %s threads (%sT per core)\nLoad 1m/5m/15m: %s / %s / %s\nLoad vs thread capacity: %s%% / %s%% / %s%%\nRunnable tasks: %s\nTemperature: %s' \
+tooltip=$(printf 'CPU Utilization: %s%%\nTopology: %s cores / %s threads (%sT per core)\nLoad 1m/5m/15m: %s / %s / %s\nLoad vs thread capacity: %s%% / %s%% / %s%%\nRunnable tasks: %s\nTemperature: %s\n\nLeft: system monitor · Right: btop · Middle: Plasma system monitor' \
   "$usage" "$cores" "$threads" "$threads_per_core" "$load_1" "$load_5" "$load_15" "$load_pct_1" "$load_pct_5" "$load_pct_15" "$runnable" "$formatted_temp")
 
 class="normal"

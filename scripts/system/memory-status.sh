@@ -48,7 +48,7 @@ mem_pct="${3:-0}"
 swap_used_gib="${4:-0.0}"
 swap_total_gib="${5:-0.0}"
 
-tooltip=$(printf 'Memory: %s/%s GiB (%s%%)\nSwap: %s/%s GiB' \
+tooltip=$(printf 'Memory: %s/%s GiB (%s%%)\nSwap: %s/%s GiB\n\nLeft: system monitor · Right: btop · Middle: Plasma system monitor' \
   "$mem_used_gib" "$mem_total_gib" "$mem_pct" "$swap_used_gib" "$swap_total_gib")
 
 class="normal"

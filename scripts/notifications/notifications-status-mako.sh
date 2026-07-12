@@ -30,6 +30,8 @@ print_mako_status() {
     tooltip="${tooltip} · Do not disturb"
   fi
 
+  tooltip=$(printf '%s\n\nLeft: open · Right: DND · Middle: settings' "$tooltip")
+
   jq -cn \
     --arg text "$text" \
     --arg alt "$alt" \

@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # Guard GTK3 / Waybar CSS compatibility.
 # Waybar's CSS parser rejects several modern CSS features and exits on parse errors
-# (see journal: 'font-variant-ligatures' / multi-percentage @keyframes).
+# (see journal: 'font-variant-ligatures' / multi-percentage @keyframes / :root / var()).
 #
 # Checks:
 #   1) Denylist of known-bad ricing props
 #   2) Allowlist of GtkCssProvider property names (docs + optional live probe)
 #   3) Multi-percentage @keyframes forms
+#   4) GTK3-unsupported :root / var() / custom properties (crash Waybar hard)
+#   5) Full-file Gtk.CssProvider load (catches selector/value errors property probes miss)
 #
 # Usage: check-gtk-css.sh [ROOT]
 # ROOT defaults to the repo root containing this script.
@@ -88,6 +90,43 @@ if [ -n "$matches" ]; then
   fail=1
 fi
 
+# GTK3 CssProvider does not support :root, CSS variables, or custom properties.
+# These previously crash-looped Waybar (journal: Invalid name of pseudo-class / 'var' is not a valid color name).
+# Strip /* */ comments first so docs mentioning :root / var() do not false-positive.
+echo "Checking for GTK3-unsupported :root / var() / custom properties..."
+modern_css_hits=$(
+  python3 - "${css_files[@]}" <<'PY'
+import re, sys
+from pathlib import Path
+
+root_re = re.compile(r"(^|[\s,}])(:root)(\s*[,{])", re.M)
+var_re = re.compile(r"\bvar\s*\(")
+custom_re = re.compile(r"(^|\n)\s*--[A-Za-z0-9_-]+\s*:")
+hits = []
+for path in sys.argv[1:]:
+    raw = Path(path).read_text(errors="ignore")
+    text = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
+    for m in root_re.finditer(text):
+        line = text[: m.start()].count("\n") + 1
+        hits.append(f"{path}:{line}: :root")
+    for m in var_re.finditer(text):
+        line = text[: m.start()].count("\n") + 1
+        hits.append(f"{path}:{line}: var()")
+    for m in custom_re.finditer(text):
+        line = text[: m.start()].count("\n") + 1
+        hits.append(f"{path}:{line}: custom property")
+if hits:
+    print("\n".join(hits))
+PY
+)
+if [ -n "$modern_css_hits" ]; then
+  echo "FAIL: GTK3 rejects :root / var() / custom properties (bake concrete colors instead):" >&2
+  printf '%s\n' "$modern_css_hits" >&2
+  fail=1
+else
+  echo "ok: no :root / var() / custom properties"
+fi
+
 # --- Allowlist: every declared property must be a known GtkCssProvider name ---
 if [ ! -f "$ALLOWLIST" ]; then
   echo "FAIL: missing GTK allowlist at $ALLOWLIST" >&2
@@ -113,9 +152,10 @@ for path in sys.argv[2:]:
     for m in prop_re.finditer(text):
         name = m.group(2)
         low = name.lower()
-        if low in skip or name.startswith("--"):
+        if low in skip:
             continue
-        if low not in allow:
+        # Custom properties are separately rejected above; still flag here.
+        if name.startswith("--") or low not in allow:
             unknown.append(f"{path}:{text[: m.start()].count(chr(10)) + 1}:{name}")
 if unknown:
     print("\n".join(sorted(set(unknown))))
@@ -132,6 +172,7 @@ fi
 
 # --- Optional live GtkCssProvider probe (when PyGObject + GTK3 are available) ---
 # CssProvider.load_from_data validates property names without Gtk.init / DISPLAY.
+# Full-file load catches :root / var() / value errors that inherit-probes miss.
 if python3 -c 'import gi; gi.require_version("Gtk","3.0"); from gi.repository import Gtk' >/dev/null 2>&1; then
   echo "Probing declared properties with Gtk.CssProvider..."
   probe_out=$(
@@ -173,6 +214,50 @@ PY
     fail=1
   else
     echo "ok: Gtk.CssProvider accepts all declared property names"
+  fi
+
+  echo "Loading each CSS file with Gtk.CssProvider (full parse)..."
+  full_out=$(
+    python3 - "$ROOT" "${css_files[@]}" <<'PY'
+import sys
+from pathlib import Path
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
+
+root = Path(sys.argv[1])
+errors = []
+for rel in sys.argv[2:]:
+    path = root / rel
+    # Skip entrypoints that @import absolute system paths (hyprwhspr, etc.).
+    # Those are validated separately via theme.css when present.
+    if rel in {"style.css"}:
+        continue
+    provider = Gtk.CssProvider()
+    try:
+        provider.load_from_data(path.read_bytes())
+    except Exception as exc:
+        errors.append(f"{rel}: {exc}")
+
+# Prefer load_from_path for theme.css so relative @imports resolve like Waybar.
+theme = root / "theme.css"
+if theme.is_file():
+    provider = Gtk.CssProvider()
+    try:
+        provider.load_from_path(str(theme))
+    except Exception as exc:
+        errors.append(f"theme.css (import chain): {exc}")
+
+if errors:
+    print("\n".join(errors))
+PY
+  )
+  if [ -n "$full_out" ]; then
+    echo "FAIL: Gtk.CssProvider rejected CSS file(s) — Waybar would exit on start:" >&2
+    printf '%s\n' "$full_out" >&2
+    fail=1
+  else
+    echo "ok: Gtk.CssProvider full-file parse clean"
   fi
 else
   echo "note: Gtk.CssProvider probe skipped (PyGObject GTK3 not installed)"

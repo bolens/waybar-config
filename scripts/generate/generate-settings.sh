@@ -354,6 +354,7 @@ build_system_json() {
         signal: signal("openlinkhub"),
         exec: ($scripts + "/services/openlinkhub/openlinkhub-status.sh"),
         "on-click": ($settings[0].services.openlinkhub.on_click // ($app_open + " xdg-open " + ($settings[0].services.openlinkhub.ui_url // "http://127.0.0.1:27003"))),
+        "on-click-right": ($settings[0].services.openlinkhub.on_click_right // ($app_open + " systemctl restart " + ($settings[0].services.openlinkhub.service_name // "openlinkhub.service"))),
         "on-click-middle": ($scripts + "/services/openlinkhub/openlinkhub-status.sh --refresh")
       },
       "custom/libredefender": {
@@ -397,8 +398,21 @@ build_system_json() {
         "on-click": (
           ($settings[0].homelab.on_click)
           // (
+            (($settings[0].homelab.targets // []) | length) as $n
+            | if $n == 0 then
+                ($scripts + "/services/homelab/homelab-status.sh --refresh")
+              elif $n == 1 then
+                ($scripts + "/services/homelab/homelab-click.sh open-first")
+              else
+                ($scripts + "/services/homelab/homelab-click.sh menu")
+              end
+          )
+        ),
+        "on-click-right": (
+          ($settings[0].homelab.on_click_right)
+          // (
             if (($settings[0].homelab.targets // []) | length) > 0 then
-              ($app_open + " xdg-open " + ($settings[0].homelab.targets[0].url // "about:blank"))
+              ($scripts + "/services/homelab/homelab-click.sh open-first")
             else
               ($scripts + "/services/homelab/homelab-status.sh --refresh")
             end
@@ -488,6 +502,7 @@ for _gen in \
   generate-hypr-tools-modules.sh \
   generate-theme-tokens.sh \
   generate-animations-css.sh \
+  generate-reduced-motion-css.sh \
   generate-submap-css.sh; do
   if [ -x "$WAYBAR_SCRIPTS/generate/$_gen" ]; then
     "$WAYBAR_SCRIPTS/generate/$_gen"

@@ -439,11 +439,12 @@
       "mode": "month",
       "on_scroll": 1,
       "first_day": "auto", 
+      
       "colors": {
-        "months": "#ff2a7f",
-        "weekdays": "#ffe600",
-        "days": "#c8f6ff",
-        "today": "#00e5ff"
+        "months": "#ff2a7f", 
+        "weekdays": "#ffe600", 
+        "days": "#c8f6ff", 
+        "today": "#00e5ff" 
       },
       "format": {
         "months": "<span color='#ff2a7f'><b>{}</b></span>",
@@ -475,7 +476,7 @@
       "foreground": "#c8f6ff",
       "background": "rgba(6, 7, 14, 0.92)",
       "border": "rgba(0, 229, 255, 0.25)",
-      "accent": "rgba(255, 42, 127, 0.32)",
+      "accent": "#00e5ff", 
       "warning": "#ffe600",
       "critical": "#ff2a7f",
       "tooltip_background": "#06070e",
@@ -495,7 +496,10 @@
     "animations": {
       "workspace_pulse": true,
       "critical_breathe": true,
-      "idle_glow": false
+      "idle_glow": false,
+      
+      
+      "reduced_motion": "auto"
     }
   },
   "hypr_tools": {

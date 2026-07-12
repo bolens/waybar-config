@@ -177,6 +177,7 @@ cp "$ROOT/scripts/lib/waybar-cache-helpers.sh" \
   "$ROOT/scripts/lib/waybar-systemd-scan-lib.sh" \
   "$ROOT/scripts/lib/waybar-settings.sh" \
   "$ROOT/scripts/lib/unicode-animations-lib.sh" \
+  "$ROOT/scripts/lib/reduced-motion-lib.sh" \
   "$tmpdir/scripts/lib/" 2>/dev/null || true
 cp "$ROOT/data/waybar-settings.json" "$tmpdir/data/" 2>/dev/null || true
 cp "$ROOT/data/waybar-settings.jsonc" "$tmpdir/data/" 2>/dev/null || true

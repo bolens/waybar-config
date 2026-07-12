@@ -38,41 +38,77 @@ switcher_theme_file="${switcher_theme_file/\$WAYBAR_HOME/$WAYBAR_HOME}"
 switcher_theme_file="${switcher_theme_file/\$\{WAYBAR_HOME\}/$WAYBAR_HOME}"
 switcher_width=$(waybar_settings_get '.rofi.switcher.width' '650')
 
-theme_window="
+# Theme colors from settings (keep switcher layout; only swap palette).
+sw_critical=$(waybar_settings_get '.theme.colors.critical' '#ff2a7f')
+sw_accent=$(waybar_settings_get '.theme.colors.accent' '#00e5ff')
+sw_ws_visible=$(waybar_settings_get '.theme.colors.workspace_visible' '')
+if [[ "$sw_accent" == rgba* ]] && [[ -n "$sw_ws_visible" && "$sw_ws_visible" != "null" ]]; then
+  sw_accent="$sw_ws_visible"
+elif [[ -z "$sw_accent" || "$sw_accent" == "null" ]]; then
+  sw_accent="${sw_ws_visible:-#00e5ff}"
+fi
+sw_fg=$(waybar_settings_get '.theme.colors.foreground' '#c8f6ff')
+sw_bg=$(waybar_settings_get '.theme.colors.background' 'rgba(6, 7, 14, 0.94)')
+sw_warning=$(waybar_settings_get '.theme.colors.warning' '#ffe600')
+
+# Soft rgba companions from hex (best-effort; fall back to cyberpunk defaults).
+_hex_rgb() {
+  local h="${1#\#}"
+  if [[ ${#h} -eq 6 ]]; then
+    printf '%d, %d, %d' "0x${h:0:2}" "0x${h:2:2}" "0x${h:4:2}"
+  else
+    printf ''
+  fi
+}
+_rgba() {
+  local c="$1" a="$2" fb="$3" rgb
+  rgb="$(_hex_rgb "$c")"
+  if [[ -n "$rgb" ]]; then
+    printf 'rgba(%s, %s)' "$rgb" "$a"
+  else
+    printf '%s' "$fb"
+  fi
+}
+sw_accent_bg08="$(_rgba "$sw_accent" "0.08" "rgba(0, 229, 255, 0.08)")"
+sw_accent_bd35="$(_rgba "$sw_accent" "0.35" "rgba(0, 229, 255, 0.35)")"
+sw_accent_bd15="$(_rgba "$sw_accent" "0.15" "rgba(0, 229, 255, 0.15)")"
+sw_accent_bg04="$(_rgba "$sw_accent" "0.04" "rgba(0, 229, 255, 0.04)")"
+sw_crit_bg18="$(_rgba "$sw_critical" "0.18" "rgba(255, 42, 127, 0.18)")"
+sw_crit_fg65="$(_rgba "$sw_critical" "0.65" "rgba(255, 42, 127, 0.65)")"
+sw_fg65="$(_rgba "$sw_fg" "0.65" "rgba(200, 246, 255, 0.65)")"
+
+theme="
   window {
     width: ${switcher_width}px;
     location: center;
     anchor: center;
     border: 2px;
-    border-color: #00e5ff;
+    border-color: ${sw_accent};
     border-radius: 8px;
-    background-color: rgba(6, 7, 14, 0.94);
+    background-color: ${sw_bg};
     padding: 15px;
   }
-"
-
-theme="${theme_window}"'
   mainbox {
     spacing: 12px;
     children: [ inputbar, listview ];
     background-color: transparent;
   }
   inputbar {
-    background-color: rgba(0, 229, 255, 0.08);
+    background-color: ${sw_accent_bg08};
     border: 1px;
-    border-color: rgba(0, 229, 255, 0.35);
+    border-color: ${sw_accent_bd35};
     border-radius: 6px;
     padding: 8px 12px;
-    text-color: #c8f6ff;
+    text-color: ${sw_fg};
     children: [ prompt, entry ];
   }
   prompt {
-    text-color: #ff2a7f;
+    text-color: ${sw_critical};
     margin: 0px 8px 0px 0px;
     background-color: transparent;
   }
   entry {
-    text-color: #c8f6ff;
+    text-color: ${sw_fg};
     background-color: transparent;
   }
   listview {
@@ -85,70 +121,70 @@ theme="${theme_window}"'
   element {
     padding: 8px 12px;
     border: 1px;
-    border-color: rgba(0, 229, 255, 0.15);
+    border-color: ${sw_accent_bd15};
     border-radius: 6px;
-    background-color: rgba(0, 229, 255, 0.04);
+    background-color: ${sw_accent_bg04};
     spacing: 12px;
   }
   element normal.normal {
-    background-color: rgba(0, 229, 255, 0.04);
-    border-color: rgba(0, 229, 255, 0.15);
-    text-color: rgba(200, 246, 255, 0.65);
+    background-color: ${sw_accent_bg04};
+    border-color: ${sw_accent_bd15};
+    text-color: ${sw_fg65};
   }
   element normal.urgent {
-    background-color: rgba(0, 229, 255, 0.04);
-    border-color: rgba(0, 229, 255, 0.15);
-    text-color: rgba(255, 42, 127, 0.65);
+    background-color: ${sw_accent_bg04};
+    border-color: ${sw_accent_bd15};
+    text-color: ${sw_crit_fg65};
   }
   element normal.active {
-    background-color: rgba(0, 229, 255, 0.04);
-    border-color: rgba(0, 229, 255, 0.15);
-    text-color: #00e5ff;
+    background-color: ${sw_accent_bg04};
+    border-color: ${sw_accent_bd15};
+    text-color: ${sw_accent};
   }
   element alternate.normal {
-    background-color: rgba(0, 229, 255, 0.04);
-    border-color: rgba(0, 229, 255, 0.15);
-    text-color: rgba(200, 246, 255, 0.65);
+    background-color: ${sw_accent_bg04};
+    border-color: ${sw_accent_bd15};
+    text-color: ${sw_fg65};
   }
   element alternate.urgent {
-    background-color: rgba(0, 229, 255, 0.04);
-    border-color: rgba(0, 229, 255, 0.15);
-    text-color: rgba(255, 42, 127, 0.65);
+    background-color: ${sw_accent_bg04};
+    border-color: ${sw_accent_bd15};
+    text-color: ${sw_crit_fg65};
   }
   element alternate.active {
-    background-color: rgba(0, 229, 255, 0.04);
-    border-color: rgba(0, 229, 255, 0.15);
-    text-color: #00e5ff;
+    background-color: ${sw_accent_bg04};
+    border-color: ${sw_accent_bd15};
+    text-color: ${sw_accent};
   }
   element selected.normal {
-    background-color: rgba(255, 42, 127, 0.18);
+    background-color: ${sw_crit_bg18};
     border: 1px;
-    border-color: #ff2a7f;
-    text-color: #ff2a7f;
+    border-color: ${sw_critical};
+    text-color: ${sw_critical};
   }
   element selected.urgent {
-    background-color: rgba(255, 42, 127, 0.18);
+    background-color: ${sw_crit_bg18};
     border: 1px;
-    border-color: #ff2a7f;
-    text-color: #ffe600;
+    border-color: ${sw_critical};
+    text-color: ${sw_warning};
   }
   element selected.active {
-    background-color: rgba(255, 42, 127, 0.18);
+    background-color: ${sw_crit_bg18};
     border: 1px;
-    border-color: #ff2a7f;
-    text-color: #ff2a7f;
+    border-color: ${sw_critical};
+    text-color: ${sw_critical};
   }
   element-icon {
     size: 24px;
     background-color: transparent;
   }
   element-text {
-    font: "JetBrainsMono Nerd Font 11";
+    font: \"JetBrainsMono Nerd Font 11\";
     background-color: transparent;
     text-color: inherit;
     vertical-align: 0.5;
   }
-'
+"
 
 # Desktop icon maps (shared lib)
 xdg_icons_load_maps "${XDG_CACHE_HOME:-$HOME/.cache}/window-switcher-icons.cache"

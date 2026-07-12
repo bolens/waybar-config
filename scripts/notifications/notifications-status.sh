@@ -26,9 +26,9 @@ case "$compositor" in
   *)
     if command -v dunstctl >/dev/null 2>&1; then
       if dunstctl is-paused | rg -Fq true; then
-        printf '{"text":"󰂛","class":"dnd-none","alt":"dnd-none","tooltip":"Notifications paused"}\n'
+        printf '{"text":"󰂛","class":"dnd-none","alt":"dnd-none","tooltip":"Notifications paused\n\nLeft: open · Right: DND · Middle: settings"}\n'
       else
-        printf '{"text":"","class":"none","alt":"none","tooltip":"Notifications active"}\n'
+        printf '{"text":"","class":"none","alt":"none","tooltip":"Notifications active\n\nLeft: open · Right: DND · Middle: settings"}\n'
       fi
       exit 0
     fi

@@ -150,7 +150,7 @@ parsed=$(
 
 if [ -z "$parsed" ] || ! echo "$parsed" | jq -e '.ok == true' >/dev/null 2>&1; then
   # Non-JSON or unexpected — still show online if HTTP returned something
-  write_cache_and_exit "$(emit_waybar_json "󰈐 on" "OpenLinkHub online\nUI: $ui_url\n\nMiddle: refresh" "normal")"
+  write_cache_and_exit "$(emit_waybar_json "󰈐 on" "OpenLinkHub online\nUI: $ui_url\n\nLeft: open UI · Right: restart · Middle: refresh" "normal")"
 fi
 
 devices=$(echo "$parsed" | jq -r '.devices // 0')
@@ -198,6 +198,6 @@ elif [ -n "$hot" ] && [ "$hot" != "null" ]; then
 fi
 [ -n "$cpu_t" ] && [ "$cpu_t" != "null" ] && [ "$cpu_t" != "0" ] && tooltip=$(printf '%s\nCPU: %s' "$tooltip" "$cpu_t")
 [ -n "$gpu_t" ] && [ "$gpu_t" != "null" ] && [ "$gpu_t" != "0" ] && tooltip=$(printf '%s\nGPU: %s' "$tooltip" "$gpu_t")
-tooltip=$(printf '%s\nUI: %s\n\nLeft: open UI · Middle: refresh' "$tooltip" "$ui_url")
+tooltip=$(printf '%s\nUI: %s\n\nLeft: open UI · Right: restart · Middle: refresh' "$tooltip" "$ui_url")
 
 write_cache_and_exit "$(emit_waybar_json "$text" "$tooltip" "$class")"

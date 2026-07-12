@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "scripts/**"
+      - "!scripts/**/*.md"
+      - "!scripts/*.md"
       - "data/**"
       - "layouts/**"
       - "modules/**"
@@ -58,6 +60,9 @@ jobs:
         id: filter
         if: env.FORCE_ALL != 'true'
         with:
+          # list-files lets Resolve suite flags ignore markdown-only scripts/** hits
+          # (dorny ! patterns need predicate-quantifier:every, which breaks multi-path ORs).
+          list-files: json
           filters: |
             # Harness/workflow only — suite file edits belong under generator/secrets
             # so they do not force validate + systemd via workflow=true.
@@ -78,6 +83,15 @@ jobs:
               - 'scripts/**'
               - 'scripts/ci/tests/generator/**'
               - 'scripts/ci/lib/**'
+              - 'data/**'
+              - 'layouts/**'
+              - 'modules/**'
+              - 'includes/**'
+              - 'theme/**'
+              - 'theme.css'
+              - 'config.jsonc'
+            # Non-scripts paths that still require the generator matrix.
+            generator_nonscript:
               - 'data/**'
               - 'layouts/**'
               - 'modules/**'
@@ -129,6 +143,8 @@ jobs:
             validate:
               - 'scripts/ci/validate-generated-config.sh'
               - 'scripts/ci/check-generated-drift.sh'
+              - 'scripts/ci/check-settings-schema.sh'
+              - 'scripts/ci/lib/settings-top-level-allowlist.txt'
               - 'scripts/generate/**'
               - 'scripts/lib/waybar-settings.sh'
               - 'data/**'
@@ -154,10 +170,14 @@ jobs:
         env:
           F_SCRIPTS: ${{ steps.filter.outputs.scripts }}
           F_GENERATOR: ${{ steps.filter.outputs.generator }}
+          F_GENERATOR_NONSCRIPT: ${{ steps.filter.outputs.generator_nonscript }}
           F_SECRETS: ${{ steps.filter.outputs.secrets }}
           F_VALIDATE: ${{ steps.filter.outputs.validate }}
           F_SYSTEMD: ${{ steps.filter.outputs.systemd }}
           F_WORKFLOW: ${{ steps.filter.outputs.workflow }}
+          # JSON arrays of matched paths (empty when FORCE_ALL / filter skipped).
+          FILES_SCRIPTS: ${{ steps.filter.outputs.scripts_files }}
+          FILES_GENERATOR: ${{ steps.filter.outputs.generator_files }}
         run: |
           set -euo pipefail
           if [ "${FORCE_ALL}" = "true" ]; then
@@ -169,16 +189,42 @@ jobs:
               echo "systemd=true"
               echo "workflow=true"
             } >> "$GITHUB_OUTPUT"
-          else
-            {
-              echo "scripts=${F_SCRIPTS:-false}"
-              echo "generator=${F_GENERATOR:-false}"
-              echo "secrets=${F_SECRETS:-false}"
-              echo "validate=${F_VALIDATE:-false}"
-              echo "systemd=${F_SYSTEMD:-false}"
-              echo "workflow=${F_WORKFLOW:-false}"
-            } >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+
+          scripts="${F_SCRIPTS:-false}"
+          generator="${F_GENERATOR:-false}"
+
+          # Markdown under scripts/ must not pull bash -n / generator suites.
+          # Keep generator true when non-script generator paths also changed.
+          has_non_md_scripts() {
+            local files="${1:-[]}"
+            printf '%s' "$files" | jq -e '
+              type == "array"
+              and any(.[]; startswith("scripts/") and (endswith(".md") | not))
+            ' >/dev/null 2>&1
+          }
+
+          if [ "$scripts" = "true" ] && ! has_non_md_scripts "${FILES_SCRIPTS:-[]}"; then
+            scripts=false
+          fi
+          if [ "$generator" = "true" ]; then
+            if has_non_md_scripts "${FILES_GENERATOR:-[]}" \
+              || [ "${F_GENERATOR_NONSCRIPT:-false}" = "true" ]; then
+              generator=true
+            else
+              generator=false
+            fi
+          fi
+
+          {
+            echo "scripts=${scripts}"
+            echo "generator=${generator}"
+            echo "secrets=${F_SECRETS:-false}"
+            echo "validate=${F_VALIDATE:-false}"
+            echo "systemd=${F_SYSTEMD:-false}"
+            echo "workflow=${F_WORKFLOW:-false}"
+          } >> "$GITHUB_OUTPUT"
 
   suite-inventory:
     name: Suite inventory sync
@@ -287,6 +333,7 @@ jobs:
           - streamdeck-module
           - stats-carousel
           - animations-css
+          - reduced-motion
           - gtk-css-compat
           - dock-windows-hypr
           - dock-windows-plasma
@@ -295,6 +342,7 @@ jobs:
           - per-output-core
           - per-output-modules
           - visual-gauges
+          - mcp-server
     steps:
       - uses: actions/checkout@v7
       - name: Install jq + dash
@@ -355,7 +403,9 @@ jobs:
       - name: Validate generated config
         env:
           WAYBAR_HOME: ${{ github.workspace }}
-        run: bash scripts/ci/validate-generated-config.sh
+        run: |
+          bash scripts/ci/validate-generated-config.sh
+          bash scripts/ci/check-settings-schema.sh
 
   generated-drift:
     name: Generated artifact drift

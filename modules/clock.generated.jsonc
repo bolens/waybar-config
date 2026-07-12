@@ -10,10 +10,10 @@
       "on-scroll": 1,
       "first_day": 0,
       "format": {
-        "months": "<span color='#ff2a7f'><b>{}</b></span>",
-        "weekdays": "<span color='#ffe600'><b>{}</b></span>",
-        "days": "<span color='#c8f6ff'>{}</span>",
-        "today": "<span color='#00e5ff'><b><u>{}</u></b></span>"
+        "months": "<span color=\"#ff2a7f\"><b>{}</b></span>",
+        "weekdays": "<span color=\"#ffe600\"><b>{}</b></span>",
+        "days": "<span color=\"#c8f6ff\">{}</span>",
+        "today": "<span color=\"#00e5ff\"><b><u>{}</u></b></span>"
       }
     },
     "actions": {

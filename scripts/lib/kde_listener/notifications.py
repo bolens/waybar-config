@@ -46,24 +46,25 @@ class NotificationsMixin:
             print(f"Error writing count file: {e}", file=sys.stderr)
 
         text = str(count) if count > 0 else ""
+        click_hint = "\n\nLeft: open · Right: DND · Middle: settings"
         if count > 0:
             if inhibited:
                 class_name = "dnd-notification"
                 alt_name = "dnd-notification"
-                tooltip = f"{count} unread notification(s) (Do not disturb)"
+                tooltip = f"{count} unread notification(s) (Do not disturb){click_hint}"
             else:
                 class_name = "notification"
                 alt_name = "notification"
-                tooltip = f"{count} unread notification(s)"
+                tooltip = f"{count} unread notification(s){click_hint}"
         else:
             if inhibited:
                 class_name = "dnd-none"
                 alt_name = "dnd-none"
-                tooltip = "Do not disturb"
+                tooltip = f"Do not disturb{click_hint}"
             else:
                 class_name = "none"
                 alt_name = "none"
-                tooltip = "Notifications"
+                tooltip = f"Notifications{click_hint}"
 
         status = {
             "text": text,

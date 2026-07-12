@@ -174,6 +174,7 @@ tooltip=$(printf 'Docker: %s (running %s / total %s / unhealthy %s)\nPodman: %s 
   "$vm_state" "$vm_running" "$vm_total" \
   "$waydroid_state" "$waydroid_health" "$waydroid_session" "$waydroid_container")
 tooltip=$(printf '%b' "$tooltip" | escape_markup)
+tooltip=$(printf '%s\n\nLeft: virt-manager · Right: podman ps · Middle: virsh list' "$tooltip")
 
 json=$(jq -cn \
   --arg text "󱂬 ${engines_text}" \

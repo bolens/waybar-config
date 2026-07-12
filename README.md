@@ -4,6 +4,23 @@ A modern, highly modular, and performance-optimized Waybar configuration tailore
 
 License: [MIT](LICENSE).
 
+## Documentation
+
+Full map (keep in sync when adding pages): **[docs/README.md](docs/README.md)**
+
+| Doc | Topic |
+|-----|--------|
+| [docs/README.md](docs/README.md) | Documentation index (canonical) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, checks, secrets, PR norms |
+| [AGENTS.md](AGENTS.md) | Short briefing for AI coding agents |
+| [docs/architecture.md](docs/architecture.md) | Settings → generate → Waybar pipeline |
+| [docs/settings-reference.md](docs/settings-reference.md) | Top-level keys in `waybar-settings.jsonc` |
+| [docs/adding-a-module.md](docs/adding-a-module.md) | Checklist for new status modules |
+| [docs/theming.md](docs/theming.md) | Presets, wallpaper, floating, reduced motion |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | Common failures and fixes |
+| [docs/mcp.md](docs/mcp.md) | Optional MCP server for AI assistants |
+| [scripts/README.md](scripts/README.md) | Script layout, growth rules, CI harness |
+
 ## Features
 
 - **Independent Active Workspace Indicators per Monitor**: Tracks and maps virtual desktops per output using a custom KWin DBus listener script, solving the global workspace tracking limitation in KDE Plasma.
@@ -12,6 +29,7 @@ License: [MIT](LICENSE).
 - **Smart Caching & Background Refresh**: Employs a zero-lag background-refresh caching mechanism via `scripts/lib/waybar-cache-helpers.sh` (using `serve_cache_or_refresh`). Serves cached UI state instantly on poll, then asynchronously runs updates in the background, preventing CPU stampedes and sluggish updates.
 - **Rich Cyberpunk Aesthetics**: High-refresh-rate-friendly pill containers, responsive icons, subtle hover micro-animations, and dynamic sliders.
 - **Optional audio visualizer**: `custom/cava` in the media drawer (requires [`cava`](https://github.com/karlstav/cava); hides when missing or silent).
+- **MCP server for AI agents**: stdlib Python MCP (`scripts/mcp/waybar-mcp.py`) exposes settings, themes, generate/validate, and more — see [docs/mcp.md](docs/mcp.md).
 
 ## File Structure
 
@@ -164,6 +182,9 @@ make generate
 Launch skips regeneration when inputs are unchanged (stamp: `~/.cache/waybar/generated.stamp`).
 
 ### Adding new status modules
+
+See the full checklist: **[docs/adding-a-module.md](docs/adding-a-module.md)**.
+
 If you are developing a new status script (e.g. `scripts/system/my-status.sh`):
 1. Place it in the matching domain folder (see [scripts/README.md](scripts/README.md)).
 2. Import the cache helpers at the top of your script (add `waybar-locale-lib.sh` if you call `detect_*` / `format_locale_*`):
@@ -186,6 +207,17 @@ If you are developing a new status script (e.g. `scripts/system/my-status.sh`):
    ```
 4. Point the generator (or module config) at `$WAYBAR_HOME/scripts/<domain>/my-status.sh`.
 
+### MCP server (AI assistants)
+
+Optional [Model Context Protocol](https://modelcontextprotocol.io/) server so coding agents can inspect and edit this config safely (stdlib only, no pip deps):
+
+```bash
+python3 scripts/mcp/waybar-mcp.py --register   # Cursor / Claude Desktop / Windsurf
+# or add manually — see docs/mcp.md
+```
+
+Typical agent flow: `waybar_backup_settings` → patch/theme/group tools → `waybar_generate` → `waybar_validate` → `waybar_restart` (`confirm=true`). Live secrets are never written via MCP. Full tool/resource/prompt tables: [docs/mcp.md](docs/mcp.md).
+
 ### Testing & Validation
 
 ```bash
@@ -198,6 +230,7 @@ make check-systemd   # systemd unit templates → real scripts
 make check-generator # scripts/ci/tests/generator/*.sh (CI runs these as a matrix)
 make check-secrets   # scripts/ci/tests/secrets/*.sh (CI runs these as a matrix)
 make check-suite-inventory  # CI matrix ↔ on-disk suite files
+make check-docs-index       # docs/README.md ↔ docs/*.md + hub backlinks
 make check-drift     # make generate then fail on dirty generated artifacts
 make fmt-shell       # shfmt -w scripts/
 make install-hooks   # symlink secrets pre-commit hook
@@ -219,27 +252,38 @@ ShellCheck runs at **warning** severity (see `.shellcheckrc`).
 
 ## Module catalog
 
+Groups and module lists live in `data/waybar-settings.jsonc` → `groups.*` (see also [`scripts/README.md`](scripts/README.md)). Common modules:
+
 | Module | Group | Binary / dep | Notes |
 |--------|-------|--------------|-------|
-| `custom/cpu` `gpu` `memory` `disk` `nvme` | hardware | sysfs / `nvidia-smi` | Threshold CSS: `.warning` / `.critical` |
-| `custom/psu` `fans` `liquidctl` `coolercontrol` `openlinkhub` | hardware | optional daemons | Hide when absent |
+| `custom/cpu` `gpu` `memory` `disk` `nvme` | hardware | sysfs / `nvidia-smi` | Threshold CSS: `.warning` / `.critical` (theme tokens) |
+| `custom/psu` `fans` `liquidctl` `coolercontrol` `openlinkhub` | hardware | optional daemons | Hide when absent; OLH right-click restarts service |
 | `custom/cava` | media | **`cava` (optional)** | Continuous bars; hides when silent/missing — see [Dependencies](#optional-media--session) |
-| `mpris` / `custom/mpris` / pulse / mic | media | playerctl / PipeWire | |
+| `mpris` / `custom/mpris` / pulse / mic | media | playerctl / PipeWire | Mic left opens `apps.audio_mixer` |
+| `custom/album-art` | media | `playerctl` | **On by default**; set `visual.album_art.enabled: false` to hide |
 | `custom/pomodoro` | tools | none | Click toggle · right reset · middle skip |
 | `custom/weather` | tools | `curl` | Open-Meteo (default) → wttr.in fallback |
+| `custom/nightlight` | tools / desk | compositor helpers | Toggle / preview / settings |
+| `custom/notifications` `clipboard` | desk-controls | Plasma / mako / cliphist | Left open · Right DND/clear · Middle settings |
 | `custom/power-menu` | power | `rofi` | Grid menu; individuals still available |
-| `custom/homelab` | infra | `curl` | `homelab.targets[]` in settings; hidden if empty |
+| `custom/homelab` | infra | `curl` | `homelab.targets[]`; hidden if empty; multi-target → rofi picker |
 | `custom/github` | infra | `gh` | Notifications + review-requested PRs |
 | `custom/updates` | infra | pacman/apt/dnf | Review → “Upgrade System Now” in terminal |
+| `custom/docker` `runtimes` | infra | docker / podman / libvirt | Optional container/VM strip |
+| `custom/streamdeck` | devices | streamdeck-ui | Left open · Right restart · Middle refresh |
+| `custom/vaults` / security scanners | security | optional | Hide when tools absent |
 | `custom/dock-windows` | bottom center | `qdbus6` (Plasma) / `hyprctl` | **On by default**; set `dock_windows.enabled: false` to hide. Plasma: install `qt6-tools`. |
-| `custom/album-art` | media | `playerctl` | Opt-in via `visual.album_art.enabled` |
 | `custom/stats-carousel` | hardware | metrics collector | Opt-in via `visual.stats_carousel.enabled` |
 | `hyprland/submap` | desk-hypr | Hyprland | Native overlay; shows active submap name |
 | Privacy / VPN / Tailscale / i2pd | privacy / net | PipeWire / daemons | |
 
 ### Minimal / laptop profile
 
-For forks that do not want CoolerControl / liquidctl / ASUS / security scanners, merge the group overrides from [`data/profiles/minimal-groups.jsonc`](data/profiles/minimal-groups.jsonc) into `data/waybar-settings.jsonc`, then `make generate`.
+```bash
+make profile-minimal   # merges data/profiles/minimal-groups.jsonc into settings + generate
+```
+
+Or manually: merge [`data/profiles/minimal-groups.jsonc`](data/profiles/minimal-groups.jsonc) into `data/waybar-settings.jsonc`, then `make generate`. The apply helper deep-merges and rewrites the jsonc (comments in the base file are not preserved).
 
 ### Homelab health
 
@@ -252,6 +296,10 @@ For forks that do not want CoolerControl / liquidctl / ASUS / security scanners,
   ]
 }
 ```
+
+- **0 targets:** module hidden; left/middle refresh.
+- **1 target:** left opens that URL.
+- **2+ targets:** left opens a rofi picker; right opens the first URL; middle refreshes.
 
 ### Dock windows
 
@@ -270,11 +318,15 @@ For forks that do not want CoolerControl / liquidctl / ASUS / security scanners,
 - Middle: cycle focus.
 - No rofi picker here — use the active-window module for that.
 
-**Per-monitor** (`dock_windows.per_output`, default on): when the compositor exposes screen metadata, each bar only lists windows on that output; otherwise both bars show the full list (Plasma WindowsRunner often lacks screen props today).
+#### Known limitation (Plasma)
+
+**Per-monitor** (`dock_windows.per_output`, default on): when the compositor exposes screen metadata, each bar only lists windows on that output. Plasma’s WindowsRunner often lacks screen props today, so **both bars may show the full window list** until KWin exposes output info. Hyprland per-output filtering works when `hyprctl` clients include monitor fields.
 
 Set `dock_windows.enabled: false` to hide. Plasma needs `qt6-tools` (`qdbus6`).
 
 ### Theming
+
+See **[docs/theming.md](docs/theming.md)** for presets, wallpaper mode, floating glass bars, and reduced motion.
 
 Colors come from `theme` in `data/waybar-settings.jsonc` (then `make generate`):
 
@@ -283,6 +335,10 @@ Colors come from `theme` in `data/waybar-settings.jsonc` (then `make generate`):
 | `static` | Use `theme.colors.*` (default cyberpunk) |
 | `preset` | Load `data/themes/<theme.preset>.jsonc`, then optional `theme.colors` overrides |
 | `wallpaper` | Auto matugen → wallust → pywal; default `scope: per_output` styles each monitor. Run `scripts/tools/theme-apply-wallpaper.sh` after wallpaper changes. |
+
+`make generate` writes `theme/tokens.generated.css` (fonts/chrome) and `theme/semantic-colors.generated.css` (warning/critical/dock/workspace colors baked as concrete values — GTK3 has no CSS `var()`). Clock calendar spans and rofi menus pull the same `theme.colors.*`.
+
+**Reduced motion:** `visual.animations.reduced_motion` (`auto` | `force` | `off`). In `auto`, launch probes GNOME `reduced-motion` / `enable-animations`, Plasma `AnimationDurationFactor=0` (Instant), and Hyprland `animations:enabled`. When active, `theme/reduced-motion.generated.css` disables CSS animations/transitions and unicode loading spinners skip. Override with `WAYBAR_REDUCED_MOTION=1|0`.
 
 **Bundled presets:** `cyberpunk`, `glass-cyber`, `minimal`, `nord`, `dracula`, `catppuccin-mocha`, `catppuccin-macchiato`, `gruvbox`, `tokyo-night`, `rose-pine`, `everforest`, `solarized-dark`, `one-dark`.
 
@@ -310,7 +366,7 @@ With `bars.output: ["*"]`, bars already appear on every monitor. These honor `$W
 
 ### Visual polish
 
-Under `visual` in settings: unicode gauges (`visual.gauges`), album art, stats carousel, CSS animations (`workspace_pulse`, `critical_breathe`, `idle_glow`). Cava: `cava.placement` `drawer` | `inline`.
+Under `visual` in settings: unicode gauges (`visual.gauges`), album art, stats carousel, CSS animations (`workspace_pulse`, `critical_breathe`, `idle_glow`), and `reduced_motion` (`auto` / `force` / `off`). Cava: `cava.placement` `drawer` | `inline`.
 
 ## Dependencies
 
@@ -352,7 +408,7 @@ sudo dnf install jq curl ripgrep socat qt6-qttools wireplumber pipewire-pulse \
 
 | Module / feature | Arch / CachyOS | Debian / Ubuntu | Fedora | Notes |
 |------------------|----------------|-----------------|--------|-------|
-| MPRIS / album art (`custom/mpris`, `custom/album-art`) | `playerctl` | `playerctl` | `playerctl` | Album art also needs `curl`; enable via `visual.album_art.enabled` |
+| MPRIS / album art (`custom/mpris`, `custom/album-art`) | `playerctl` | `playerctl` | `playerctl` | Album art also needs `curl`; on by default — set `visual.album_art.enabled: false` to hide |
 | Scrolling titles (`zscroll`) | AUR `zscroll-git` | build from [upstream](https://github.com/noctuid/zscroll) | same | Optional polish for MPRIS / active-window |
 | Audio visualizer (`custom/cava`) | `cava` | `cava` | `cava` | Hides when binary missing or output silent. Config: `cava.bars` / `cava.framerate` |
 | Mixer click fallbacks | `pavucontrol` / `pwvucontrol` / AUR `wiremix` | `pavucontrol` | `pavucontrol` | Used when `apps.audio_mixer` is unset |
