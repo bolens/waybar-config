@@ -60,6 +60,9 @@ waybar_test_assert_json_file_jq "$TEST_DIR/modules/dock-windows.generated.jsonc"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/dock-windows.generated.jsonc" \
   '."custom/dock-win-0"."on-click" | test("focus 0")' \
   "dock-win-0 on-click should focus slot 0"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/dock-windows.generated.jsonc" \
+  '(."custom/dock-win-0"."on-click" | test("WAYBAR_OUTPUT_NAME")) | not' \
+  "dock-win on-click must not expand \$WAYBAR_OUTPUT_NAME (Waybar#3848)"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups-dock-windows.generated.jsonc" \
   '."group/dock-windows".modules | index("custom/dock-win-0")' \
   "group/dock-windows should list slot modules"
@@ -111,11 +114,52 @@ slot0=$(
     WAYBAR_COMPOSITOR=kde \
     "$TEST_DIR/scripts/dock/dock-windows-slot-status.sh" 0 DP-1
 )
-waybar_test_assert_jq "$slot0" '.text != ""' "slot 0 should show an icon: $slot0"
+# Glyph text may be empty when .appicon is set (PNG CSS; avoids flash on refresh).
+waybar_test_assert_jq "$slot0" \
+  '(.text != "") or (.class | index("appicon"))' \
+  "slot 0 should show glyph or appicon: $slot0"
 waybar_test_assert_jq "$slot0" '.class | index("dock-win-hit")' "slot 0 should be clickable: $slot0"
 waybar_test_assert_jq "$slot0" '.class | index("dock-win-active")' \
   "slot matching active title should be dock-win-active: $slot0"
 waybar_test_assert_jq "$slot0" '.tooltip | test("Terminal")' "slot tooltip should be title: $slot0"
+
+# With icons.appicon + stubbed appicon binary, slot should emit .appicon
+waybar_test_patch_settings \
+  '.icons.appicon.enabled = true | .icons.appicon.size = 18 | .icons.appicon.theme = "dark"'
+# Minimal valid PNG (1x1)
+mkdir -p "$TEST_DIR/fake-icons"
+export TEST_DIR
+python3 - <<'PY'
+import struct, zlib, pathlib, os
+dest = pathlib.Path(os.environ["TEST_DIR"]) / "fake-icons" / "konsole.png"
+sig = b"\x89PNG\r\n\x1a\n"
+def chunk(tag, data):
+    return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xffffffff)
+raw = zlib.compress(b"\x00" + b"\x00\x00\x00\xff")
+png = sig + chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 6, 0, 0, 0)) + chunk(b"IDAT", raw) + chunk(b"IEND", b"")
+dest.write_bytes(png)
+PY
+waybar_test_write_bin_stub appicon <<EOF
+#!/usr/bin/env sh
+printf '%s\n' "$TEST_DIR/fake-icons/konsole.png"
+EOF
+export APPICON_BIN="$TEST_DIR/bin/appicon"
+# Prefetch-style launcher png so slot can reuse dock-appicons/terminal.png
+mkdir -p "$TEST_DIR/theme/dock-appicons"
+cp "$TEST_DIR/fake-icons/konsole.png" "$TEST_DIR/theme/dock-appicons/terminal.png"
+rm -f "$CACHE/waybar"/dock-windows-list.json "$CACHE/waybar"/dock-windows-list.*.json
+slot0_ai=$(
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+    WAYBAR_COMPOSITOR=kde APPICON_BIN="$TEST_DIR/bin/appicon" \
+    PATH="$TEST_DIR/bin:$PATH" \
+    "$TEST_DIR/scripts/dock/dock-windows-slot-status.sh" 0 DP-1
+)
+waybar_test_assert_jq "$slot0_ai" '.class | index("appicon")' \
+  "slot with appicon resolve should include appicon class: $slot0_ai"
+waybar_test_assert_jq "$slot0_ai" '.class | index("appicon-terminal")' \
+  "slot should use app-keyed class appicon-terminal: $slot0_ai"
+waybar_test_assert_jq "$slot0_ai" '.text == ""' \
+  "appicon slot must omit glyph text (prevents flash): $slot0_ai"
 
 # Empty slot beyond window count → hidden
 slot15=$(

@@ -70,6 +70,20 @@ if [ -f "$dock" ]; then
         fail=1
         ;;
     esac
+    dock_click=$(printf '%s' "$dock_json" | jq -r '."custom/dock-win-0"."on-click" // empty')
+    case "$dock_click" in
+      *'$WAYBAR_OUTPUT_NAME'*)
+        echo "FAIL: dock-win on-click must not expand \$WAYBAR_OUTPUT_NAME: $dock_click" >&2
+        fail=1
+        ;;
+      *'focus 0'*)
+        echo "PASS: dock-win on-click omits \$WAYBAR_OUTPUT_NAME (Waybar#3848)"
+        ;;
+      *)
+        echo "FAIL: unexpected dock-win on-click: $dock_click" >&2
+        fail=1
+        ;;
+    esac
   else
     echo "FAIL: custom/dock-win-0 missing from dock-windows.generated.jsonc" >&2
     fail=1

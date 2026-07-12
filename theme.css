@@ -9,8 +9,10 @@
 @import "theme/workspaces.css";
 @import "theme/workspaces.generated.css";
 @import "theme/dock-windows.css";
-@import "theme/dock-windows.generated.css";
 @import "theme/semantic-colors.generated.css";
+/* After semantic-colors so .appicon PNG rules win over glyph color tokens. */
+@import "theme/dock-windows.generated.css";
+@import "theme/dock-win-runtime.generated.css";
 @import "theme/dock-appicons.generated.css";
 @import "theme/animations.generated.css";
 @import "theme/album-art.generated.css";

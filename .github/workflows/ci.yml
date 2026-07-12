@@ -345,9 +345,11 @@ jobs:
           - animations-css
           - reduced-motion
           - gtk-css-compat
+          - dock-appicon-cache
           - dock-appicon-css
           - dock-windows-hypr
           - dock-windows-plasma
+          - dock-windows-regressions
           - active-window-kde-cache
           - github-status
           - vpn-cooling-refresh

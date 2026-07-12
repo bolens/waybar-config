@@ -24,8 +24,9 @@ run_detached() {
 
 # Resolve a PNG via appicon when icons.appicon.enabled; materialize exact-size file for CSS.
 # Glyph fallback when disabled, binary missing, or resolve fails. Never embeds SVGL URLs.
+# Prefer an existing materialized PNG so focus/signal refreshes never drop .appicon (glyph flash).
 dock_appicon_prepare() {
-  local query path link_dir link_path display_size theme bin
+  local query path link_dir link_path display_size theme png
   classes_extra=()
 
   if [ ! -f "$WAYBAR_SCRIPTS/lib/waybar-settings.sh" ] \
@@ -38,7 +39,21 @@ dock_appicon_prepare() {
   . "$WAYBAR_SCRIPTS/lib/appicon-lib.sh"
 
   waybar_appicon_enabled || return 0
-  bin="$(waybar_appicon_bin)" || return 0
+
+  link_dir="$WAYBAR_HOME/theme/dock-appicons"
+  link_path="$link_dir/$app_id"
+  png="${link_path}.png"
+  # Warm cache: keep .appicon on every signal/status tick without re-resolving.
+  if [ -f "$png" ] || [ -e "$link_path" ]; then
+    waybar_appicon_miss_clear "$app_id" || true
+    classes_extra=(appicon)
+    return 0
+  fi
+
+  # Recent miss → skip spawn; glyph stays until prefetch / TTL.
+  if waybar_appicon_miss_fresh "$app_id"; then
+    return 0
+  fi
 
   display_size="$(waybar_settings_get '.icons.appicon.size' '18')"
   theme="$(waybar_settings_get '.icons.appicon.theme' 'dark')"
@@ -56,16 +71,19 @@ dock_appicon_prepare() {
   ' "$manifest")"
   [ -n "$query" ] || query="$app_id"
 
-  path="$("$bin" resolve --format png --size "$display_size" --theme "$theme" "$query" 2>/dev/null || true)"
-  if [ -z "$path" ] || [ ! -f "$path" ]; then
+  # Hot path: --offline against ~/.cache/appicon (prefetch fills online).
+  path="$(waybar_appicon_resolve "$query" "$display_size" "$theme" offline || true)"
+  if [ -z "${path:-}" ] || [ ! -f "$path" ]; then
+    waybar_appicon_miss_mark "$app_id" || true
     return 0
   fi
 
-  link_dir="$WAYBAR_HOME/theme/dock-appicons"
-  link_path="$link_dir/$app_id"
   mkdir -p "$link_dir"
   if waybar_appicon_materialize "$path" "$link_path" "$display_size"; then
+    waybar_appicon_miss_clear "$app_id" || true
     classes_extra=(appicon)
+  else
+    waybar_appicon_miss_mark "$app_id" || true
   fi
 }
 
@@ -120,12 +138,17 @@ case "$action" in
     fi
 
     classes_extra=()
-    dock_appicon_prepare
+    dock_appicon_prepare || true
+
+    emit_text="${icon:-}"
+    if [ "${#classes_extra[@]}" -gt 0 ]; then
+      emit_text=""
+    fi
 
     # Waybar applies class as one token unless it is a JSON array.
     if [ "${#classes_extra[@]}" -gt 0 ]; then
       jq -cn \
-        --arg text "${icon:-}" \
+        --arg text "$emit_text" \
         --arg tooltip "${tooltip:-}" \
         --arg base "$class" \
         --argjson extra "$(printf '%s\n' "${classes_extra[@]}" | jq -R . | jq -s -c .)" \
@@ -150,14 +173,24 @@ case "$action" in
         ;;
     esac
     run_detached "$script_dir/dock-app.sh" "$app_id" "$click_action"
-    # Refresh dock app running indicators (dedicated signal; not dock_windows).
+    # Refresh dock app running indicators + window-strip focused state.
     sig=26
+    dock_sig=11
     if [ -f "$WAYBAR_HOME/data/waybar-settings.json" ] \
       && command -v jq >/dev/null 2>&1; then
       sig="$(jq -r '.signals.dock_apps // 26' "$WAYBAR_HOME/data/waybar-settings.json")"
+      dock_sig="$(jq -r '.signals.dock_windows // 11' "$WAYBAR_HOME/data/waybar-settings.json")"
     fi
     (
-      sleep 1
+      # Fast path: force window-strip highlight refresh as soon as focus settles.
+      sleep 0.05
+      if [ -x "$WAYBAR_SCRIPTS/dock/dock-windows-signal.sh" ]; then
+        "$WAYBAR_SCRIPTS/dock/dock-windows-signal.sh" --force --focus-only >/dev/null 2>&1 || true
+      else
+        "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$dock_sig" >/dev/null 2>&1 || true
+      fi
+      # Running indicators can lag launch slightly.
+      sleep 0.4
       "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$sig" >/dev/null 2>&1 || true
     ) &
     ;;

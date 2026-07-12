@@ -108,8 +108,11 @@ socat -u "UNIX-CONNECT:${socket}" - 2>/dev/null | while IFS= read -r line; do
       "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$SIG_WORKSPACES"
       ;;
     activewindow | windowtitle)
-      # Title cache is watched by active-window-scroll (zscroll); no Waybar signal.
+      # Title cache is watched by active-window-scroll (zscroll); dock highlight is signal-driven.
       update_active_window_cache
+      if [ -x "$WAYBAR_SCRIPTS/dock/dock-windows-signal.sh" ]; then
+        "$WAYBAR_SCRIPTS/dock/dock-windows-signal.sh" --force --focus-only
+      fi
       ;;
     activelayout)
       "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$SIG_KEYBOARD"

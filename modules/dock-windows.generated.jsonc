@@ -7,9 +7,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 0 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 0 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 0 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 0",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 0",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-1": {
@@ -20,9 +20,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 1 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 1 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 1 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 1",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 1",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-2": {
@@ -33,9 +33,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 2 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 2 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 2 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 2",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 2",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-3": {
@@ -46,9 +46,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 3 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 3 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 3 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 3",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 3",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-4": {
@@ -59,9 +59,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 4 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 4 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 4 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 4",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 4",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-5": {
@@ -72,9 +72,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 5 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 5 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 5 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 5",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 5",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-6": {
@@ -85,9 +85,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 6 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 6 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 6 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 6",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 6",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-7": {
@@ -98,9 +98,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 7 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 7 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 7 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 7",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 7",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-8": {
@@ -111,9 +111,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 8 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 8 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 8 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 8",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 8",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-9": {
@@ -124,9 +124,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 9 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 9 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 9 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 9",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 9",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-10": {
@@ -137,9 +137,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 10 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 10 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 10 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 10",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 10",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   },
   "custom/dock-win-11": {
@@ -150,9 +150,9 @@
     "hide-empty-text": true,
     "exec-on-event": true,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-windows-slot-status.sh 11 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 11 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 11 \"$WAYBAR_OUTPUT_NAME\"",
-    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\"",
+    "on-click": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh focus 11",
+    "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh close 11",
+    "on-click-middle": "$WAYBAR_HOME/scripts/dock/dock-windows-click.sh cycle",
     "tooltip": true
   }
 }

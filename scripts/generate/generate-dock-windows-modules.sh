@@ -35,10 +35,12 @@ jq -n --arg scripts "$scripts" --argjson count "$slot_count" --argjson sig "$sig
         interval: (if $iv == "once" then "once" else ($iv|tonumber? // 1) end),
         "hide-empty-text": true,
         "exec-on-event": true,
+        # exec gets WAYBAR_OUTPUT_NAME from Waybar; on-click does not (#3848), so
+        # clicks omit the arg and resolve via active output + slot bind files.
         exec: ($scripts + "/dock/dock-windows-slot-status.sh " + ($i|tostring) + " \"$WAYBAR_OUTPUT_NAME\""),
-        "on-click": ($scripts + "/dock/dock-windows-click.sh focus " + ($i|tostring) + " \"$WAYBAR_OUTPUT_NAME\""),
-        "on-click-right": ($scripts + "/dock/dock-windows-click.sh close " + ($i|tostring) + " \"$WAYBAR_OUTPUT_NAME\""),
-        "on-click-middle": ($scripts + "/dock/dock-windows-click.sh cycle \"$WAYBAR_OUTPUT_NAME\""),
+        "on-click": ($scripts + "/dock/dock-windows-click.sh focus " + ($i|tostring)),
+        "on-click-right": ($scripts + "/dock/dock-windows-click.sh close " + ($i|tostring)),
+        "on-click-middle": ($scripts + "/dock/dock-windows-click.sh cycle"),
         tooltip: true
       }
     };

@@ -89,8 +89,50 @@ fi
 theme_css="$ROOT_DIR/theme.css"
 sem_line="$(grep -n 'semantic-colors.generated.css' "$theme_css" | head -1 | cut -d: -f1)"
 icon_line="$(grep -n 'dock-appicons.generated.css' "$theme_css" | head -1 | cut -d: -f1)"
+dock_win_line="$(grep -n 'dock-windows.generated.css' "$theme_css" | head -1 | cut -d: -f1)"
 if [ -z "$sem_line" ] || [ -z "$icon_line" ] || [ "$icon_line" -le "$sem_line" ]; then
   echo "FAIL: theme.css must import dock-appicons.generated.css after semantic-colors" >&2
+  exit 1
+fi
+if [ -z "$dock_win_line" ] || [ "$dock_win_line" -le "$sem_line" ]; then
+  echo "FAIL: theme.css must import dock-windows.generated.css after semantic-colors" >&2
+  exit 1
+fi
+
+# dock-windows slot PNGs share icons.appicon via appicon-<dock-apps-id>
+win_css="$TEST_DIR/theme/dock-windows.generated.css"
+if ! grep -q 'appicon-browser' "$win_css"; then
+  echo "FAIL: expected appicon-browser CSS when icons.appicon.enabled" >&2
+  exit 1
+fi
+if ! grep -q 'url("file://.*/theme/dock-appicons/browser.png")' "$win_css"; then
+  echo "FAIL: expected dock-windows CSS to reuse dock-appicons/browser.png" >&2
+  exit 1
+fi
+if grep -q 'dock-win-icons/slot-0' "$win_css"; then
+  echo "FAIL: dock-windows must not use per-slot PNG URLs (multi-output race)" >&2
+  exit 1
+fi
+# Glyph flash guard: generic .appicon hides nerd glyphs before/without per-app PNG rules.
+if ! grep -Fq 'Hide glyph text whenever .appicon is set' "$win_css"; then
+  echo "FAIL: dock-windows CSS must include generic .appicon glyph-hide rule" >&2
+  exit 1
+fi
+if ! awk '
+  /Hide glyph text whenever \.appicon is set/ { inblock=1; next }
+  inblock && /font-size: 0/ { found_fs=1 }
+  inblock && /color: transparent/ { found_c=1 }
+  inblock && /^}/ { exit !(found_fs && found_c) }
+' "$win_css"; then
+  echo "FAIL: generic .appicon rule must set font-size:0 and color:transparent" >&2
+  exit 1
+fi
+if ! grep -q ':not(\.appicon)' "$TEST_DIR/theme/semantic-colors.generated.css"; then
+  echo "FAIL: semantic dock-win color rules must skip .appicon" >&2
+  exit 1
+fi
+if ! git -C "$ROOT_DIR" check-ignore -q --no-index theme/dock-win-icons/browser.png; then
+  echo "FAIL: theme/dock-win-icons/*.png must be gitignored" >&2
   exit 1
 fi
 

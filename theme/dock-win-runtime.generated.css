@@ -1,0 +1,25 @@
+/* Runtime dock-windows appicon rules — do not edit by hand */
+#custom-dock-win-0.appicon-steam-app-1891700,
+#custom-dock-win-1.appicon-steam-app-1891700,
+#custom-dock-win-2.appicon-steam-app-1891700,
+#custom-dock-win-3.appicon-steam-app-1891700,
+#custom-dock-win-4.appicon-steam-app-1891700,
+#custom-dock-win-5.appicon-steam-app-1891700,
+#custom-dock-win-6.appicon-steam-app-1891700,
+#custom-dock-win-7.appicon-steam-app-1891700,
+#custom-dock-win-8.appicon-steam-app-1891700,
+#custom-dock-win-9.appicon-steam-app-1891700,
+#custom-dock-win-10.appicon-steam-app-1891700,
+#custom-dock-win-11.appicon-steam-app-1891700 {
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-win-icons/steam-app-1891700.png");
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 18px 18px;
+    color: transparent;
+    text-shadow: none;
+    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}

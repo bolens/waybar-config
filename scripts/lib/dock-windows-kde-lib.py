@@ -260,8 +260,102 @@ def output_for_point(
     return hits[0][1]
 
 
+def parse_window_info_fields(text: str) -> dict[str, str]:
+    """Extract resourceClass / resourceName / desktopFile / caption from getWindowInfo."""
+    text = text or ""
+    out: dict[str, str] = {}
+    for key in ("resourceClass", "resourceName", "desktopFile", "caption"):
+        m = re.search(
+            rf'"{key}"\s*=\s*\[Variant(?:\([^)]*\))?:\s*"((?:\\.|[^"\\])*)"\]',
+            text,
+        )
+        if m:
+            out[key] = m.group(1).replace('\\"', '"').replace("\\\\", "\\")
+    return out
+
+
+def fetch_window_info_fields(uuid: str) -> dict[str, str]:
+    """Call getWindowInfo; honor WAYBAR_TEST_WINDOW_INFO_MAP for class fixtures.
+
+    Fixture form: ``uuid=resourceClass`` or ``uuid=resourceClass|resourceName|desktopFile``.
+    Geometry fixtures (``uuid=x,y,WxH``) are ignored here.
+    """
+    fixture = os.environ.get("WAYBAR_TEST_WINDOW_INFO_MAP", "").strip()
+    if fixture:
+        for part in fixture.split(";"):
+            part = part.strip()
+            if not part or "=" not in part:
+                continue
+            key, rest = part.split("=", 1)
+            key = key.strip()
+            if key not in (uuid, uuid.strip("{}")):
+                continue
+            rest = rest.strip()
+            # Geometry fixture for enrich_screens — skip.
+            if re.fullmatch(
+                r"-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,\d+(?:\.\d+)?x\d+(?:\.\d+)?",
+                rest,
+            ):
+                return {}
+            bits = rest.split("|")
+            fields = {
+                "resourceClass": bits[0] if bits else "",
+                "resourceName": bits[1] if len(bits) > 1 else "",
+                "desktopFile": bits[2] if len(bits) > 2 else "",
+                "caption": bits[3] if len(bits) > 3 else "",
+            }
+            return {k: v for k, v in fields.items() if v}
+
+    if os.environ.get("WAYBAR_TEST_NO_QDBUS") in ("1", "true", "TRUE", "yes", "YES"):
+        return {}
+
+    try:
+        proc = subprocess.run(
+            [
+                "qdbus6",
+                "--literal",
+                "org.kde.KWin",
+                "/KWin",
+                "org.kde.KWin.getWindowInfo",
+                uuid,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return {}
+    return parse_window_info_fields(proc.stdout or "")
+
+
+def enrich_resource_meta(
+    entries: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Fill resourceClass/resourceName/desktopFile when WindowsRunner app is blank."""
+    for e in entries:
+        if e.get("resourceClass"):
+            continue
+        uuid = runner_id_to_uuid(str(e.get("id") or ""))
+        if not uuid:
+            continue
+        fields = fetch_window_info_fields(uuid)
+        if not fields:
+            continue
+        if fields.get("resourceClass"):
+            e["resourceClass"] = fields["resourceClass"]
+        if fields.get("resourceName"):
+            e["resourceName"] = fields["resourceName"]
+        if fields.get("desktopFile"):
+            e["desktopFile"] = fields["desktopFile"]
+        # Prefer real class over empty WindowsRunner app field.
+        if not (e.get("app") or "").strip() and fields.get("resourceClass"):
+            e["app"] = fields["resourceClass"]
+    return entries
+
+
 def fetch_window_center(uuid: str) -> tuple[float, float] | None:
-    """Call getWindowInfo for uuid; honor WAYBAR_TEST_WINDOW_INFO_MAP fixture."""
+    """Call getWindowInfo for uuid; honor WAYBAR_TEST_WINDOW_INFO_MAP geometry fixtures."""
     fixture = os.environ.get("WAYBAR_TEST_WINDOW_INFO_MAP", "").strip()
     if fixture:
         # uuid=x,y,wxh;...
@@ -273,7 +367,10 @@ def fetch_window_center(uuid: str) -> tuple[float, float] | None:
             key = key.strip()
             if key not in (uuid, uuid.strip("{}")):
                 continue
-            m = re.fullmatch(r"(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)", rest.strip())
+            m = re.fullmatch(
+                r"(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)",
+                rest.strip(),
+            )
             if not m:
                 continue
             x, y, w, h = map(float, m.groups())
@@ -355,19 +452,51 @@ def entries_as_lines(
     """Emit id|title|app lines (click uses id|title; status uses title|app)."""
     lines: list[str] = []
     for e in entries:
+        if not _keep_window_entry(e):
+            continue
         win_id = e.get("id") or ""
         title = e.get("title") or ""
         app = e.get("app") or ""
-        if not win_id:
-            continue
-        if not title and not app:
-            continue
         if for_click:
             display = title if title else app
             lines.append(f"{win_id}|{display}")
         else:
             lines.append(f"{title}|{app}")
     return lines
+
+
+# Shell/panel chrome that must never occupy dock-windows slots.
+_SKIP_RESOURCE_CLASSES = frozenset(
+    {
+        "waybar",
+        "plasmashell",
+        "plasmashellsilent",
+        "krunner",
+        "kwin",
+        "ksmserver-logout-greeter",
+        "xwaylandvideobridge",
+        "xdg-desktop-portal-kde",
+    }
+)
+
+
+def _keep_window_entry(e: dict[str, Any]) -> bool:
+    """Drop ghost/chrome windows (empty title + panel classes)."""
+    win_id = e.get("id") or ""
+    if not win_id:
+        return False
+    title = (e.get("title") or "").strip()
+    app = (e.get("app") or "").strip()
+    rc = (e.get("resourceClass") or app or "").strip().lower()
+    bare = rc.split(".")[-1] if rc else ""
+    if bare in _SKIP_RESOURCE_CLASSES or rc in _SKIP_RESOURCE_CLASSES:
+        return False
+    if not title and not app:
+        return False
+    # Empty-title ghosts still pollute slots after resourceClass fill.
+    if not title:
+        return False
+    return True
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -397,12 +526,17 @@ def main(argv: list[str] | None = None) -> int:
     raw = sys.stdin.read()
     entries = parse_windows_runner_literal(raw)
     if not args.no_enrich:
-        entries = enrich_screens(entries)
+        # Always fill resourceClass — WindowsRunner app field is often blank.
+        entries = enrich_resource_meta(entries)
+        # Geometry/kscreen enrichment is only needed for per-output filtering.
+        if args.output:
+            entries = enrich_screens(entries)
     entries = filter_by_output(entries, args.output or None)
 
     if args.json:
         import json
 
+        entries = [e for e in entries if _keep_window_entry(e)]
         json.dump(entries, sys.stdout, ensure_ascii=False)
         sys.stdout.write("\n")
         return 0

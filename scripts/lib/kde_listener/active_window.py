@@ -93,13 +93,13 @@ class ActiveWindowMixin:
             pass
 
     def update_active_window(self, title, app, output=""):
-        # 150ms debounce coalesces rapid caption/focus events into one cache write.
+        # Short debounce: coalesce caption spam without lagging the dock highlight.
         self.pending_title = title
         self.pending_app = app
         self.pending_output = output or ""
         if self.active_window_timeout_id != 0:
             GLib.source_remove(self.active_window_timeout_id)
-        self.active_window_timeout_id = GLib.timeout_add(150, self.flush_active_window_update)
+        self.active_window_timeout_id = GLib.timeout_add(50, self.flush_active_window_update)
 
     def _resolve_active_output(self, output: str) -> str:
         """Prefer KWin-script output; fall back to KWin.activeOutputName()."""
@@ -204,10 +204,13 @@ class ActiveWindowMixin:
             for name in self._known_output_names():
                 write_output_caches(self._safe_output_name(name))
 
-        # Refresh dock-window slot active highlight when focus changes.
+        # Refresh dock highlight only — keep list cache (no qdbus Match storm).
         signal_script = os.path.join(waybar_scripts_dir(), "dock", "dock-windows-signal.sh")
         if os.path.exists(signal_script):
-            subprocess.run([signal_script], stderr=subprocess.DEVNULL)
+            subprocess.run(
+                [signal_script, "--force", "--focus-only"],
+                stderr=subprocess.DEVNULL,
+            )
 
         return False
 
@@ -215,6 +218,7 @@ class ActiveWindowMixin:
         self.windows_changed_timeout_id = 0
         signal_script = os.path.join(waybar_scripts_dir(), "dock", "dock-windows-signal.sh")
         if os.path.exists(signal_script):
+            # Window add/remove: full list rebuild.
             subprocess.run([signal_script], stderr=subprocess.DEVNULL)
         return False
 

@@ -392,66 +392,66 @@
     border-color: rgba(0, 229, 255, 0.42);
 }
 
-#custom-dock-win-0.dock-win-inactive,
-#custom-dock-win-1.dock-win-inactive,
-#custom-dock-win-2.dock-win-inactive,
-#custom-dock-win-3.dock-win-inactive,
-#custom-dock-win-4.dock-win-inactive,
-#custom-dock-win-5.dock-win-inactive,
-#custom-dock-win-6.dock-win-inactive,
-#custom-dock-win-7.dock-win-inactive,
-#custom-dock-win-8.dock-win-inactive,
-#custom-dock-win-9.dock-win-inactive,
-#custom-dock-win-10.dock-win-inactive,
-#custom-dock-win-11.dock-win-inactive {
+#custom-dock-win-0.dock-win-inactive:not(.appicon),
+#custom-dock-win-1.dock-win-inactive:not(.appicon),
+#custom-dock-win-2.dock-win-inactive:not(.appicon),
+#custom-dock-win-3.dock-win-inactive:not(.appicon),
+#custom-dock-win-4.dock-win-inactive:not(.appicon),
+#custom-dock-win-5.dock-win-inactive:not(.appicon),
+#custom-dock-win-6.dock-win-inactive:not(.appicon),
+#custom-dock-win-7.dock-win-inactive:not(.appicon),
+#custom-dock-win-8.dock-win-inactive:not(.appicon),
+#custom-dock-win-9.dock-win-inactive:not(.appicon),
+#custom-dock-win-10.dock-win-inactive:not(.appicon),
+#custom-dock-win-11.dock-win-inactive:not(.appicon) {
     color: rgba(0, 229, 255, 0.42);
 }
 
-#custom-dock-win-0.dock-win-active,
-#custom-dock-win-1.dock-win-active,
-#custom-dock-win-2.dock-win-active,
-#custom-dock-win-3.dock-win-active,
-#custom-dock-win-4.dock-win-active,
-#custom-dock-win-5.dock-win-active,
-#custom-dock-win-6.dock-win-active,
-#custom-dock-win-7.dock-win-active,
-#custom-dock-win-8.dock-win-active,
-#custom-dock-win-9.dock-win-active,
-#custom-dock-win-10.dock-win-active,
-#custom-dock-win-11.dock-win-active {
+#custom-dock-win-0.dock-win-active:not(.appicon),
+#custom-dock-win-1.dock-win-active:not(.appicon),
+#custom-dock-win-2.dock-win-active:not(.appicon),
+#custom-dock-win-3.dock-win-active:not(.appicon),
+#custom-dock-win-4.dock-win-active:not(.appicon),
+#custom-dock-win-5.dock-win-active:not(.appicon),
+#custom-dock-win-6.dock-win-active:not(.appicon),
+#custom-dock-win-7.dock-win-active:not(.appicon),
+#custom-dock-win-8.dock-win-active:not(.appicon),
+#custom-dock-win-9.dock-win-active:not(.appicon),
+#custom-dock-win-10.dock-win-active:not(.appicon),
+#custom-dock-win-11.dock-win-active:not(.appicon) {
     color: #ff2a7f;
     background-color: rgba(255, 42, 127, 0.14);
     text-shadow: 0 0 8px rgba(255, 42, 127, 0.55);
 }
 
-#custom-dock-win-0.dock-win-hit:hover,
-#custom-dock-win-1.dock-win-hit:hover,
-#custom-dock-win-2.dock-win-hit:hover,
-#custom-dock-win-3.dock-win-hit:hover,
-#custom-dock-win-4.dock-win-hit:hover,
-#custom-dock-win-5.dock-win-hit:hover,
-#custom-dock-win-6.dock-win-hit:hover,
-#custom-dock-win-7.dock-win-hit:hover,
-#custom-dock-win-8.dock-win-hit:hover,
-#custom-dock-win-9.dock-win-hit:hover,
-#custom-dock-win-10.dock-win-hit:hover,
-#custom-dock-win-11.dock-win-hit:hover {
+#custom-dock-win-0.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-1.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-2.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-3.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-4.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-5.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-6.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-7.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-8.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-9.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-10.dock-win-hit:not(.appicon):hover,
+#custom-dock-win-11.dock-win-hit:not(.appicon):hover {
     color: #00e5ff;
     background-color: rgba(0, 229, 255, 0.10);
 }
 
-#custom-dock-win-0.dock-win-active:hover,
-#custom-dock-win-1.dock-win-active:hover,
-#custom-dock-win-2.dock-win-active:hover,
-#custom-dock-win-3.dock-win-active:hover,
-#custom-dock-win-4.dock-win-active:hover,
-#custom-dock-win-5.dock-win-active:hover,
-#custom-dock-win-6.dock-win-active:hover,
-#custom-dock-win-7.dock-win-active:hover,
-#custom-dock-win-8.dock-win-active:hover,
-#custom-dock-win-9.dock-win-active:hover,
-#custom-dock-win-10.dock-win-active:hover,
-#custom-dock-win-11.dock-win-active:hover {
+#custom-dock-win-0.dock-win-active:not(.appicon):hover,
+#custom-dock-win-1.dock-win-active:not(.appicon):hover,
+#custom-dock-win-2.dock-win-active:not(.appicon):hover,
+#custom-dock-win-3.dock-win-active:not(.appicon):hover,
+#custom-dock-win-4.dock-win-active:not(.appicon):hover,
+#custom-dock-win-5.dock-win-active:not(.appicon):hover,
+#custom-dock-win-6.dock-win-active:not(.appicon):hover,
+#custom-dock-win-7.dock-win-active:not(.appicon):hover,
+#custom-dock-win-8.dock-win-active:not(.appicon):hover,
+#custom-dock-win-9.dock-win-active:not(.appicon):hover,
+#custom-dock-win-10.dock-win-active:not(.appicon):hover,
+#custom-dock-win-11.dock-win-active:not(.appicon):hover {
     color: #ff5a9a;
     background-color: rgba(255, 42, 127, 0.18);
 }

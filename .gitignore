@@ -37,6 +37,8 @@ node_modules/
 # Runtime dock PNG symlinks (relative url("dock-appicons/<id>") next to generated CSS)
 /theme/dock-appicons/
 !/theme/dock-appicons.generated.css
+# Runtime dock-windows slot PNGs (icons.appicon)
+/theme/dock-win-icons/
 
 # Exclude the dry-run folder with large tarballs
 dry-run/

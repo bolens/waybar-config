@@ -63,8 +63,13 @@ if ! grep -Fq 'theme/dock-appicons.generated.css' "$ROOT_DIR/theme.css"; then
 fi
 sem_line="$(grep -n 'semantic-colors.generated.css' "$ROOT_DIR/theme.css" | head -1 | cut -d: -f1)"
 icon_line="$(grep -n 'dock-appicons.generated.css' "$ROOT_DIR/theme.css" | head -1 | cut -d: -f1)"
+dock_win_line="$(grep -n 'dock-windows.generated.css' "$ROOT_DIR/theme.css" | head -1 | cut -d: -f1)"
 if [ -n "$sem_line" ] && [ -n "$icon_line" ] && [ "$icon_line" -le "$sem_line" ]; then
   echo "FAIL: dock-appicons.generated.css must load after semantic-colors.generated.css" >&2
+  fail=1
+fi
+if [ -n "$sem_line" ] && [ -n "$dock_win_line" ] && [ "$dock_win_line" -le "$sem_line" ]; then
+  echo "FAIL: dock-windows.generated.css must load after semantic-colors.generated.css" >&2
   fail=1
 fi
 if grep -Fq 'theme/drawers.css"' "$ROOT_DIR/theme.css" || grep -Fq "theme/drawers.css'" "$ROOT_DIR/theme.css"; then

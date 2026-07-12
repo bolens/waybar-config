@@ -27,8 +27,8 @@ if dock_windows_per_output_enabled && [ -n "${WAYBAR_OUTPUT_NAME:-}" ]; then
   suffix="$(dock_windows_cache_suffix "$WAYBAR_OUTPUT_NAME")"
 fi
 list_cache="$cache_dir/dock-windows-list${suffix}.json"
-# 1s cache keeps all dock slots consistent within one Waybar refresh cycle.
-ttl=1
+# Longer TTL: focus changes use --focus-only (keep cache). Open/close signals drop it.
+ttl=30
 
 active_title=""
 if [ -n "${WAYBAR_OUTPUT_NAME:-}" ]; then
@@ -48,6 +48,7 @@ title_is_focused() {
   local tn an
   tn=$(printf '%s' "$title" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
   an="$active_title"
+  [ -n "$tn" ] || return 1
   [ -n "$an" ] || return 1
   [ "$tn" = "$an" ] && return 0
   [[ "$tn" == *"$an"* ]] && return 0
@@ -121,59 +122,38 @@ build_list() {
       printf '[]\n'
       return 0
     fi
-    local filter_out="" i n id title app t a focused first=1
-    local -a click_entries=() status_entries=()
+    # Single Match+parse so slot icons and click ids stay aligned (no dual-list race).
+    local raw filter_out="" entries first=1 id title app focused
+    raw="$(timeout 2 qdbus6 --literal org.kde.KWin /WindowsRunner org.kde.krunner1.Match windows 2>/dev/null || true)"
+    if [ -z "$raw" ]; then
+      printf '[]\n'
+      return 0
+    fi
     if dock_windows_per_output_enabled && [ -n "${WAYBAR_OUTPUT_NAME:-}" ]; then
       filter_out="$WAYBAR_OUTPUT_NAME"
     fi
-    mapfile -t click_entries < <(
-      if [ -n "$filter_out" ]; then
-        dock_windows_kde_list --output "$filter_out" --mode click || true
-      else
-        dock_windows_kde_list --mode click || true
-      fi
-    )
-    mapfile -t status_entries < <(
-      if [ -n "$filter_out" ]; then
-        dock_windows_kde_list --output "$filter_out" --mode status || true
-      else
-        dock_windows_kde_list --mode status || true
-      fi
-    )
-    n=${#click_entries[@]}
+    if [ -n "$filter_out" ]; then
+      entries=$(printf '%s\n' "$raw" | dock_windows_kde_parse_matches --json --output "$filter_out" 2>/dev/null || echo '[]')
+    else
+      entries=$(printf '%s\n' "$raw" | dock_windows_kde_parse_matches --json 2>/dev/null || echo '[]')
+    fi
     printf '['
-    for ((i = 0; i < n; i++)); do
-      id="${click_entries[$i]%%|*}"
-      title="${click_entries[$i]#*|}"
-      app=""
-      if [ "$i" -lt "${#status_entries[@]}" ]; then
-        t="${status_entries[$i]%%|*}"
-        a="${status_entries[$i]#*|}"
-        # Prefer status title/app when the status title matches click title.
-        if [ "$t" = "$title" ] || [ -z "$title" ]; then
-          [ -n "$t" ] && title="$t"
-          app="$a"
-        else
-          # Fall back: find status row with same title.
-          local se st sa
-          for se in "${status_entries[@]}"; do
-            st="${se%%|*}"
-            sa="${se#*|}"
-            if [ "$st" = "$title" ]; then
-              app="$sa"
-              break
-            fi
-          done
-        fi
-      fi
+    while IFS= read -r row; do
+      [ -n "$row" ] || continue
+      id=$(printf '%s' "$row" | jq -r '.id // empty')
+      title=$(printf '%s' "$row" | jq -r '.title // empty')
+      app=$(printf '%s' "$row" | jq -r '.app // empty')
       [ -n "$id" ] || continue
+      if [ -z "$title" ] && [ -z "$app" ]; then
+        continue
+      fi
       focused=false
       if title_is_focused "$title"; then
         focused=true
       fi
       if [ "$first" -eq 1 ]; then first=0; else printf ','; fi
       emit_row "$id" "$title" "$app" "$focused"
-    done
+    done < <(printf '%s' "$entries" | jq -c '.[]?' 2>/dev/null || true)
     printf ']\n'
     return 0
   fi
