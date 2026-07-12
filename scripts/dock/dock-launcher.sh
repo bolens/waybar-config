@@ -71,8 +71,8 @@ dock_appicon_prepare() {
 
 case "$action" in
   status)
-    # icon, display name, full tooltip, process_names
-    IFS=$'\t' read -r icon name tooltip proc_list < <(jq -r --arg id "$app_id" '
+    # icon, display name, detail (no newlines — @tsv escapes them), process_names
+    IFS=$'\t' read -r icon name detail proc_list < <(jq -r --arg id "$app_id" '
       .[$id]
       | if . == null then empty
         else
@@ -87,15 +87,19 @@ case "$action" in
           | [
               (.icon // ""),
               $name,
-              (if $detail == "" then $name else ($name + "\n" + $detail) end),
+              $detail,
               ((.process_names // []) | join(","))
             ] | @tsv
         end
     ' "$manifest")
 
-    # Ensure tooltip always has at least the app name.
-    if [ -z "${tooltip:-}" ] || [ "$tooltip" = "null" ]; then
-      tooltip="${name:-$app_id}"
+    if [ -z "${name:-}" ] || [ "$name" = "null" ]; then
+      name="$app_id"
+    fi
+    if [ -n "${detail:-}" ] && [ "$detail" != "null" ]; then
+      tooltip="${name}"$'\n'"${detail}"
+    else
+      tooltip="$name"
     fi
 
     is_running="false"
