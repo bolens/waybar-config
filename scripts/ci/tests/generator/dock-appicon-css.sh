@@ -26,7 +26,7 @@ if ! grep -q 'icons.appicon disabled' "$css"; then
 fi
 
 waybar_test_patch_settings \
-  '.icons.appicon.enabled = true | .icons.appicon.size = 28 | .icons.appicon.gap = 12'
+  '.icons.appicon.enabled = true | .icons.appicon.size = 28 | .icons.appicon.gap = 12 | .icons.appicon.pad = 8'
 if ! waybar_test_gen_default; then
   echo "FAIL: generate failed with icons.appicon enabled" >&2
   exit 1
@@ -47,16 +47,21 @@ if ! grep -q 'margin-right: 12px' "$css"; then
   echo "FAIL: dock-appicons.generated.css should use icons.appicon.gap" >&2
   exit 1
 fi
+if ! grep -q 'padding: 0 8px' "$css"; then
+  echo "FAIL: dock-appicons.generated.css should use icons.appicon.pad" >&2
+  exit 1
+fi
+# Layout must apply without .appicon so glyph fallbacks keep the same gaps.
+if ! grep -qE '^#custom-dock-[a-z0-9-]+,' "$css"; then
+  echo "FAIL: expected shared #custom-dock-* layout rules without requiring .appicon" >&2
+  exit 1
+fi
 if ! grep -q 'url("file://.*/theme/dock-appicons/browser.png")' "$css"; then
   echo "FAIL: expected file:// browser.png dock-appicon CSS rule" >&2
   exit 1
 fi
 if ! grep -q '#custom-dock-browser.appicon:hover' "$css"; then
   echo "FAIL: expected hover rules that keep background-image" >&2
-  exit 1
-fi
-if ! grep -q '#dock-apps label.appicon' "$css"; then
-  echo "FAIL: expected shared label.appicon rules" >&2
   exit 1
 fi
 if ! grep -q ':not(\.appicon)' "$ROOT_DIR/theme/accents/dock.css"; then

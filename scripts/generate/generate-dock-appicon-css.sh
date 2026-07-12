@@ -15,11 +15,13 @@ mkdir -p "$WAYBAR_HOME/theme"
 
 enabled=false
 size=18
-gap=10
+gap=12
+pad=6
 if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
   enabled="$(jq -r '.icons.appicon.enabled // false' "$settings")"
   size="$(jq -r '.icons.appicon.size // 18' "$settings")"
-  gap="$(jq -r '.icons.appicon.gap // 10' "$settings")"
+  gap="$(jq -r '.icons.appicon.gap // 12' "$settings")"
+  pad="$(jq -r '.icons.appicon.pad // 6' "$settings")"
 fi
 
 case "$enabled" in
@@ -35,57 +37,67 @@ if [ ! -f "$manifest" ]; then
   exit 0
 fi
 
-# Prefetch first so file:// URLs point at real PNGs.
 if [ "${1:-}" != "--no-prefetch" ] && [ -x "$WAYBAR_SCRIPTS/dock/dock-appicon-prefetch.sh" ]; then
   "$WAYBAR_SCRIPTS/dock/dock-appicon-prefetch.sh" || true
 fi
 
 css_url_for() {
   local id="$1"
-  local png="$icon_dir/${id}.png"
-  printf 'file://%s' "$png"
+  printf 'file://%s/%s.png' "$icon_dir" "$id"
 }
+
+mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
 
 {
   printf '%s\n' '/* Generated from icons.appicon — do not edit by hand */'
-  printf '%s\n' '/* After semantic-colors: use background-color on pills so icons survive hover. */'
-  printf '%s\n' '/* margin-right = gap between bordered boxes; padding = space around PNG. */'
-  printf '#dock-apps .drawer-child.appicon,\n'
-  printf '#dock-apps label.appicon {\n'
-  printf '    font-size: 0;\n'
-  printf '    color: transparent;\n'
-  printf '    text-shadow: none;\n'
-  printf '    min-width: %spx;\n' "$size"
-  printf '    min-height: %spx;\n' "$size"
-  printf '    padding: 0 2px;\n'
+  printf '%s\n' '/* Layout applies to every dock launcher id (even glyph fallback) for even gaps. */'
+  printf '%s\n' '/* .appicon adds the PNG; gap/pad from icons.appicon.gap / .pad */'
+
+  # Shared layout for all launcher modules — do not require .appicon.
+  first=1
+  for id in "${app_ids[@]}"; do
+    [ -n "$id" ] || continue
+    if [ "$first" -eq 1 ]; then
+      printf '#custom-dock-%s' "$id"
+      first=0
+    else
+      printf ',\n#custom-dock-%s' "$id"
+    fi
+  done
+  printf ' {\n'
+  printf '    padding: 0 %spx;\n' "$pad"
   printf '    margin-top: 4px;\n'
   printf '    margin-bottom: 4px;\n'
   printf '    margin-left: 0;\n'
   printf '    margin-right: %spx;\n' "$gap"
-  printf '    background-repeat: no-repeat;\n'
-  printf '    background-position: center;\n'
-  printf '    background-size: %spx %spx;\n' "$size" "$size"
+  printf '    min-width: %spx;\n' "$size"
+  printf '    min-height: %spx;\n' "$size"
+  printf '    border-right: 1px solid rgba(0, 229, 255, 0.12);\n'
+  printf '    border-radius: 6px;\n'
   printf '}\n'
-  jq -r 'keys[]' "$manifest" | while read -r id; do
+
+  # Last launcher in the drawer still needs a right margin for visual rhythm, or
+  # zero it — keep gap on all so neighbors never glue when order changes.
+  printf '\n'
+
+  for id in "${app_ids[@]}"; do
     [ -n "$id" ] || continue
     url="$(css_url_for "$id")"
-    printf '\n#custom-dock-%s.appicon,\n' "$id"
+    printf '#custom-dock-%s.appicon,\n' "$id"
     printf '#custom-dock-%s.appicon:hover,\n' "$id"
     printf '#custom-dock-%s.appicon:active,\n' "$id"
     printf '#custom-dock-%s.appicon.ready,\n' "$id"
     printf '#custom-dock-%s.appicon.running {\n' "$id"
     printf '    background-image: url("%s");\n' "$url"
     printf '    background-color: transparent;\n'
-    printf '    color: transparent;\n'
-    printf '    text-shadow: none;\n'
-    printf '    font-size: 0;\n'
-    printf '    padding: 0 2px;\n'
-    printf '    margin-right: %spx;\n' "$gap"
-    printf '    min-width: %spx;\n' "$size"
-    printf '    min-height: %spx;\n' "$size"
     printf '    background-repeat: no-repeat;\n'
     printf '    background-position: center;\n'
     printf '    background-size: %spx %spx;\n' "$size" "$size"
+    printf '    color: transparent;\n'
+    printf '    text-shadow: none;\n'
+    printf '    font-size: 0;\n'
+    printf '    padding: 0 %spx;\n' "$pad"
+    printf '    margin-right: %spx;\n' "$gap"
     printf '}\n'
     printf '#custom-dock-%s.appicon:hover {\n' "$id"
     printf '    background-color: rgba(0, 229, 255, 0.10);\n'
@@ -93,6 +105,6 @@ css_url_for() {
     printf '}\n'
     printf '#custom-dock-%s.appicon.running {\n' "$id"
     printf '    box-shadow: 0 0 6px rgba(0, 229, 255, 0.7);\n'
-    printf '}\n'
+    printf '}\n\n'
   done
 } >"$out"

@@ -302,7 +302,8 @@
       "enabled": true, // make install-appicon; glyph fallback if binary missing
       "theme": "dark", // dark | light (SVGL / pack variant hint)
       "size": 18, // PNG pixel size + CSS min box
-      "gap": 10 // margin between bordered dock icon boxes
+      "gap": 12, // margin between bordered dock icon boxes
+      "pad": 6 // horizontal padding inside each box around the icon
     }
   },
 
