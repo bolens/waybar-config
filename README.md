@@ -29,7 +29,7 @@ License: [MIT](LICENSE).
 
 ### Installation
 
-See [Dependencies](#dependencies) for core packages and optional telemetry (Arch/CachyOS, Debian/Ubuntu, Fedora). Modules hide when their tools are absent.
+See [Dependencies](#dependencies) for core packages and optional tools (media, network, capture, devices, hardware telemetry, security, wallpaper backends). Modules hide when their tools are absent.
 
 1. Clone this repository directly to your Waybar home directory:
    ```bash
@@ -223,7 +223,7 @@ ShellCheck runs at **warning** severity (see `.shellcheckrc`).
 |--------|-------|--------------|-------|
 | `custom/cpu` `gpu` `memory` `disk` `nvme` | hardware | sysfs / `nvidia-smi` | Threshold CSS: `.warning` / `.critical` |
 | `custom/psu` `fans` `liquidctl` `coolercontrol` `openlinkhub` | hardware | optional daemons | Hide when absent |
-| `custom/cava` | media | **`cava` (optional)** | Continuous bars; hides when silent/missing — see [Dependencies](#optional-telemetry--integrations) |
+| `custom/cava` | media | **`cava` (optional)** | Continuous bars; hides when silent/missing — see [Dependencies](#optional-media--session) |
 | `mpris` / `custom/mpris` / pulse / mic | media | playerctl / PipeWire | |
 | `custom/pomodoro` | tools | none | Click toggle · right reset · middle skip |
 | `custom/weather` | tools | `curl` | Open-Meteo (default) → wttr.in fallback |
@@ -323,34 +323,92 @@ Package names below target the distros Waybar is commonly packaged for: **Arch /
 | Need | Arch / CachyOS | Debian / Ubuntu | Fedora |
 |------|----------------|-----------------|--------|
 | JSON helpers | `jq` | `jq` | `jq` |
+| HTTP clients (weather, APIs) | `curl` | `curl` | `curl` |
+| Fast text search (several scripts) | `ripgrep` (`rg`) | `ripgrep` | `ripgrep` |
 | Hyprland IPC | `socat` | `socat` | `socat` |
-| KDE DBus helpers | `qt6-tools` | `qt6-tools` | `qt6-qttools` |
-| Audio (PipeWire session) | `wireplumber` | `wireplumber` | `wireplumber` |
+| KDE DBus helpers | `qt6-tools` (`qdbus6`) | `qt6-tools` | `qt6-qttools` |
+| Audio (PipeWire session + `wpctl`) | `wireplumber` | `wireplumber` | `wireplumber` |
+| Pulse helpers (`pactl`) | `libpulse` | `pulseaudio-utils` | `pipewire-pulse` / `pulseaudio-utils` |
 | Menus | `rofi` and/or `wofi` | `rofi` / `wofi` | `rofi` / `wofi` |
+| Clipboard (`wl-copy` / `wl-paste`) | `wl-clipboard` | `wl-clipboard` | `wl-clipboard` |
 | Clipboard history | `cliphist` | `cliphist` | `cliphist` |
+| Desktop notifications | `libnotify` (`notify-send`) | `libnotify-bin` | `libnotify` |
 
 ```bash
 # Arch / CachyOS
-sudo pacman -S jq socat qt6-tools wireplumber rofi cliphist
+sudo pacman -S jq curl ripgrep socat qt6-tools wireplumber libpulse \
+  rofi wl-clipboard cliphist libnotify
 
 # Debian / Ubuntu
-sudo apt install jq socat qt6-tools wireplumber rofi cliphist
+sudo apt install jq curl ripgrep socat qt6-tools wireplumber pulseaudio-utils \
+  rofi wl-clipboard cliphist libnotify-bin
 
 # Fedora
-sudo dnf install jq socat qt6-qttools wireplumber rofi cliphist
+sudo dnf install jq curl ripgrep socat qt6-qttools wireplumber pipewire-pulse \
+  rofi wl-clipboard cliphist libnotify
 ```
 
-### Optional telemetry & integrations
+### Optional media & session
 
 | Module / feature | Arch / CachyOS | Debian / Ubuntu | Fedora | Notes |
 |------------------|----------------|-----------------|--------|-------|
-| NetworkManager status | `networkmanager` | `network-manager` | `NetworkManager` | |
-| Audio visualizer (`custom/cava`) | `cava` | `cava` | `cava` | **Optional.** Media drawer bars; module hides when binary missing or output silent. Config: `cava.bars` / `cava.framerate` in settings. |
+| MPRIS / album art (`custom/mpris`, `custom/album-art`) | `playerctl` | `playerctl` | `playerctl` | Album art also needs `curl`; enable via `visual.album_art.enabled` |
+| Scrolling titles (`zscroll`) | AUR `zscroll-git` | build from [upstream](https://github.com/noctuid/zscroll) | same | Optional polish for MPRIS / active-window |
+| Audio visualizer (`custom/cava`) | `cava` | `cava` | `cava` | Hides when binary missing or output silent. Config: `cava.bars` / `cava.framerate` |
+| Mixer click fallbacks | `pavucontrol` / `pwvucontrol` / AUR `wiremix` | `pavucontrol` | `pavucontrol` | Used when `apps.audio_mixer` is unset |
+| Power profiles | `power-profiles-daemon` (`powerprofilesctl`) | `power-profiles-daemon` | `power-profiles-daemon` | |
 | Brightness | `brightnessctl` | `brightnessctl` | `brightnessctl` | |
 | External monitor DDC | `ddcutil` | `ddcutil` | `ddcutil` | |
-| Docker / containers | `docker` | `docker.io` | `docker` | |
+| Night light (Hyprland) | `hyprsunset` | `hyprsunset` | `hyprsunset` | Plasma uses Night Color / KWin |
+| Lock (power menu) | `hyprlock` and/or `swaylock` | same | same | Compositor-specific |
+| Hyprland voice (`hyprwhspr`) | project install | project install | project install | Optional CSS import in `style.css` |
+| Keybind hints (`custom/keybindhint`) | AUR `hyprkeys` | build from upstream | same | Falls back to terminal + config path |
+
+### Optional network, VPN & sync
+
+| Module / feature | Arch / CachyOS | Debian / Ubuntu | Fedora | Notes |
+|------------------|----------------|-----------------|--------|-------|
+| NetworkManager (`nmcli`, interfaces) | `networkmanager` | `network-manager` | `NetworkManager` | Optional GUI: `nm-connection-editor` / `nmtui` |
+| Wi‑Fi SSID fallback | `wireless_tools` (`iwgetid`) | `wireless-tools` | `wireless-tools` | |
+| Bluetooth (`bluetoothctl`) | `bluez` / `bluez-utils` | `bluez` / `bluez` | `bluez` | Optional GUI: `blueman` |
+| Tailscale (`custom/tailscale`) | `tailscale` | `tailscale` | `tailscale` | |
+| VPN summary extras | `netbird` / `zerotier-one` / `mullvad-vpn` | upstream packages | same | Detected when present; not required |
+| I2P (`custom/i2pd`) | `i2pd` | `i2pd` | `i2pd` | Console password via secrets + `i2pd-set-console-pass.sh` |
+| Syncthing (`custom/syncthing`) | `syncthing` | `syncthing` | `syncthing` | |
+| Homelab / weather HTTP | `curl` (core) | `curl` | `curl` | `homelab.targets[]`; weather Open-Meteo → wttr.in |
+
+### Optional capture, picker & clipboard polish
+
+| Module / feature | Arch / CachyOS | Debian / Ubuntu | Fedora | Notes |
+|------------------|----------------|-----------------|--------|-------|
+| Wayland screenshot / region | `grim` + `slurp` | `grim` + `slurp` | `grim` + `slurp` | |
+| Hyprland screenshot helper | AUR `grimblast` | rarely packaged | same | Optional; falls back to grim/slurp |
+| Screen record (wlroots) | `wf-recorder` | `wf-recorder` | `wf-recorder` | |
+| Plasma capture | `spectacle` | `spectacle` | `spectacle` | Preferred on KDE |
+| Color picker | `hyprpicker` (Hyprland) / `kcolorchooser` (Plasma) | same | same | X11 fallback: `xclip` |
+| Calendar popup | `util-linux` (`cal`) | `bsdmainutils` / `ncal` | `util-linux` | |
+
+### Optional devices, desktop & apps
+
+| Module / feature | Arch / CachyOS | Debian / Ubuntu | Fedora | Notes |
+|------------------|----------------|-----------------|--------|-------|
 | Device / battery (UPower) | `upower` | `upower` | `upower` | |
 | Logitech battery fallback | `solaar` | `solaar` | `solaar` | Used only if sysfs Device batteries are missing |
+| KDE Connect | `kdeconnect` (`kdeconnect-cli`) | `kdeconnect` | `kde-connect` | Optional share picker: `zenity` |
+| Stream Deck (`custom/streamdeck`) | AUR / chaotic `streamdeck-ui` | pip / upstream `streamdeck-ui` | same | Left-click opens UI; USB probe uses `usbutils` (`lsusb`) |
+| Sunshine (`custom/sunshine`) | `sunshine` | Flatpak / upstream | Copr / upstream | |
+| GitHub (`custom/github`) | `github-cli` (`gh`) | `gh` | `gh` | |
+| Docker (`custom/docker`) | `docker` | `docker.io` | `docker` | |
+| Other runtimes (`custom/runtimes`) | `podman` / `libvirt` (`virsh`) / `waydroid` | same | same | Each detected independently |
+| Encrypted vaults (`custom/vaults`) | `gocryptfs` (+ `fuse3`) | `gocryptfs` | `gocryptfs` | Uses `findmnt` / `fusermount` from util-linux / fuse |
+| Keyboard layout (X11 fallback) | `xorg-setxkbmap` | `x11-xkb-utils` | `setxkbmap` | Plasma prefers `qdbus6` |
+| Output discovery extras | `wlr-randr` / `sway` (`swaymsg`) / Plasma `kscreen-doctor` | same | same | Plus `hyprctl` on Hyprland |
+| Window focus helpers | `wmctrl` / `xdotool` / `wtype` / `ydotool` | same | same | Optional; Stream Deck / Discord mute paths |
+
+### Optional hardware telemetry
+
+| Module / feature | Arch / CachyOS | Debian / Ubuntu | Fedora | Notes |
+|------------------|----------------|-----------------|--------|-------|
 | UPS (`custom` NUT path) | `nut` | `nut-client` / `nut` | `nut` | |
 | AIO / USB coolers (`custom/liquidctl`) | `liquidctl` | `liquidctl` | `liquidctl` | **AIO/hubs only** when Corsair PSU is covered by hwmon; Aura RGB skipped in favor of OpenRGB/ckb-next |
 | Digital Corsair PSU (`custom/psu`) | kernel `corsair-psu` / `corsairpsu` hwmon | same (in-tree hwmon) | same | No userspace package — load module if needed: `sudo modprobe corsair-psu` |
@@ -360,11 +418,28 @@ sudo dnf install jq socat qt6-qttools wireplumber rofi cliphist
 | RGB daemon presence (`custom/rgb`) | `openrgb` and/or `ckb-next` | `openrgb` / `ckb-next` | `openrgb` / `ckb-next` | Module shows only while a daemon is running |
 | NVIDIA GPU metrics | `nvidia-utils` (provides `nvidia-smi`) | NVIDIA driver packages | NVIDIA driver packages | Falls back to `amdgpu` hwmon if NVIDIA is suspended/missing |
 | Fan curves note (`custom/fans` tooltip) | `fanctl` (community/AUR) | install from upstream if packaged | same | Optional note only — does not replace hwmon fans |
-| Hyprland voice (`hyprwhspr`) | project install | project install | project install | Optional CSS import in `style.css` |
 | Sensors / lm-sensors | `lm_sensors` | `lm-sensors` | `lm_sensors` | Helps hwmon labels; not required for every module |
+
+### Optional security & updates
+
+| Module / feature | Arch / CachyOS | Debian / Ubuntu | Fedora | Notes |
+|------------------|----------------|-----------------|--------|-------|
 | LibreDefender (`custom/libredefender`) | `libredefender` (+ `clamav` / `clamav-freshclam`) | build from [upstream](https://github.com/kpcyrd/libredefender) or ClamAV packages | same | Wire `services.libredefender.service_name` to your scan unit (default `libredefender-scan.service`) |
 | chkrootkit (`custom/chkrootkit`) | AUR `chkrootkit` | `chkrootkit` | `chkrootkit` | Wire `services.chkrootkit.service_name` to your scan unit (default `chkrootkit-scan.service`) |
 | System updates (`custom/updates`) | `pacman-contrib` (`checkupdates`); optional `paru` for AUR | `apt` (base) | `dnf` (base) | Auto-detects backend; Flatpak optional additive |
+
+### Optional wallpaper theming
+
+Used when `theme.mode=wallpaper` (see [Theming](#theming)). Install at least one backend:
+
+| Backend | Arch / CachyOS | Debian / Ubuntu | Fedora | Notes |
+|---------|----------------|-----------------|--------|-------|
+| matugen | AUR / crates `matugen` | build / crates | same | Preferred when present |
+| wallust | AUR `wallust` | crates / upstream | same | |
+| pywal | `python-pywal` / `pywal16` | `python3-pywal` | `python3-pywal` | |
+| Wallpaper setter | `swww` | `swww` | `swww` | Optional helper for applying images |
+
+**Click targets** (`apps.*` in settings) are not module gates — point them at whatever you run (`ghostty`, `btop`, `nvtop`, `lazydocker`, `missioncenter`, `kclock`, `virt-manager`, `discord`, GoXLR launcher, etc.).
 
 **Kernel / sysfs (no package)** — used when present:
 
@@ -390,16 +465,20 @@ Richer / cheaper sources win; modules skip or hide when covered:
 ### Example: Arch / CachyOS (this repo author’s stack)
 
 ```bash
-# Core + common telemetry
-sudo pacman -S jq socat qt6-tools wireplumber rofi cliphist \
-  networkmanager brightnessctl ddcutil upower solaar nut liquidctl \
-  openrgb ckb-next lm_sensors
+# Core + common desktop / media / network
+sudo pacman -S jq curl ripgrep socat qt6-tools wireplumber libpulse \
+  rofi wl-clipboard cliphist libnotify \
+  playerctl networkmanager bluez bluez-utils brightnessctl ddcutil \
+  power-profiles-daemon upower solaar kdeconnect usbutils \
+  grim slurp wf-recorder spectacle hyprpicker kcolorchooser \
+  nut liquidctl openrgb ckb-next lm_sensors github-cli \
+  tailscale syncthing gocryptfs
 
-# Optional: media visualizer for custom/cava
-# sudo pacman -S cava
+# Optional: media visualizer, GameStream host, I2P, …
+# sudo pacman -S cava sunshine i2pd
 
 # Optional AUR / community (yay/paru) — pick what you own
-yay -S coolercontrol-bin openlinkhub-bin   # or coolercontrol / openlinkhub
+yay -S coolercontrol-bin openlinkhub-bin streamdeck-ui   # or coolercontrol / openlinkhub
 # asusctl: prefer asus-linux g14 repo, or AUR asusctl
 sudo systemctl enable --now coolercontrold
 sudo systemctl enable --now openlinkhub
@@ -415,9 +494,12 @@ sudo ~/.config/waybar/scripts/services/coolercontrol/coolercontrol-set-ui-pass.s
 ### Example: Debian / Ubuntu
 
 ```bash
-sudo apt install jq socat qt6-tools wireplumber rofi cliphist \
-  network-manager brightnessctl ddcutil upower solaar nut-client liquidctl \
-  openrgb lm-sensors
+sudo apt install jq curl ripgrep socat qt6-tools wireplumber pulseaudio-utils \
+  rofi wl-clipboard cliphist libnotify-bin \
+  playerctl network-manager bluez brightnessctl ddcutil \
+  power-profiles-daemon upower solaar kdeconnect usbutils \
+  grim slurp wf-recorder spectacle \
+  nut-client liquidctl openrgb lm-sensors gh
 
 # Optional: media visualizer for custom/cava
 # sudo apt install cava
@@ -434,9 +516,12 @@ sudo systemctl enable --now openlinkhub
 ### Example: Fedora
 
 ```bash
-sudo dnf install jq socat qt6-qttools wireplumber rofi cliphist \
-  NetworkManager brightnessctl ddcutil upower solaar nut liquidctl \
-  openrgb lm_sensors
+sudo dnf install jq curl ripgrep socat qt6-qttools wireplumber pipewire-pulse \
+  rofi wl-clipboard cliphist libnotify \
+  playerctl NetworkManager bluez brightnessctl ddcutil \
+  power-profiles-daemon upower solaar kde-connect usbutils \
+  grim slurp wf-recorder spectacle \
+  nut liquidctl openrgb lm_sensors gh
 
 # Optional: media visualizer for custom/cava
 # sudo dnf install cava

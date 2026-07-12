@@ -13,7 +13,7 @@ Scripts are grouped so related status/click/popup pairs stay together, with shar
 | `workspaces/` | Workspaces, active window, keybind hints |
 | `system/` | CPU/mem/disk/gpu/nvme/fans/liquidctl/asusctl/rgb/power/brightness/… |
 | `network/` | Wi‑Fi, VPN, ethernet, Tailscale, … |
-| `media/` | Audio, mic, MPRIS; optional `cava-status.sh` visualizer ([`cava`](https://github.com/karlstav/cava) — see [Dependencies](../README.md#optional-telemetry--integrations)) |
+| `media/` | Audio, mic, MPRIS; optional `cava-status.sh` visualizer ([`cava`](https://github.com/karlstav/cava) — see [Dependencies](../README.md#optional-media--session)) |
 | `notifications/` | Notifications + clipboard |
 | `capture/` | Screenshot / screenrecord / color picker |
 | `services/` | Third-party integrations (see subfolders below) |
