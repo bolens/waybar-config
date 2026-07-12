@@ -5,13 +5,13 @@
 }
 
 #dock-apps > * {
-    padding: 0 8px;
-    margin: 4px 3px;
+    padding: 0 2px;
+    margin: 4px 0;
     min-width: 18px;
 }
 
 #dock-apps > *:not(:last-child) {
-    margin-right: 3px;
+    margin-right: 10px;
     border-right: 1px solid rgba(0, 229, 255, 0.12);
     border-top-right-radius: 6px;
     border-bottom-right-radius: 6px;
