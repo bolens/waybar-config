@@ -137,8 +137,8 @@ if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
     printf 'FAIL missing modules/workspaces.generated.jsonc\n' >&2
     fail=1
   fi
-  if ! jq -e '.bars.layer == "overlay" and .bars.tooltip == true' "$settings" >/dev/null 2>&1; then
-    printf 'WARN %s: expected bars.layer=overlay and tooltip=true for KWin tooltips\n' "$settings" >&2
+  if ! jq -e '(.bars.layer == "overlay" or .bars.layer == "top") and .bars.tooltip == true' "$settings" >/dev/null 2>&1; then
+    printf 'WARN %s: expected bars.layer overlay|top and tooltip=true (overlay for KWin tooltips; top for fullscreen coverage)\n' "$settings" >&2
   fi
 fi
 

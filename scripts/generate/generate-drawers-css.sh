@@ -26,7 +26,7 @@ ${shells} {
     border: none;
     box-shadow: none;
     padding: 0;
-    margin: 4px 2px;
+    margin: 0 2px;
 }
 
 ${shell_children} {

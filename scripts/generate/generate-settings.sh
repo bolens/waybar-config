@@ -98,9 +98,13 @@ build_groups_json() {
       end;
 
     def apply_cava_placement($mods):
-      # cava.placement=inline → cava first (always-visible head); drawer keeps SoT order.
-      (($settings[0].cava.placement // "drawer") | tostring) as $place
+      # cava.enabled=false → strip; placement=inline → cava first (always-visible head).
+      # Note: jq `//` treats false as missing — use == false, not `enabled // true`.
+      (($settings[0].cava.enabled == false) | not) as $on
+      | (($settings[0].cava.placement // "drawer") | tostring) as $place
       | if ($mods | index("custom/cava")) == null then $mods
+        elif ($on | not) then
+          ($mods | map(select(. != "custom/cava")))
         elif $place == "inline" then
           # Always-visible head: cava first; media-drawer + controls reveal as children.
           (["custom/cava"] + ($mods | map(select(. != "custom/cava"))))

@@ -12,7 +12,7 @@
   "custom/dock-drawer": {
     "format": "󰀻",
     "tooltip": true,
-    "tooltip-format": "Applications\nContains: Zen Browser · Helium Browser · Pear Desktop · Floorp · Cursor · VS Code Insiders · Zed · Kitty · Terminal · File manager · Obsidian · Krita · OrcaSlicer · Discord · Steam · Heroic Games Launcher · Lutris · Anyrun\nClick to toggle"
+    "tooltip-format": "Applications\nClick to toggle"
   },
   "custom/tray-drawer": {
     "format": "󰇝",
@@ -22,7 +22,7 @@
   "custom/media-drawer": {
     "format": "󰝚",
     "tooltip": true,
-    "tooltip-format": "Media &amp; volume\nContains: Visualizer · Previous · Album art · Now playing · Next · Volume · Microphone\nClick to toggle"
+    "tooltip-format": "Media &amp; volume\nContains: Previous · Album art · Now playing · Next · Volume · Microphone\nClick to toggle"
   },
   "custom/net-drawer": {
     "format": "󰖩",
@@ -32,22 +32,22 @@
   "custom/tools-drawer": {
     "format": "󰒓",
     "tooltip": true,
-    "tooltip-format": "Quick tools\nContains: Screenshot · Screen record · Night light · Clipboard · Color picker · RGB · Discord · Weather · Pomodoro · GitHub\nClick to toggle"
+    "tooltip-format": "Quick tools\nClick to toggle"
   },
   "custom/infra-drawer": {
     "format": "󰒍",
     "tooltip": true,
-    "tooltip-format": "Infrastructure\nContains: Homelab · Docker · Syncthing · Sunshine · Runtimes · Updates · UPS · Systemd · Uptime\nClick to toggle"
+    "tooltip-format": "Infrastructure\nClick to toggle"
   },
   "custom/hardware-drawer": {
     "format": "󰻠",
     "tooltip": true,
-    "tooltip-format": "Hardware\nContains: Stats · NVMe · PSU\nClick to toggle"
+    "tooltip-format": "Hardware\nClick to toggle"
   },
   "custom/cooling-drawer": {
     "format": "󰈐",
     "tooltip": true,
-    "tooltip-format": "Cooling\nContains: Fans · Liquidctl · CoolerControl · OpenLinkHub\nClick to toggle"
+    "tooltip-format": "Cooling\nClick to toggle"
   },
   "custom/power-drawer": {
     "format": "",
@@ -62,7 +62,7 @@
   "custom/security-drawer": {
     "format": "󰒃",
     "tooltip": true,
-    "tooltip-format": "Security\nContains: Vaults · LibreDefender · chkrootkit\nClick to toggle"
+    "tooltip-format": "Security\nClick to toggle"
   },
   "idle_inhibitor": {
     "format": "{icon}",

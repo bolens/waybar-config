@@ -1,14 +1,17 @@
 // Source of truth for Waybar settings. Edit this file, not waybar-settings.json
 // (JSON is compiled from this on launch / generate-settings).
-// bars.layer: "overlay" required for KWin tooltips; "top" helps fullscreen but breaks tooltips.
+// bars.layer: "top" lets fullscreen apps cover the bar. "overlay" keeps bar above
+// fullscreen and is better for KWin tooltips on Plasma Wayland.
 {
   "bars": {
-    "layer": "overlay",
+    "layer": "top",
     "output": ["*"],
     "exclusive": true,
     "passthrough": false,
     "reload_style_on_change": true,
-    "height": 44,
+    // Keep ≥ module min-height (dock/drawers need ~60). Undersized height breaks
+    // bottom-bar tooltip anchoring on Plasma (tooltips render off-screen below).
+    "height": 60,
     "spacing": 6,
     "tooltip": true,
     // Floating island geometry (default off = exclusive edge-to-edge). When floating:
@@ -296,7 +299,7 @@
   },
   // Optional brand/desktop icons via bolens/appicon (make install-appicon).
   // Peer-optional like zscroll/cava: glyphs stay when binary missing or resolve fails.
-  // Launch prefetches when enabled+installed; dock ticks use --offline against cache.
+  // Launch batch-prefetches when enabled+installed; dock ticks use --offline against cache.
   "icons": {
     "appicon": {
       "enabled": true, // make install-appicon; glyph fallback if binary missing
@@ -329,8 +332,12 @@
   "cava": {
     // Optional dep: install `cava` (Arch/Debian/Fedora package of the same name).
     // Module hides when the binary is missing or the visualizer is silent.
+    // Dual-output continuous cava starves GTK and kills ALL bar tooltips while
+    // audio plays (Waybar#3910/#4909). Keep false unless you accept that tradeoff.
+    "enabled": false,
     "bars": 8, // Frequency bars (4–32)
-    "framerate": 30,
+    // Engine rate; status script also caps ≤12 fps and Waybar emits ≤~1.25/s (tooltip safety).
+    "framerate": 12,
     "placement": "drawer" // drawer | inline (keep cava in open media strip)
   },
   "pomodoro": {
@@ -348,9 +355,12 @@
     ]
   },
   "active_window": {
-    "zscroll": true, // Enable continuous scrolling text using zscroll (requires zscroll installed)
+    // Continuous title scroll × dual outputs also hammers the GTK loop; keep off
+    // while diagnosing bar-wide tooltip death (Waybar#3910/#4909).
+    "zscroll": false, // Enable continuous scrolling text using zscroll (requires zscroll installed)
     "max_length": 40, // Maximum length of the window title in the bar
-    "scroll_delay": 0.3, // Delay in seconds between scroll steps
+    // ≥0.5 keeps GTK tooltip timers alive; 0.3×2 outputs starved bottom-bar tooltips.
+    "scroll_delay": 0.5, // Delay in seconds between scroll steps
     "per_output": true // Show focused window for this bar's monitor
   },
   "capture": {
@@ -453,9 +463,12 @@
     "output_map": {} // Optional pins: { "DP-1": "ddc:2", "eDP-1": "backlight:intel_backlight" }
   },
   "audio": {
-    "mpris_zscroll": true, // Enable continuous scrolling for custom music module (requires zscroll installed)
+    // Continuous zscroll × dual outputs starves GTK tooltips while music plays.
+    // Prefer false until Waybar handles high-rate custom updates better.
+    "mpris_zscroll": false, // Enable continuous scrolling for custom music module (requires zscroll installed)
     "mpris_max_length": 32, // Maximum length of mpris track text
-    "mpris_scroll_delay": 0.3, // Scroll delay in seconds
+    // Keep ≥0.8 — faster scroll × dual outputs starves GTK tooltips bar-wide.
+    "mpris_scroll_delay": 0.8, // Scroll delay in seconds
     "volume_step": 5, // Volume adjust step percentage on scroll
     "max_volume": 1.5, // Maximum volume level multiplier limit (e.g. 1.5 is 150%)
     "seek_back_sec": 30, // Seconds to seek backward on media-prev right-click

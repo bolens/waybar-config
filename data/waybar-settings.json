@@ -1,14 +1,17 @@
 
 
 
+
 {
   "bars": {
-    "layer": "overlay",
+    "layer": "top",
     "output": ["*"],
     "exclusive": true,
     "passthrough": false,
     "reload_style_on_change": true,
-    "height": 44,
+    
+    
+    "height": 60,
     "spacing": 6,
     "tooltip": true,
     
@@ -329,8 +332,12 @@
   "cava": {
     
     
+    
+    
+    "enabled": false,
     "bars": 8, 
-    "framerate": 30,
+    
+    "framerate": 12,
     "placement": "drawer" 
   },
   "pomodoro": {
@@ -348,9 +355,12 @@
     ]
   },
   "active_window": {
-    "zscroll": true, 
+    
+    
+    "zscroll": false, 
     "max_length": 40, 
-    "scroll_delay": 0.3, 
+    
+    "scroll_delay": 0.5, 
     "per_output": true 
   },
   "capture": {
@@ -453,9 +463,12 @@
     "output_map": {} 
   },
   "audio": {
-    "mpris_zscroll": true, 
+    
+    
+    "mpris_zscroll": false, 
     "mpris_max_length": 32, 
-    "mpris_scroll_delay": 0.3, 
+    
+    "mpris_scroll_delay": 0.8, 
     "volume_step": 5, 
     "max_volume": 1.5, 
     "seek_back_sec": 30, 

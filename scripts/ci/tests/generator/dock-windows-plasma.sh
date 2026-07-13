@@ -158,8 +158,17 @@ waybar_test_assert_jq "$slot0_ai" '.class | index("appicon")' \
   "slot with appicon resolve should include appicon class: $slot0_ai"
 waybar_test_assert_jq "$slot0_ai" '.class | index("appicon-terminal")' \
   "slot should use app-keyed class appicon-terminal: $slot0_ai"
-waybar_test_assert_jq "$slot0_ai" '.text == ""' \
-  "appicon slot must omit glyph text (prevents flash): $slot0_ai"
+waybar_test_assert_jq "$slot0_ai" '.text != null and (.text | length > 0)' \
+  "appicon slot must keep non-empty text (never collapse): $slot0_ai"
+# Plasma tooltip hitbox: real glyph metrics, not ZWSP; tooltip payload present.
+if printf '%s' "$slot0_ai" | jq -e '.text == "\u200b"' >/dev/null 2>&1; then
+  echo "FAIL: appicon slot must not use ZWSP text (collapses tooltip hitbox): $slot0_ai" >&2
+  fail=1
+fi
+waybar_test_assert_jq "$slot0_ai" \
+  '(.tooltip | type == "string") and (.tooltip | length > 0)' \
+  "appicon slot must emit tooltip payload: $slot0_ai"
+echo "PASS: Plasma dock-windows slot keeps glyph text + tooltip"
 
 # Empty slot beyond window count → hidden
 slot15=$(

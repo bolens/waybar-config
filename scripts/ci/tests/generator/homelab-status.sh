@@ -39,9 +39,11 @@ waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" \
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" \
   '."group/infra".modules | index("custom/homelab")' \
   "custom/homelab missing from group/infra"
+# Bottom-bar drawers use compact tips (no Contains: lists) so Plasma does not
+# clip tall popups (Waybar#3356). Homelab still lives in group/infra above.
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/drawers.generated.jsonc" \
-  '."custom/infra-drawer"."tooltip-format" | test("Homelab")' \
-  "infra-drawer tooltip should list Homelab"
+  '."custom/infra-drawer"."tooltip-format" | test("Infrastructure")' \
+  "infra-drawer tooltip should identify Infrastructure drawer"
 
 if ! bash -n "$TEST_DIR/scripts/services/homelab/homelab-status.sh"; then
   echo "FAIL: homelab-status.sh failed bash -n" >&2

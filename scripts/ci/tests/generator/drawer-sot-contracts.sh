@@ -28,22 +28,47 @@ drawer_count=0
 while IFS= read -r drawer_key; do
   [ -z "$drawer_key" ] && continue
   drawer_count=$((drawer_count + 1))
-  if ! echo "$clean_drawers" | jq -e --arg k "$drawer_key" '
-    .[$k].tooltip == true
-    and (.[$k] | has("exec") | not)
-    and (.[$k]["return-type"] != "json")
-    and (.[$k]["tooltip-format"]|type)=="string"
-    and (.[$k]["tooltip-format"]|contains("Contains:"))
-    and (.[$k]["tooltip-format"]|contains("Click to toggle"))
-    and ((.[$k]["tooltip-format"]|contains("Click to expand"))|not)
-    and (.[$k].format|type)=="string"
-    and (.[$k].format|length)>0
-    and .[$k]["tooltip-format"] != .[$k].format
-  ' >/dev/null 2>&1; then
-    echo "FAIL: $drawer_key must use static format + tooltip:true + descriptive tooltip-format (no exec/json)" >&2
-    echo "$clean_drawers" | jq --arg k "$drawer_key" '.[$k]' >&2
-    fail=1
-  fi
+  # Bottom-bar drawers use a compact tip (no Contains:) so Plasma does not clip
+  # tall popups off the bottom edge (Waybar#3356).
+  case "$drawer_key" in
+    custom/dock-drawer | custom/tools-drawer | custom/infra-drawer | \
+    custom/security-drawer | custom/hardware-drawer | custom/cooling-drawer)
+      if ! echo "$clean_drawers" | jq -e --arg k "$drawer_key" '
+        .[$k].tooltip == true
+        and (.[$k] | has("exec") | not)
+        and (.[$k]["return-type"] != "json")
+        and (.[$k]["tooltip-format"]|type)=="string"
+        and (.[$k]["tooltip-format"]|contains("Click to toggle"))
+        and ((.[$k]["tooltip-format"]|contains("Contains:"))|not)
+        and ((.[$k]["tooltip-format"]|contains("Click to expand"))|not)
+        and (.[$k].format|type)=="string"
+        and (.[$k].format|length)>0
+        and .[$k]["tooltip-format"] != .[$k].format
+      ' >/dev/null 2>&1; then
+        echo "FAIL: $drawer_key must use compact bottom-bar tooltip (no Contains:)" >&2
+        echo "$clean_drawers" | jq --arg k "$drawer_key" '.[$k]' >&2
+        fail=1
+      fi
+      ;;
+    *)
+      if ! echo "$clean_drawers" | jq -e --arg k "$drawer_key" '
+        .[$k].tooltip == true
+        and (.[$k] | has("exec") | not)
+        and (.[$k]["return-type"] != "json")
+        and (.[$k]["tooltip-format"]|type)=="string"
+        and (.[$k]["tooltip-format"]|contains("Contains:"))
+        and (.[$k]["tooltip-format"]|contains("Click to toggle"))
+        and ((.[$k]["tooltip-format"]|contains("Click to expand"))|not)
+        and (.[$k].format|type)=="string"
+        and (.[$k].format|length)>0
+        and .[$k]["tooltip-format"] != .[$k].format
+      ' >/dev/null 2>&1; then
+        echo "FAIL: $drawer_key must use static format + tooltip:true + descriptive tooltip-format (no exec/json)" >&2
+        echo "$clean_drawers" | jq --arg k "$drawer_key" '.[$k]' >&2
+        fail=1
+      fi
+      ;;
+  esac
 done <<<"$drawer_keys"
 if [ "$drawer_count" -lt 8 ]; then
   # Settings SoT currently defines ≥8 drawer sides; fewer means a generate miss.
@@ -51,10 +76,14 @@ if [ "$drawer_count" -lt 8 ]; then
   fail=1
 fi
 
-# Content contracts: hardware lists Stats (carousel) or CPU/GPU; desk lists Notifications
+# Content contracts: top-bar drawers keep Contains:; bottom-bar drawers are compact.
 hw_tip=$(echo "$clean_drawers" | jq -r '."custom/hardware-drawer"."tooltip-format"')
-if ! printf '%s' "$hw_tip" | grep -qE 'Stats|CPU'; then
-  echo "FAIL: hardware-drawer tooltip missing Stats/CPU contents: $hw_tip" >&2
+if ! printf '%s' "$hw_tip" | grep -qE 'Hardware'; then
+  echo "FAIL: hardware-drawer tooltip missing Hardware title: $hw_tip" >&2
+  fail=1
+fi
+if printf '%s' "$hw_tip" | grep -q 'Contains:'; then
+  echo "FAIL: hardware-drawer (bottom) must omit Contains: list: $hw_tip" >&2
   fail=1
 fi
 desk_tip=$(echo "$clean_drawers" | jq -r '."custom/desk-drawer"."tooltip-format"')
@@ -68,23 +97,39 @@ if [ -z "$devices_tip" ] || ! printf '%s' "$devices_tip" | grep -qiE 'Bluetooth|
   fail=1
 fi
 cooling_tip=$(echo "$clean_drawers" | jq -r '."custom/cooling-drawer"."tooltip-format" // empty')
-if [ -z "$cooling_tip" ] || ! printf '%s' "$cooling_tip" | grep -qiE 'Fans|CoolerControl|Liquidctl'; then
-  echo "FAIL: cooling-drawer tooltip missing cooling contents: $cooling_tip" >&2
+if [ -z "$cooling_tip" ] || ! printf '%s' "$cooling_tip" | grep -qiE 'Cooling'; then
+  echo "FAIL: cooling-drawer tooltip missing Cooling title: $cooling_tip" >&2
+  fail=1
+fi
+if printf '%s' "$cooling_tip" | grep -q 'Contains:'; then
+  echo "FAIL: cooling-drawer (bottom) must omit Contains: list: $cooling_tip" >&2
   fail=1
 fi
 security_tip=$(echo "$clean_drawers" | jq -r '."custom/security-drawer"."tooltip-format" // empty')
-if [ -z "$security_tip" ] || ! printf '%s' "$security_tip" | grep -q 'Vaults'; then
-  echo "FAIL: security-drawer tooltip missing Vaults: $security_tip" >&2
+if [ -z "$security_tip" ] || ! printf '%s' "$security_tip" | grep -q 'Security'; then
+  echo "FAIL: security-drawer tooltip missing Security title: $security_tip" >&2
+  fail=1
+fi
+if printf '%s' "$security_tip" | grep -q 'Contains:'; then
+  echo "FAIL: security-drawer (bottom) must omit Contains: list: $security_tip" >&2
   fail=1
 fi
 tools_tip=$(echo "$clean_drawers" | jq -r '."custom/tools-drawer"."tooltip-format" // empty')
-if [ -z "$tools_tip" ] || ! printf '%s' "$tools_tip" | grep -q 'GitHub'; then
-  echo "FAIL: tools-drawer tooltip missing GitHub: $tools_tip" >&2
+if [ -z "$tools_tip" ] || ! printf '%s' "$tools_tip" | grep -q 'Quick tools\|Tools'; then
+  echo "FAIL: tools-drawer tooltip missing tools title: $tools_tip" >&2
+  fail=1
+fi
+if printf '%s' "$tools_tip" | grep -q 'Contains:'; then
+  echo "FAIL: tools-drawer (bottom) must omit Contains: list: $tools_tip" >&2
   fail=1
 fi
 infra_github=$(echo "$clean_drawers" | jq -r '."custom/infra-drawer"."tooltip-format" // empty')
 if printf '%s' "$infra_github" | grep -q 'GitHub'; then
   echo "FAIL: infra-drawer should not list GitHub (moved to tools): $infra_github" >&2
+  fail=1
+fi
+if printf '%s' "$infra_github" | grep -q 'Contains:'; then
+  echo "FAIL: infra-drawer (bottom) must omit Contains: list: $infra_github" >&2
   fail=1
 fi
 desk_vaults=$(printf '%s' "$desk_tip")
@@ -165,7 +210,8 @@ rm -rf "$drawer_bad_dir"
 
 # Compiled settings SoT contracts
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" 'has("poll_intervals")|not' "compiled waybar-settings.json still has poll_intervals"
-waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '.bars.layer == "overlay" and .bars.tooltip == true' "expected bars.layer=overlay and tooltip=true in compiled settings"
+# layer=overlay favors KWin tooltips; layer=top lets fullscreen cover the bar.
+waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '(.bars.layer == "overlay" or .bars.layer == "top") and .bars.tooltip == true' "expected bars.layer overlay|top and tooltip=true in compiled settings"
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" '.module_intervals.network_bandwidth == 5' "expected module_intervals.network_bandwidth == 5"
 
 # jsonc overwrites json (SoT)

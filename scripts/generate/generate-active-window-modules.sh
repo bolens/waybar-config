@@ -27,7 +27,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
 
   {
     "custom/active-window": {
-      format: "{}",
+      format: "{text}",
       "return-type": "json",
       escape: true,
       exec: ($scripts + "/workspaces/active-window-scroll.sh" + out_arg),

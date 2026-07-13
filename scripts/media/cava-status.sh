@@ -13,6 +13,8 @@ case "$bars" in '' | *[!0-9]*) bars=8 ;; esac
 case "$framerate" in '' | *[!0-9]*) framerate=30 ;; esac
 if [ "$bars" -lt 4 ]; then bars=4; fi
 if [ "$bars" -gt 32 ]; then bars=32; fi
+# Cap engine rate — high framerate × dual outputs floods Waybar and kills tooltips.
+if [ "$framerate" -gt 12 ]; then framerate=12; fi
 
 cava_bin="${WAYBAR_CAVA_BIN:-cava}"
 
@@ -54,6 +56,11 @@ cava_pid=$!
 # ▁▂▃▄▅▆▇█
 dict="▁▂▃▄▅▆▇█"
 silent_streak=0
+# Cap Waybar JSON updates — continuous cava frames starve the GTK loop and kill
+# tooltips bar-wide (see Alexays/Waybar#3910 / #4909 / #3356).
+emit_min_ms=800
+last_emit_ms=0
+last_payload=""
 
 while IFS= read -r line; do
   [ -n "$line" ] || continue
@@ -69,10 +76,23 @@ while IFS= read -r line; do
     out="${out}${dict:v:1}"
   done
 
+  now_ms=$(date +%s%3N 2>/dev/null || echo 0)
+  case "$now_ms" in '' | *[!0-9]*) now_ms=0 ;; esac
+  if [ "$now_ms" -gt 0 ] && [ "$last_emit_ms" -gt 0 ] \
+    && [ $((now_ms - last_emit_ms)) -lt "$emit_min_ms" ]; then
+    continue
+  fi
+
   if [ "$all_zero" -eq 1 ]; then
     silent_streak=$((silent_streak + 1))
     # ~8 silent frames at configured framerate before hiding the module.
     if [ "$silent_streak" -ge 8 ]; then
+      payload='hidden'
+      if [ "$payload" = "$last_payload" ]; then
+        continue
+      fi
+      last_payload="$payload"
+      [ "$now_ms" -gt 0 ] && last_emit_ms=$now_ms
       emit_waybar_json "" "Cava (silent)" "hidden"
       continue
     fi
@@ -80,5 +100,11 @@ while IFS= read -r line; do
     silent_streak=0
   fi
 
+  payload="bars:$out"
+  if [ "$payload" = "$last_payload" ]; then
+    continue
+  fi
+  last_payload="$payload"
+  [ "$now_ms" -gt 0 ] && last_emit_ms=$now_ms
   emit_waybar_json "$out" "Audio visualizer" "normal"
 done <"$fifo"

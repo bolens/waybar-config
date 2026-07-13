@@ -63,7 +63,6 @@
     },
     "modules": [
       "custom/media-drawer",
-      "custom/cava",
       "custom/media-prev",
       "custom/album-art",
       "custom/mpris",

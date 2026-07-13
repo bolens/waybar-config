@@ -1,6 +1,6 @@
 {
   "custom/active-window": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "escape": true,
     "exec": "$WAYBAR_HOME/scripts/workspaces/active-window-scroll.sh \"$WAYBAR_OUTPUT_NAME\"",

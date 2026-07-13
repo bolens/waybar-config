@@ -478,13 +478,32 @@ dock_windows_ensure_runtime_css() {
       printf '    background-size: %spx %spx;\n' "$size" "$size"
       printf '    color: transparent;\n'
       printf '    text-shadow: none;\n'
-      printf '    font-size: 0;\n'
+      # No font-size:0 — preserves hover hitbox for Plasma tooltips.
+      printf '    padding: %spx;\n' "$pad"
+      printf '    min-width: %spx;\n' "$size"
+      printf '    min-height: %spx;\n' "$size"
+      printf '}\n'
+      first=1
+      for ((i = 0; i < slot_count; i++)); do
+        if [ "$first" -eq 1 ]; then
+          printf '#custom-dock-win-%s.appicon-%s label' "$i" "$app_key"
+          first=0
+        else
+          printf ',\n#custom-dock-win-%s.appicon-%s label' "$i" "$app_key"
+        fi
+      done
+      printf ' {\n'
       printf '    padding: %spx;\n' "$pad"
       printf '    min-width: %spx;\n' "$size"
       printf '    min-height: %spx;\n' "$size"
       printf '}\n'
     } >"${runtime}.tmp.$$"
-    mv -f "${runtime}.tmp.$$" "$runtime"
+    # Skip mv when unchanged — each rewrite triggers reload_style_on_change flicker.
+    if [ -f "$runtime" ] && cmp -s "${runtime}.tmp.$$" "$runtime"; then
+      rm -f "${runtime}.tmp.$$"
+    else
+      mv -f "${runtime}.tmp.$$" "$runtime"
+    fi
   ) 8>"$lock"
 }
 

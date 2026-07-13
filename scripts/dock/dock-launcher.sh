@@ -143,9 +143,12 @@ case "$action" in
     classes_extra=()
     dock_appicon_prepare || true
 
+    # Keep non-empty text for module visibility after CSS hot-reload.
+    # Use the real glyph (CSS color:transparent hides paint) so the label keeps
+    # a hover hitbox — ZWSP + font-size:0 collapses tooltips on Plasma.
     emit_text="${icon:-}"
     if [ "${#classes_extra[@]}" -gt 0 ]; then
-      emit_text=""
+      emit_text="$(waybar_appicon_emit_text "${icon:-}")"
     fi
 
     # Waybar applies class as one token unless it is a JSON array.

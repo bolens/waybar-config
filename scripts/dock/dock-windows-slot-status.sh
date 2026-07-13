@@ -129,7 +129,7 @@ dock_windows_appicon_prepare() {
     if waybar_appicon_materialize "$path" "$link_path" "$display_size"; then
       waybar_appicon_miss_clear "$app_key" || true
       if [ "$known" != 1 ]; then
-        url="dock-win-icons/${app_key}.png"
+        url="$(waybar_appicon_css_file_url "theme/dock-win-icons/${app_key}.png")"
         dock_windows_ensure_runtime_css "$app_key" "$url" "$display_size" "$pad" || true
       fi
     else
@@ -150,10 +150,17 @@ if [ "$focused" = "true" ]; then
   focus_class="dock-win-active"
 fi
 
-# When PNG class is present, omit glyph text so a missed CSS rule cannot flash a nerd icon.
+# Keep non-empty text when PNG class is set (module visibility + tooltip hitbox).
+# Prefer the real glyph; CSS color:transparent hides it without font-size:0.
 emit_text="$icon"
 if [ "${#classes_extra[@]}" -gt 0 ]; then
-  emit_text=""
+  if type waybar_appicon_emit_text >/dev/null 2>&1; then
+    emit_text="$(waybar_appicon_emit_text "$icon")"
+  elif [ -n "$icon" ]; then
+    emit_text="$icon"
+  else
+    emit_text=$'\u200b'
+  fi
 fi
 
 if [ "${#classes_extra[@]}" -gt 0 ]; then

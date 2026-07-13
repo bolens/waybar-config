@@ -105,7 +105,7 @@ Avoid drop-ins that override `ExecStart=` with an absolute `/home/…` path (tha
 
 ### Layer / tooltips (Plasma)
 
-`bars.layer` is **`overlay`** so KWin renders tooltips. Using `"top"` can fix fullscreen overlap but breaks tooltips on Plasma Wayland. Keep `bars.tooltip: true`.
+`bars.layer` is **`top`** so fullscreen apps cover the bar. Use `"overlay"` if you need KWin tooltips more reliably on Plasma Wayland (bar stays above fullscreen). Keep `bars.tooltip: true`.
 
 ### Hyprland / hyprwhspr
 
@@ -416,7 +416,7 @@ sudo dnf install jq curl ripgrep socat qt6-qttools wireplumber pipewire-pulse \
 | MPRIS / album art (`custom/mpris`, `custom/album-art`) | `playerctl` | `playerctl` | `playerctl` | Album art also needs `curl`; on by default — set `visual.album_art.enabled: false` to hide |
 | Scrolling titles (`zscroll`) | AUR `zscroll-git` | build from [upstream](https://github.com/noctuid/zscroll) | same | Optional polish for MPRIS / active-window |
 | Audio visualizer (`custom/cava`) | `cava` | `cava` | `cava` | Hides when binary missing or output silent. Config: `cava.bars` / `cava.framerate` |
-| Dock brand icons (`icons.appicon`) | [`bolens/appicon`](https://github.com/bolens/appicon) (`make install-appicon`) | same release tarball | same | Peer-optional like cava/zscroll: glyphs if missing; launch prefetches; dock uses `--offline` |
+| Dock brand icons (`icons.appicon`) | [`bolens/appicon`](https://github.com/bolens/appicon) (`make install-appicon`, pinned ≥ v0.2.1) | same release tarball | same | Peer-optional like cava/zscroll: glyphs if missing; launch batch-prefetches then materializes; dock ticks use `--offline` |
 | Mixer click fallbacks | `pavucontrol` / `pwvucontrol` / AUR `wiremix` | `pavucontrol` | `pavucontrol` | Used when `apps.audio_mixer` is unset |
 | Power profiles | `power-profiles-daemon` (`powerprofilesctl`) | `power-profiles-daemon` | `power-profiles-daemon` | |
 | Brightness | `brightnessctl` | `brightnessctl` | `brightnessctl` | |

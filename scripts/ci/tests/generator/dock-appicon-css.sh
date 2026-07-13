@@ -56,8 +56,37 @@ if ! grep -qE '^#custom-dock-[a-z0-9-]+,' "$css"; then
   echo "FAIL: expected shared #custom-dock-* layout rules without requiring .appicon" >&2
   exit 1
 fi
-if ! grep -q 'url("dock-appicons/browser.png")' "$css"; then
-  echo "FAIL: expected relative dock-appicons/browser.png CSS rule" >&2
+if ! grep -qE 'url\("file://.*/theme/dock-appicons/browser\.png"\)' "$css"; then
+  echo "FAIL: expected file://…/theme/dock-appicons/browser.png CSS rule (stable across style reload)" >&2
+  exit 1
+fi
+# Regression: relative urls break after reload_style_on_change — icons vanish until restart.
+if grep -E 'url\("dock-appicons/|url\("theme/dock-appicons/' "$css"; then
+  echo "FAIL: dock-appicons.generated.css must use file:// urls, not relative theme/dock-appicons/" >&2
+  exit 1
+fi
+if grep -E 'url\("dock-win-icons/|url\("theme/dock-win-icons/' "$css"; then
+  echo "FAIL: dock-appicons.generated.css must not use relative dock-win-icons/ urls" >&2
+  exit 1
+fi
+# Every background-image for PNGs must be absolute file:// under WAYBAR_HOME/theme/.
+while IFS= read -r u; do
+  [ -n "$u" ] || continue
+  case "$u" in
+    file://*/theme/dock-appicons/* | file://*/theme/dock-win-icons/*) ;;
+    *)
+      echo "FAIL: dock appicon CSS url must be file://…/theme/dock-*-icons/… (got: $u)" >&2
+      exit 1
+      ;;
+  esac
+done < <(grep -oE 'url\("[^"]+\.png"\)' "$css" | sed -E 's/^url\("//; s/"\)$//' || true)
+# Generators must emit file:// (catch source drift before regen).
+if ! grep -Fq 'waybar_appicon_css_file_url' "$ROOT_DIR/scripts/generate/generate-dock-appicon-css.sh"; then
+  echo "FAIL: generate-dock-appicon-css.sh must use waybar_appicon_css_file_url" >&2
+  exit 1
+fi
+if grep -nE "printf ['\"]theme/dock-appicons/|printf ['\"]dock-appicons/" "$ROOT_DIR/scripts/generate/generate-dock-appicon-css.sh"; then
+  echo "FAIL: generate-dock-appicon-css.sh still formats relative dock-appicons urls" >&2
   exit 1
 fi
 if ! grep -q '#custom-dock-browser.appicon:hover' "$css"; then
@@ -105,26 +134,158 @@ if ! grep -q 'appicon-browser' "$win_css"; then
   echo "FAIL: expected appicon-browser CSS when icons.appicon.enabled" >&2
   exit 1
 fi
-if ! grep -q 'url("dock-appicons/browser.png")' "$win_css"; then
-  echo "FAIL: expected dock-windows CSS to reuse relative dock-appicons/browser.png" >&2
+if ! grep -qE 'url\("file://.*/theme/dock-appicons/browser\.png"\)' "$win_css"; then
+  echo "FAIL: expected dock-windows CSS file://…/theme/dock-appicons/browser.png" >&2
   exit 1
 fi
+if grep -E 'url\("dock-appicons/|url\("theme/dock-appicons/|url\("dock-win-icons/|url\("theme/dock-win-icons/' "$win_css"; then
+  echo "FAIL: dock-windows.generated.css must use file:// urls, not relative dock-*-icons/" >&2
+  exit 1
+fi
+if ! grep -Fq 'waybar_appicon_css_file_url' "$ROOT_DIR/scripts/generate/generate-dock-windows-css.sh"; then
+  echo "FAIL: generate-dock-windows-css.sh must use waybar_appicon_css_file_url" >&2
+  exit 1
+fi
+if ! grep -Fq 'waybar_appicon_css_file_url' "$ROOT_DIR/scripts/dock/dock-windows-slot-status.sh"; then
+  echo "FAIL: dock-windows-slot-status.sh runtime CSS must use waybar_appicon_css_file_url" >&2
+  exit 1
+fi
+if ! grep -Fq 'waybar_appicon_emit_text' "$ROOT_DIR/scripts/dock/dock-launcher.sh"; then
+  echo "FAIL: dock-launcher must use waybar_appicon_emit_text (glyph hitbox for tooltips)" >&2
+  exit 1
+fi
+if ! grep -Fq 'waybar_appicon_emit_text' "$ROOT_DIR/scripts/dock/dock-windows-slot-status.sh"; then
+  echo "FAIL: dock-windows-slot-status must use waybar_appicon_emit_text" >&2
+  exit 1
+fi
+# Anti-pattern: empty text + .appicon vanishes after CSS hot-reload until waybar restart.
+if grep -nE 'emit_text=""' "$ROOT_DIR/scripts/dock/dock-launcher.sh" \
+  "$ROOT_DIR/scripts/dock/dock-windows-slot-status.sh"; then
+  echo "FAIL: dock status scripts must not clear emit_text to empty with .appicon" >&2
+  exit 1
+fi
+# Anti-pattern: font-size:0 collapses GtkLabel → Plasma tooltips stop working.
+if grep -nE 'font-size: 0' "$ROOT_DIR/scripts/generate/generate-dock-appicon-css.sh" \
+  "$ROOT_DIR/scripts/generate/generate-dock-windows-css.sh" \
+  "$ROOT_DIR/scripts/lib/dock-windows-kde-lib.sh"; then
+  echo "FAIL: dock appicon CSS must not set font-size:0 (breaks Plasma tooltips)" >&2
+  exit 1
+fi
+if grep -nE 'font-size: 0' "$css" "$win_css"; then
+  echo "FAIL: generated dock appicon CSS must not set font-size:0" >&2
+  exit 1
+fi
+# Plasma tooltip hitbox: .appicon must hide paint via color, keep metrics + box size.
+if ! awk '
+  /#custom-dock-browser\.appicon,/ { inblock=1; next }
+  inblock && /color: transparent/ { found_c=1 }
+  inblock && /font-size: 0/ { bad_fs=1 }
+  inblock && /padding:/ { found_pad=1 }
+  inblock && /^}/ {
+    exit (found_c && found_pad && !bad_fs) ? 0 : 1
+  }
+' "$css"; then
+  echo "FAIL: #custom-dock-browser.appicon must use color:transparent + padding, without font-size:0" >&2
+  exit 1
+fi
+# Shared layout min-width (even without .appicon) keeps a hover target.
+if ! grep -qE 'min-width: [0-9]+px' "$css"; then
+  echo "FAIL: dock-appicons CSS must set min-width for launcher hitbox" >&2
+  exit 1
+fi
+# Bottom-bar tooltip placement: vertical margins push popups off-screen (Waybar#3356).
+if grep -nE 'margin-top: [1-9]|margin-bottom: [1-9]' "$css"; then
+  echo "FAIL: dock-appicons CSS must not use vertical margins (breaks bottom tooltips)" >&2
+  exit 1
+fi
+if ! grep -qE 'color: transparent' "$css"; then
+  echo "FAIL: dock-appicons.generated.css must hide glyph paint with color:transparent" >&2
+  exit 1
+fi
+echo "PASS: Plasma tooltip hitbox CSS contract (no font-size:0; color:transparent)"
+if ! grep -qE '#custom-dock-browser\.appicon label' "$css"; then
+  echo "FAIL: dock-appicons CSS must expand GtkLabel hitbox (.appicon label)" >&2
+  exit 1
+fi
+if ! grep -Fq '"format": "{text}"' "$ROOT_DIR/scripts/generate/generate-dock-modules.sh"; then
+  echo "FAIL: dock modules must use format {text} (Waybar binds tooltips to GtkLabel)" >&2
+  exit 1
+fi
+if ! grep -Fq 'format: "{text}"' "$ROOT_DIR/scripts/generate/generate-active-window-modules.sh"; then
+  echo "FAIL: active-window must use format {text}" >&2
+  exit 1
+fi
+if ! grep -Fq 'hide-empty-text' "$ROOT_DIR/scripts/generate/generate-dock-modules.sh"; then
+  echo "FAIL: generate-dock-modules.sh must set hide-empty-text false" >&2
+  exit 1
+fi
+# Generated module JSON must keep dock launchers visible when placeholder/CSS race.
+dock_mods="$TEST_DIR/modules/dock.generated.jsonc"
+if [ ! -f "$dock_mods" ]; then
+  echo "FAIL: dock.generated.jsonc missing after generate" >&2
+  exit 1
+fi
+if ! jq -e '
+  to_entries
+  | map(select(.key | startswith("custom/dock-")))
+  | length > 0
+  and all(.[]; .value["hide-empty-text"] == false)
+' "$dock_mods" >/dev/null; then
+  echo "FAIL: every custom/dock-* module must set hide-empty-text=false (got $(
+    jq -c '[to_entries[] | select(.key|startswith("custom/dock-")) | {(.key): .value["hide-empty-text"]}]' "$dock_mods" 2>/dev/null
+  ))" >&2
+  exit 1
+fi
+if ! jq -e '
+  to_entries
+  | map(select(.key | startswith("custom/dock-")))
+  | length > 0
+  and all(.[]; .value.tooltip == true)
+' "$dock_mods" >/dev/null; then
+  echo "FAIL: every custom/dock-* module must set tooltip=true" >&2
+  exit 1
+fi
+echo "PASS: dock modules enable tooltip=true and hide-empty-text=false"
+# Lib contracts used by generators + status scripts.
+# shellcheck source=../../../lib/appicon-lib.sh
+. "$ROOT_DIR/scripts/lib/appicon-lib.sh"
+zwsp="$(waybar_appicon_placeholder_text)"
+if [ "${#zwsp}" -ne 1 ] || [ "$zwsp" != $'\u200b' ]; then
+  echo "FAIL: waybar_appicon_placeholder_text must be U+200B (got len=${#zwsp})" >&2
+  exit 1
+fi
+if [ "$(waybar_appicon_emit_text '󰈹')" != '󰈹' ]; then
+  echo "FAIL: waybar_appicon_emit_text should prefer the real glyph" >&2
+  exit 1
+fi
+if [ "$(waybar_appicon_emit_text '')" != "$zwsp" ]; then
+  echo "FAIL: waybar_appicon_emit_text should fall back to ZWSP when icon empty" >&2
+  exit 1
+fi
+file_url="$(WAYBAR_HOME=/tmp/waybar-home waybar_appicon_css_file_url 'theme/dock-appicons/browser.png')"
+case "$file_url" in
+  file:///tmp/waybar-home/theme/dock-appicons/browser.png) ;;
+  *)
+    echo "FAIL: waybar_appicon_css_file_url shape (got: $file_url)" >&2
+    exit 1
+    ;;
+esac
 if grep -q 'dock-win-icons/slot-0' "$win_css"; then
   echo "FAIL: dock-windows must not use per-slot PNG URLs (multi-output race)" >&2
   exit 1
 fi
-# Glyph flash guard: generic .appicon hides nerd glyphs before/without per-app PNG rules.
-if ! grep -Fq 'Hide glyph text whenever .appicon is set' "$win_css"; then
+# Glyph paint guard: generic .appicon hides paint (not font metrics) for tooltip hitbox.
+if ! grep -Fq 'Hide glyph paint whenever .appicon is set' "$win_css"; then
   echo "FAIL: dock-windows CSS must include generic .appicon glyph-hide rule" >&2
   exit 1
 fi
 if ! awk '
-  /Hide glyph text whenever \.appicon is set/ { inblock=1; next }
-  inblock && /font-size: 0/ { found_fs=1 }
+  /Hide glyph paint whenever \.appicon is set/ { inblock=1; next }
   inblock && /color: transparent/ { found_c=1 }
-  inblock && /^}/ { exit !(found_fs && found_c) }
+  inblock && /font-size: 0/ { bad_fs=1 }
+  inblock && /^}/ { exit (found_c && !bad_fs) ? 0 : 1 }
 ' "$win_css"; then
-  echo "FAIL: generic .appicon rule must set font-size:0 and color:transparent" >&2
+  echo "FAIL: generic .appicon rule must set color:transparent and must NOT set font-size:0" >&2
   exit 1
 fi
 if ! grep -q ':not(\.appicon)' "$TEST_DIR/theme/semantic-colors.generated.css"; then

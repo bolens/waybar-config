@@ -6,6 +6,7 @@ set -euo pipefail
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+. "$WAYBAR_SCRIPTS/lib/appicon-lib.sh"
 settings="$WAYBAR_HOME/data/waybar-settings.json"
 manifest="$WAYBAR_HOME/data/dock-apps.json"
 out="$WAYBAR_HOME/theme/dock-appicons.generated.css"
@@ -43,8 +44,8 @@ fi
 
 css_url_for() {
   local id="$1"
-  # Relative to theme/*.css (same dir as dock-appicons/) — portable across hosts/CI.
-  printf 'dock-appicons/%s.png' "$id"
+  # file:// absolute — GTK hot style reload drops relative background-image.
+  waybar_appicon_css_file_url "theme/dock-appicons/${id}.png"
 }
 
 mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
@@ -67,9 +68,10 @@ mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
   done
   printf ' {\n'
   # Equal padding so running/hover box-shadow is not clipped at the widget edge (GTK).
+  # No vertical margin: Waybar#3356 — bottom-bar vertical margins push tooltips off-screen.
   printf '    padding: %spx;\n' "$pad"
-  printf '    margin-top: 4px;\n'
-  printf '    margin-bottom: 4px;\n'
+  printf '    margin-top: 0;\n'
+  printf '    margin-bottom: 0;\n'
   printf '    margin-left: 0;\n'
   printf '    margin-right: %spx;\n' "$gap"
   printf '    min-width: %spx;\n' "$size"
@@ -97,7 +99,8 @@ mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
     printf '    background-size: %spx %spx;\n' "$size" "$size"
     printf '    color: transparent;\n'
     printf '    text-shadow: none;\n'
-    printf '    font-size: 0;\n'
+    # Do NOT set font-size:0 — that collapses the GtkLabel hitbox and Plasma
+    # tooltips stop working. Keep the glyph (transparent) for layout/hover.
     printf '    padding: %spx;\n' "$pad"
     printf '    margin-right: %spx;\n' "$gap"
     printf '}\n'
@@ -110,4 +113,22 @@ mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
     printf '    box-shadow: 0 0 %spx rgba(0, 229, 255, 0.7);\n' "$pad"
     printf '}\n\n'
   done
+
+  # Waybar binds tooltips to the GtkLabel child, not the padded module box (#custom-dock-*).
+  # Without label padding/min-size, hover over the PNG tile misses the label → no tooltip.
+  first=1
+  for id in "${app_ids[@]}"; do
+    [ -n "$id" ] || continue
+    if [ "$first" -eq 1 ]; then
+      printf '#custom-dock-%s.appicon label' "$id"
+      first=0
+    else
+      printf ',\n#custom-dock-%s.appicon label' "$id"
+    fi
+  done
+  printf ' {\n'
+  printf '    padding: %spx;\n' "$pad"
+  printf '    min-width: %spx;\n' "$size"
+  printf '    min-height: %spx;\n' "$size"
+  printf '}\n'
 } >"$out"

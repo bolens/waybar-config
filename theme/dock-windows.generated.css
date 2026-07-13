@@ -89,7 +89,8 @@
     min-width: 0;
 }
 
-/* Hide glyph text whenever .appicon is set (PNG may load a tick later). */
+/* Hide glyph paint whenever .appicon is set (PNG may load a tick later).
+ * Keep font metrics — font-size:0 collapses the label and breaks Plasma tooltips. */
 #custom-dock-win-0.appicon,
 #custom-dock-win-1.appicon,
 #custom-dock-win-2.appicon,
@@ -104,7 +105,24 @@
 #custom-dock-win-11.appicon {
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+}
+
+/* Tooltips attach to the GtkLabel child — match the icon tile hitbox. */
+#custom-dock-win-0.appicon,
+#custom-dock-win-1.appicon,
+#custom-dock-win-2.appicon,
+#custom-dock-win-3.appicon,
+#custom-dock-win-4.appicon,
+#custom-dock-win-5.appicon,
+#custom-dock-win-6.appicon,
+#custom-dock-win-7.appicon,
+#custom-dock-win-8.appicon,
+#custom-dock-win-9.appicon,
+#custom-dock-win-10.appicon,
+#custom-dock-win-11.appicon label {
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
 }
 
 /* icons.appicon: per-app PNGs (shared across outputs; class appicon-<id>) */
@@ -120,14 +138,29 @@
 #custom-dock-win-9.appicon-anyrun,
 #custom-dock-win-10.appicon-anyrun,
 #custom-dock-win-11.appicon-anyrun {
-    background-image: url("dock-appicons/anyrun.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/anyrun.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-anyrun label,
+#custom-dock-win-1.appicon-anyrun label,
+#custom-dock-win-2.appicon-anyrun label,
+#custom-dock-win-3.appicon-anyrun label,
+#custom-dock-win-4.appicon-anyrun label,
+#custom-dock-win-5.appicon-anyrun label,
+#custom-dock-win-6.appicon-anyrun label,
+#custom-dock-win-7.appicon-anyrun label,
+#custom-dock-win-8.appicon-anyrun label,
+#custom-dock-win-9.appicon-anyrun label,
+#custom-dock-win-10.appicon-anyrun label,
+#custom-dock-win-11.appicon-anyrun label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -145,7 +178,7 @@
 #custom-dock-win-10.appicon-anyrun:hover,
 #custom-dock-win-11.appicon-anyrun:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/anyrun.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/anyrun.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-anyrun.dock-win-active,
@@ -161,7 +194,7 @@
 #custom-dock-win-10.appicon-anyrun.dock-win-active,
 #custom-dock-win-11.appicon-anyrun.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/anyrun.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/anyrun.png");
     color: transparent;
     text-shadow: none;
 }
@@ -178,14 +211,29 @@
 #custom-dock-win-9.appicon-browser,
 #custom-dock-win-10.appicon-browser,
 #custom-dock-win-11.appicon-browser {
-    background-image: url("dock-appicons/browser.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/browser.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-browser label,
+#custom-dock-win-1.appicon-browser label,
+#custom-dock-win-2.appicon-browser label,
+#custom-dock-win-3.appicon-browser label,
+#custom-dock-win-4.appicon-browser label,
+#custom-dock-win-5.appicon-browser label,
+#custom-dock-win-6.appicon-browser label,
+#custom-dock-win-7.appicon-browser label,
+#custom-dock-win-8.appicon-browser label,
+#custom-dock-win-9.appicon-browser label,
+#custom-dock-win-10.appicon-browser label,
+#custom-dock-win-11.appicon-browser label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -203,7 +251,7 @@
 #custom-dock-win-10.appicon-browser:hover,
 #custom-dock-win-11.appicon-browser:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/browser.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/browser.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-browser.dock-win-active,
@@ -219,7 +267,7 @@
 #custom-dock-win-10.appicon-browser.dock-win-active,
 #custom-dock-win-11.appicon-browser.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/browser.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/browser.png");
     color: transparent;
     text-shadow: none;
 }
@@ -236,14 +284,29 @@
 #custom-dock-win-9.appicon-cursor,
 #custom-dock-win-10.appicon-cursor,
 #custom-dock-win-11.appicon-cursor {
-    background-image: url("dock-appicons/cursor.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/cursor.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-cursor label,
+#custom-dock-win-1.appicon-cursor label,
+#custom-dock-win-2.appicon-cursor label,
+#custom-dock-win-3.appicon-cursor label,
+#custom-dock-win-4.appicon-cursor label,
+#custom-dock-win-5.appicon-cursor label,
+#custom-dock-win-6.appicon-cursor label,
+#custom-dock-win-7.appicon-cursor label,
+#custom-dock-win-8.appicon-cursor label,
+#custom-dock-win-9.appicon-cursor label,
+#custom-dock-win-10.appicon-cursor label,
+#custom-dock-win-11.appicon-cursor label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -261,7 +324,7 @@
 #custom-dock-win-10.appicon-cursor:hover,
 #custom-dock-win-11.appicon-cursor:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/cursor.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/cursor.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-cursor.dock-win-active,
@@ -277,7 +340,7 @@
 #custom-dock-win-10.appicon-cursor.dock-win-active,
 #custom-dock-win-11.appicon-cursor.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/cursor.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/cursor.png");
     color: transparent;
     text-shadow: none;
 }
@@ -294,14 +357,29 @@
 #custom-dock-win-9.appicon-discord,
 #custom-dock-win-10.appicon-discord,
 #custom-dock-win-11.appicon-discord {
-    background-image: url("dock-appicons/discord.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/discord.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-discord label,
+#custom-dock-win-1.appicon-discord label,
+#custom-dock-win-2.appicon-discord label,
+#custom-dock-win-3.appicon-discord label,
+#custom-dock-win-4.appicon-discord label,
+#custom-dock-win-5.appicon-discord label,
+#custom-dock-win-6.appicon-discord label,
+#custom-dock-win-7.appicon-discord label,
+#custom-dock-win-8.appicon-discord label,
+#custom-dock-win-9.appicon-discord label,
+#custom-dock-win-10.appicon-discord label,
+#custom-dock-win-11.appicon-discord label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -319,7 +397,7 @@
 #custom-dock-win-10.appicon-discord:hover,
 #custom-dock-win-11.appicon-discord:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/discord.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/discord.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-discord.dock-win-active,
@@ -335,7 +413,7 @@
 #custom-dock-win-10.appicon-discord.dock-win-active,
 #custom-dock-win-11.appicon-discord.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/discord.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/discord.png");
     color: transparent;
     text-shadow: none;
 }
@@ -352,14 +430,29 @@
 #custom-dock-win-9.appicon-files,
 #custom-dock-win-10.appicon-files,
 #custom-dock-win-11.appicon-files {
-    background-image: url("dock-appicons/files.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/files.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-files label,
+#custom-dock-win-1.appicon-files label,
+#custom-dock-win-2.appicon-files label,
+#custom-dock-win-3.appicon-files label,
+#custom-dock-win-4.appicon-files label,
+#custom-dock-win-5.appicon-files label,
+#custom-dock-win-6.appicon-files label,
+#custom-dock-win-7.appicon-files label,
+#custom-dock-win-8.appicon-files label,
+#custom-dock-win-9.appicon-files label,
+#custom-dock-win-10.appicon-files label,
+#custom-dock-win-11.appicon-files label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -377,7 +470,7 @@
 #custom-dock-win-10.appicon-files:hover,
 #custom-dock-win-11.appicon-files:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/files.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/files.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-files.dock-win-active,
@@ -393,7 +486,7 @@
 #custom-dock-win-10.appicon-files.dock-win-active,
 #custom-dock-win-11.appicon-files.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/files.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/files.png");
     color: transparent;
     text-shadow: none;
 }
@@ -410,14 +503,29 @@
 #custom-dock-win-9.appicon-floorp,
 #custom-dock-win-10.appicon-floorp,
 #custom-dock-win-11.appicon-floorp {
-    background-image: url("dock-appicons/floorp.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/floorp.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-floorp label,
+#custom-dock-win-1.appicon-floorp label,
+#custom-dock-win-2.appicon-floorp label,
+#custom-dock-win-3.appicon-floorp label,
+#custom-dock-win-4.appicon-floorp label,
+#custom-dock-win-5.appicon-floorp label,
+#custom-dock-win-6.appicon-floorp label,
+#custom-dock-win-7.appicon-floorp label,
+#custom-dock-win-8.appicon-floorp label,
+#custom-dock-win-9.appicon-floorp label,
+#custom-dock-win-10.appicon-floorp label,
+#custom-dock-win-11.appicon-floorp label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -435,7 +543,7 @@
 #custom-dock-win-10.appicon-floorp:hover,
 #custom-dock-win-11.appicon-floorp:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/floorp.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/floorp.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-floorp.dock-win-active,
@@ -451,7 +559,7 @@
 #custom-dock-win-10.appicon-floorp.dock-win-active,
 #custom-dock-win-11.appicon-floorp.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/floorp.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/floorp.png");
     color: transparent;
     text-shadow: none;
 }
@@ -468,14 +576,29 @@
 #custom-dock-win-9.appicon-helium,
 #custom-dock-win-10.appicon-helium,
 #custom-dock-win-11.appicon-helium {
-    background-image: url("dock-appicons/helium.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/helium.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-helium label,
+#custom-dock-win-1.appicon-helium label,
+#custom-dock-win-2.appicon-helium label,
+#custom-dock-win-3.appicon-helium label,
+#custom-dock-win-4.appicon-helium label,
+#custom-dock-win-5.appicon-helium label,
+#custom-dock-win-6.appicon-helium label,
+#custom-dock-win-7.appicon-helium label,
+#custom-dock-win-8.appicon-helium label,
+#custom-dock-win-9.appicon-helium label,
+#custom-dock-win-10.appicon-helium label,
+#custom-dock-win-11.appicon-helium label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -493,7 +616,7 @@
 #custom-dock-win-10.appicon-helium:hover,
 #custom-dock-win-11.appicon-helium:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/helium.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/helium.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-helium.dock-win-active,
@@ -509,7 +632,7 @@
 #custom-dock-win-10.appicon-helium.dock-win-active,
 #custom-dock-win-11.appicon-helium.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/helium.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/helium.png");
     color: transparent;
     text-shadow: none;
 }
@@ -526,14 +649,29 @@
 #custom-dock-win-9.appicon-heroic,
 #custom-dock-win-10.appicon-heroic,
 #custom-dock-win-11.appicon-heroic {
-    background-image: url("dock-appicons/heroic.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/heroic.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-heroic label,
+#custom-dock-win-1.appicon-heroic label,
+#custom-dock-win-2.appicon-heroic label,
+#custom-dock-win-3.appicon-heroic label,
+#custom-dock-win-4.appicon-heroic label,
+#custom-dock-win-5.appicon-heroic label,
+#custom-dock-win-6.appicon-heroic label,
+#custom-dock-win-7.appicon-heroic label,
+#custom-dock-win-8.appicon-heroic label,
+#custom-dock-win-9.appicon-heroic label,
+#custom-dock-win-10.appicon-heroic label,
+#custom-dock-win-11.appicon-heroic label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -551,7 +689,7 @@
 #custom-dock-win-10.appicon-heroic:hover,
 #custom-dock-win-11.appicon-heroic:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/heroic.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/heroic.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-heroic.dock-win-active,
@@ -567,7 +705,7 @@
 #custom-dock-win-10.appicon-heroic.dock-win-active,
 #custom-dock-win-11.appicon-heroic.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/heroic.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/heroic.png");
     color: transparent;
     text-shadow: none;
 }
@@ -584,14 +722,29 @@
 #custom-dock-win-9.appicon-kitty,
 #custom-dock-win-10.appicon-kitty,
 #custom-dock-win-11.appicon-kitty {
-    background-image: url("dock-appicons/kitty.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/kitty.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-kitty label,
+#custom-dock-win-1.appicon-kitty label,
+#custom-dock-win-2.appicon-kitty label,
+#custom-dock-win-3.appicon-kitty label,
+#custom-dock-win-4.appicon-kitty label,
+#custom-dock-win-5.appicon-kitty label,
+#custom-dock-win-6.appicon-kitty label,
+#custom-dock-win-7.appicon-kitty label,
+#custom-dock-win-8.appicon-kitty label,
+#custom-dock-win-9.appicon-kitty label,
+#custom-dock-win-10.appicon-kitty label,
+#custom-dock-win-11.appicon-kitty label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -609,7 +762,7 @@
 #custom-dock-win-10.appicon-kitty:hover,
 #custom-dock-win-11.appicon-kitty:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/kitty.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/kitty.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-kitty.dock-win-active,
@@ -625,7 +778,7 @@
 #custom-dock-win-10.appicon-kitty.dock-win-active,
 #custom-dock-win-11.appicon-kitty.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/kitty.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/kitty.png");
     color: transparent;
     text-shadow: none;
 }
@@ -642,14 +795,29 @@
 #custom-dock-win-9.appicon-krita,
 #custom-dock-win-10.appicon-krita,
 #custom-dock-win-11.appicon-krita {
-    background-image: url("dock-appicons/krita.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/krita.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-krita label,
+#custom-dock-win-1.appicon-krita label,
+#custom-dock-win-2.appicon-krita label,
+#custom-dock-win-3.appicon-krita label,
+#custom-dock-win-4.appicon-krita label,
+#custom-dock-win-5.appicon-krita label,
+#custom-dock-win-6.appicon-krita label,
+#custom-dock-win-7.appicon-krita label,
+#custom-dock-win-8.appicon-krita label,
+#custom-dock-win-9.appicon-krita label,
+#custom-dock-win-10.appicon-krita label,
+#custom-dock-win-11.appicon-krita label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -667,7 +835,7 @@
 #custom-dock-win-10.appicon-krita:hover,
 #custom-dock-win-11.appicon-krita:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/krita.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/krita.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-krita.dock-win-active,
@@ -683,7 +851,7 @@
 #custom-dock-win-10.appicon-krita.dock-win-active,
 #custom-dock-win-11.appicon-krita.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/krita.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/krita.png");
     color: transparent;
     text-shadow: none;
 }
@@ -700,14 +868,29 @@
 #custom-dock-win-9.appicon-lutris,
 #custom-dock-win-10.appicon-lutris,
 #custom-dock-win-11.appicon-lutris {
-    background-image: url("dock-appicons/lutris.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/lutris.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-lutris label,
+#custom-dock-win-1.appicon-lutris label,
+#custom-dock-win-2.appicon-lutris label,
+#custom-dock-win-3.appicon-lutris label,
+#custom-dock-win-4.appicon-lutris label,
+#custom-dock-win-5.appicon-lutris label,
+#custom-dock-win-6.appicon-lutris label,
+#custom-dock-win-7.appicon-lutris label,
+#custom-dock-win-8.appicon-lutris label,
+#custom-dock-win-9.appicon-lutris label,
+#custom-dock-win-10.appicon-lutris label,
+#custom-dock-win-11.appicon-lutris label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -725,7 +908,7 @@
 #custom-dock-win-10.appicon-lutris:hover,
 #custom-dock-win-11.appicon-lutris:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/lutris.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/lutris.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-lutris.dock-win-active,
@@ -741,7 +924,7 @@
 #custom-dock-win-10.appicon-lutris.dock-win-active,
 #custom-dock-win-11.appicon-lutris.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/lutris.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/lutris.png");
     color: transparent;
     text-shadow: none;
 }
@@ -758,14 +941,29 @@
 #custom-dock-win-9.appicon-obsidian,
 #custom-dock-win-10.appicon-obsidian,
 #custom-dock-win-11.appicon-obsidian {
-    background-image: url("dock-appicons/obsidian.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/obsidian.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-obsidian label,
+#custom-dock-win-1.appicon-obsidian label,
+#custom-dock-win-2.appicon-obsidian label,
+#custom-dock-win-3.appicon-obsidian label,
+#custom-dock-win-4.appicon-obsidian label,
+#custom-dock-win-5.appicon-obsidian label,
+#custom-dock-win-6.appicon-obsidian label,
+#custom-dock-win-7.appicon-obsidian label,
+#custom-dock-win-8.appicon-obsidian label,
+#custom-dock-win-9.appicon-obsidian label,
+#custom-dock-win-10.appicon-obsidian label,
+#custom-dock-win-11.appicon-obsidian label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -783,7 +981,7 @@
 #custom-dock-win-10.appicon-obsidian:hover,
 #custom-dock-win-11.appicon-obsidian:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/obsidian.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/obsidian.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-obsidian.dock-win-active,
@@ -799,7 +997,7 @@
 #custom-dock-win-10.appicon-obsidian.dock-win-active,
 #custom-dock-win-11.appicon-obsidian.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/obsidian.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/obsidian.png");
     color: transparent;
     text-shadow: none;
 }
@@ -816,14 +1014,29 @@
 #custom-dock-win-9.appicon-orcaslicer,
 #custom-dock-win-10.appicon-orcaslicer,
 #custom-dock-win-11.appicon-orcaslicer {
-    background-image: url("dock-appicons/orcaslicer.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/orcaslicer.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-orcaslicer label,
+#custom-dock-win-1.appicon-orcaslicer label,
+#custom-dock-win-2.appicon-orcaslicer label,
+#custom-dock-win-3.appicon-orcaslicer label,
+#custom-dock-win-4.appicon-orcaslicer label,
+#custom-dock-win-5.appicon-orcaslicer label,
+#custom-dock-win-6.appicon-orcaslicer label,
+#custom-dock-win-7.appicon-orcaslicer label,
+#custom-dock-win-8.appicon-orcaslicer label,
+#custom-dock-win-9.appicon-orcaslicer label,
+#custom-dock-win-10.appicon-orcaslicer label,
+#custom-dock-win-11.appicon-orcaslicer label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -841,7 +1054,7 @@
 #custom-dock-win-10.appicon-orcaslicer:hover,
 #custom-dock-win-11.appicon-orcaslicer:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/orcaslicer.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/orcaslicer.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-orcaslicer.dock-win-active,
@@ -857,7 +1070,7 @@
 #custom-dock-win-10.appicon-orcaslicer.dock-win-active,
 #custom-dock-win-11.appicon-orcaslicer.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/orcaslicer.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/orcaslicer.png");
     color: transparent;
     text-shadow: none;
 }
@@ -874,14 +1087,29 @@
 #custom-dock-win-9.appicon-pear,
 #custom-dock-win-10.appicon-pear,
 #custom-dock-win-11.appicon-pear {
-    background-image: url("dock-appicons/pear.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/pear.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-pear label,
+#custom-dock-win-1.appicon-pear label,
+#custom-dock-win-2.appicon-pear label,
+#custom-dock-win-3.appicon-pear label,
+#custom-dock-win-4.appicon-pear label,
+#custom-dock-win-5.appicon-pear label,
+#custom-dock-win-6.appicon-pear label,
+#custom-dock-win-7.appicon-pear label,
+#custom-dock-win-8.appicon-pear label,
+#custom-dock-win-9.appicon-pear label,
+#custom-dock-win-10.appicon-pear label,
+#custom-dock-win-11.appicon-pear label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -899,7 +1127,7 @@
 #custom-dock-win-10.appicon-pear:hover,
 #custom-dock-win-11.appicon-pear:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/pear.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/pear.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-pear.dock-win-active,
@@ -915,7 +1143,7 @@
 #custom-dock-win-10.appicon-pear.dock-win-active,
 #custom-dock-win-11.appicon-pear.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/pear.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/pear.png");
     color: transparent;
     text-shadow: none;
 }
@@ -932,14 +1160,29 @@
 #custom-dock-win-9.appicon-steam,
 #custom-dock-win-10.appicon-steam,
 #custom-dock-win-11.appicon-steam {
-    background-image: url("dock-appicons/steam.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/steam.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-steam label,
+#custom-dock-win-1.appicon-steam label,
+#custom-dock-win-2.appicon-steam label,
+#custom-dock-win-3.appicon-steam label,
+#custom-dock-win-4.appicon-steam label,
+#custom-dock-win-5.appicon-steam label,
+#custom-dock-win-6.appicon-steam label,
+#custom-dock-win-7.appicon-steam label,
+#custom-dock-win-8.appicon-steam label,
+#custom-dock-win-9.appicon-steam label,
+#custom-dock-win-10.appicon-steam label,
+#custom-dock-win-11.appicon-steam label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -957,7 +1200,7 @@
 #custom-dock-win-10.appicon-steam:hover,
 #custom-dock-win-11.appicon-steam:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/steam.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/steam.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-steam.dock-win-active,
@@ -973,7 +1216,7 @@
 #custom-dock-win-10.appicon-steam.dock-win-active,
 #custom-dock-win-11.appicon-steam.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/steam.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/steam.png");
     color: transparent;
     text-shadow: none;
 }
@@ -990,14 +1233,29 @@
 #custom-dock-win-9.appicon-terminal,
 #custom-dock-win-10.appicon-terminal,
 #custom-dock-win-11.appicon-terminal {
-    background-image: url("dock-appicons/terminal.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/terminal.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-terminal label,
+#custom-dock-win-1.appicon-terminal label,
+#custom-dock-win-2.appicon-terminal label,
+#custom-dock-win-3.appicon-terminal label,
+#custom-dock-win-4.appicon-terminal label,
+#custom-dock-win-5.appicon-terminal label,
+#custom-dock-win-6.appicon-terminal label,
+#custom-dock-win-7.appicon-terminal label,
+#custom-dock-win-8.appicon-terminal label,
+#custom-dock-win-9.appicon-terminal label,
+#custom-dock-win-10.appicon-terminal label,
+#custom-dock-win-11.appicon-terminal label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -1015,7 +1273,7 @@
 #custom-dock-win-10.appicon-terminal:hover,
 #custom-dock-win-11.appicon-terminal:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/terminal.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/terminal.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-terminal.dock-win-active,
@@ -1031,7 +1289,7 @@
 #custom-dock-win-10.appicon-terminal.dock-win-active,
 #custom-dock-win-11.appicon-terminal.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/terminal.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/terminal.png");
     color: transparent;
     text-shadow: none;
 }
@@ -1048,14 +1306,29 @@
 #custom-dock-win-9.appicon-vscode,
 #custom-dock-win-10.appicon-vscode,
 #custom-dock-win-11.appicon-vscode {
-    background-image: url("dock-appicons/vscode.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/vscode.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-vscode label,
+#custom-dock-win-1.appicon-vscode label,
+#custom-dock-win-2.appicon-vscode label,
+#custom-dock-win-3.appicon-vscode label,
+#custom-dock-win-4.appicon-vscode label,
+#custom-dock-win-5.appicon-vscode label,
+#custom-dock-win-6.appicon-vscode label,
+#custom-dock-win-7.appicon-vscode label,
+#custom-dock-win-8.appicon-vscode label,
+#custom-dock-win-9.appicon-vscode label,
+#custom-dock-win-10.appicon-vscode label,
+#custom-dock-win-11.appicon-vscode label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -1073,7 +1346,7 @@
 #custom-dock-win-10.appicon-vscode:hover,
 #custom-dock-win-11.appicon-vscode:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/vscode.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/vscode.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-vscode.dock-win-active,
@@ -1089,7 +1362,7 @@
 #custom-dock-win-10.appicon-vscode.dock-win-active,
 #custom-dock-win-11.appicon-vscode.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/vscode.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/vscode.png");
     color: transparent;
     text-shadow: none;
 }
@@ -1106,14 +1379,29 @@
 #custom-dock-win-9.appicon-zed,
 #custom-dock-win-10.appicon-zed,
 #custom-dock-win-11.appicon-zed {
-    background-image: url("dock-appicons/zed.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/zed.png");
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 18px 18px;
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+    padding: 8px;
+    min-width: 18px;
+    min-height: 18px;
+}
+#custom-dock-win-0.appicon-zed label,
+#custom-dock-win-1.appicon-zed label,
+#custom-dock-win-2.appicon-zed label,
+#custom-dock-win-3.appicon-zed label,
+#custom-dock-win-4.appicon-zed label,
+#custom-dock-win-5.appicon-zed label,
+#custom-dock-win-6.appicon-zed label,
+#custom-dock-win-7.appicon-zed label,
+#custom-dock-win-8.appicon-zed label,
+#custom-dock-win-9.appicon-zed label,
+#custom-dock-win-10.appicon-zed label,
+#custom-dock-win-11.appicon-zed label {
     padding: 8px;
     min-width: 18px;
     min-height: 18px;
@@ -1131,7 +1419,7 @@
 #custom-dock-win-10.appicon-zed:hover,
 #custom-dock-win-11.appicon-zed:hover {
     background-color: rgba(0, 229, 255, 0.10);
-    background-image: url("dock-appicons/zed.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/zed.png");
     color: transparent;
 }
 #custom-dock-win-0.appicon-zed.dock-win-active,
@@ -1147,7 +1435,7 @@
 #custom-dock-win-10.appicon-zed.dock-win-active,
 #custom-dock-win-11.appicon-zed.dock-win-active {
     background-color: rgba(255, 42, 127, 0.14);
-    background-image: url("dock-appicons/zed.png");
+    background-image: url("file:///home/panda/.config/waybar/theme/dock-appicons/zed.png");
     color: transparent;
     text-shadow: none;
 }

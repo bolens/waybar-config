@@ -3,10 +3,10 @@
 # Used by the dock CSS proof — Waybar only shells out to `appicon resolve`.
 set -euo pipefail
 
-APPICON_VERSION="${APPICON_VERSION:-v0.1.1}"
-# SHA256 of release archives (from https://github.com/bolens/appicon/releases).
-APPICON_SHA256_AMD64="${APPICON_SHA256_AMD64:-4332b2e33bc39c095fd1455345717f53bcedde5a69d60fc4991674ce2ae43a25}"
-APPICON_SHA256_ARM64="${APPICON_SHA256_ARM64:-17af174714398ad772dac116be2bb214e405daafde8348b135f3e62cbafdcf27}"
+APPICON_VERSION="${APPICON_VERSION:-v0.2.1}"
+# SHA256 of release archives (from https://github.com/bolens/appicon/releases SHA256SUMS).
+APPICON_SHA256_AMD64="${APPICON_SHA256_AMD64:-5bb3f1394a10017298de0061dc26fe223dc30de18bd374b4437967d91b75b45a}"
+APPICON_SHA256_ARM64="${APPICON_SHA256_ARM64:-4c7dcae41158aec643e92e525d36bbc7bcef369dea8d0c35f78eb48a132f6fa8}"
 
 DEST_DIR="${APPICON_INSTALL_DIR:-${HOME}/.local/bin}"
 REPO="${APPICON_REPO:-bolens/appicon}"

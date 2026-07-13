@@ -97,7 +97,8 @@ waybar_appicon_miss_mark() {
   [ -n "$key" ] || return 0
   dir="$(waybar_appicon_miss_dir)"
   mkdir -p "$dir" 2>/dev/null || return 0
-  : >"${dir}/${key}" 2>/dev/null || true
+  # Redirect stderr first so a non-writable stamp path stays silent.
+  { : >"${dir}/${key}"; } 2>/dev/null || true
 }
 
 # Return 0 when a recent miss stamp exists (skip resolve). TTL default 300s.
@@ -114,6 +115,7 @@ waybar_appicon_miss_fresh() {
 
 # Resolve a PNG path via appicon. mode=offline (default, hot path) or online (prefetch).
 # Prints absolute path on success. Uses appicon's XDG cache; offline never hits the network.
+# Exit 1 from appicon is a supported miss — callers keep glyphs / skip CSS.
 waybar_appicon_resolve() {
   local query="$1" size="$2" theme="$3" mode="${4:-offline}"
   local bin path
@@ -126,11 +128,40 @@ waybar_appicon_resolve() {
   else
     path="$("$bin" resolve --offline --format png --size "$size" --theme "$theme" "$query" 2>/dev/null || true)"
   fi
+  # Plain resolve may print a path; ignore non-file stdout (hints / noise).
+  path="$(printf '%s\n' "$path" | awk 'NF{print; exit}')"
   if [ -n "$path" ] && [ -f "$path" ]; then
     printf '%s\n' "$path"
     return 0
   fi
   return 1
+}
+
+# Absolute file:// URL for GTK CSS (stable across reload_style_on_change).
+# Relative urls are resolved from style.css, but hot style reloads often drop
+# background-image — empty-text .appicon modules then vanish until restart.
+waybar_appicon_css_file_url() {
+  local rel="$1"
+  local base="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
+  rel="${rel#./}"
+  printf 'file://%s/%s' "$base" "$rel"
+}
+
+# Non-empty text so Waybar keeps the module after CSS hot-reload.
+# Prefer the real dock glyph: with color:transparent (not font-size:0) it still
+# owns layout/hover metrics so Plasma tooltips work. ZWSP alone is a last resort.
+waybar_appicon_placeholder_text() {
+  printf '\u200b'
+}
+
+# Emit text for an .appicon module: glyph when available, else ZWSP.
+waybar_appicon_emit_text() {
+  local icon="${1:-}"
+  if [ -n "$icon" ]; then
+    printf '%s' "$icon"
+  else
+    waybar_appicon_placeholder_text
+  fi
 }
 
 # GTK3/Waybar often ignores background-size — materialize exact NxN PNGs.

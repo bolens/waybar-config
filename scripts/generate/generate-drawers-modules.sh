@@ -141,8 +141,12 @@ jq -n --slurpfile s "$settings" \
     end;
 
   def apply_cava_placement($mods):
-    (($s[0].cava.placement // "drawer") | tostring) as $place
+    # jq `//` treats false as missing — use == false, not `enabled // true`.
+    (($s[0].cava.enabled == false) | not) as $on
+    | (($s[0].cava.placement // "drawer") | tostring) as $place
     | if ($mods | index("custom/cava")) == null then $mods
+      elif ($on | not) then
+        ($mods | map(select(. != "custom/cava")))
       elif $place == "inline" then
         (["custom/cava"] + ($mods | map(select(. != "custom/cava"))))
       else
@@ -201,15 +205,24 @@ jq -n --slurpfile s "$settings" \
   def drawer_tooltip($key):
     ($s[0].drawers.icons[$key].tooltip // ($key)) as $title
     | (drawer_contents($key)) as $items
+    # Bottom-bar drawers (Plasma): tall "Contains:" lists render below the bar and
+    # clip off-screen (Waybar#3356). Keep a short tip; open the drawer for contents.
     | (
-        [$title]
-        + (if ($items | length) > 0 then
-            ["Contains: " + ($items | join(" · "))]
+        ["dock", "tools", "infra", "security", "hardware", "cooling"] as $bottom
+        | if ($bottom | index($key)) != null then
+            [$title, "Click to toggle"] | join("\n")
           else
-            []
-          end)
-        + ["Click to toggle"]
-      ) | join("\n");
+            (
+              [$title]
+              + (if ($items | length) > 0 then
+                  ["Contains: " + ($items | join(" · "))]
+                else
+                  []
+                end)
+              + ["Click to toggle"]
+            ) | join("\n")
+          end
+      );
 
   # Waybar tooltips use Pango markup — bare & breaks parsing (Gtk-WARNING).
   def pango_escape:

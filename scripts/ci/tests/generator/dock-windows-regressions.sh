@@ -4,7 +4,8 @@
 # - steam_app_* must not collapse onto Steam client appicon key
 # - --focus-only must keep list cache; full signal must drop it
 # - live active highlight from active-window-title*.raw
-# - glyph flash: warm/cold appicon paths must keep .appicon + empty text without re-resolve
+# - glyph flash: warm/cold appicon paths must keep .appicon + non-empty placeholder without re-resolve
+# - vanish-until-restart: never emit empty text with .appicon (CSS hot-reload drops backgrounds)
 # - appicon cache: offline hot path, miss stamps, prefetch skip-if-warm
 set -euo pipefail
 
@@ -286,7 +287,7 @@ waybar_test_assert_jq "$term_now" '.class | index("dock-win-inactive")' \
   "Terminal slot inactive when title=Steam: $term_now"
 
 # --- Glyph flash regressions (focus/signal must not drop PNG classes) ---
-# Warm launcher PNG: failing APPICON_BIN must still keep .appicon + empty text.
+# Warm launcher PNG: failing APPICON_BIN must still keep .appicon + placeholder text.
 waybar_test_write_bin_stub appicon <<'EOF'
 #!/usr/bin/env sh
 echo "appicon-called $*" >>"${WAYBAR_TEST_APPICON_LOG:-/dev/null}"
@@ -300,8 +301,8 @@ warm=$(
     "$TEST_DIR/scripts/dock/dock-windows-slot-status.sh" 1 DP-1
 )
 waybar_test_assert_jq "$warm" \
-  '(.class | index("appicon")) and (.class | index("appicon-steam")) and (.text == "")' \
-  "warm launcher PNG must keep appicon class + empty glyph text: $warm"
+  '(.class | index("appicon")) and (.class | index("appicon-steam")) and (.text != null) and (.text | length > 0)' \
+  "warm launcher PNG must keep appicon class + non-empty placeholder: $warm"
 if [ -s "$WAYBAR_TEST_APPICON_LOG" ]; then
   echo "FAIL: warm PNG path should not call appicon resolve: $(cat "$WAYBAR_TEST_APPICON_LOG")" >&2
   fail=1
@@ -318,7 +319,7 @@ for _i in 1 2 3; do
       "$TEST_DIR/scripts/dock/dock-windows-slot-status.sh" 1 DP-1
   )
   if ! printf '%s' "$tick" | jq -e \
-    '(.class | index("appicon-steam")) and (.text == "")' >/dev/null; then
+    '(.class | index("appicon-steam")) and (.text != null) and (.text | length > 0)' >/dev/null; then
     echo "FAIL: refresh $_i dropped appicon / restored glyph: $tick" >&2
     glyph_flash_ok=0
     fail=1
@@ -344,8 +345,8 @@ warm_win=$(
     "$TEST_DIR/scripts/dock/dock-windows-slot-status.sh" 1 DP-1
 )
 waybar_test_assert_jq "$warm_win" \
-  '(.class | index("appicon-steam")) and (.text == "")' \
-  "warm dock-win-icons PNG must keep appicon + empty text: $warm_win"
+  '(.class | index("appicon-steam")) and (.text != null) and (.text | length > 0)' \
+  "warm dock-win-icons PNG must keep appicon + non-empty placeholder: $warm_win"
 if [ -s "$WAYBAR_TEST_APPICON_LOG" ]; then
   echo "FAIL: dock-win-icons warm path should not call appicon: $(cat "$WAYBAR_TEST_APPICON_LOG")" >&2
   fail=1
@@ -363,8 +364,8 @@ cold_key=$(
     "$TEST_DIR/scripts/dock/dock-windows-slot-status.sh" 1 DP-1
 )
 waybar_test_assert_jq "$cold_key" \
-  '(.class | index("appicon")) and (.class | index("appicon-steam")) and (.text == "")' \
-  "known dock-apps id without PNG must still emit appicon + empty text: $cold_key"
+  '(.class | index("appicon")) and (.class | index("appicon-steam")) and (.text != null) and (.text | length > 0)' \
+  "known dock-apps id without PNG must still emit appicon + non-empty placeholder: $cold_key"
 if ! grep -q -- '--offline' "$WAYBAR_TEST_APPICON_LOG"; then
   echo "FAIL: cold fill must use appicon --offline: $(cat "$WAYBAR_TEST_APPICON_LOG")" >&2
   fail=1
@@ -378,7 +379,7 @@ cold_key2=$(
     "$TEST_DIR/scripts/dock/dock-windows-slot-status.sh" 1 DP-1
 )
 waybar_test_assert_jq "$cold_key2" \
-  '(.class | index("appicon-steam")) and (.text == "")' \
+  '(.class | index("appicon-steam")) and (.text != null) and (.text | length > 0)' \
   "miss-stamped known key still emits appicon: $cold_key2"
 if [ -s "$WAYBAR_TEST_APPICON_LOG" ]; then
   echo "FAIL: miss stamp must skip re-resolve: $(cat "$WAYBAR_TEST_APPICON_LOG")" >&2
@@ -417,7 +418,7 @@ filled=$(
     "$TEST_DIR/scripts/dock/dock-windows-slot-status.sh" 1 DP-1
 )
 waybar_test_assert_jq "$filled" \
-  '(.class | index("appicon-steam")) and (.text == "")' \
+  '(.class | index("appicon-steam")) and (.text != null) and (.text | length > 0)' \
   "offline cache hit should keep appicon class: $filled"
 if [ ! -f "$TEST_DIR/theme/dock-appicons/steam.png" ]; then
   echo "FAIL: offline hit should materialize theme/dock-appicons/steam.png" >&2
@@ -485,7 +486,7 @@ else
   echo "PASS: prefetch skips warm PNGs ($prefetch_out)"
 fi
 
-# Launcher status warm path: existing PNG → .appicon + empty text, no resolve.
+# Launcher status warm path: existing PNG → .appicon + placeholder text, no resolve.
 cp "$ROOT_DIR/scripts/dock/dock-launcher.sh" "$TEST_DIR/scripts/dock/"
 chmod +x "$TEST_DIR/scripts/dock/dock-launcher.sh"
 mkdir -p "$TEST_DIR/theme/dock-appicons"
@@ -511,8 +512,8 @@ launcher_warm=$(
     "$TEST_DIR/scripts/dock/dock-launcher.sh" browser status
 )
 waybar_test_assert_jq "$launcher_warm" \
-  '(.class | index("appicon")) and (.text == "")' \
-  "launcher warm PNG must keep appicon + empty glyph text: $launcher_warm"
+  '(.class | index("appicon")) and (.text != null) and (.text | length > 0)' \
+  "launcher warm PNG must keep appicon + non-empty placeholder: $launcher_warm"
 if [ -s "$WAYBAR_TEST_APPICON_LOG" ]; then
   echo "FAIL: launcher warm path should not call appicon resolve: $(cat "$WAYBAR_TEST_APPICON_LOG")" >&2
   fail=1
@@ -520,24 +521,44 @@ else
   echo "PASS: launcher warm PNG skips appicon resolve"
 fi
 
-# Generic .appicon glyph-hide rule: font-size:0 + transparent (not just per-app classes).
+# Generic .appicon glyph-hide rule: transparent paint (NOT font-size:0 — tooltips).
 "$TEST_DIR/scripts/generate/generate-dock-windows-css.sh"
 css="$TEST_DIR/theme/dock-windows.generated.css"
-if ! grep -Fq 'Hide glyph text whenever .appicon is set' "$css"; then
+if ! grep -Fq 'Hide glyph paint whenever .appicon is set' "$css"; then
   echo "FAIL: dock-windows CSS missing generic .appicon glyph-hide comment" >&2
   fail=1
+elif grep -nE 'font-size: 0' "$css"; then
+  echo "FAIL: dock-windows CSS must not set font-size:0 (breaks Plasma tooltips)" >&2
+  fail=1
 elif ! awk '
-  /Hide glyph text whenever \.appicon is set/ { inblock=1; next }
-  inblock && /font-size: 0/ { found_fs=1 }
+  /Hide glyph paint whenever \.appicon is set/ { inblock=1; next }
   inblock && /color: transparent/ { found_c=1 }
   inblock && /^}/ {
-    exit !(found_fs && found_c)
+    exit !found_c
   }
 ' "$css"; then
-  echo "FAIL: generic .appicon rule must set font-size:0 and color:transparent" >&2
+  echo "FAIL: generic .appicon rule must set color:transparent" >&2
   fail=1
 else
-  echo "PASS: dock-windows CSS hides glyphs for generic .appicon"
+  echo "PASS: dock-windows CSS hides glyph paint without font-size:0"
+fi
+if ! grep -qE '#custom-dock-win-[0-9]+\.appicon-.* label' "$css"; then
+  echo "FAIL: dock-windows CSS must expand GtkLabel hitbox for appicon slots" >&2
+  fail=1
+else
+  echo "PASS: dock-windows CSS expands GtkLabel tooltip hitbox"
+fi
+echo "PASS: Plasma tooltip hitbox — dock-windows CSS keeps font metrics"
+
+# file:// urls survive reload_style_on_change (relative urls drop backgrounds).
+if ! grep -qE 'url\("file://.*/theme/dock-appicons/' "$css"; then
+  echo "FAIL: dock-windows CSS must use file://…/theme/dock-appicons/ urls" >&2
+  fail=1
+elif grep -E 'url\("dock-appicons/|url\("theme/dock-appicons/|url\("dock-win-icons/' "$css"; then
+  echo "FAIL: dock-windows CSS must not use relative dock-*-icons/ urls" >&2
+  fail=1
+else
+  echo "PASS: dock-windows CSS urls are file:// (reload-stable)"
 fi
 
 waybar_test_end

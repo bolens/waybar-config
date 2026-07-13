@@ -1,11 +1,12 @@
 {
   "custom/dock-browser": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh browser status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh browser click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh browser click on-click-right",
@@ -13,12 +14,13 @@
   }
 ,
   "custom/dock-floorp": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh floorp status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh floorp click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh floorp click on-click-right",
@@ -26,12 +28,13 @@
   }
 ,
   "custom/dock-helium": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh helium status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh helium click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh helium click on-click-right",
@@ -39,12 +42,13 @@
   }
 ,
   "custom/dock-pear": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh pear status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh pear click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh pear click on-click-right",
@@ -52,12 +56,13 @@
   }
 ,
   "custom/dock-cursor": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh cursor status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh cursor click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh cursor click on-click-right",
@@ -65,12 +70,13 @@
   }
 ,
   "custom/dock-files": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh files status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh files click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh files click on-click-right",
@@ -78,12 +84,13 @@
   }
 ,
   "custom/dock-kitty": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh kitty status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh kitty click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh kitty click on-click-right",
@@ -91,12 +98,13 @@
   }
 ,
   "custom/dock-terminal": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh terminal status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh terminal click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh terminal click on-click-right",
@@ -104,12 +112,13 @@
   }
 ,
   "custom/dock-vscode": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh vscode status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh vscode click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh vscode click on-click-right",
@@ -117,12 +126,13 @@
   }
 ,
   "custom/dock-zed": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh zed status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh zed click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh zed click on-click-right",
@@ -130,12 +140,13 @@
   }
 ,
   "custom/dock-anyrun": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh anyrun status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh anyrun click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh anyrun click on-click-right",
@@ -143,12 +154,13 @@
   }
 ,
   "custom/dock-discord": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh discord status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh discord click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh discord click on-click-right",
@@ -156,12 +168,13 @@
   }
 ,
   "custom/dock-heroic": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh heroic status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh heroic click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh heroic click on-click-right",
@@ -169,12 +182,13 @@
   }
 ,
   "custom/dock-krita": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh krita status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh krita click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh krita click on-click-right",
@@ -182,12 +196,13 @@
   }
 ,
   "custom/dock-lutris": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh lutris status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh lutris click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh lutris click on-click-right",
@@ -195,12 +210,13 @@
   }
 ,
   "custom/dock-obsidian": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh obsidian status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh obsidian click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh obsidian click on-click-right",
@@ -208,12 +224,13 @@
   }
 ,
   "custom/dock-orcaslicer": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh orcaslicer status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh orcaslicer click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh orcaslicer click on-click-right",
@@ -221,12 +238,13 @@
   }
 ,
   "custom/dock-steam": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "once",
     "signal": 26,
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh steam status",
     "on-click": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh steam click on-click",
     "on-click-right": "$WAYBAR_HOME/scripts/dock/dock-launcher.sh steam click on-click-right",

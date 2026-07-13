@@ -162,7 +162,7 @@ jq -n --slurpfile s "$settings" --argjson colors "$colors_json" --arg mode "$mod
   cat <<'EOF'
  {
     padding: 0 10px;
-    margin: 4px 0;
+    margin: 0 2px;
     border-radius: 6px;
     transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
 }

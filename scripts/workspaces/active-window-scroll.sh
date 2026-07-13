@@ -147,6 +147,7 @@ output_title() {
 
 # If zscroll is enabled and available, run it
 if [ "$enable_scroll" = "true" ] && command -v zscroll >/dev/null 2>&1; then
+  last_emitted=""
   zscroll -l "$scroll_len" \
     --delay "$scroll_delay" \
     --update-check true \
@@ -158,6 +159,13 @@ if [ "$enable_scroll" = "true" ] && command -v zscroll >/dev/null 2>&1; then
     else
       original=""
     fi
+    # Skip duplicate frames — each Waybar JSON update can dismiss open tooltips
+    # on the bottom bar (continuous scroll × dual outputs).
+    key="${scrolled}"$'\t'"${original}"
+    if [ "$key" = "$last_emitted" ]; then
+      continue
+    fi
+    last_emitted="$key"
     output_title "$scrolled" "$original"
   done
 else

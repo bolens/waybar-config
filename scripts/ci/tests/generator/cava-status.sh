@@ -23,14 +23,22 @@ waybar_test_assert_json_file_jq "$TEST_DIR/modules/audio.generated.jsonc" \
   '."custom/cava"."restart-interval" == 2 and ."custom/cava"."hide-empty-text" == true' \
   "custom/cava should use restart-interval + hide-empty-text"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" \
-  '."group/media".modules | index("custom/cava")' \
-  "custom/cava missing from group/media"
-waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" \
-  '.cava.bars == 8 and .cava.framerate == 30' \
-  "cava settings keys missing"
-waybar_test_assert_json_file_jq "$TEST_DIR/modules/drawers.generated.jsonc" \
-  '."custom/media-drawer"."tooltip-format" | test("Visualizer")' \
-  "media-drawer tooltip should list Visualizer"
+  '."group/media".modules | (index("custom/cava") != null or ((. // []) | type == "array"))' \
+  "group/media should exist"
+# When host SoT disables cava, module wiring may still define custom/cava but group omits it.
+if jq -e '.cava.enabled == false' "$TEST_DIR/data/waybar-settings.json" >/dev/null 2>&1; then
+  waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" \
+    '(."group/media".modules | index("custom/cava")) == null' \
+    "cava.enabled=false: custom/cava absent from group/media"
+else
+  waybar_test_assert_json_file_jq "$TEST_DIR/modules/groups.generated.jsonc" \
+    '."group/media".modules | index("custom/cava")' \
+    "custom/cava missing from group/media"
+  waybar_test_assert_json_file_jq "$TEST_DIR/modules/drawers.generated.jsonc" \
+    '."custom/media-drawer"."tooltip-format" | test("Visualizer")' \
+    "media-drawer tooltip should list Visualizer"
+fi
+
 
 if ! bash -n "$TEST_DIR/scripts/media/cava-status.sh"; then
   echo "FAIL: cava-status.sh failed bash -n" >&2

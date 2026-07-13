@@ -17,7 +17,7 @@ Optional overlay: `data/waybar-secrets.jsonc` (gitignored). Never put credential
 | `layouts` | `top` / `bottom` → `modules_left` / `modules_center` / `modules_right` |
 | `groups` | Named strips/drawers and their module id lists |
 | `dock` | Dock section ordering |
-| `icons` | Optional `appicon` dock PNGs (`enabled` / `theme` / `size` / `gap` / `pad`) — `make install-appicon`. Peer-optional (glyph fallback); launch prefetches when binary present |
+| `icons` | Optional `appicon` dock PNGs (`enabled` / `theme` / `size` / `gap` / `pad`) — `make install-appicon` (pinned ≥ v0.2.1). Peer-optional (glyph fallback); launch batch-prefetches when binary present; dock ticks use `--offline` |
 | `workspaces` | Slot count, scroll-per-output |
 | `dock_windows` | Per-window dock slots (enable, slot_count, per_output, …) |
 | `window_switcher` | Output filtering for the switcher |
@@ -49,7 +49,7 @@ Optional overlay: `data/waybar-secrets.jsonc` (gitignored). Never put credential
 
 ## `bars`
 
-Common fields: `layer` (`overlay` recommended on Plasma for tooltips), `output`, `exclusive`, `height`, `spacing`, `tooltip`, `floating`, `margin_*`, `glass_opacity`, `chrome_radius`.
+Common fields: `layer` (`top` = fullscreen can cover the bar; `overlay` better for KWin tooltips on Plasma), `output`, `exclusive`, `height`, `spacing`, `tooltip`, `floating`, `margin_*`, `glass_opacity`, `chrome_radius`.
 
 ## `module_intervals` and `signals`
 

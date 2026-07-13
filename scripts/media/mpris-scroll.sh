@@ -17,12 +17,35 @@ fi
 # Load config overrides
 enable_scroll=$(waybar_settings_get '.audio.mpris_zscroll' 'true')
 mpris_max_length=$(waybar_settings_get '.audio.mpris_max_length' '32')
-scroll_delay=$(waybar_settings_get '.audio.mpris_scroll_delay' '0.3')
+scroll_delay=$(waybar_settings_get '.audio.mpris_scroll_delay' '0.8')
+
+# Cap Waybar text updates — dual-output zscroll at 0.3s kills tooltips bar-wide
+# (Alexays/Waybar#3910 / #4909).
+emit_min_ms=500
+
+emit_throttled() {
+  local line="$1"
+  local now_ms
+  now_ms=$(date +%s%3N 2>/dev/null || echo 0)
+  case "$now_ms" in '' | *[!0-9]*) now_ms=0 ;; esac
+  if [ -n "${last_line:-}" ] && [ "$line" = "$last_line" ]; then
+    return 0
+  fi
+  if [ "$now_ms" -gt 0 ] && [ "${last_emit_ms:-0}" -gt 0 ] \
+    && [ $((now_ms - last_emit_ms)) -lt "$emit_min_ms" ]; then
+    return 0
+  fi
+  last_line="$line"
+  [ "$now_ms" -gt 0 ] && last_emit_ms=$now_ms
+  printf '%s\n' "$line"
+}
 
 # Run in loop to handle player restarts
 if [ "$enable_scroll" = "true" ] && command -v zscroll >/dev/null 2>&1; then
   while true; do
     if playerctl status >/dev/null 2>&1; then
+      last_line=""
+      last_emit_ms=0
       # Prefix each output line with the music icon.
       # zscroll scrolls the text after the formatting dynamically.
       zscroll -l "$mpris_max_length" \
@@ -31,7 +54,10 @@ if [ "$enable_scroll" = "true" ] && command -v zscroll >/dev/null 2>&1; then
         --match-text "Playing" "--scroll 1" \
         --match-text "Paused" "--scroll 0" \
         --update-check true \
-        'playerctl metadata --format "󰝚 {{title}} - {{artist}}" 2>/dev/null' 2>/dev/null || true
+        'playerctl metadata --format "󰝚 {{title}} - {{artist}}" 2>/dev/null' 2>/dev/null \
+        | while IFS= read -r line; do
+          emit_throttled "$line"
+        done || true
     else
       # Output empty string so Waybar hides the module
       echo ""

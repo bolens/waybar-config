@@ -7,6 +7,7 @@ set -euo pipefail
 
 . "$WAYBAR_SCRIPTS/lib/css-selectors-lib.sh"
 . "$WAYBAR_SCRIPTS/lib/waybar-settings.sh"
+. "$WAYBAR_SCRIPTS/lib/appicon-lib.sh"
 
 settings="${WAYBAR_HOME}/data/waybar-settings.json"
 manifest="${WAYBAR_HOME}/data/dock-apps.json"
@@ -72,11 +73,18 @@ ${hidden} {
     min-width: 0;
 }
 
-/* Hide glyph text whenever .appicon is set (PNG may load a tick later). */
+/* Hide glyph paint whenever .appicon is set (PNG may load a tick later).
+ * Keep font metrics — font-size:0 collapses the label and breaks Plasma tooltips. */
 ${appicon_base} {
     color: transparent;
     text-shadow: none;
-    font-size: 0;
+}
+
+/* Tooltips attach to the GtkLabel child — match the icon tile hitbox. */
+${appicon_base} label {
+    padding: ${pad}px;
+    min-width: ${size}px;
+    min-height: ${size}px;
 }
 EOF
 
@@ -85,10 +93,10 @@ EOF
     mapfile -t app_ids < <(jq -r 'keys[]' "$manifest")
     for id in "${app_ids[@]}"; do
       [ -n "$id" ] || continue
-      # Prefer launcher materializations; fall back to dock-win-icons/<id>.png.
-      # Relative URLs (next to this CSS under theme/) stay portable for CI drift.
-      url="dock-appicons/${id}.png"
-      alt_url="dock-win-icons/${id}.png"
+      # Prefer launcher materializations; fall back to theme/dock-win-icons/<id>.png.
+      # file:// absolute URLs survive reload_style_on_change (relative urls often don't).
+      url="$(waybar_appicon_css_file_url "theme/dock-appicons/${id}.png")"
+      alt_url="$(waybar_appicon_css_file_url "theme/dock-win-icons/${id}.png")"
       # Slot list for this app class
       first=1
       for ((i = 0; i < slot_count; i++)); do
@@ -107,7 +115,22 @@ EOF
       printf '    background-size: %spx %spx;\n' "$size" "$size"
       printf '    color: transparent;\n'
       printf '    text-shadow: none;\n'
-      printf '    font-size: 0;\n'
+      # No font-size:0 — preserves hover hitbox for Plasma tooltips.
+      printf '    padding: %spx;\n' "$pad"
+      printf '    min-width: %spx;\n' "$size"
+      printf '    min-height: %spx;\n' "$size"
+      printf '}\n'
+      # Label hitbox (Waybar tooltips bind to GtkLabel, not the padded module box).
+      first=1
+      for ((i = 0; i < slot_count; i++)); do
+        if [ "$first" -eq 1 ]; then
+          printf '#custom-dock-win-%s.appicon-%s label' "$i" "$id"
+          first=0
+        else
+          printf ',\n#custom-dock-win-%s.appicon-%s label' "$i" "$id"
+        fi
+      done
+      printf ' {\n'
       printf '    padding: %spx;\n' "$pad"
       printf '    min-width: %spx;\n' "$size"
       printf '    min-height: %spx;\n' "$size"
@@ -148,6 +171,6 @@ EOF
   fi
 } >"$out"
 
-# Portable stub — unknown-app rules are appended at runtime with relative urls.
+# Stub only — unknown-app rules are appended at runtime (file:// urls).
 printf '%s\n' '/* Runtime dock-windows appicon rules — do not edit by hand */' \
   >"$WAYBAR_HOME/theme/dock-win-runtime.generated.css"

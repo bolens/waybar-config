@@ -49,12 +49,13 @@ mapfile -t app_ids < <(
     [ "$i" -gt 0 ] && printf ',\n'
     cat <<EOF
   "custom/dock-${id}": {
-    "format": "{}",
+    "format": "{text}",
     "return-type": "json",
     "interval": "${interval}",
     "signal": ${dock_signal},
     "tooltip": true,
     "escape": true,
+    "hide-empty-text": false,
     "exec": "${scripts}/dock/dock-launcher.sh ${id} status",
     "on-click": "${scripts}/dock/dock-launcher.sh ${id} click on-click",
     "on-click-right": "${scripts}/dock/dock-launcher.sh ${id} click on-click-right",

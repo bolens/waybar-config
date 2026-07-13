@@ -291,6 +291,13 @@ rm -f "$TEST_DIR/theme/dock-appicons/terminal.png"
 waybar_test_write_bin_stub appicon <<'EOF'
 #!/usr/bin/env sh
 echo "appicon-called $*" >>"${WAYBAR_TEST_APPICON_LOG:-/dev/null}"
+# Batch warm: prefetch <queries...> (no path stdout required).
+case "$*" in
+  prefetch\ *)
+    exit 0
+    ;;
+esac
+# Materialize path: prefer offline after warm; online fallback also ok for stubs.
 case "$*" in
   *konsole*|*terminal*)
     printf '%s\n' "${WAYBAR_TEST_APPICON_SRC}"
@@ -308,8 +315,11 @@ prefetch_out=$(
     XDG_CACHE_HOME="$CACHE" \
     "$TEST_DIR/scripts/dock/dock-appicon-prefetch.sh" 2>&1
 ) || true
-if grep -q -- '--offline' "$WAYBAR_TEST_APPICON_LOG"; then
-  echo "FAIL: prefetch must use online resolve: $(cat "$WAYBAR_TEST_APPICON_LOG")" >&2
+if ! grep -qE '(^| )prefetch( |$)' "$WAYBAR_TEST_APPICON_LOG"; then
+  echo "FAIL: prefetch script must call appicon prefetch: $(cat "$WAYBAR_TEST_APPICON_LOG")" >&2
+  fail=1
+elif ! grep -q -- '--offline' "$WAYBAR_TEST_APPICON_LOG"; then
+  echo "FAIL: after warm, materialize must use --offline resolve: $(cat "$WAYBAR_TEST_APPICON_LOG")" >&2
   fail=1
 elif ! grep -q 'konsole\|terminal' "$WAYBAR_TEST_APPICON_LOG"; then
   echo "FAIL: prefetch should resolve missing terminal: $(cat "$WAYBAR_TEST_APPICON_LOG")" >&2
@@ -329,7 +339,7 @@ elif [ ! -f "$TEST_DIR/theme/dock-appicons/terminal.png" ]; then
   echo "FAIL: prefetch should materialize terminal.png" >&2
   fail=1
 else
-  echo "PASS: prefetch online-fills missing, skips warm ($prefetch_out)"
+  echo "PASS: prefetch warms then offline-fills missing, skips warm ($prefetch_out)"
 fi
 
 # Keep warm PNG when resolve fails (FORCE path with failing bin).
@@ -442,8 +452,31 @@ launcher_fill=$(
     "$TEST_DIR/scripts/dock/dock-launcher.sh" browser status
 )
 waybar_test_assert_jq "$launcher_fill" \
-  '(.class | index("appicon")) and (.text == "")' \
+  '(.class | index("appicon")) and (.text != null) and (.text | length > 0)' \
   "launcher offline fill: $launcher_fill"
+# Vanish-until-restart regression: empty text + dropped background-image hides the module.
+if printf '%s' "$launcher_fill" | jq -e '.class | index("appicon")' >/dev/null \
+  && printf '%s' "$launcher_fill" | jq -e '.text == ""' >/dev/null; then
+  echo "FAIL: .appicon status must never emit empty text (module vanishes after CSS reload): $launcher_fill" >&2
+  fail=1
+fi
+# Tooltip hitbox regression: emit the real glyph (not ZWSP) when the dock icon exists.
+got_text="$(printf '%s' "$launcher_fill" | jq -r '.text')"
+if [ -z "$got_text" ] || [ "$got_text" = $'\u200b' ]; then
+  echo "FAIL: launcher .appicon should emit the dock glyph for tooltip hitbox (got $(printf '%s' "$got_text" | jq -Rs .))" >&2
+  fail=1
+elif [ "$got_text" != "󰈹" ]; then
+  # browser fixture icon from dock-apps in this test
+  echo "FAIL: expected browser glyph in .appicon text (got $(printf '%s' "$got_text" | jq -Rs .))" >&2
+  fail=1
+else
+  echo "PASS: launcher .appicon emits glyph text (tooltip hitbox; CSS hides paint)"
+fi
+# Tooltip payload must stay present (module config tooltip:true is useless without it).
+waybar_test_assert_jq "$launcher_fill" \
+  '(.tooltip | type == "string") and (.tooltip | length > 0) and (.tooltip | test("Browser"))' \
+  "launcher .appicon must emit a non-empty tooltip: $launcher_fill"
+echo "PASS: launcher .appicon keeps tooltip payload for Plasma hover"
 if [ ! -f "$TEST_DIR/theme/dock-appicons/browser.png" ]; then
   echo "FAIL: launcher offline fill must write browser.png" >&2
   fail=1
@@ -508,7 +541,7 @@ game_fill=$(
     "$TEST_DIR/scripts/dock/dock-windows-slot-status.sh" 2 DP-1
 )
 waybar_test_assert_jq "$game_fill" \
-  '(.class | index("appicon-steam-app-1891700")) and (.text == "")' \
+  '(.class | index("appicon-steam-app-1891700")) and (.text != null) and (.text | length > 0)' \
   "unknown steam-app offline fill: $game_fill"
 if [ -f "$TEST_DIR/theme/dock-appicons/steam-app-1891700.png" ]; then
   echo "FAIL: unknown key must not write dock-appicons/" >&2
@@ -519,8 +552,45 @@ elif [ ! -f "$TEST_DIR/theme/dock-win-icons/steam-app-1891700.png" ]; then
 elif ! grep -q -- '--offline' "$WAYBAR_TEST_APPICON_LOG"; then
   echo "FAIL: unknown-key fill must be offline: $(cat "$WAYBAR_TEST_APPICON_LOG")" >&2
   fail=1
+elif [ ! -f "$TEST_DIR/theme/dock-win-runtime.generated.css" ] \
+  || ! grep -qE 'url\("file://.*/theme/dock-win-icons/steam-app-1891700\.png"\)' \
+    "$TEST_DIR/theme/dock-win-runtime.generated.css"; then
+  echo "FAIL: runtime CSS must use file://…/theme/dock-win-icons/… url" >&2
+  echo "  runtime=$(cat "$TEST_DIR/theme/dock-win-runtime.generated.css" 2>/dev/null | head -c 400)" >&2
+  fail=1
+elif grep -E 'url\("dock-win-icons/|url\("theme/dock-win-icons/' "$TEST_DIR/theme/dock-win-runtime.generated.css"; then
+  echo "FAIL: runtime CSS must not use relative dock-win-icons/ urls" >&2
+  fail=1
 else
   echo "PASS: unknown window fills dock-win-icons via --offline"
+  echo "PASS: runtime CSS uses file:// theme/dock-win-icons/ url"
+fi
+# Runtime CSS must also avoid font-size:0 (same Plasma tooltip hitbox rule).
+if [ -f "$TEST_DIR/theme/dock-win-runtime.generated.css" ] \
+  && grep -nE 'font-size: 0' "$TEST_DIR/theme/dock-win-runtime.generated.css"; then
+  echo "FAIL: runtime dock-win CSS must not set font-size:0 (breaks Plasma tooltips)" >&2
+  fail=1
+else
+  echo "PASS: runtime CSS omits font-size:0 (tooltip hitbox)"
+fi
+
+# Runtime CSS no-op must not rewrite the file (each mv triggers reload_style_on_change flicker).
+if [ -f "$TEST_DIR/theme/dock-win-runtime.generated.css" ]; then
+  # shellcheck source=../../../lib/appicon-lib.sh
+  . "$TEST_DIR/scripts/lib/appicon-lib.sh"
+  # shellcheck source=../../../lib/dock-windows-kde-lib.sh
+  . "$TEST_DIR/scripts/lib/dock-windows-kde-lib.sh"
+  runtime_css="$TEST_DIR/theme/dock-win-runtime.generated.css"
+  before_sum="$(cksum <"$runtime_css")"
+  url="$(waybar_appicon_css_file_url 'theme/dock-win-icons/steam-app-1891700.png')"
+  dock_windows_ensure_runtime_css "steam-app-1891700" "$url" 18 8 || true
+  after_sum="$(cksum <"$runtime_css")"
+  if [ "$before_sum" != "$after_sum" ]; then
+    echo "FAIL: ensure_runtime_css must be idempotent for existing appicon key (cksum changed)" >&2
+    fail=1
+  else
+    echo "PASS: runtime CSS rewrite skipped when rule already present (no style-reload thrash)"
+  fi
 fi
 
 waybar_test_end

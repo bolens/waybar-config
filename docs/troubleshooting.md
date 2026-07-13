@@ -22,7 +22,17 @@ systemctl --user restart waybar
 
 ## Tooltips missing on Plasma
 
-Keep `bars.layer: "overlay"` and `bars.tooltip: true`. Layer `"top"` can help fullscreen overlap but often breaks KWin tooltips on Wayland.
+Keep `bars.tooltip: true`. This config uses `bars.layer: "top"` so fullscreen apps cover the bar. Layer `"overlay"` is better for KWin tooltips on Plasma Wayland but keeps the bar above fullscreen.
+
+**Bottom bar only (top still works):** Common Waybar/gtk-layer-shell issue ([#3356](https://github.com/Alexays/Waybar/issues/3356)) — tooltips render *below* the bar (off-screen). Mitigations in this config:
+- bottom-bar drawer tips are compact (title + “Click to toggle”, no tall Contains: lists)
+- no vertical module margins (they worsen off-screen placement)
+- `bars.height` ≥ module min-height (~60)
+- do **not** float the bottom bar with side margins — that leaves visible gaps at the screen edges
+
+**Dock appicons:** Waybar attaches tooltips to the inner `GtkLabel`, not the padded module box. Generated CSS includes `.appicon label { padding; min-width; min-height }`. Dock launchers use `"format": "{text}"`.
+
+**Bar-wide tooltips dead (top and bottom):** Streaming modules starve the GTK loop — almost always `custom/cava` and/or `custom/mpris` zscroll while music plays (dual outputs double the load). Pause playback to confirm; tooltips should return. This config caps cava emits (~1.25/s, engine ≤12 fps) and mpris scroll (≥0.8s + 500ms throttle).
 
 ## “No such file” / wrong paths after move
 

@@ -63,20 +63,16 @@ if ! grep -q 'as \$m | \$hw | index(\$m)' "$TEST_DIR/scripts/generate/generate-d
   fail=1
 fi
 
+# Bottom-bar drawers use compact tips (no Contains:); group modules still swap.
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/drawers.generated.jsonc" \
-  '."custom/hardware-drawer"."tooltip-format" | test("Stats")' \
-  "hardware-drawer tooltip should list Stats when carousel enabled"
-# Drawer SoT should still mention non-carousel telemetry (not carousel-only wipe).
+  '."custom/hardware-drawer"."tooltip-format" | test("Hardware")' \
+  "hardware-drawer tooltip should keep Hardware title"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/drawers.generated.jsonc" \
-  '
-    (."custom/hardware-drawer"."tooltip-format" | test("NVMe|PSU"; "i"))
-  ' \
-  "hardware-drawer tooltip should still list non-carousel hardware modules"
+  '(."custom/hardware-drawer"."tooltip-format" | test("Contains:")) | not' \
+  "hardware-drawer (bottom) omits Contains: list"
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/drawers.generated.jsonc" \
-  '
-    (."custom/cooling-drawer"."tooltip-format" | test("Fans|CoolerControl|Liquidctl"; "i"))
-  ' \
-  "cooling-drawer tooltip should list cooling modules"
+  '."custom/cooling-drawer"."tooltip-format" | test("Cooling")' \
+  "cooling-drawer tooltip should keep Cooling title"
 
 # Module definition is always emitted for availability.
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" \
