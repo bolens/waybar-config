@@ -32,10 +32,6 @@ if [ "${1:-}" != "--refresh" ]; then
   exit 0
 fi
 
-if ! command -v yggdrasilctl >/dev/null 2>&1; then
-  emit_disconnected "Yggdrasil not installed" "$cache_file"
-fi
-
 service_name=$(waybar_settings_get '.services.yggdrasil.service_name' 'yggdrasil.service')
 endpoint=$(waybar_settings_get '.services.yggdrasil.endpoint' '/var/run/yggdrasil.sock')
 # Normalize socket path → yggdrasilctl endpoint (JSONC cannot store unix:///… — // is a comment).
@@ -51,8 +47,13 @@ elif pgrep -x yggdrasil >/dev/null 2>&1; then
   service_active=1
 fi
 
+# Offline (or not installed) before needing yggdrasilctl — CI stubs service inactive first.
 if [ "$service_active" -eq 0 ]; then
   finish_refresh "$(emit_waybar_json "󰙨 Off" "Yggdrasil daemon is offline" "offline")"
+fi
+
+if ! command -v yggdrasilctl >/dev/null 2>&1; then
+  emit_disconnected "Yggdrasil not installed" "$cache_file"
 fi
 
 ygg_cmd=(yggdrasilctl -json)
