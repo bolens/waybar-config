@@ -64,6 +64,16 @@ check_and_heal_listeners() {
     fi
   fi
 
+  # 2d. Sanitize Plasma/DrKonqi HTML bodies when mako is the notification daemon
+  if ! is_listener_running "notify-sanitize"; then
+    if [ -x "$WAYBAR_SCRIPTS/listeners/notify-sanitize-listener.py" ] \
+      && command -v makoctl >/dev/null 2>&1; then
+      log "notify-sanitize listener dead; restarting"
+      "$script_dir/listener-ctl.sh" start \
+        "$WAYBAR_SCRIPTS/listeners/notify-sanitize-listener.py" notify-sanitize
+    fi
+  fi
+
   # 3. Compositor-specific listener
   comp="$(detect_compositor)"
   if [ "$comp" = "hyprland" ]; then

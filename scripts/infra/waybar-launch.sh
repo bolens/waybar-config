@@ -291,6 +291,12 @@ launch_detached "$WAYBAR_SCRIPTS/system/brightness-status.sh" --refresh
   if [ -x "$WAYBAR_SCRIPTS/listeners/album-art-listener.sh" ]; then
     start_waybar_listener "$WAYBAR_SCRIPTS/listeners/album-art-listener.sh" album-art
   fi
+
+  # Plasma/DrKonqi HTML → plain text when mako owns Notifications (Pango-only).
+  if [ -x "$WAYBAR_SCRIPTS/listeners/notify-sanitize-listener.py" ] \
+    && command -v makoctl >/dev/null 2>&1; then
+    start_waybar_listener "$WAYBAR_SCRIPTS/listeners/notify-sanitize-listener.py" notify-sanitize
+  fi
 ) &
 
 if [ -f "$XDG_CACHE_HOME/waybar/system-metrics.json" ]; then

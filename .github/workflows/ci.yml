@@ -361,6 +361,7 @@ jobs:
           - mcp-server
           - module-signals
           - tooltip-pango-escape
+          - notify-sanitize
     steps:
       - uses: actions/checkout@v7
       - name: Install jq + dash

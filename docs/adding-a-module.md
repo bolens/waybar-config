@@ -122,6 +122,7 @@ For event-driven modules (`interval: "once"`), add a listener under `scripts/lis
 | Generator output / module JSON | New or extended `scripts/ci/tests/generator/*.sh` + CI matrix name |
 | `signals.*` uniqueness / keyed refresh / `waybar-signal.sh` | `module-signals` (+ `check-settings-schema` via validate) |
 | Tooltip Pango escape / notification rich tooltips | `tooltip-pango-escape` (+ `lib-utils` emit single-escape) |
+| DrKonqi/Plasma HTML → plain text for mako | `notify-sanitize` |
 | VPN / cooling / docker polish | `vpn-cooling-refresh` |
 | Yggdrasil / IPFS (overlay net) | `overlay-network-modules` |
 | Album art signal + CSS | `album-art-wiring` |

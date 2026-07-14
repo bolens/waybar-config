@@ -39,6 +39,7 @@ Project docs hub: **[docs/README.md](../docs/README.md)** ([architecture](../doc
 | `clipboard-lib.sh` | cliphist / Klipper backends + clipboard signal helper |
 | `capture-lib.sh` | Screenshot/screenrecord dirs, tools, screenrecord signal |
 | `notifications-lib.sh` | Plasma notifications / DND helpers + notifications signal |
+| `notify_markup.py` | Plasma/Qt HTML → plain text for Pango notification daemons (mako) |
 | `brightness-lib.sh` | Per-output backlight / DDC target resolution |
 | `waybar-locale-lib.sh` | `detect_*` clock/date/weather + `format_locale_*` (`WAYBAR_WEATHER_UNIT` pins unit for CI) |
 | `locale_temp.py` | Python twin of `format_locale_temp` (CoolerControl etc.) |
@@ -63,6 +64,7 @@ Started by `waybar-launch.sh`, healed by `waybar-healthcheck.sh`, stopped via `l
 | `device-notifier` | `device-notifier-listener.sh` | `device_notifier` |
 | `vpn-tailscale` | `vpn-tailscale-listener.sh` | `vpn`, `tailscale` |
 | `album-art` | `album-art-listener.sh` | `album_art` |
+| `notify-sanitize` | `notify-sanitize-listener.py` | (none — rewrites DrKonqi HTML for mako) |
 | `kde-activewindow` | `active-window-listener-kde.py` | workspaces / dock (Plasma) |
 | `hypr-workspaces` | `workspaces-hyprland-listener.sh` | `workspaces` (Hyprland) |
 

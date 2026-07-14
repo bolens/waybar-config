@@ -20,6 +20,14 @@ systemctl --user restart waybar
 
 `ExecStop` / `ExecStartPre` call `listener-ctl.sh stop-all` to avoid orphan watchers.
 
+## Crash toasts show `&lt;html&gt;&lt;tt&gt;…` (DrKonqi + mako)
+
+DrKonqi / KNotifications send Plasma Qt HTML (`<html><tt>/usr/bin/zsh</tt>…`). **mako** advertises `body-markup` but only parses Pango, so invalid tags make it escape the whole body and you see literal entities.
+
+This config starts `notify-sanitize-listener.py` whenever `makoctl` is on `PATH` (see `waybar-launch.sh` / healthcheck). It replaces the toast in place with plain text. Covered by the `notify-sanitize` CI suite.
+
+If toasts still look escaped: `systemctl --user restart waybar` (or start the listener via `listener-ctl.sh start …/notify-sanitize-listener.py notify-sanitize`) and confirm `makoctl` owns `org.freedesktop.Notifications`.
+
 ## Tooltips show literal `&gt;` / `<b>` instead of styled text
 
 Waybar's `"escape": true` runs `Glib::Markup::escape_text` on JSON `text`/`tooltip`. If the status script **already** escapes (`emit_waybar_json`, `html.escape`, `escape_markup`), entities are escaped twice and the tooltip shows markup like `-&gt;` instead of `->`.
