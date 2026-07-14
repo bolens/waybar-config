@@ -23,6 +23,12 @@ scroll_delay=$(waybar_settings_get '.audio.mpris_scroll_delay' '0.8')
 # (Alexays/Waybar#3910 / #4909).
 emit_min_ms=500
 
+# Waybar custom modules parse module text as Pango markup; bare &/< /> in
+# titles (e.g. "Justice & Tame Impala") spam Gtk-WARNING and drop the label.
+escape_markup() {
+  printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+}
+
 emit_throttled() {
   local line="$1"
   local now_ms
@@ -37,7 +43,7 @@ emit_throttled() {
   fi
   last_line="$line"
   [ "$now_ms" -gt 0 ] && last_emit_ms=$now_ms
-  printf '%s\n' "$line"
+  printf '%s\n' "$(escape_markup "$line")"
 }
 
 # Run in loop to handle player restarts
@@ -81,7 +87,8 @@ else
           else
             truncated="$meta"
           fi
-          echo "$truncated"
+          # Truncate on raw length, then escape so &amp; does not inflate max-length.
+          printf '%s\n' "$(escape_markup "$truncated")"
         else
           echo ""
         fi

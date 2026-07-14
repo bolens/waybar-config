@@ -11,6 +11,12 @@ stop_listener() {
   lock_dir="$runtime_dir/waybar-dock-listener-${lock_name}.lock.d"
   lock_pid_file="$lock_dir/pid"
 
+  # Prefer stopping the transient unit (escapes oneshot healthcheck cgroup).
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl --user stop "waybar-listener-${lock_name}.service" >/dev/null 2>&1 || true
+    systemctl --user stop "waybar-listener-${lock_name}.scope" >/dev/null 2>&1 || true
+  fi
+
   if [ -f "$lock_pid_file" ]; then
     old_pid="$(sed -n '1p' "$lock_pid_file" 2>/dev/null || true)"
     if [ -n "$old_pid" ] && kill -0 "$old_pid" 2>/dev/null; then
@@ -42,12 +48,16 @@ start_listener() {
 
   stop_listener "$lock_name"
   if [ -x "$script" ]; then
-    # Keep listeners in the same session tree when possible; lock files still
-    # track PIDs for ExecStop / healthcheck. Avoid setsid so systemd stop can
-    # still clean up via stop-all even if cgroup reaping misses them.
-    if command -v setsid >/dev/null 2>&1; then
-      # setsid is retained so listeners survive launch.sh's final `exec waybar`,
-      # but stop-all + healthcheck are the lifecycle owners.
+    # Transient Type=exec service returns immediately (unlike --scope, which
+    # waits for the command to exit). Keeps listeners out of the healthcheck
+    # oneshot cgroup so default KillMode=control-group is safe.
+    if command -v systemd-run >/dev/null 2>&1; then
+      systemd-run --user --collect --quiet \
+        --unit="waybar-listener-${lock_name}" \
+        --service-type=exec \
+        --property=Restart=no \
+        -- "$script" >/dev/null 2>&1 || true
+    elif command -v setsid >/dev/null 2>&1; then
       setsid -f "$script" >/dev/null 2>&1 </dev/null || true
     else
       nohup "$script" >/dev/null 2>&1 &

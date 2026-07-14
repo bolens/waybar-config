@@ -4,6 +4,9 @@ After=waybar.service
 
 [Service]
 Type=oneshot
+# Listeners are started via systemd-run transient service in listener-ctl.sh (outside
+# this cgroup). Default KillMode=control-group is safe and avoids TimeoutStop
+# failures that happened when setsid children stayed in this oneshot.
 Environment=WAYBAR_HOME=%h/.config/waybar
 Environment=WAYBAR_SCRIPTS=%h/.config/waybar/scripts
 ExecStart=%h/.config/waybar/scripts/infra/waybar-healthcheck.sh
