@@ -32,7 +32,7 @@ while IFS= read -r drawer_key; do
   # tall popups off the bottom edge (Waybar#3356).
   case "$drawer_key" in
     custom/dock-drawer | custom/tools-drawer | custom/infra-drawer | \
-    custom/security-drawer | custom/hardware-drawer | custom/cooling-drawer)
+      custom/security-drawer | custom/hardware-drawer | custom/cooling-drawer)
       if ! echo "$clean_drawers" | jq -e --arg k "$drawer_key" '
         .[$k].tooltip == true
         and (.[$k] | has("exec") | not)

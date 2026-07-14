@@ -48,19 +48,25 @@ start_listener() {
 
   stop_listener "$lock_name"
   if [ -x "$script" ]; then
-    # Transient Type=exec service returns immediately (unlike --scope, which
-    # waits for the command to exit). Keeps listeners out of the healthcheck
-    # oneshot cgroup so default KillMode=control-group is safe.
+    # Prefer a transient Type=exec service so listeners escape the
+    # waybar-healthcheck oneshot cgroup (setsid alone does not). Fall back
+    # when systemd --user is unavailable (CI sandboxes, no session bus).
+    started=0
     if command -v systemd-run >/dev/null 2>&1; then
-      systemd-run --user --collect --quiet \
+      if systemd-run --user --collect --quiet \
         --unit="waybar-listener-${lock_name}" \
         --service-type=exec \
         --property=Restart=no \
-        -- "$script" >/dev/null 2>&1 || true
-    elif command -v setsid >/dev/null 2>&1; then
-      setsid -f "$script" >/dev/null 2>&1 </dev/null || true
-    else
-      nohup "$script" >/dev/null 2>&1 &
+        -- "$script" >/dev/null 2>&1; then
+        started=1
+      fi
+    fi
+    if [ "$started" -eq 0 ]; then
+      if command -v setsid >/dev/null 2>&1; then
+        setsid -f "$script" >/dev/null 2>&1 </dev/null || true
+      else
+        nohup "$script" >/dev/null 2>&1 &
+      fi
     fi
   fi
 }

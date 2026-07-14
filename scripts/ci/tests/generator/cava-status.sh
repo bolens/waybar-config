@@ -39,7 +39,6 @@ else
     "media-drawer tooltip should list Visualizer"
 fi
 
-
 if ! bash -n "$TEST_DIR/scripts/media/cava-status.sh"; then
   echo "FAIL: cava-status.sh failed bash -n" >&2
   fail=1

@@ -45,6 +45,43 @@ if git diff --quiet -- "${paths[@]}"; then
   exit 0
 fi
 
+# dock-appicons / dock-windows bake absolute file://$WAYBAR_HOME/theme/… URLs so
+# GTK hot style reload keeps background-image. That makes a cross-host false
+# positive here (runner vs developer $HOME). Compare with those prefixes collapsed.
+_norm_css_urls() {
+  # shellcheck disable=SC2016
+  sed -E 's|url\("file://[^"]+/theme/|url("file://__WAYBAR_HOME__/theme/|g'
+}
+
+_portable_theme_only=1
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  case "$f" in
+    theme/*.generated.css) ;;
+    *)
+      _portable_theme_only=0
+      break
+      ;;
+  esac
+done < <(git diff --name-only -- "${paths[@]}")
+
+if [ "$_portable_theme_only" -eq 1 ]; then
+  drift=0
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if ! diff -q \
+      <(git show "HEAD:$f" | _norm_css_urls) \
+      <(_norm_css_urls <"$f") >/dev/null 2>&1; then
+      drift=1
+      break
+    fi
+  done < <(git diff --name-only -- "${paths[@]}")
+  if [ "$drift" -eq 0 ]; then
+    echo "ok: generated artifacts match make generate (ignoring host file:// theme URLs)"
+    exit 0
+  fi
+fi
+
 echo "FAIL: generated artifacts are out of date. Run: make generate" >&2
 git --no-pager diff --stat -- "${paths[@]}" >&2 || true
 git --no-pager diff -- "${paths[@]}" >&2 || true
