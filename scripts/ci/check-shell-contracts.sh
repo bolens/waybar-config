@@ -40,6 +40,8 @@ done < <(find "$ROOT/scripts" -type f -name '*.sh' -print0)
 # Known CI regressions: these must stay on bash (they source waybar-settings.sh).
 for must_bash in \
   services/i2pd/i2pd-status.sh \
+  services/yggdrasil/yggdrasil-status.sh \
+  services/ipfs/ipfs-status.sh \
   services/sync/updates-status.sh \
   services/apps/github-status.sh \
   lib/waybar-settings.sh; do
@@ -168,8 +170,10 @@ fi
 
 # --- 4) Status scripts that source settings must emit JSON via their shebang ---
 tmpdir="$WORK/status-home"
-mkdir -p "$tmpdir/data" "$tmpdir/cache" "$tmpdir/scripts"/{lib,services/{i2pd,sync,apps}}
+mkdir -p "$tmpdir/data" "$tmpdir/cache" "$tmpdir/scripts"/{lib,services/{i2pd,yggdrasil,ipfs,sync,apps}}
 cp "$ROOT/scripts/services/i2pd/i2pd-status.sh" "$tmpdir/scripts/services/i2pd/" 2>/dev/null || true
+cp "$ROOT/scripts/services/yggdrasil/yggdrasil-status.sh" "$tmpdir/scripts/services/yggdrasil/" 2>/dev/null || true
+cp "$ROOT/scripts/services/ipfs/ipfs-status.sh" "$tmpdir/scripts/services/ipfs/" 2>/dev/null || true
 cp "$ROOT/scripts/services/sync/updates-status.sh" "$tmpdir/scripts/services/sync/" 2>/dev/null || true
 cp "$ROOT/scripts/services/apps/github-status.sh" "$tmpdir/scripts/services/apps/" 2>/dev/null || true
 cp "$ROOT/scripts/lib/waybar-cache-helpers.sh" \
@@ -219,7 +223,7 @@ EOF
 fi
 chmod +x "$tmpdir"/bin/* "$tmpdir/scripts/lib/waybar-signal.sh"
 
-for script in services/i2pd/i2pd-status.sh services/sync/updates-status.sh services/apps/github-status.sh; do
+for script in services/i2pd/i2pd-status.sh services/yggdrasil/yggdrasil-status.sh services/ipfs/ipfs-status.sh services/sync/updates-status.sh services/apps/github-status.sh; do
   out="$(
     PATH="$tmpdir/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
       HOME="$tmpdir" \

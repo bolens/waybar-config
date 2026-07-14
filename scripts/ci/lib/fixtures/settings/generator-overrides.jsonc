@@ -8,13 +8,17 @@
     "syncthing": 77,
     "sunshine": 76,
     "streamdeck": 75,
-    "i2pd": 74
+    "i2pd": 74,
+    "yggdrasil": 73,
+    "ipfs": 72
   },
   "signals": {
     "syncthing": 99,
     "sunshine": 98,
     "streamdeck": 97,
-    "i2pd": 96
+    "i2pd": 96,
+    "yggdrasil": 95,
+    "ipfs": 94
   },
   "clocks": {
     "locale": "fr_FR.UTF-8",
@@ -122,6 +126,17 @@
       "console_url": "http://i2pd.test:7070/",
       "service_name": "MOCK_I2PD.service",
       "on_click": "TEST_I2PD_ON_CLICK"
+    },
+    "yggdrasil": {
+      "endpoint": "/tmp/ygg.test.sock",
+      "service_name": "MOCK_YGG.service",
+      "on_click": "TEST_YGGDRASIL_ON_CLICK"
+    },
+    "ipfs": {
+      "api_url": "http://ipfs.test:5001",
+      "webui_url": "http://ipfs.test:5001/webui",
+      "service_name": "MOCK_IPFS.service",
+      "on_click": "TEST_IPFS_ON_CLICK"
     }
   },
   "apps": {

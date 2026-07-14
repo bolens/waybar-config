@@ -27,6 +27,16 @@ waybar_test_assert_json_file_jq "$TEST_DIR/modules/network-custom.generated.json
     and (."custom/tailscale"."on-click-middle" | test("waybar-signal\\.sh tailscale"))
   ' \
   "tailscale should wire middle refresh + signal"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/network-custom.generated.jsonc" \
+  '
+    (."custom/yggdrasil"."on-click-middle" | test("yggdrasil-status\\.sh --refresh"))
+    and (."custom/yggdrasil"."on-click-middle" | test("waybar-signal\\.sh yggdrasil"))
+    and (."custom/ipfs"."on-click-middle" | test("ipfs-status\\.sh --refresh"))
+    and (."custom/ipfs"."on-click-middle" | test("waybar-signal\\.sh ipfs"))
+    and ."custom/yggdrasil".signal == 37
+    and ."custom/ipfs".signal == 38
+  ' \
+  "yggdrasil/ipfs should wire middle refresh + reserved signals"
 
 echo "Testing weather/github signal wiring..."
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/utilities.generated.jsonc" \
@@ -37,6 +47,32 @@ waybar_test_assert_json_file_jq "$TEST_DIR/modules/utilities.generated.jsonc" \
     and (."custom/github"."on-click-middle" | test("waybar-signal\\.sh github"))
   ' \
   "weather/github should expose signals and signal on middle-click"
+
+echo "Testing keyed refresh (no numeric waybar-signal.sh in generators)..."
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/utilities.generated.jsonc" \
+  '
+    (."custom/kdeconnect"."on-click-middle" | test("waybar-signal\\.sh kdeconnect"))
+    and (."custom/device-notifier"."on-click-right" | test("waybar-signal\\.sh device_notifier"))
+    and (."custom/vaults"."on-click-right" | test("waybar-signal\\.sh vaults"))
+    and (."custom/touchpad"."on-click-right" | test("waybar-signal\\.sh touchpad"))
+    and (."custom/rgb"."on-click-middle" | test("waybar-signal\\.sh rgb"))
+    and (."custom/asusctl"."on-click-middle" | test("waybar-signal\\.sh asusctl"))
+    and (."custom/device-battery"."on-click-middle" | test("waybar-signal\\.sh device_battery"))
+  ' \
+  "utilities refresh clicks should use signals.* keys"
+waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" \
+  '
+    (."custom/coolercontrol"."on-click-middle" | test("waybar-signal\\.sh coolercontrol"))
+    and (."custom/openlinkhub"."on-click-middle" | test("waybar-signal\\.sh openlinkhub"))
+    and (."custom/homelab"."on-click-middle" | test("waybar-signal\\.sh homelab"))
+  ' \
+  "system polling modules should signal on middle-click refresh"
+if grep -RE 'waybar-signal\.sh [0-9]+' \
+  "$TEST_DIR/modules/"*.generated.jsonc \
+  "$TEST_DIR/scripts/generate/"*.sh 2>/dev/null; then
+  echo "FAIL: generators/modules must not bake numeric waybar-signal.sh offsets" >&2
+  fail=1
+fi
 
 echo "Testing fans/liquidctl → cooling-click..."
 waybar_test_assert_json_file_jq "$TEST_DIR/modules/system.generated.jsonc" \
@@ -93,7 +129,7 @@ waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" \
   '(.homelab.targets | length) >= 1' \
   "homelab.targets should be populated"
 waybar_test_assert_json_file_jq "$TEST_DIR/data/waybar-settings.json" \
-  '.signals.weather == 34 and .signals.github == 35 and .signals.album_art == 36' \
+  '.signals.weather == 34 and .signals.github == 35 and .signals.album_art == 36 and .signals.yggdrasil == 37 and .signals.ipfs == 38' \
   "new signal offsets should be reserved in settings"
 
 echo "Testing cooling-click CoolerControl preference (hermetic)..."

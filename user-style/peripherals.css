@@ -5,7 +5,9 @@
 #custom-device-battery,
 #custom-syncthing,
 #custom-streamdeck,
-#custom-i2pd {
+#custom-i2pd,
+#custom-yggdrasil,
+#custom-ipfs {
     color: #e0aaff;
     text-shadow: 0 0 6px rgba(224, 170, 255, 0.3);
 }

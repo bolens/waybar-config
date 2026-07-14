@@ -20,6 +20,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
   def sig($k): ($s[0].signals[$k] // null);
   def app_open: ($scripts + "/tools/app-open.sh");
+  def terminal: ($s[0].apps.terminal // "ghostty");
   # Middle-click: refresh cache then signal — Waybar ignores on-click stdout.
   def sig_refresh($key; $script):
     ($script + " --refresh && " + $scripts + "/lib/waybar-signal.sh " + $key);
@@ -55,6 +56,28 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "on-click": ($s[0].services.i2pd.on_click // (app_open + " xdg-open " + (($s[0].services.i2pd.console_url // "http://127.0.0.1:7070/") | sub("/$"; "")))),
       "on-click-right": ($s[0].services.i2pd.on_click_right // (app_open + " systemctl restart " + ($s[0].services.i2pd.service_name // "i2pd.service"))),
       "on-click-middle": ($scripts + "/services/i2pd/i2pd-status.sh --refresh")
+    },
+    "custom/yggdrasil": {
+      format: "{}",
+      "return-type": "json",
+      interval: iv("yggdrasil"),
+      signal: sig("yggdrasil"),
+      tooltip: true,
+      exec: ($scripts + "/services/yggdrasil/yggdrasil-status.sh"),
+      "on-click": ($s[0].services.yggdrasil.on_click // (app_open + " " + terminal + " -e yggdrasilctl getPeers")),
+      "on-click-right": ($s[0].services.yggdrasil.on_click_right // (app_open + " systemctl restart " + ($s[0].services.yggdrasil.service_name // "yggdrasil.service"))),
+      "on-click-middle": sig_refresh("yggdrasil"; $scripts + "/services/yggdrasil/yggdrasil-status.sh")
+    },
+    "custom/ipfs": {
+      format: "{}",
+      "return-type": "json",
+      interval: iv("ipfs"),
+      signal: sig("ipfs"),
+      tooltip: true,
+      exec: ($scripts + "/services/ipfs/ipfs-status.sh"),
+      "on-click": ($s[0].services.ipfs.on_click // (app_open + " xdg-open " + ($s[0].services.ipfs.webui_url // "http://127.0.0.1:5001/webui"))),
+      "on-click-right": ($s[0].services.ipfs.on_click_right // (app_open + " systemctl restart " + ($s[0].services.ipfs.service_name // "ipfs.service"))),
+      "on-click-middle": sig_refresh("ipfs"; $scripts + "/services/ipfs/ipfs-status.sh")
     }
   } | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ' | jq -c '.' >"$mod_dir/network-custom.generated.jsonc"

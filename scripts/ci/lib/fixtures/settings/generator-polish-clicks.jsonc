@@ -20,7 +20,9 @@
     "libredefender": { "service_name": "polish-ld.service" },
     "chkrootkit": { "service_name": "polish-ck.service" },
     "sunshine": {},
-    "i2pd": {}
+    "i2pd": {},
+    "yggdrasil": {},
+    "ipfs": {}
   },
   "apps": {
     "github_notifications": "https://github.polish/notifications",

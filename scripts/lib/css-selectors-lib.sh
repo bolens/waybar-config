@@ -154,6 +154,8 @@ waybar_css_pill_ids() {
 #custom-syncthing
 #custom-sunshine
 #custom-i2pd
+#custom-yggdrasil
+#custom-ipfs
 #custom-libredefender
 #custom-chkrootkit
 #custom-media-prev

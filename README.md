@@ -280,7 +280,7 @@ Groups and module lists live in `data/waybar-settings.jsonc` → `groups.*` (see
 | `custom/dock-windows` | bottom center | `qdbus6` (Plasma) / `hyprctl` | **On by default**; set `dock_windows.enabled: false` to hide. Plasma: install `qt6-tools`. |
 | `custom/stats-carousel` | hardware | metrics collector | **On by default** (`visual.stats_carousel.enabled`); replaces cpu/mem/disk/gpu; scroll to cycle |
 | `hyprland/submap` | desk-hypr | Hyprland | Native overlay; shows active submap name |
-| Privacy / VPN / Tailscale / i2pd | privacy / net | PipeWire / daemons | |
+| Privacy / VPN / Tailscale / i2pd / Yggdrasil / IPFS | privacy / net | PipeWire / daemons | |
 
 ### Minimal / laptop profile
 
@@ -436,6 +436,8 @@ sudo dnf install jq curl ripgrep socat qt6-qttools wireplumber pipewire-pulse \
 | Tailscale (`custom/tailscale`) | `tailscale` | `tailscale` | `tailscale` | |
 | VPN summary extras | `netbird` / `zerotier-one` / `mullvad-vpn` | upstream packages | same | Detected when present; not required |
 | I2P (`custom/i2pd`) | `i2pd` | `i2pd` | `i2pd` | Console password via secrets + `i2pd-set-console-pass.sh` |
+| Yggdrasil (`custom/yggdrasil`) | `yggdrasil` | `yggdrasil` | `yggdrasil` | Needs `yggdrasil` group (or root) for admin socket |
+| IPFS (`custom/ipfs`) | `kubo` / `ipfs` | Kubo daemon | `ipfs` / `kubo` | Default API `http://127.0.0.1:5001` |
 | Syncthing (`custom/syncthing`) | `syncthing` | `syncthing` | `syncthing` | |
 | Homelab / weather HTTP | `curl` (core) | `curl` | `curl` | `homelab.targets[]`; weather Open-Meteo → wttr.in |
 
@@ -537,7 +539,7 @@ sudo pacman -S jq curl ripgrep socat qt6-tools wireplumber libpulse \
   tailscale syncthing gocryptfs
 
 # Optional: media visualizer, GameStream host, I2P, …
-# sudo pacman -S cava sunshine i2pd
+# sudo pacman -S cava sunshine i2pd yggdrasil kubo
 
 # Optional AUR / community (yay/paru) — pick what you own
 yay -S coolercontrol-bin openlinkhub-bin streamdeck-ui   # or coolercontrol / openlinkhub

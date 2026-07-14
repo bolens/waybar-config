@@ -86,6 +86,8 @@
       "custom/vpnstatus",
       "custom/tailscale",
       "custom/i2pd",
+      "custom/yggdrasil",
+      "custom/ipfs",
       "network#bond",
       "custom/eno1",
       "custom/enp5s0",

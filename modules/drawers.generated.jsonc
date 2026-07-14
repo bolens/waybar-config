@@ -27,7 +27,7 @@
   "custom/net-drawer": {
     "format": "󰖩",
     "tooltip": true,
-    "tooltip-format": "Network\nContains: Upload · Download · VPN · Tailscale · i2pd · Bond · eno1 · enp5s0 · wlan0\nClick to toggle"
+    "tooltip-format": "Network\nContains: Upload · Download · VPN · Tailscale · i2pd · Yggdrasil · IPFS · Bond · eno1 · enp5s0 · wlan0\nClick to toggle"
   },
   "custom/tools-drawer": {
     "format": "󰒓",

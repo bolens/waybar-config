@@ -4,7 +4,7 @@
   //   (or: bash scripts/tools/apply-profile.sh minimal-groups)
   //
   // Keeps: workspaces, media, net, notifications, clock, cpu/mem/disk, updates, weather, power menu, pomodoro
-  // Drops: CoolerControl, liquidctl, OpenLinkHub, ASUS, Stream Deck, i2pd, security scanners, dock hardware extras
+  // Drops: CoolerControl, liquidctl, OpenLinkHub, ASUS, Stream Deck, i2pd / Yggdrasil / IPFS, security scanners, dock hardware extras
   "layouts": {
     "top": {
       "modules_left": ["group/desk-controls", "group/devices", "group/media", "group/net"]

@@ -102,6 +102,8 @@
     "sunshine": 30,
     "streamdeck": "once",
     "i2pd": "once",
+    "yggdrasil": "once",
+    "ipfs": "once",
     "pomodoro": 1,
     "homelab": 60,
     "cava": 0,
@@ -133,6 +135,8 @@
     "sunshine": 23,
     "streamdeck": 24,
     "i2pd": 25,
+    "yggdrasil": 37,
+    "ipfs": 38,
     "coolercontrol": 27,
     "asusctl": 28,
     "openlinkhub": 29,
@@ -211,6 +215,8 @@
         "custom/vpnstatus",
         "custom/tailscale",
         "custom/i2pd",
+        "custom/yggdrasil",
+        "custom/ipfs",
         "network#bond",
         "@network.interfaces"
       ]
@@ -426,6 +432,20 @@
       "service_name": "i2pd.service",
       "on_click": null,
       "on_click_right": null
+    },
+    "yggdrasil": {
+      
+      "endpoint": "/var/run/yggdrasil.sock",
+      "service_name": "yggdrasil.service",
+      "on_click": null, 
+      "on_click_right": null 
+    },
+    "ipfs": {
+      "api_url": "http://127.0.0.1:5001",
+      "webui_url": "http://127.0.0.1:5001/webui",
+      "service_name": "ipfs.service",
+      "on_click": null, 
+      "on_click_right": null 
     },
     "coolercontrol": {
       "api_url": "http://127.0.0.1:11987",

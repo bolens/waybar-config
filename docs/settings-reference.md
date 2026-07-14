@@ -54,19 +54,20 @@ Common fields: `layer` (`top` = fullscreen can cover the bar; `overlay` better f
 ## `module_intervals` and `signals`
 
 - Interval keys (e.g. `cpu`, `weather`) are read by status scripts via `waybar_module_interval <key> <fallback>`.
-- Value `"once"` → long cache TTL for signal-driven modules (`vpn`, `tailscale`, `album_art`, …).
+- Value `"once"` → long cache TTL for signal-driven modules (`vpn`, `tailscale`, `i2pd`, `yggdrasil`, `ipfs`, `album_art`, …).
 - `signals.<key>` must match the Waybar module `signal` field generators emit.
-- Reserved offsets used by polish modules: `weather` 34, `github` 35, `album_art` 36 (see `signals` in settings).
-- **Click / listener scripts must refresh that same number.** Prefer the key:
+- Offsets must be unique positive integers (`make validate` / `check-settings-schema.sh` enforces this). Spare gap: **13** (available for a new key).
+- Reserved polish offsets: `weather` 34, `github` 35, `album_art` 36, `yggdrasil` 37, `ipfs` 38 (see `signals` in settings).
+- **Click / listener scripts must refresh that same key.** Prefer:
 
   ```bash
   "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" my_feature
   ```
 
-  For middle-click “refresh now” on poll-heavy modules, generators should run
+  Generators expose a `sig_refresh("key"; $script)` helper for middle-click
   `--refresh && waybar-signal.sh <key>` (cache write alone does not update the bar).
 
-  Numeric offsets and raw `pkill -RTMIN+N` are legacy — if `signals.*` changes, they miss the module Waybar subscribed to.
+  Numeric offsets and raw `pkill -RTMIN+N` are legacy — if `signals.*` changes, they miss the module Waybar subscribed to. Unknown keys log a clear line on stderr (see [troubleshooting](troubleshooting.md)).
 
 ## `thresholds`
 
@@ -111,6 +112,19 @@ When `true` (default on Arch-oriented machines), `updates-status.sh` also querie
 ## `apps` and personalization
 
 Click targets, desktop IDs, and service URLs under `apps` / `services` are machine-specific. Forks should edit them locally rather than expecting upstream hosts.
+
+### Overlay network services (`services.i2pd` / `yggdrasil` / `ipfs`)
+
+These sit in `groups.net` next to VPN / Tailscale (`custom/i2pd`, `custom/yggdrasil`, `custom/ipfs`).
+
+| Key | Role |
+|-----|------|
+| `services.i2pd` | Console URL / user; password only in `waybar-secrets.jsonc` |
+| `services.yggdrasil.endpoint` | Admin **socket path** (e.g. `/var/run/yggdrasil.sock`). Do **not** store `unix:///…` in JSONC — the `//` comment stripper truncates it. The status script prefixes `unix://`. |
+| `services.ipfs.api_url` / `webui_url` | Kubo HTTP API and WebUI (defaults `http://127.0.0.1:5001`) |
+| `service_name` / `on_click*` | systemd unit + optional click overrides for each |
+
+CI: `scripts/ci/tests/generator/overlay-network-modules.sh` (matrix stem `overlay-network-modules`).
 
 ## Manifests (outside the main JSONC)
 

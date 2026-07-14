@@ -221,11 +221,17 @@ waybar_test_assert_jq "$clean_utils" '."custom/streamdeck"."on-click-middle" == 
 waybar_test_assert_jq "$clean_utils" '."custom/streamdeck".interval == 75' "Custom streamdeck interval override not compiled correctly into utilities.generated.jsonc"
 waybar_test_assert_jq "$clean_utils" '."custom/streamdeck".signal == 97' "Custom streamdeck signal override not compiled correctly into utilities.generated.jsonc"
 
-# Assert network custom configurations overrides compiled correctly (for i2pd)
+# Assert network custom configurations overrides compiled correctly (for i2pd/yggdrasil/ipfs)
 clean_net_custom=$(waybar_test_read_jsonc "$TEST_DIR/modules/network-custom.generated.jsonc")
 waybar_test_assert_jq "$clean_net_custom" '."custom/i2pd".interval == 74' "Custom i2pd interval override not compiled correctly into network-custom.generated.jsonc"
 waybar_test_assert_jq "$clean_net_custom" '."custom/i2pd".signal == 96' "Custom i2pd signal override not compiled correctly into network-custom.generated.jsonc"
 waybar_test_assert_jq "$clean_net_custom" '."custom/i2pd"."on-click" == "TEST_I2PD_ON_CLICK"' "Custom i2pd on-click override not compiled correctly into network-custom.generated.jsonc"
+waybar_test_assert_jq "$clean_net_custom" '."custom/yggdrasil".interval == 73' "Custom yggdrasil interval override not compiled correctly"
+waybar_test_assert_jq "$clean_net_custom" '."custom/yggdrasil".signal == 95' "Custom yggdrasil signal override not compiled correctly"
+waybar_test_assert_jq "$clean_net_custom" '."custom/yggdrasil"."on-click" == "TEST_YGGDRASIL_ON_CLICK"' "Custom yggdrasil on-click override not compiled correctly"
+waybar_test_assert_jq "$clean_net_custom" '."custom/ipfs".interval == 72' "Custom ipfs interval override not compiled correctly"
+waybar_test_assert_jq "$clean_net_custom" '."custom/ipfs".signal == 94' "Custom ipfs signal override not compiled correctly"
+waybar_test_assert_jq "$clean_net_custom" '."custom/ipfs"."on-click" == "TEST_IPFS_ON_CLICK"' "Custom ipfs on-click override not compiled correctly"
 
 waybar_test_assert_jq "$clean_utils" '."custom/github"."on-click" | test("github.test/notifications")' "apps.github_notifications not wired into custom/github on-click"
 waybar_test_assert_jq "$clean_utils" '."custom/github"."on-click-right" == "TEST_GITHUB_ON_CLICK_RIGHT"' "github.on_click_right override not compiled correctly"

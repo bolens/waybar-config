@@ -64,6 +64,8 @@ jq -n --slurpfile s "$settings" \
       "custom/vpnstatus": "VPN",
       "custom/tailscale": "Tailscale",
       "custom/i2pd": "i2pd",
+      "custom/yggdrasil": "Yggdrasil",
+      "custom/ipfs": "IPFS",
       "network#bond": "Bond",
       "@network.interfaces": "Interfaces",
       "custom/screenshot": "Screenshot",

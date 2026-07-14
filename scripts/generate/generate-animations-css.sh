@@ -134,6 +134,8 @@ EOF
 #custom-sunshine.critical,
 #custom-streamdeck.critical,
 #custom-i2pd.critical,
+#custom-yggdrasil.critical,
+#custom-ipfs.critical,
 #custom-runtimes.critical,
 #custom-libredefender.critical,
 #custom-chkrootkit.critical {
