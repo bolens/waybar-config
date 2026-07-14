@@ -86,4 +86,17 @@ if ! grep -q 'systemctl suspend' "$TEST_DIR/bin/calls.log"; then
   fail=1
 fi
 
+# Direct destructive actions must refuse confirmation when rofi is absent.
+rm -f "$TEST_DIR/bin/rofi"
+: >"$TEST_DIR/bin/calls.log"
+PATH="$TEST_DIR/bin:/usr/bin:/bin" \
+  WAYBAR_HOME="$TEST_DIR" \
+  WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+  WAYBAR_COMPOSITOR=kde \
+  "$TEST_DIR/scripts/system/power-click.sh" reboot || true
+if grep -q 'systemctl reboot' "$TEST_DIR/bin/calls.log"; then
+  echo "FAIL: reboot without rofi must not call systemctl reboot. log=$(cat "$TEST_DIR/bin/calls.log")" >&2
+  fail=1
+fi
+
 waybar_test_end

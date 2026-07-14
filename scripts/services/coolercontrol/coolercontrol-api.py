@@ -62,30 +62,40 @@ def _http(
     body: str | None = None,
     content_type: str | None = None,
 ) -> tuple[int, str]:
+    # Keep Authorization / API keys off curl argv (visible in /proc/*/cmdline).
+    hdr_dir: tempfile.TemporaryDirectory[str] | None = None
     args = ["curl", "-sS", "--max-time", "4", "-w", "\n%{http_code}", "-X", method]
-    if base.startswith("https://"):
-        args.append("-k")
-    if netrc:
-        args += ["--netrc-file", netrc]
-    if cookie_jar:
-        args += ["-b", cookie_jar, "-c", cookie_jar]
-    if headers:
-        for h in headers:
-            args += ["-H", h]
-    if content_type:
-        args += ["-H", f"Content-Type: {content_type}"]
-    if body is not None:
-        args += ["--data-binary", body]
-    args.append(f"{base}{path}")
-    r = _curl(args)
-    if r is None:
-        return 0, ""
-    out = r.stdout or ""
-    body_out, _, code = out.rpartition("\n")
     try:
-        return int(code.strip() or "0"), body_out
-    except ValueError:
-        return 0, body_out
+        if base.startswith("https://"):
+            args.append("-k")
+        if netrc:
+            args += ["--netrc-file", netrc]
+        if cookie_jar:
+            args += ["-b", cookie_jar, "-c", cookie_jar]
+        if headers:
+            hdr_dir = tempfile.TemporaryDirectory(prefix="cc-hdr.")
+            for i, h in enumerate(headers):
+                hp = Path(hdr_dir.name) / f"h{i}"
+                hp.write_text(h if h.endswith("\n") else h + "\n", encoding="utf-8")
+                hp.chmod(0o600)
+                args += ["-H", f"@{hp}"]
+        if content_type:
+            args += ["-H", f"Content-Type: {content_type}"]
+        if body is not None:
+            args += ["--data-binary", body]
+        args.append(f"{base}{path}")
+        r = _curl(args)
+        if r is None:
+            return 0, ""
+        out = r.stdout or ""
+        body_out, _, code = out.rpartition("\n")
+        try:
+            return int(code.strip() or "0"), body_out
+        except ValueError:
+            return 0, body_out
+    finally:
+        if hdr_dir is not None:
+            hdr_dir.cleanup()
 
 
 class CcClient:

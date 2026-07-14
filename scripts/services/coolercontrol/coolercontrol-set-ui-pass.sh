@@ -302,14 +302,21 @@ def try_bases(build_args):
     return "000"
 
 if mode == "token":
-    def build(base):
-        return [
-            "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
-            "--max-time", "3",
-            "-H", f"Authorization: Bearer {token}",
-            f"{base}/status",
-        ]
-    print(try_bases(build))
+    # Bearer via -H @file so the token never appears on curl argv.
+    with tempfile.TemporaryDirectory(prefix="cc-tok.") as td:
+        hdr = Path(td) / "bearer.hdr"
+        hdr.write_text(f"Authorization: Bearer {token}\n", encoding="utf-8")
+        hdr.chmod(0o600)
+
+        def build(base, hdr_path=str(hdr)):
+            return [
+                "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
+                "--max-time", "3",
+                "-H", f"@{hdr_path}",
+                f"{base}/status",
+            ]
+
+        print(try_bases(build))
 elif mode == "basic_login":
     def build(base, netrc):
         return [

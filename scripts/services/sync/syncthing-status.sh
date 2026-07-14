@@ -70,13 +70,26 @@ fi
 
 api_url="$protocol://$gui_host_port/rest"
 
+# API key via curl -H @file (0600) so it never appears on argv (/proc cmdline).
+_st_auth=$(mktemp -d "${TMPDIR:-/tmp}/waybar-st-auth.XXXXXX")
+chmod 700 "$_st_auth"
+# shellcheck disable=SC2064
+trap 'rm -rf "${_st_auth:-}"' EXIT
+printf 'X-API-Key: %s\n' "$api_key" >"$_st_auth/hdr"
+chmod 600 "$_st_auth/hdr"
+unset api_key
+
+syncthing_curl() {
+  timeout 3 curl -k -s -H "@$_st_auth/hdr" "$@" || true
+}
+
 # Query system status
-sys_status=$(timeout 3 curl -k -s -H "X-API-Key: $api_key" "$api_url/system/status" || true)
+sys_status=$(syncthing_curl "$api_url/system/status")
 if [ -z "$sys_status" ] && [ "$protocol" = "https" ]; then
   # Try fallback to HTTP
   protocol="http"
   api_url="$protocol://$gui_host_port/rest"
-  sys_status=$(timeout 3 curl -k -s -H "X-API-Key: $api_key" "$api_url/system/status" || true)
+  sys_status=$(syncthing_curl "$api_url/system/status")
 fi
 
 if [ -z "$sys_status" ]; then
@@ -88,6 +101,9 @@ if [ -z "$sys_status" ]; then
   fi
   printf '%s\n' "$json"
   printf '%s\n' "$json" >"$cache_file"
+  rm -rf "$_st_auth"
+  unset _st_auth
+  trap - EXIT
   exit 0
 fi
 
@@ -96,7 +112,7 @@ uptime_s=$(echo "$sys_status" | jq -r '.uptime // 0')
 my_id=$(echo "$sys_status" | jq -r '.myID // "unknown"')
 
 # Query active connections
-connections_json=$(timeout 3 curl -k -s -H "X-API-Key: $api_key" "$api_url/system/connections" || true)
+connections_json=$(syncthing_curl "$api_url/system/connections")
 connected_devices=0
 total_devices=0
 device_tooltip=""
@@ -143,3 +159,7 @@ mv -f "$tmp_cache" "$cache_file"
 
 # Signal Waybar to refresh the module UI
 "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" syncthing
+
+rm -rf "${_st_auth:-}"
+unset _st_auth
+trap - EXIT

@@ -10,7 +10,8 @@ from typing import Any
 
 
 _SECRET_KEY_RE = re.compile(
-    r"(pass|password|token|secret|api[_-]?key|credential)", re.IGNORECASE
+    r"(pass|password|token|secret|api[_-]?key|credential|bearer|auth[_-]?token|access[_-]?token|private[_-]?key)",
+    re.IGNORECASE,
 )
 
 

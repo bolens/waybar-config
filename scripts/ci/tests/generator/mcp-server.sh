@@ -143,6 +143,11 @@ resp=$(run_mcp "$(tool_call waybar_patch_settings '{"overlay":{"services":{"i2pd
 assert_contains "$resp" 'isError' "patch refuses secret-looking keys"
 assert_contains "$resp" 'secret' "patch secret rejection mentions secret"
 
+resp=$(run_mcp "$(tool_call waybar_set_path '{"path":"services.coolercontrol.bearer","value":"x"}')")
+assert_contains "$resp" 'isError' "set_path refuses bearer key"
+resp=$(run_mcp "$(tool_call waybar_set_path '{"path":"services.demo.access_token","value":"x"}')")
+assert_contains "$resp" 'isError' "set_path refuses access_token key"
+
 # --- backup / restore ---
 resp=$(run_mcp "$(tool_call waybar_backup_settings '{}')")
 assert_contains "$resp" 'backup' "backup_settings returns backup path"

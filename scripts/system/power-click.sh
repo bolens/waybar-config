@@ -27,7 +27,9 @@ confirm_action() {
     fi
     return 1
   fi
-  return 0
+  # Without an interactive confirmer, refuse destructive actions.
+  notify-send "Power" "Confirm required (install rofi) — aborted $action_name" 2>/dev/null || true
+  return 1
 }
 
 do_lock() {

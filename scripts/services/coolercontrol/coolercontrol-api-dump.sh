@@ -44,22 +44,32 @@ def curl(args):
     return r
 
 def req(method, path, headers=None, jar=None, netrc=None):
+    # Auth headers via -H @file so secrets never appear on curl argv.
+    hdr_dir = None
     args = ["curl", "-sS", "--max-time", "5", "-w", "\n%{http_code}", "-X", method]
-    if netrc:
-        args += ["--netrc-file", netrc]
-    if jar:
-        args += ["-b", jar, "-c", jar]
-    if headers:
-        for h in headers:
-            args += ["-H", h]
-    args.append(f"{base}{path}")
-    r = curl(args)
-    body, _, code = (r.stdout or "").rpartition("\n")
     try:
-        code_i = int(code.strip() or "0")
-    except ValueError:
-        code_i = 0
-    return code_i, body
+        if netrc:
+            args += ["--netrc-file", netrc]
+        if jar:
+            args += ["-b", jar, "-c", jar]
+        if headers:
+            hdr_dir = tempfile.TemporaryDirectory(prefix="cc-dump-hdr.")
+            for i, h in enumerate(headers):
+                hp = Path(hdr_dir.name) / f"h{i}"
+                hp.write_text(h if h.endswith("\n") else h + "\n", encoding="utf-8")
+                hp.chmod(0o600)
+                args += ["-H", f"@{hp}"]
+        args.append(f"{base}{path}")
+        r = curl(args)
+        body, _, code = (r.stdout or "").rpartition("\n")
+        try:
+            code_i = int(code.strip() or "0")
+        except ValueError:
+            code_i = 0
+        return code_i, body
+    finally:
+        if hdr_dir is not None:
+            hdr_dir.cleanup()
 
 headers = None
 jar = None

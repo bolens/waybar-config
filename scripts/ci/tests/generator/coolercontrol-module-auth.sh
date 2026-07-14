@@ -23,19 +23,43 @@ mkdir -p "$CC_AUTH_BIN"
 CC_AUTH_LOG="$TEST_DIR/cc-auth-curl.log"
 : >"$CC_AUTH_LOG"
 # Mock: bad token (cc_bad*) → 401 on Bearer /status; good token → 200; password login → 200 + cookie status
+# Bearer may arrive as -H "Authorization: …" or -H @file (secrets off argv).
 cat >"$CC_AUTH_BIN/curl" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"${CC_AUTH_LOG:?}"
 joined="$*"
 # Emit body\nhttp_code like real curl -w
 emit() { printf '%s\n%s' "$1" "$2"; }
-if [[ "$joined" == *"/status"* && "$joined" == *"Authorization: Bearer"* ]]; then
-  if [[ "$joined" == *"cc_bad"* ]]; then
-    emit '{"error":"unauthorized"}' "401"
-  else
-    emit '{"devices":[]}' "200"
+
+_bearer_hdr() {
+  local prev="" a f
+  for a in "$@"; do
+    if [[ "$a" == *"Authorization: Bearer"* ]]; then
+      printf '%s' "$a"
+      return 0
+    fi
+    if [[ "$prev" == "-H" && "$a" == @* ]]; then
+      f="${a#@}"
+      if [[ -f "$f" ]]; then
+        printf '%s' "$(tr -d '\n' <"$f")"
+        return 0
+      fi
+    fi
+    prev="$a"
+  done
+  return 1
+}
+
+if [[ "$joined" == *"/status"* ]]; then
+  hdr="$(_bearer_hdr "$@" || true)"
+  if [[ -n "$hdr" ]]; then
+    if [[ "$hdr" == *"cc_bad"* ]]; then
+      emit '{"error":"unauthorized"}' "401"
+    else
+      emit '{"devices":[]}' "200"
+    fi
+    exit 0
   fi
-  exit 0
 fi
 if [[ "$joined" == *"/login"* ]]; then
   if [[ "$joined" != *"-X POST"* ]]; then
@@ -82,6 +106,16 @@ if grep -q '/login' "$CC_AUTH_LOG"; then
   cat "$CC_AUTH_LOG" >&2 || true
   fail=1
 fi
+if grep -F 'cc_good_token_aaaaaaaaaaaaaaaa' "$CC_AUTH_LOG"; then
+  echo "FAIL: bearer token must not appear on curl argv. Log:" >&2
+  cat "$CC_AUTH_LOG" >&2 || true
+  fail=1
+fi
+if ! grep -qE -- '-H @' "$CC_AUTH_LOG"; then
+  echo "FAIL: bearer auth should use -H @file. Log:" >&2
+  cat "$CC_AUTH_LOG" >&2 || true
+  fail=1
+fi
 
 # Meta-guard: prove cmdline WAYBAR_CC_FIXTURE_DIR= clears a poisoned parent export.
 # In bash, `export VAR=poison` then `VAR= cmd` → cmd sees empty VAR (assignment wins).
@@ -122,8 +156,13 @@ auth_fb=$(
     python3 "$TEST_DIR/scripts/services/coolercontrol/coolercontrol-api.py" fetch-bundle
 ) || true
 waybar_test_assert_jq "$auth_fb" '.ok == true and .auth == "basic"' "bad token should fall back to ui_pass (basic): $auth_fb"
-if ! grep -q 'Authorization: Bearer' "$CC_AUTH_LOG"; then
-  echo "FAIL: fallback path should still try Bearer first. Log:" >&2
+if ! grep -qE -- '-H @' "$CC_AUTH_LOG"; then
+  echo "FAIL: fallback path should try Bearer via -H @file first. Log:" >&2
+  cat "$CC_AUTH_LOG" >&2 || true
+  fail=1
+fi
+if grep -F 'cc_bad_token_bbbbbbbbbbbbbbbb' "$CC_AUTH_LOG"; then
+  echo "FAIL: bearer token must not appear on curl argv. Log:" >&2
   cat "$CC_AUTH_LOG" >&2 || true
   fail=1
 fi

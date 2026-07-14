@@ -33,9 +33,13 @@ login_reject=skip
 cookie_status=skip
 
 if [[ -n "$token" && "$token" == cc_* ]]; then
-  bearer_status=$(curl -sS -m 5 -o "$td/status.json" -w '%{http_code}' -H "Authorization: Bearer $token" "$base/status" || true)
-  bearer_devices=$(curl -sS -m 5 -o "$td/devices.json" -w '%{http_code}' -H "Authorization: Bearer $token" "$base/devices" || true)
+  # Header via @file so the token never appears on curl argv.
+  printf 'Authorization: Bearer %s\n' "$token" >"$td/bearer.hdr"
+  chmod 600 "$td/bearer.hdr"
+  bearer_status=$(curl -sS -m 5 -o "$td/status.json" -w '%{http_code}' -H "@$td/bearer.hdr" "$base/status" || true)
+  bearer_devices=$(curl -sS -m 5 -o "$td/devices.json" -w '%{http_code}' -H "@$td/bearer.hdr" "$base/devices" || true)
 fi
+unset token
 
 if [[ -n "$pass" && "$pass" != CHANGE_ME ]]; then
   cat >"$td/netrc" <<NETRC

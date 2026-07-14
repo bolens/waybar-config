@@ -52,6 +52,7 @@ fi
 
 # Mock curl auth path: POST /login required (GET → 405); netrc password
 # "invalid-auth-check" forces 401; "000" mimics curl transport failure.
+# Bearer arrives as -H @file (token off argv) or legacy -H "Authorization: …".
 CC_CURL_FAKE="$TEST_DIR/fakebin"
 mkdir -p "$CC_CURL_FAKE"
 CC_CURL_LOG="$TEST_DIR/curl-args.log"
@@ -60,7 +61,48 @@ cat >"$CC_CURL_FAKE/curl" <<EOF
 #!/usr/bin/env bash
 printf '%s\n' "\$*" >>$(printf '%q' "$CC_CURL_LOG")
 joined="\$*"
-if [[ "\$joined" == *"/status"* && "\$joined" == *"Authorization: Bearer"* ]]; then
+
+_has_bearer() {
+  local prev="" a f
+  for a in "\$@"; do
+    if [[ "\$a" == *"Authorization: Bearer"* ]]; then
+      return 0
+    fi
+    if [[ "\$prev" == "-H" && "\$a" == @* ]]; then
+      f="\${a#@}"
+      if [[ -f "\$f" ]] && grep -q 'Authorization: Bearer' "\$f" 2>/dev/null; then
+        return 0
+      fi
+    fi
+    prev="\$a"
+  done
+  return 1
+}
+
+_bearer_contains() {
+  local needle="\$1"
+  shift
+  local prev="" a f
+  for a in "\$@"; do
+    if [[ "\$a" == *"\$needle"* ]]; then
+      return 0
+    fi
+    if [[ "\$prev" == "-H" && "\$a" == @* ]]; then
+      f="\${a#@}"
+      if [[ -f "\$f" ]] && grep -qF "\$needle" "\$f" 2>/dev/null; then
+        return 0
+      fi
+    fi
+    prev="\$a"
+  done
+  return 1
+}
+
+if [[ "\$joined" == *"/status"* ]] && _has_bearer "\$@"; then
+  if _bearer_contains "cc_bad" "\$@"; then
+    printf '401'
+    exit 0
+  fi
   printf '200'
   exit 0
 fi
@@ -148,8 +190,13 @@ if ! grep -q 'Bearer token' <<<"$out_auth_tok"; then
   echo "FAIL: expected Bearer token auth OK message. Output: $out_auth_tok" >&2
   fail=1
 fi
-if ! grep -q 'Authorization: Bearer' "$CC_CURL_LOG"; then
-  echo "FAIL: mock curl missing Bearer header. Log:" >&2
+if ! grep -qE -- '-H @' "$CC_CURL_LOG"; then
+  echo "FAIL: mock curl missing Bearer -H @file. Log:" >&2
+  cat "$CC_CURL_LOG" >&2 || true
+  fail=1
+fi
+if grep -F 'cc_authtoken333333333333333333333' "$CC_CURL_LOG"; then
+  echo "FAIL: bearer token appeared on curl argv. Log:" >&2
   cat "$CC_CURL_LOG" >&2 || true
   fail=1
 fi
@@ -201,8 +248,45 @@ cat >"$CC_CURL_FAKE/curl" <<EOF
 #!/usr/bin/env bash
 printf '%s\n' "\$*" >>$(printf '%q' "$CC_CURL_LOG")
 joined="\$*"
-if [[ "\$joined" == *"/status"* && "\$joined" == *"Authorization: Bearer"* ]]; then
-  if [[ "\$joined" == *"cc_bad"* ]]; then
+
+_has_bearer() {
+  local prev="" a f
+  for a in "\$@"; do
+    if [[ "\$a" == *"Authorization: Bearer"* ]]; then
+      return 0
+    fi
+    if [[ "\$prev" == "-H" && "\$a" == @* ]]; then
+      f="\${a#@}"
+      if [[ -f "\$f" ]] && grep -q 'Authorization: Bearer' "\$f" 2>/dev/null; then
+        return 0
+      fi
+    fi
+    prev="\$a"
+  done
+  return 1
+}
+
+_bearer_contains() {
+  local needle="\$1"
+  shift
+  local prev="" a f
+  for a in "\$@"; do
+    if [[ "\$a" == *"\$needle"* ]]; then
+      return 0
+    fi
+    if [[ "\$prev" == "-H" && "\$a" == @* ]]; then
+      f="\${a#@}"
+      if [[ -f "\$f" ]] && grep -qF "\$needle" "\$f" 2>/dev/null; then
+        return 0
+      fi
+    fi
+    prev="\$a"
+  done
+  return 1
+}
+
+if [[ "\$joined" == *"/status"* ]] && _has_bearer "\$@"; then
+  if _bearer_contains "cc_bad" "\$@"; then
     printf '401'
     exit 0
   fi
@@ -260,8 +344,13 @@ if ! grep -q 'API auth check: OK' <<<"$out_auth_fb"; then
   echo "FAIL: fallback should still OK via ui_pass. Output: $out_auth_fb" >&2
   fail=1
 fi
-if ! grep -q 'Authorization: Bearer' "$CC_CURL_LOG"; then
-  echo "FAIL: fallback should try Bearer first. Log:" >&2
+if ! grep -qE -- '-H @' "$CC_CURL_LOG"; then
+  echo "FAIL: fallback should try Bearer via -H @file first. Log:" >&2
+  cat "$CC_CURL_LOG" >&2 || true
+  fail=1
+fi
+if grep -F 'cc_bad_token_should_fallback' "$CC_CURL_LOG"; then
+  echo "FAIL: bad bearer token appeared on curl argv. Log:" >&2
   cat "$CC_CURL_LOG" >&2 || true
   fail=1
 fi

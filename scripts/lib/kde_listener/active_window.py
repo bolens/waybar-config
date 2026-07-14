@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 
 import gi
 
@@ -397,29 +398,46 @@ class ActiveWindowMixin:
         notifyActiveWindow();
         """
 
-        script_path = "/tmp/active_window_watcher.js"
-        with open(script_path, "w") as f:
-            f.write(script_content)
+        script_fd, script_path = tempfile.mkstemp(
+            prefix="waybar-active-window-",
+            suffix=".js",
+            dir=os.environ.get("XDG_RUNTIME_DIR") or None,
+        )
+        try:
+            os.fchmod(script_fd, 0o600)
+            with os.fdopen(script_fd, "w", encoding="utf-8") as f:
+                f.write(script_content)
+            script_fd = -1  # ownership transferred to file object
 
-        # Cleanup first
-        subprocess.run([
-            "qdbus6", "org.kde.KWin", "/Scripting",
-            "org.kde.kwin.Scripting.unloadScript", "active_window_watcher"
-        ], capture_output=True)
-
-        res = subprocess.run([
-            "qdbus6", "org.kde.KWin", "/Scripting",
-            "org.kde.kwin.Scripting.loadScript", script_path, "active_window_watcher"
-        ], capture_output=True, text=True)
-        script_id = res.stdout.strip()
-
-        if script_id.isdigit():
+            # Cleanup first
             subprocess.run([
-                "qdbus6", "org.kde.KWin", f"/Scripting/Script{script_id}",
-                "org.kde.kwin.Script.run"
+                "qdbus6", "org.kde.KWin", "/Scripting",
+                "org.kde.kwin.Scripting.unloadScript", "active_window_watcher"
             ], capture_output=True)
-            return script_id
-        return None
+
+            res = subprocess.run([
+                "qdbus6", "org.kde.KWin", "/Scripting",
+                "org.kde.kwin.Scripting.loadScript", script_path, "active_window_watcher"
+            ], capture_output=True, text=True)
+            script_id = res.stdout.strip()
+
+            if script_id.isdigit():
+                subprocess.run([
+                    "qdbus6", "org.kde.KWin", f"/Scripting/Script{script_id}",
+                    "org.kde.kwin.Script.run"
+                ], capture_output=True)
+                return script_id
+            return None
+        finally:
+            if script_fd >= 0:
+                try:
+                    os.close(script_fd)
+                except OSError:
+                    pass
+            try:
+                os.unlink(script_path)
+            except OSError:
+                pass
 
     def on_virtual_desktops_changed(self, conn, sender_name, object_path, interface_name, signal_name, parameters, user_data):
         if signal_name in ("currentChanged", "desktopCreated", "desktopRemoved", "desktopDataChanged"):

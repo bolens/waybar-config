@@ -48,11 +48,33 @@ user=$(waybar_settings_get '.services.i2pd.console_user' 'i2pd')
 pass="${WAYBAR_I2PD_CONSOLE_PASS:-$(waybar_settings_get '.services.i2pd.console_pass' '')}"
 console_url=$(waybar_settings_get '.services.i2pd.console_url' 'http://127.0.0.1:7070/')
 
+# Auth via temp netrc (0600) so the password never appears on curl argv (/proc cmdline).
+web_data=""
 if [ -n "$pass" ]; then
-  web_data=$(timeout 3 curl -H "Host: localhost:7070" -u "$user:$pass" -s "$console_url" || true)
+  _i2pd_auth=$(mktemp -d "${TMPDIR:-/tmp}/waybar-i2pd-auth.XXXXXX")
+  chmod 700 "$_i2pd_auth"
+  # shellcheck disable=SC2064
+  trap 'rm -rf "${_i2pd_auth:-}"' EXIT
+  I2PD_NETRC_PATH="$_i2pd_auth/netrc" I2PD_CONSOLE_USER="$user" I2PD_CONSOLE_PASS="$pass" python3 <<'PY'
+import os
+from pathlib import Path
+path = Path(os.environ["I2PD_NETRC_PATH"])
+user = os.environ["I2PD_CONSOLE_USER"]
+password = os.environ["I2PD_CONSOLE_PASS"]
+path.write_text(
+    f"machine 127.0.0.1\nlogin {user}\npassword {password}\n"
+    f"machine localhost\nlogin {user}\npassword {password}\n"
+)
+path.chmod(0o600)
+PY
+  web_data=$(timeout 3 curl --netrc-file "$_i2pd_auth/netrc" -H "Host: localhost:7070" -s "$console_url" || true)
+  rm -rf "$_i2pd_auth"
+  unset _i2pd_auth
+  trap - EXIT
 else
   web_data=$(timeout 3 curl -H "Host: localhost:7070" -s "$console_url" || true)
 fi
+unset pass
 
 if [ -z "$web_data" ]; then
   json=$(emit_waybar_json "󱚽 On" "i2pd running (Web Console unreachable)" "normal")

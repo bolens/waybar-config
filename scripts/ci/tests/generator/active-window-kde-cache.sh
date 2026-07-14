@@ -17,12 +17,18 @@ for needle in \
   '_resolve_active_output' \
   '_known_output_names' \
   'active-window-title-' \
-  'Two-string callDBus'; do
+  'Two-string callDBus' \
+  'mkstemp' \
+  'XDG_RUNTIME_DIR'; do
   if ! grep -Fq "$needle" "$aw_py"; then
     echo "FAIL: active_window.py missing $needle" >&2
     fail=1
   fi
 done
+if grep -Fq '/tmp/active_window_watcher.js' "$aw_py"; then
+  echo "FAIL: active_window.py must not use fixed /tmp script path" >&2
+  fail=1
+fi
 # Guard against reintroducing a 3-arg update — callDBus with a third string
 # silently failed on Plasma (CI enforces two-arg ss only).
 if grep -Fq '"update", title, app, output' "$aw_py" || grep -Fq 'type="s" name="output"' "$aw_py"; then

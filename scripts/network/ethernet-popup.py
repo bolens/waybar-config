@@ -95,25 +95,39 @@ def nmcli_device_connection(iface):
 
 # Helper to get ethernet info (mimics your shell logic)
 def get_eth_info(iface):
-    def run(cmd):
+    def run(argv):
         try:
             result = subprocess.check_output(
-                cmd,
-                shell=True,
+                argv,
                 text=True,
                 stderr=subprocess.DEVNULL if not DEBUG else None,
+                timeout=3,
             ).strip()
             if DEBUG:
-                print(f"[DEBUG] {cmd} => {result}", file=sys.stderr)
+                print(f"[DEBUG] {argv} => {result}", file=sys.stderr)
             return result
         except Exception as e:
             if DEBUG:
-                print(f"[DEBUG] {cmd} => Exception: {e}", file=sys.stderr)
+                print(f"[DEBUG] {argv} => Exception: {e}", file=sys.stderr)
             return ''
 
+    def read_sys(path):
+        try:
+            return Path(path).read_text(encoding="utf-8", errors="replace").strip()
+        except Exception as e:
+            if DEBUG:
+                print(f"[DEBUG] read {path} => Exception: {e}", file=sys.stderr)
+            return ''
+
+    def nmcli_first(gkey, *rest):
+        out = run(["nmcli", "-g", gkey, *rest])
+        if not out:
+            return ''
+        return out.splitlines()[0].strip()
+
     # Always get permanent MAC and speed from the real interface (never from bond)
-    mac = get_permanent_mac(iface) or run(f"cat /sys/class/net/{iface}/address")
-    speed = run(f"cat /sys/class/net/{iface}/speed")
+    mac = get_permanent_mac(iface) or read_sys(f"/sys/class/net/{iface}/address")
+    speed = read_sys(f"/sys/class/net/{iface}/speed")
     if speed.isdigit():
         speed = f"{int(speed)//1000} Gbps" if int(speed) >= 1000 else f"{speed} Mbps"
     else:
@@ -129,7 +143,7 @@ def get_eth_info(iface):
     ip4 = netmask = gateway = dns = 'n/a'
     if status == "connected":
         info_profile = nmcli_device_connection(info_iface)
-        ip4_cidr = run(f"nmcli -g IP4.ADDRESS device show {info_iface} | awk 'NR==1 {{print; exit}}'")
+        ip4_cidr = nmcli_first("IP4.ADDRESS", "device", "show", info_iface)
         if ip4_cidr:
             ip4_split = ip4_cidr.split('/')
             ip4 = ip4_split[0]
@@ -142,7 +156,7 @@ def get_eth_info(iface):
                 except Exception:
                     netmask = 'n/a'
         if (not ip4) and info_profile and info_profile != '--':
-            ip4_cidr = run(f"nmcli -g ip4.address connection show '{info_profile}' | awk 'NR==1 {{print; exit}}'")
+            ip4_cidr = nmcli_first("ip4.address", "connection", "show", info_profile)
             if ip4_cidr:
                 ip4_split = ip4_cidr.split('/')
                 ip4 = ip4_split[0]
@@ -153,12 +167,14 @@ def get_eth_info(iface):
                         netmask = f"{(mask >> 24) & 0xff}.{(mask >> 16) & 0xff}.{(mask >> 8) & 0xff}.{mask & 0xff}"
                     except Exception:
                         netmask = 'n/a'
-        gateway = run(f"nmcli -g IP4.GATEWAY device show {info_iface}")
+        gateway = nmcli_first("IP4.GATEWAY", "device", "show", info_iface)
         if (not gateway) and info_profile and info_profile != '--':
-            gateway = run(f"nmcli -g ipv4.gateway connection show '{info_profile}'")
-        dns = run(f"nmcli -g IP4.DNS device show {info_iface} | paste -sd ', ' -")
+            gateway = nmcli_first("ipv4.gateway", "connection", "show", info_profile)
+        dns_raw = run(["nmcli", "-g", "IP4.DNS", "device", "show", info_iface])
+        dns = ", ".join(line.strip() for line in dns_raw.splitlines() if line.strip()) if dns_raw else ''
         if (not dns) and info_profile and info_profile != '--':
-            dns = run(f"nmcli -g ipv4.dns connection show '{info_profile}' | paste -sd ', ' -")
+            dns_raw = run(["nmcli", "-g", "ipv4.dns", "connection", "show", info_profile])
+            dns = ", ".join(line.strip() for line in dns_raw.splitlines() if line.strip()) if dns_raw else ''
 
     profile = nmcli_device_connection(iface)
     real_ip, vpn_ip = get_public_ips()
@@ -177,22 +193,29 @@ def get_eth_info(iface):
     }
 
 def get_default_iface():
-    # Try to find the first up ethernet interface
+    # Prefer first UP ethernet-like interface without shell interpolation.
     try:
         out = subprocess.check_output(
-            "ip -o link show | awk '{sub(/:/,\"\",$2)} $2 ~ /^(eno|enp|ens|eth)/ && /state UP/ {print $2; exit}'",
-            shell=True, text=True).strip()
-        if out:
-            return out
-    except Exception:
-        pass
-    # Fallback: any ethernet
-    try:
-        out = subprocess.check_output(
-            "ip -o link show | awk '{sub(/:/,\"\",$2)} $2 ~ /^(eno|enp|ens|eth)/ {print $2; exit}'",
-            shell=True, text=True).strip()
-        if out:
-            return out
+            ["ip", "-o", "link", "show"], text=True, timeout=3
+        )
+        up = None
+        any_eth = None
+        for line in out.splitlines():
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            name = parts[1].rstrip(":")
+            if not re.match(r"^(eno|enp|ens|eth)", name):
+                continue
+            if any_eth is None:
+                any_eth = name
+            if "state UP" in line:
+                up = name
+                break
+        if up:
+            return up
+        if any_eth:
+            return any_eth
     except Exception:
         pass
     return 'eno1'
@@ -217,7 +240,9 @@ def get_bond_master(iface):
 
 def get_permanent_mac(iface):
     try:
-        out = subprocess.check_output(f"ethtool -P {iface}", shell=True, text=True)
+        out = subprocess.check_output(
+            ["ethtool", "-P", iface], text=True, timeout=3
+        )
         m = re.search(r"Permanent address: ([0-9a-f:]{17})", out)
         if m:
             if DEBUG:

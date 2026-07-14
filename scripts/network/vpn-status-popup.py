@@ -93,7 +93,9 @@ def get_tailscale_status():
         debug('tailscale not installed')
         return {'active': False, 'ip': 'tailscale not installed', 'user': 'n/a', 'hostname': 'n/a'}
     try:
-        out = subprocess.check_output("tailscale status --json", shell=True, text=True, timeout=2)
+        out = subprocess.check_output(
+            ["tailscale", "status", "--json"], text=True, timeout=2
+        )
         debug(f"Tailscale status: {out}")
         js = json.loads(out)
         self = js.get('Self', {})
@@ -145,7 +147,9 @@ def get_netbird_status():
         return {'active': False, 'peer_id': 'netbird not installed', 'hostname': 'n/a', 'ip': 'n/a', 'type': 'n/a'}
     try:
         # Try JSON output for richer info
-        out = subprocess.check_output("netbird status --json", shell=True, text=True, timeout=2)
+        out = subprocess.check_output(
+            ["netbird", "status", "--json"], text=True, timeout=2
+        )
         debug(f"Netbird status JSON: {out}")
         import json as _json
         js = _json.loads(out)
@@ -165,7 +169,11 @@ def get_nm_vpn_status():
         debug('nmcli not installed')
         return {'active': False, 'name': 'nmcli not installed'}
     try:
-        out = subprocess.check_output("nmcli -t -f NAME,TYPE,DEVICE,STATE connection show --active", shell=True, text=True, timeout=2)
+        out = subprocess.check_output(
+            ["nmcli", "-t", "-f", "NAME,TYPE,DEVICE,STATE", "connection", "show", "--active"],
+            text=True,
+            timeout=2,
+        )
         debug(f"nmcli output: {out}")
         lines = out.strip().split('\n')
         for line in lines:
@@ -176,7 +184,19 @@ def get_nm_vpn_status():
                 # Now get more details for this VPN connection
                 details = {'active': True, 'name': name, 'device': device}
                 try:
-                    detail_out = subprocess.check_output(f"nmcli -s -g connection.type,vpn-type,vpn.data,vpn.user-name,ipv4.dns,ipv4.gateway,ipv4.addresses connection show '{name}'", shell=True, text=True, timeout=2)
+                    detail_out = subprocess.check_output(
+                        [
+                            "nmcli",
+                            "-s",
+                            "-g",
+                            "connection.type,vpn-type,vpn.data,vpn.user-name,ipv4.dns,ipv4.gateway,ipv4.addresses",
+                            "connection",
+                            "show",
+                            name,
+                        ],
+                        text=True,
+                        timeout=2,
+                    )
                     detail_lines = detail_out.strip().split('\n')
                     # connection.type, vpn-type, vpn.data, vpn.user-name, ipv4.dns, ipv4.gateway, ipv4.addresses
                     if len(detail_lines) > 0:
@@ -217,7 +237,7 @@ def get_zerotier_status():
         }
     try:
         # Get basic info
-        out = subprocess.check_output("zerotier-cli info", shell=True, text=True, timeout=2)
+        out = subprocess.check_output(["zerotier-cli", "info"], text=True, timeout=2)
         debug(f"Zerotier info: {out}")
         parts = out.strip().split()
         # Example: 200 info <id> <public id> <online|offline> <port> <version>
@@ -229,7 +249,9 @@ def get_zerotier_status():
             active = False
         # Get network info (may be empty if not joined)
         try:
-            net_out = subprocess.check_output("zerotier-cli -j listnetworks", shell=True, text=True, timeout=2)
+            net_out = subprocess.check_output(
+                ["zerotier-cli", "-j", "listnetworks"], text=True, timeout=2
+            )
             import json as _json
             nets = _json.loads(net_out)
             if nets and isinstance(nets, list) and len(nets) > 0:
