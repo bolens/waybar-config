@@ -41,6 +41,8 @@ Details: [docs/architecture.md](docs/architecture.md).
 - **Do** hide modules when optional deps are missing.
 - **Do** add CI suite + matrix entry when adding generator/secrets tests (`make check-suite-inventory`).
 - **Do** refresh modules with `waybar-signal.sh <key>` matching `signals.*` / generated `signal`.
+- **Do** cover signal wiring in `module-signals` (or extend it) when changing `signals.*` / generators / click refresh paths.
+- **Do** cover tooltip markup / `"escape"` changes in `tooltip-pango-escape` (avoid script escape + Waybar `escape: true`).
 - **Don’t** reimplement generators in ad-hoc Python when `make generate` already covers the path.
 - **Don’t** write live secrets via MCP or dump secret values into chat/logs.
 - **Don’t** skip hooks or force-push `main`.

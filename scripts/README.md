@@ -28,7 +28,7 @@ Project docs hub: **[docs/README.md](../docs/README.md)** ([architecture](../doc
 |----------------|------|
 | `waybar-cache-helpers.sh` | Intervals, cache/locks, `serve_*`, `emit_waybar_json`, `write_cache_and_exit`, `emit_disconnected`, `waybar_threshold_class` |
 | `waybar-settings.sh` | Settings compile / getters / `waybar_settings_bool` |
-| `waybar-signal.sh` | `pkill -RTMIN+N` by **`signals.*` key** (preferred) or numeric offset (+ optional cache invalidate). Numeric args are legacy. |
+| `waybar-signal.sh` | `pkill -RTMIN+N` by **`signals.*` key** (preferred) or numeric offset (+ optional cache invalidate). Numeric args are legacy. Unknown keys / missing compiled settings print a short stderr line (shows in journal / `~/.cache/waybar/waybar.log`) then exit 0. |
 | `settings-bool-lib.sh` | Portable `waybar_is_false` / `waybar_is_truthy` |
 | `gauge-lib.sh` | `gauge_bar`, `gauge_or_pct`, `gauge_status_text` |
 | `theme-colors-lib.sh` | Preset color merge + hex/rgba helpers for generators |
@@ -66,7 +66,7 @@ Started by `waybar-launch.sh`, healed by `waybar-healthcheck.sh`, stopped via `l
 | `kde-activewindow` | `active-window-listener-kde.py` | workspaces / dock (Plasma) |
 | `hypr-workspaces` | `workspaces-hyprland-listener.sh` | `workspaces` (Hyprland) |
 
-New listeners: add the lock name to `listener-ctl.sh` `KNOWN_LISTENERS`, start in `waybar-launch.sh`, heal in `waybar-healthcheck.sh`, and cover in `listener-lifecycle` / shell contracts.
+New listeners: add the lock name to `listener-ctl.sh` `KNOWN_LISTENERS`, start in `waybar-launch.sh`, heal in `waybar-healthcheck.sh`, and cover in `listener-lifecycle` / shell contracts. FIFO-driven listeners must `exec 3<>"$fifo"` (RDWR) and define `waybar_listener_cleanup` instead of replacing the lock EXIT trap — otherwise the reader hits EOF after each tick and healthcheck restart-loops.
 
 ### `generate/` domain emitters
 
@@ -88,6 +88,8 @@ CSS selector SoT: `scripts/lib/css-selectors-lib.sh` (pills, drawer sides/groups
 | `containers/` | docker, runtimes |
 | `sync/` | updates, syncthing |
 | `i2pd/` | i2pd status + console-pass helper |
+| `yggdrasil/` | Yggdrasil mesh peer status |
+| `ipfs/` | IPFS (Kubo) swarm status |
 | `coolercontrol/` | CoolerControl status/click + API helper + UI-pass sync + dumps ([deps](../README.md#dependencies)) |
 | `openlinkhub/` | OpenLinkHub status + restart click (hides when service/API down; PSU prefers corsairpsu — [deps](../README.md#dependencies)) |
 | `homelab/` | HTTP health probes + multi-target picker (`homelab-click.sh`) |
@@ -177,5 +179,6 @@ Suites source the harness entrypoint only. Run one suite directly:
 
 ```bash
 bash scripts/ci/tests/generator/liquidctl.sh
+bash scripts/ci/tests/generator/overlay-network-modules.sh
 bash scripts/ci/tests/secrets/i2pd-sync.sh
 ```

@@ -124,13 +124,11 @@ case "$action" in
       systemctl --user restart "$service" >/dev/null 2>&1 || true
     fi
     "$WAYBAR_SCRIPTS/services/devices/streamdeck-status.sh" --refresh >/dev/null 2>&1 || true
-    sig="$(waybar_settings_get '.signals.streamdeck' '24')"
-    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$sig" >/dev/null 2>&1 || true
+    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" streamdeck >/dev/null 2>&1 || true
     ;;
   refresh)
     "$WAYBAR_SCRIPTS/services/devices/streamdeck-status.sh" --refresh >/dev/null 2>&1 || true
-    sig="$(waybar_settings_get '.signals.streamdeck' '24')"
-    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$sig" >/dev/null 2>&1 || true
+    "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" streamdeck >/dev/null 2>&1 || true
     ;;
   *)
     printf 'Usage: %s [open|restart|refresh]\n' "${0##*/}" >&2

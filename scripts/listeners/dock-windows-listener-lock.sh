@@ -1,8 +1,12 @@
 #!/usr/bin/env sh
-# Ensure only one dock-windows listener runs per compositor backend.
+# Ensure only one Waybar listener runs per lock name.
 #
-# Must be sourced (sets EXIT trap in the listener). Dash ignores arguments to
-# `.`, so pass the lock name via WAYBAR_LISTENER_LOCK_NAME (bash still accepts $1).
+# Must be sourced (registers EXIT trap). Dash ignores arguments to `.`, so pass
+# the lock name via WAYBAR_LISTENER_LOCK_NAME (bash still accepts $1).
+#
+# Listeners that need extra teardown should define `waybar_listener_cleanup`
+# (no args) *after* sourcing this file — do not replace the EXIT trap, or the
+# lock dir leaks and healthcheck flails.
 set -eu
 
 listener_name="${WAYBAR_LISTENER_LOCK_NAME:-${1-}}"
@@ -26,4 +30,17 @@ if ! mkdir "$lock_dir" 2>/dev/null; then
 fi
 
 printf '%s\n' "$$" >"$lock_pid_file"
-trap 'rm -f "$lock_pid_file"; rmdir "$lock_dir" 2>/dev/null || true' EXIT INT TERM
+
+waybar_listener_release_lock() {
+  rm -f "$lock_pid_file" 2>/dev/null || true
+  rmdir "$lock_dir" 2>/dev/null || true
+}
+
+waybar_listener_on_exit() {
+  if type waybar_listener_cleanup >/dev/null 2>&1; then
+    waybar_listener_cleanup || true
+  fi
+  waybar_listener_release_lock
+}
+
+trap 'waybar_listener_on_exit' EXIT INT TERM

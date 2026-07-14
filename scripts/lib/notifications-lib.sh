@@ -4,6 +4,12 @@
 
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
+
+# Pango-escape user-facing status tooltips (custom/notifications has escape:false).
+notifications_pango_escape() {
+  printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+}
+
 signal_waybar() {
   # Prefer signals.notifications from settings (default 10).
   "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" notifications

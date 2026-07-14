@@ -36,6 +36,16 @@ if ! echo "$test_json_out" | jq -e '.class == "myclass"' >/dev/null 2>&1; then
   fail=1
 fi
 
+# Regression: updates-style arrows must be single-escaped (module has no escape:true).
+arrow_json=$(WAYBAR_HOME="$TEST_DIR" bash -c "
+  . $TEST_DIR/scripts/lib/waybar-cache-helpers.sh
+  emit_waybar_json '1' 'pkg 1.0 -> 1.1' 'normal'
+")
+if ! echo "$arrow_json" | jq -e '.tooltip == "pkg 1.0 -&gt; 1.1" and (.tooltip | test("&amp;gt;") | not)' >/dev/null 2>&1; then
+  echo "FAIL: emit_waybar_json must single-escape -> for updates tooltips: $arrow_json" >&2
+  fail=1
+fi
+
 # Assert strip_jsonc_comments correctly strips inline/block comments but preserves URLs
 echo "Testing strip_jsonc_comments utility..."
 cat <<'JSON' >"$TEST_DIR/data/comment-test.jsonc"
@@ -144,7 +154,7 @@ fi
 
 # Assert new status scripts output valid JSON and handle missing daemons gracefully
 echo "Testing new status scripts execution..."
-for script in services/sync/syncthing-status.sh services/apps/sunshine-status.sh services/devices/streamdeck-status.sh services/i2pd/i2pd-status.sh; do
+for script in services/sync/syncthing-status.sh services/apps/sunshine-status.sh services/devices/streamdeck-status.sh services/i2pd/i2pd-status.sh services/yggdrasil/yggdrasil-status.sh services/ipfs/ipfs-status.sh; do
   script_path="$TEST_DIR/scripts/$script"
   out=$(XDG_CACHE_HOME="$TEST_DIR/data" WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" "$script_path" --refresh 2>/dev/null || true)
   if [ -z "$out" ]; then
@@ -157,7 +167,7 @@ for script in services/sync/syncthing-status.sh services/apps/sunshine-status.sh
 done
 
 # i2pd/settings consumers must keep a bash shebang (regression for Ubuntu dash CI).
-for script in services/i2pd/i2pd-status.sh services/sync/updates-status.sh services/apps/github-status.sh; do
+for script in services/i2pd/i2pd-status.sh services/yggdrasil/yggdrasil-status.sh services/ipfs/ipfs-status.sh services/sync/updates-status.sh services/apps/github-status.sh; do
   sheb="$(head -1 "$TEST_DIR/scripts/$script" || true)"
   case "$sheb" in
     '#!/usr/bin/env bash' | '#!/bin/bash') ;;

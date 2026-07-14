@@ -182,6 +182,9 @@ build_system_json() {
     def signal($key): $settings[0].signals[$key] // null;
     def click_app($key): ($scripts + "/tools/app-open-key.sh " + $key);
     def term_cmd($cmd): ($app_open + " " + $terminal_app + " -e " + $cmd);
+    # Middle-click: refresh cache then signal by key — Waybar ignores on-click stdout.
+    def sig_refresh($key; $script):
+      ($script + " --refresh && " + $scripts + "/lib/waybar-signal.sh " + $key);
     {
       "custom/cpu": {
         format: "{}",
@@ -239,7 +242,6 @@ build_system_json() {
         tooltip: true,
         signal: signal("updates"),
         interval: interval("updates"),
-        escape: true,
         exec: ($scripts + "/services/sync/updates-status.sh"),
         "on-click": click_app("paru_update"),
         "on-click-right": click_app("updates_review"),
@@ -337,7 +339,7 @@ build_system_json() {
         exec: ($scripts + "/services/coolercontrol/coolercontrol-status.sh"),
         "on-click": ($settings[0].services.coolercontrol.on_click // ($app_open + " xdg-open " + ($settings[0].services.coolercontrol.ui_url // "http://127.0.0.1:11987"))),
         "on-click-right": ($settings[0].services.coolercontrol.on_click_right // ($scripts + "/services/coolercontrol/coolercontrol-click.sh menu")),
-        "on-click-middle": ($settings[0].services.coolercontrol.on_click_middle // ($scripts + "/services/coolercontrol/coolercontrol-status.sh --refresh")),
+        "on-click-middle": ($settings[0].services.coolercontrol.on_click_middle // sig_refresh("coolercontrol"; $scripts + "/services/coolercontrol/coolercontrol-status.sh")),
         "on-scroll-up": ($settings[0].services.coolercontrol.on_scroll_up // ($scripts + "/services/coolercontrol/coolercontrol-click.sh next")),
         "on-scroll-down": ($settings[0].services.coolercontrol.on_scroll_down // ($scripts + "/services/coolercontrol/coolercontrol-click.sh prev"))
       },
@@ -350,7 +352,7 @@ build_system_json() {
         exec: ($scripts + "/services/openlinkhub/openlinkhub-status.sh"),
         "on-click": ($settings[0].services.openlinkhub.on_click // ($app_open + " xdg-open " + ($settings[0].services.openlinkhub.ui_url // "http://127.0.0.1:27003"))),
         "on-click-right": ($settings[0].services.openlinkhub.on_click_right // ($app_open + " systemctl restart " + ($settings[0].services.openlinkhub.service_name // "openlinkhub.service"))),
-        "on-click-middle": ($scripts + "/services/openlinkhub/openlinkhub-status.sh --refresh")
+        "on-click-middle": sig_refresh("openlinkhub"; $scripts + "/services/openlinkhub/openlinkhub-status.sh")
       },
       "custom/libredefender": {
         format: "{}",
@@ -413,7 +415,7 @@ build_system_json() {
             end
           )
         ),
-        "on-click-middle": ($scripts + "/services/homelab/homelab-status.sh --refresh")
+        "on-click-middle": sig_refresh("homelab"; $scripts + "/services/homelab/homelab-status.sh")
       },
       "custom/sunshine": {
         format: "{}",

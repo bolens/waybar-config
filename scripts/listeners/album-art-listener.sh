@@ -18,6 +18,8 @@ WAYBAR_LISTENER_LOCK_NAME=album-art
 . "$script_dir/dock-windows-listener-lock.sh"
 
 mkdir -p "$cache_dir"
+# Drop orphaned FIFOs from prior crash loops (PID in name; process gone).
+rm -f "$cache_dir"/album-art-trigger.*.fifo 2>/dev/null || true
 
 prev=""
 
@@ -50,11 +52,11 @@ fifo="${cache_dir}/album-art-trigger.$$.fifo"
 rm -f "$fifo"
 mkfifo "$fifo"
 
-cleanup() {
+waybar_listener_cleanup() {
+  exec 3<&- 2>/dev/null || true
   rm -f "$fifo" 2>/dev/null || true
   pkill -P "$$" 2>/dev/null || true
 }
-trap cleanup EXIT INT TERM
 
 # Follow metadata (art URL / track changes). Debounce via FIFO reader.
 (
@@ -71,7 +73,9 @@ trap cleanup EXIT INT TERM
   done
 ) &
 
-exec 3<"$fifo"
+# Open RDWR so the reader never EOFs between ephemeral writers and we don't
+# deadlock waiting for a writer before the keep-alive open.
+exec 3<>"$fifo"
 while read -r _line <&3; do
   refresh_art
 done

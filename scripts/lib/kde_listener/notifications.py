@@ -5,6 +5,7 @@ history, so we scrape `dbus-monitor` lines for Notify / method-return /
 NotificationClosed and keep a local unread count + history cache for Waybar.
 """
 
+import html
 import os
 import re
 import subprocess
@@ -19,6 +20,60 @@ gi.require_version("GLib", "2.0")
 from gi.repository import Gio, GLib  # noqa: E402
 
 from kde_listener.signals import waybar_rtmin  # noqa: E402
+
+_TAG_RE = re.compile(r"<[^>]+>")
+_CLICK_HINT = "\n\nLeft: open · Right: DND · Middle: settings"
+
+
+def _strip_markup(text: str) -> str:
+    """Remove HTML/Pango tags and unescape entities from notification bodies."""
+    if not text:
+        return ""
+    return html.unescape(_TAG_RE.sub("", text)).strip()
+
+
+def _pango_escape(text: str) -> str:
+    return (
+        text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+def build_notifications_tooltip(
+    count: int,
+    inhibited: bool,
+    notifications: list,
+    *,
+    max_items: int = 5,
+) -> str:
+    """Pango tooltip: header + recent summaries (tags stripped, text escaped)."""
+    if count > 0:
+        header = f"{count} unread notification(s)"
+        if inhibited:
+            header += " (Do not disturb)"
+    elif inhibited:
+        header = "Do not disturb"
+    else:
+        header = "Notifications"
+
+    lines = [header]
+    if notifications:
+        # Newest last in the list — show newest first in the tooltip.
+        recent = list(reversed(notifications[-max_items:]))
+        lines.append("")
+        for item in recent:
+            app = _pango_escape(_strip_markup(str(item.get("app_name") or "app")))
+            summary = _pango_escape(_strip_markup(str(item.get("summary") or "")))
+            if summary:
+                lines.append(f"<b>{app}</b>: {summary}")
+            else:
+                lines.append(f"<b>{app}</b>")
+        omitted = max(0, len(notifications) - max_items)
+        if omitted:
+            lines.append(f"…and {omitted} more")
+
+    return "\n".join(lines) + _CLICK_HINT
 
 
 class NotificationsMixin:
@@ -53,31 +108,28 @@ class NotificationsMixin:
             print(f"Error writing count file: {e}", file=sys.stderr)
 
         text = str(count) if count > 0 else ""
-        click_hint = "\n\nLeft: open · Right: DND · Middle: settings"
         if count > 0:
             if inhibited:
                 class_name = "dnd-notification"
                 alt_name = "dnd-notification"
-                tooltip = f"{count} unread notification(s) (Do not disturb){click_hint}"
             else:
                 class_name = "notification"
                 alt_name = "notification"
-                tooltip = f"{count} unread notification(s){click_hint}"
         else:
             if inhibited:
                 class_name = "dnd-none"
                 alt_name = "dnd-none"
-                tooltip = f"Do not disturb{click_hint}"
             else:
                 class_name = "none"
                 alt_name = "none"
-                tooltip = f"Notifications{click_hint}"
 
         status = {
             "text": text,
             "class": class_name,
             "alt": alt_name,
-            "tooltip": tooltip
+            "tooltip": build_notifications_tooltip(
+                count, inhibited, self.notifications
+            ),
         }
 
         self.write_json_atomically(self.status_cache, status)

@@ -47,7 +47,7 @@ scripts/infra/waybar-launch.sh  (+ systemd user units, listeners)
 2. Launch compiles settings if needed, skips `make generate` when the stamp (`~/.cache/waybar/generated.stamp`) matches inputs, starts listeners via `listener-ctl.sh`, then execs Waybar.
 3. Status modules under `scripts/<domain>/` poll or listen; most use [`scripts/lib/waybar-cache-helpers.sh`](../scripts/lib/waybar-cache-helpers.sh) (`serve_cache_or_refresh`) and intervals from `module_intervals` via `waybar_module_interval`.
 4. Settings reads go through [`scripts/lib/waybar-settings.sh`](../scripts/lib/waybar-settings.sh) (`waybar_settings_get`, secrets merge).
-5. Long-running listeners (`privacy`, `vpn-tailscale`, `album-art`, compositor watchers, …) push updates with [`scripts/lib/waybar-signal.sh`](../scripts/lib/waybar-signal.sh) keyed by `signals.*` — see [`scripts/README.md`](../scripts/README.md#listeners-daemons).
+5. Long-running listeners (`privacy`, `vpn-tailscale`, `album-art`, compositor watchers, …) push updates with [`scripts/lib/waybar-signal.sh`](../scripts/lib/waybar-signal.sh) keyed by `signals.*` — see [`scripts/README.md`](../scripts/README.md#listeners-daemons). Unknown keys log to stderr (journal / `~/.cache/waybar/waybar.log`); CI covers the map in the `module-signals` suite.
 
 ## Generators
 

@@ -79,6 +79,8 @@ Most modules are emitted by a domain script under `scripts/generate/` that `gene
 
 Emit JSON that includes `exec`, `interval` / `signal`, `return-type`, tooltips, and CSS `class` hooks as needed. **Do not** hand-edit `modules/*.generated.jsonc`.
 
+**Pango / `escape`:** Prefer escaping in the status script (`escape_markup` / `emit_waybar_json`). Do **not** also set `"escape": true` — Waybar will double-escape and tooltips show literal `&gt;` / `&lt;`. Use intentional markup only with `escape` unset/false and escape user-controlled strings yourself (see [troubleshooting](troubleshooting.md#tooltips-show-literal-gt--b-instead-of-styled-text)).
+
 ## 5. CSS (optional)
 
 - Prefer theme tokens from `theme/tokens.generated.css` / semantic colors.
@@ -105,7 +107,7 @@ Waybar **on-click stdout is ignored** for custom modules. After `--refresh` writ
 "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" my_feature
 ```
 
-Or wire the generator middle-click as:
+Or wire the generator middle-click via `sig_refresh("my_feature"; $scripts + "/…/my-status.sh")`, which expands to:
 
 ```text
 …/my-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh my_feature
@@ -118,7 +120,10 @@ For event-driven modules (`interval: "once"`), add a listener under `scripts/lis
 | Change | Suite / check |
 |--------|----------------|
 | Generator output / module JSON | New or extended `scripts/ci/tests/generator/*.sh` + CI matrix name |
+| `signals.*` uniqueness / keyed refresh / `waybar-signal.sh` | `module-signals` (+ `check-settings-schema` via validate) |
+| Tooltip Pango escape / notification rich tooltips | `tooltip-pango-escape` (+ `lib-utils` emit single-escape) |
 | VPN / cooling / docker polish | `vpn-cooling-refresh` |
+| Yggdrasil / IPFS (overlay net) | `overlay-network-modules` |
 | Album art signal + CSS | `album-art-wiring` |
 | Plasma dock per-output enrich | `dock-windows-plasma` (+ `WAYBAR_TEST_*` fixtures) |
 | Listener lock / launch / heal | `listener-lifecycle`, `check-shell-contracts` |
@@ -126,7 +131,7 @@ For event-driven modules (`interval: "once"`), add a listener under `scripts/lis
 | Shell contracts | Covered by `make check-contracts` |
 | Python helper | `make check-python` / ruff |
 
-After adding a suite file, ensure `.github/workflows/ci.yml` matrix lists it (`make check-suite-inventory`).
+After adding a suite file, ensure `.github/workflows/ci.yml` matrix lists it (`make check-suite-inventory`). Path filters for new shared libs (e.g. under `scripts/lib/`) may also need a line in the dorny `secrets` / `validate` blocks — `make check-ci-path-filters` / `check-suite-inventory` catch drift.
 
 ## 9. Docs
 

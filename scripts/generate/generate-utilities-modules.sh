@@ -31,6 +31,9 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def sig($k): ($s[0].signals[$k] // null);
   def app($k): ($s[0].apps[$k] // "");
   def app_open: ($scripts + "/tools/app-open.sh");
+  # Refresh cache then signal by key — Waybar ignores on-click stdout.
+  def sig_refresh($key; $script):
+    ($script + " --refresh && " + $scripts + "/lib/waybar-signal.sh " + $key);
   # Append output name to click args when brightness/capture.per_output is enabled.
   def brightness_out:
     ((($s[0].brightness // {}).per_output) as $p | if $p == false then false else true end)
@@ -45,7 +48,6 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       "return-type": "json",
       signal: sig("notifications"),
       interval: iv("notifications"),
-      escape: true,
       exec: ($scripts + "/notifications/notifications-status.sh"),
       "format-icons": {
         notification: "󰂚",
@@ -146,7 +148,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       exec: ($scripts + "/system/asusctl-status.sh"),
       "on-click": ($scripts + "/system/asusctl-click.sh menu"),
       "on-click-right": ($scripts + "/system/asusctl-click.sh next"),
-      "on-click-middle": ($scripts + "/system/asusctl-status.sh --refresh"),
+      "on-click-middle": sig_refresh("asusctl"; $scripts + "/system/asusctl-status.sh"),
       "on-scroll-up": ($scripts + "/system/asusctl-click.sh next"),
       "on-scroll-down": ($scripts + "/system/asusctl-click.sh prev")
     },
@@ -197,7 +199,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       exec: ($scripts + "/services/devices/kdeconnect-status.sh"),
       "on-click": ($s[0].kdeconnect.on_click // ($scripts + "/services/devices/kdeconnect-status.sh --ring")),
       "on-click-right": ($s[0].kdeconnect.on_click_right // ($scripts + "/services/devices/kdeconnect-menu.sh")),
-      "on-click-middle": ($s[0].kdeconnect.on_click_middle // ($scripts + "/services/devices/kdeconnect-status.sh --refresh && " + $scripts + "/lib/waybar-signal.sh " + ((sig("kdeconnect") // 18) | tostring)))
+      "on-click-middle": ($s[0].kdeconnect.on_click_middle // sig_refresh("kdeconnect"; $scripts + "/services/devices/kdeconnect-status.sh"))
     },
     "custom/device-notifier": {
       format: "{}",
@@ -206,7 +208,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       interval: iv("device_notifier"),
       exec: ($scripts + "/services/devices/device-notifier-status.sh"),
       "on-click": ($s[0].device_notifier.on_click // ($scripts + "/services/devices/device-notifier.py --menu")),
-      "on-click-right": ($s[0].device_notifier.on_click_right // ($scripts + "/services/devices/device-notifier-status.sh --refresh && " + $scripts + "/lib/waybar-signal.sh " + ((sig("device_notifier") // 19) | tostring)))
+      "on-click-right": ($s[0].device_notifier.on_click_right // sig_refresh("device_notifier"; $scripts + "/services/devices/device-notifier-status.sh"))
     },
     "custom/colorpicker": {
       format: "󰏘",
@@ -222,7 +224,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       exec: ($scripts + "/system/rgb-status.sh"),
       "on-click": ($scripts + "/tools/app-open-key.sh openrgb"),
       "on-click-right": ($scripts + "/tools/app-open-key.sh ckb_next"),
-      "on-click-middle": ($scripts + "/system/rgb-status.sh --refresh")
+      "on-click-middle": sig_refresh("rgb"; $scripts + "/system/rgb-status.sh")
     },
     "custom/vaults": {
       format: "{}",
@@ -231,7 +233,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       interval: iv("vaults"),
       exec: ($scripts + "/services/security/vaults-status.sh"),
       "on-click": ($s[0].vaults.on_click // ($scripts + "/services/security/vaults.py --menu")),
-      "on-click-right": ($s[0].vaults.on_click_right // ($scripts + "/services/security/vaults-status.sh --refresh && " + $scripts + "/lib/waybar-signal.sh " + ((sig("vaults") // 21) | tostring)))
+      "on-click-right": ($s[0].vaults.on_click_right // sig_refresh("vaults"; $scripts + "/services/security/vaults-status.sh"))
     },
     "custom/touchpad": {
       format: "{}",
@@ -240,7 +242,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       interval: iv("touchpad"),
       exec: ($scripts + "/lib/compositor-gate.sh --show hyprland -- " + $scripts + "/system/touchpad-status.sh"),
       "on-click": ($s[0].touchpad.on_click // ($scripts + "/system/touchpad.py --toggle")),
-      "on-click-right": ($s[0].touchpad.on_click_right // ($scripts + "/system/touchpad-status.sh --refresh && " + $scripts + "/lib/waybar-signal.sh " + ((sig("touchpad") // 20) | tostring)))
+      "on-click-right": ($s[0].touchpad.on_click_right // sig_refresh("touchpad"; $scripts + "/system/touchpad-status.sh"))
     },
     "custom/weather": {
       format: "{}",
@@ -250,7 +252,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       exec: ($scripts + "/services/apps/weather-status.sh"),
       "on-click": ($s[0].weather.on_click // (app_open + " xdg-open https://open-meteo.com/")),
       "on-click-right": ($s[0].weather.on_click_right // (app_open + " xdg-open https://weather.com/")),
-      "on-click-middle": ($s[0].weather.on_click_middle // ($scripts + "/services/apps/weather-status.sh --refresh && " + $scripts + "/lib/waybar-signal.sh weather"))
+      "on-click-middle": ($s[0].weather.on_click_middle // sig_refresh("weather"; $scripts + "/services/apps/weather-status.sh"))
     },
     "custom/pomodoro": {
       format: "{}",
@@ -277,7 +279,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       exec: ($scripts + "/services/apps/github-status.sh"),
       "on-click": ((($s[0].github // {}).on_click) // (app_open + " xdg-open " + (app("github_notifications") // "https://github.com/notifications"))),
       "on-click-right": ((($s[0].github // {}).on_click_right) // (app_open + " xdg-open " + (app("github_home") // "https://github.com"))),
-      "on-click-middle": ((($s[0].github // {}).on_click_middle) // ($scripts + "/services/apps/github-status.sh --refresh && " + $scripts + "/lib/waybar-signal.sh github"))
+      "on-click-middle": ((($s[0].github // {}).on_click_middle) // sig_refresh("github"; $scripts + "/services/apps/github-status.sh"))
     },
     "custom/device-battery": {
       format: "{}",
@@ -287,7 +289,7 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
       exec: ($scripts + "/services/devices/device-battery-status.sh"),
       "on-click": (app_open + " " + (app("solaar") // "solaar")),
       "on-click-right": ($scripts + "/tools/app-open-key.sh input_settings"),
-      "on-click-middle": ($scripts + "/services/devices/device-battery-status.sh --refresh")
+      "on-click-middle": sig_refresh("device_battery"; $scripts + "/services/devices/device-battery-status.sh")
     },
     "custom/streamdeck": {
       format: "{}",

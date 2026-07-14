@@ -114,6 +114,7 @@ jobs:
               - 'scripts/ci/pre-commit-check-secrets.sh'
               - 'scripts/ci/validate-generated-config.sh'
               - 'scripts/lib/waybar-settings.sh'
+              - 'scripts/lib/waybar-signal.sh'
               - 'scripts/lib/capture-lib.sh'
               - 'scripts/lib/compositor-gate.sh'
               - 'scripts/lib/compositor-session.sh'
@@ -335,6 +336,7 @@ jobs:
           - power-menu
           - pomodoro
           - homelab-status
+          - overlay-network-modules
           - apply-profile
           - cava-status
           - cava-placement
@@ -357,6 +359,8 @@ jobs:
           - per-output-modules
           - visual-gauges
           - mcp-server
+          - module-signals
+          - tooltip-pango-escape
     steps:
       - uses: actions/checkout@v7
       - name: Install jq + dash

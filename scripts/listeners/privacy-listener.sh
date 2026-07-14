@@ -16,6 +16,7 @@ WAYBAR_LISTENER_LOCK_NAME=privacy
 # collect_privacy_json is defined in privacy-status.sh --refresh path
 
 mkdir -p "$cache_dir"
+rm -f "$cache_dir"/privacy-trigger.*.fifo 2>/dev/null || true
 
 prev_state=""
 
@@ -51,11 +52,11 @@ fifo="${cache_dir}/privacy-trigger.$$.fifo"
 rm -f "$fifo"
 mkfifo "$fifo"
 
-cleanup() {
+waybar_listener_cleanup() {
+  exec 3<&- 2>/dev/null || true
   rm -f "$fifo" 2>/dev/null || true
   pkill -P "$$" 2>/dev/null || true
 }
-trap cleanup EXIT INT TERM
 
 # Start PulseAudio listener writing to FIFO
 if command -v pactl >/dev/null 2>&1; then
@@ -70,8 +71,8 @@ fi
   done
 ) &
 
-# Read and process triggers
-exec 3<"$fifo"
+# Open RDWR so read never EOFs if pactl/grep exits between ticks.
+exec 3<>"$fifo"
 while read -r line <&3; do
   case "$line" in
     *source* | *tick*)

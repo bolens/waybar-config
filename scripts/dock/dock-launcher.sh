@@ -180,24 +180,17 @@ case "$action" in
     esac
     run_detached "$script_dir/dock-app.sh" "$app_id" "$click_action"
     # Refresh dock app running indicators + window-strip focused state.
-    sig=26
-    dock_sig=11
-    if [ -f "$WAYBAR_HOME/data/waybar-settings.json" ] \
-      && command -v jq >/dev/null 2>&1; then
-      sig="$(jq -r '.signals.dock_apps // 26' "$WAYBAR_HOME/data/waybar-settings.json")"
-      dock_sig="$(jq -r '.signals.dock_windows // 11' "$WAYBAR_HOME/data/waybar-settings.json")"
-    fi
     (
       # Fast path: force window-strip highlight refresh as soon as focus settles.
       sleep 0.05
       if [ -x "$WAYBAR_SCRIPTS/dock/dock-windows-signal.sh" ]; then
         "$WAYBAR_SCRIPTS/dock/dock-windows-signal.sh" --force --focus-only >/dev/null 2>&1 || true
       else
-        "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$dock_sig" >/dev/null 2>&1 || true
+        "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" dock_windows >/dev/null 2>&1 || true
       fi
       # Running indicators can lag launch slightly.
       sleep 0.4
-      "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$sig" >/dev/null 2>&1 || true
+      "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" dock_apps >/dev/null 2>&1 || true
     ) &
     ;;
   *)

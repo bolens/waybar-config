@@ -19,7 +19,6 @@ case "$short_min" in '' | *[!0-9]*) short_min=5 ;; esac
 case "$long_min" in '' | *[!0-9]*) long_min=15 ;; esac
 case "$long_every" in '' | *[!0-9]*) long_every=4 ;; esac
 
-sig=$(waybar_settings_get '.signals.pomodoro' '31')
 action="${1:-toggle}"
 now=$(date +%s)
 
@@ -102,5 +101,5 @@ case "$action" in
 esac
 
 if [ -x "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" ]; then
-  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$sig" 2>/dev/null || true
+  "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" pomodoro 2>/dev/null || true
 fi

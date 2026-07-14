@@ -114,6 +114,59 @@ if ! grep -q 'WAYBAR_LISTENER_LOCK_NAME=album-art' "$TEST_DIR/scripts/listeners/
   echo "FAIL: album-art-listener.sh missing WAYBAR_LISTENER_LOCK_NAME=album-art" >&2
   fail=1
 fi
+
+echo "Testing FIFO listeners open RDWR (avoid EOF exit / open deadlock)..."
+for listener in privacy-listener.sh vpn-tailscale-listener.sh album-art-listener.sh; do
+  path="$TEST_DIR/scripts/listeners/$listener"
+  if ! grep -qE 'exec 3<>"\$fifo"|exec 3<>"\$\{fifo\}"' "$path" \
+    && ! grep -Fq 'exec 3<>"$fifo"' "$path"; then
+    echo "FAIL: $listener must open FIFO RDWR (exec 3<>\"\$fifo\")" >&2
+    fail=1
+  fi
+  if ! grep -q 'waybar_listener_cleanup' "$path"; then
+    echo "FAIL: $listener must define waybar_listener_cleanup (not replace EXIT trap)" >&2
+    fail=1
+  fi
+  if grep -qE '^trap .*EXIT' "$path"; then
+    echo "FAIL: $listener must not replace lock EXIT trap (use waybar_listener_cleanup)" >&2
+    fail=1
+  fi
+done
+if ! grep -q 'waybar_listener_cleanup' "$TEST_DIR/scripts/listeners/dock-windows-listener-lock.sh"; then
+  echo "FAIL: dock-windows-listener-lock.sh should invoke waybar_listener_cleanup on exit" >&2
+  fail=1
+fi
+
+echo "Testing FIFO RDWR avoids mid-tick EOF (hermetic)..."
+fifo_probe=$(mktemp -d)
+mkfifo "$fifo_probe/f"
+(
+  # RDWR open does not block and keeps a writer "alive".
+  exec 3<>"$fifo_probe/f"
+  (sleep 0.05; echo tick >"$fifo_probe/f") &
+  got=""
+  if read -r -t 1 got <&3; then
+    printf '%s' "$got" >"$fifo_probe/got"
+  fi
+  if read -r -t 0.2 _ <&3; then
+    echo overdue >"$fifo_probe/second"
+  else
+    echo blocked >"$fifo_probe/second"
+  fi
+  exec 3<&-
+) &
+fid=$!
+wait "$fid" 2>/dev/null || true
+if [ "$(cat "$fifo_probe/got" 2>/dev/null)" != "tick" ]; then
+  echo "FAIL: FIFO probe did not receive tick" >&2
+  fail=1
+fi
+if [ "$(cat "$fifo_probe/second" 2>/dev/null)" != "blocked" ]; then
+  echo "FAIL: FIFO RDWR keep-open should block (not EOF) after ephemeral writer closes" >&2
+  fail=1
+fi
+rm -rf "$fifo_probe"
+
 # Launch + healthcheck must know about the new listeners (stop-all + heal).
 for needle in vpn-tailscale album-art; do
   if ! grep -q "$needle" "$TEST_DIR/scripts/infra/waybar-launch.sh"; then

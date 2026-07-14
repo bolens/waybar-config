@@ -16,6 +16,8 @@ mod_dir="$WAYBAR_HOME/modules"
 theme_dir="$WAYBAR_HOME/theme"
 mkdir -p "$mod_dir" "$theme_dir"
 
+# Title/tooltip are already html.escape / escape_markup in scripts.
+# Do not set escape:true — Waybar would double-escape tooltip entities.
 jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
   def iv($k): ($s[0].module_intervals[$k] // $s[0].poll_intervals[$k] // 1);
   def sig($k): ($s[0].signals[$k] // null);
@@ -29,7 +31,6 @@ jq -n --slurpfile s "$settings" --arg scripts "$scripts" '
     "custom/active-window": {
       format: "{text}",
       "return-type": "json",
-      escape: true,
       exec: ($scripts + "/workspaces/active-window-scroll.sh" + out_arg),
       tooltip: true,
       "on-click": ($scripts + "/workspaces/window-switcher.sh" + out_arg)

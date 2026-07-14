@@ -61,4 +61,4 @@ esac
 
 # Invalidate cache to force instant redraw of active indicator on click/scroll
 rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/waybar"/workspaces-*.json 2>/dev/null || true
-"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" 16
+"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" workspaces

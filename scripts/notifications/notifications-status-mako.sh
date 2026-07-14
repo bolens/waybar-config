@@ -31,6 +31,7 @@ print_mako_status() {
   fi
 
   tooltip=$(printf '%s\n\nLeft: open · Right: DND · Middle: settings' "$tooltip")
+  tooltip="$(notifications_pango_escape "$tooltip")"
 
   jq -cn \
     --arg text "$text" \

@@ -4,7 +4,6 @@
     "return-type": "json",
     "signal": 10,
     "interval": "once",
-    "escape": true,
     "exec": "$WAYBAR_HOME/scripts/notifications/notifications-status.sh",
     "format-icons": {
       "notification": "󰂚",
@@ -100,7 +99,7 @@
     "exec": "$WAYBAR_HOME/scripts/system/asusctl-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/system/asusctl-click.sh menu",
     "on-click-right": "$WAYBAR_HOME/scripts/system/asusctl-click.sh next",
-    "on-click-middle": "$WAYBAR_HOME/scripts/system/asusctl-status.sh --refresh",
+    "on-click-middle": "$WAYBAR_HOME/scripts/system/asusctl-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh asusctl",
     "on-scroll-up": "$WAYBAR_HOME/scripts/system/asusctl-click.sh next",
     "on-scroll-down": "$WAYBAR_HOME/scripts/system/asusctl-click.sh prev"
   },
@@ -151,7 +150,7 @@
     "exec": "$WAYBAR_HOME/scripts/services/devices/kdeconnect-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/services/devices/kdeconnect-status.sh --ring",
     "on-click-right": "$WAYBAR_HOME/scripts/services/devices/kdeconnect-menu.sh",
-    "on-click-middle": "$WAYBAR_HOME/scripts/services/devices/kdeconnect-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh 18"
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/devices/kdeconnect-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh kdeconnect"
   },
   "custom/device-notifier": {
     "format": "{}",
@@ -160,7 +159,7 @@
     "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/services/devices/device-notifier-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/services/devices/device-notifier.py --menu",
-    "on-click-right": "$WAYBAR_HOME/scripts/services/devices/device-notifier-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh 19"
+    "on-click-right": "$WAYBAR_HOME/scripts/services/devices/device-notifier-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh device_notifier"
   },
   "custom/colorpicker": {
     "format": "󰏘",
@@ -176,7 +175,7 @@
     "exec": "$WAYBAR_HOME/scripts/system/rgb-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/tools/app-open-key.sh openrgb",
     "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open-key.sh ckb_next",
-    "on-click-middle": "$WAYBAR_HOME/scripts/system/rgb-status.sh --refresh"
+    "on-click-middle": "$WAYBAR_HOME/scripts/system/rgb-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh rgb"
   },
   "custom/vaults": {
     "format": "{}",
@@ -185,7 +184,7 @@
     "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/services/security/vaults-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/services/security/vaults.py --menu",
-    "on-click-right": "$WAYBAR_HOME/scripts/services/security/vaults-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh 21"
+    "on-click-right": "$WAYBAR_HOME/scripts/services/security/vaults-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh vaults"
   },
   "custom/touchpad": {
     "format": "{}",
@@ -194,7 +193,7 @@
     "interval": "once",
     "exec": "$WAYBAR_HOME/scripts/lib/compositor-gate.sh --show hyprland -- $WAYBAR_HOME/scripts/system/touchpad-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/system/touchpad.py --toggle",
-    "on-click-right": "$WAYBAR_HOME/scripts/system/touchpad-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh 20"
+    "on-click-right": "$WAYBAR_HOME/scripts/system/touchpad-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh touchpad"
   },
   "custom/weather": {
     "format": "{}",
@@ -241,7 +240,7 @@
     "exec": "$WAYBAR_HOME/scripts/services/devices/device-battery-status.sh",
     "on-click": "$WAYBAR_HOME/scripts/tools/app-open.sh solaar",
     "on-click-right": "$WAYBAR_HOME/scripts/tools/app-open-key.sh input_settings",
-    "on-click-middle": "$WAYBAR_HOME/scripts/services/devices/device-battery-status.sh --refresh"
+    "on-click-middle": "$WAYBAR_HOME/scripts/services/devices/device-battery-status.sh --refresh && $WAYBAR_HOME/scripts/lib/waybar-signal.sh device_battery"
   },
   "custom/streamdeck": {
     "format": "{}",

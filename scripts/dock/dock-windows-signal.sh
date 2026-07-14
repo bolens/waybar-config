@@ -26,12 +26,6 @@ cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
 debounce_stamp="${XDG_RUNTIME_DIR:-/tmp}/waybar-dock-signal.stamp"
 # Default 80ms — old 1s default made the active highlight feel lagged.
 debounce_ms="${WAYBAR_DOCK_SIGNAL_DEBOUNCE_MS:-80}"
-settings="$WAYBAR_HOME/data/waybar-settings.json"
-dock_sig=11
-if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
-  dock_sig="$(jq -r '.signals.dock_windows // 11' "$settings")"
-fi
-
 now_ms() {
   if command -v date >/dev/null 2>&1; then
     ms=$(date +%s%3N 2>/dev/null || true)
@@ -89,4 +83,4 @@ else
     done
   fi
 fi
-"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$dock_sig" "$@"
+"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" dock_windows "$@"

@@ -47,7 +47,7 @@ bash scripts/ci/tests/secrets/i2pd-sync.sh
 
 Harness docs: [`scripts/README.md`](scripts/README.md#ci-test-layout).
 
-When you add `scripts/ci/tests/generator/foo.sh` or `secrets/foo.sh`, add `foo` to the matching matrix in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+When you add `scripts/ci/tests/generator/foo.sh` or `secrets/foo.sh`, add `foo` to the matching matrix in [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Shared libs touched by secrets suites may also need a dorny `secrets:` path entry (see existing `scripts/lib/*` lines). Signal registry / keyed refresh coverage lives in `module-signals`. Tooltip Pango / `escape` double-escape regressions live in `tooltip-pango-escape`. Overlay net modules (Yggdrasil / IPFS) live in `overlay-network-modules`.
 
 ## Secrets
 

@@ -19,6 +19,7 @@ WAYBAR_LISTENER_LOCK_NAME=vpn-tailscale
 . "$script_dir/dock-windows-listener-lock.sh"
 
 mkdir -p "$cache_dir"
+rm -f "$cache_dir"/vpn-tailscale-trigger.*.fifo 2>/dev/null || true
 
 prev_vpn=""
 prev_ts=""
@@ -44,11 +45,11 @@ fifo="${cache_dir}/vpn-tailscale-trigger.$$.fifo"
 rm -f "$fifo"
 mkfifo "$fifo"
 
-cleanup() {
+waybar_listener_cleanup() {
+  exec 3<&- 2>/dev/null || true
   rm -f "$fifo" 2>/dev/null || true
   pkill -P "$$" 2>/dev/null || true
 }
-trap cleanup EXIT INT TERM
 
 # NetworkManager events (VPN up/down, device state).
 if command -v nmcli >/dev/null 2>&1; then
@@ -65,7 +66,8 @@ fi
   done
 ) &
 
-exec 3<"$fifo"
+# Open RDWR so read never EOFs between ephemeral writers (nmcli/tick).
+exec 3<>"$fifo"
 while read -r _line <&3; do
   refresh_modules
 done

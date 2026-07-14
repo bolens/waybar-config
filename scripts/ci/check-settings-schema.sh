@@ -58,4 +58,47 @@ if [ -n "$unknown" ]; then
   exit 1
 fi
 
-printf 'ok settings top-level keys match allowlist (%s keys)\n' "${#allowed_keys[@]}"
+# signals.* offsets must be unique positive integers (Waybar RTMIN+N).
+signal_report=$(
+  jq -r '
+    (.signals // {}) as $sig
+    | ($sig | to_entries) as $entries
+    | if ($entries | length) == 0 then
+        "empty"
+      else
+        ($entries | map(select(.value | type != "number" or . < 1 or (. % 1) != 0))) as $bad
+        | if ($bad | length) > 0 then
+            "invalid:" + ($bad | map("\(.key)=\(.value)") | join(","))
+          else
+            ($entries | group_by(.value) | map(select(length > 1))
+              | map("\((.[0].value|tostring)):\([.[].key] | join("+"))") | join(";")) as $dups
+            | if $dups == "" then "ok:\(($entries | length))"
+              else "dup:" + $dups end
+          end
+      end
+  ' "$settings"
+)
+case "$signal_report" in
+  empty)
+    printf 'FAIL signals map missing or empty in %s\n' "$settings" >&2
+    exit 1
+    ;;
+  invalid:*)
+    printf 'FAIL signals.* values must be positive integers: %s\n' "${signal_report#invalid:}" >&2
+    exit 1
+    ;;
+  dup:*)
+    printf 'FAIL duplicate signals.* offsets (each RTMIN must be unique):\n' >&2
+    printf '  %s\n' "${signal_report#dup:}" | tr ';' '\n' | sed 's/^/  /' >&2
+    exit 1
+    ;;
+  ok:*)
+    ;;
+  *)
+    printf 'FAIL unexpected signals report: %s\n' "$signal_report" >&2
+    exit 1
+    ;;
+esac
+
+printf 'ok settings top-level keys match allowlist (%s keys); signals unique (%s)\n' \
+  "${#allowed_keys[@]}" "${signal_report#ok:}"

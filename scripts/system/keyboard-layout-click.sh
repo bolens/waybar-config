@@ -10,8 +10,6 @@ script_dir="${0%/*}"
 
 direction="${1:-next}"
 comp="$(detect_compositor)"
-WAYBAR_HOME="${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
-settings="$WAYBAR_HOME/data/waybar-settings.json"
 
 cycle_plasma() {
   method="org.kde.KeyboardLayouts.switchToNextLayout"
@@ -48,8 +46,4 @@ case "$comp" in
   hyprland) cycle_hyprland ;;
 esac
 
-sig=2
-if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
-  sig="$(jq -r '.signals.keyboard_layout // 2' "$settings")"
-fi
-"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" "$sig" >/dev/null 2>&1 || true
+"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" keyboard_layout >/dev/null 2>&1 || true

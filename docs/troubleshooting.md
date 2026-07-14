@@ -20,6 +20,20 @@ systemctl --user restart waybar
 
 `ExecStop` / `ExecStartPre` call `listener-ctl.sh stop-all` to avoid orphan watchers.
 
+## Tooltips show literal `&gt;` / `<b>` instead of styled text
+
+Waybar's `"escape": true` runs `Glib::Markup::escape_text` on JSON `text`/`tooltip`. If the status script **already** escapes (`emit_waybar_json`, `html.escape`, `escape_markup`), entities are escaped twice and the tooltip shows markup like `-&gt;` instead of `->`.
+
+Contract used here:
+
+| Module pattern | `escape` flag | Who escapes |
+|----------------|---------------|-------------|
+| `emit_waybar_json` / script `escape_markup` | **omit** (false) | script |
+| Intentional Pango (`<b>…</b>`) | **omit** (false) | escape user text only |
+| Raw untrusted text, no script escape | `escape: true` | Waybar |
+
+Covered by the `tooltip-pango-escape` CI suite (and `lib-utils` for `emit_waybar_json` single-escape).
+
 ## Tooltips missing on Plasma
 
 Keep `bars.tooltip: true`. This config uses `bars.layer: "top"` so fullscreen apps cover the bar. Layer `"overlay"` is better for KWin tooltips on Plasma Wayland but keeps the bar above fullscreen.
@@ -51,6 +65,7 @@ export WAYBAR_SCRIPTS="$WAYBAR_HOME/scripts"
 2. Group list omitted the module id — check `groups.*` in settings.
 3. Generator not emitting it — `make generate` and inspect `modules/*.generated.jsonc`.
 4. For secrets-backed modules (i2pd, CoolerControl), verify `data/waybar-secrets.jsonc` mode `0600` and auth helpers.
+5. Overlay net modules: **Yggdrasil** needs your user in the `yggdrasil` group for the admin socket; **IPFS** needs Kubo reachable at `services.ipfs.api_url` (default `http://127.0.0.1:5001`).
 
 ## CoolerControl / i2pd auth
 
@@ -91,13 +106,25 @@ Suite matrix out of sync: `make check-suite-inventory`.
 - MCP never writes live secrets; use example + helpers.
 - After agent patches: generate → validate → restart (`confirm=true`). See [mcp.md](mcp.md).
 
-## Getting more signal
+## Logs and stale modules
+
+Useful logs:
 
 ```bash
 journalctl --user -u waybar -n 100 --no-pager
+# Filtered stderr copy (Drop patterns in scripts/infra/waybar-journal-drop.rg):
+less "${XDG_CACHE_HOME:-$HOME/.cache}/waybar/waybar.log"
 scripts/infra/waybar-healthcheck.sh   # if present / via timer unit
 bash scripts/ci/validate-generated-config.sh
 ```
+
+Stale custom modules after a click usually mean a **missed signal**:
+
+1. Confirm the module has a `signal` field and a matching `signals.<key>` (`jq '.signals' data/waybar-settings.json`).
+2. Prefer `"$WAYBAR_SCRIPTS/lib/waybar-signal.sh" <key>` (not a bare `RTMIN+N`).
+3. Unknown keys print `waybar-signal: unknown key …` on stderr — that line appears in the journal / `waybar.log` when a click/listener typo drifts from settings.
+4. After changing `signals.*`, regenerate and restart so generators and listeners pick up the new map.
+5. Listener crash loops (`album-art listener dead; restarting` every ~30s) usually mean a FIFO reader saw EOF — listeners must open the trigger FIFO with `exec 3<>"$fifo"` (RDWR) and define `waybar_listener_cleanup` instead of replacing the lock EXIT trap. See `scripts/listeners/album-art-listener.sh`.
 
 ## Related docs
 
