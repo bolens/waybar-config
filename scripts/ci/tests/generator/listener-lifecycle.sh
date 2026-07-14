@@ -143,7 +143,10 @@ mkfifo "$fifo_probe/f"
 (
   # RDWR open does not block and keeps a writer "alive".
   exec 3<>"$fifo_probe/f"
-  (sleep 0.05; echo tick >"$fifo_probe/f") &
+  (
+    sleep 0.05
+    echo tick >"$fifo_probe/f"
+  ) &
   got=""
   if read -r -t 1 got <&3; then
     printf '%s' "$got" >"$fifo_probe/got"
