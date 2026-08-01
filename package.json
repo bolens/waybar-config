@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "markdownlint-cli2": "0.23.0",
-    "stylelint": "17.14.0",
+    "stylelint": "17.14.1",
     "stylelint-config-standard": "40.0.0"
   }
 }
