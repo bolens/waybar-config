@@ -46,7 +46,7 @@ jobs:
         with:
           # Reads packageManager from package.json (pnpm@11.11.0).
           package_json_file: package.json
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: pnpm
