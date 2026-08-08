@@ -55,8 +55,8 @@ jobs:
       systemd: ${{ steps.flags.outputs.systemd }}
       workflow: ${{ steps.flags.outputs.workflow }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: filter
         if: env.FORCE_ALL != 'true'
         with:
@@ -244,7 +244,7 @@ jobs:
           || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Compare CI matrix to on-disk suites
         run: bash scripts/ci/check-suite-inventory.sh
       - name: Check CI path filters cover CSS surfaces
@@ -257,7 +257,7 @@ jobs:
     if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Syntax-check all shell scripts
         run: |
           set -euo pipefail
@@ -274,7 +274,7 @@ jobs:
     if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Syntax-check Python helpers
         env:
           WAYBAR_HOME: ${{ github.workspace }}
@@ -286,7 +286,7 @@ jobs:
     if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
       - name: Run shell contract checks
@@ -363,7 +363,7 @@ jobs:
           - tooltip-pango-escape
           - notify-sanitize
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
       - name: Run generator suite ${{ matrix.suite }}
@@ -397,7 +397,7 @@ jobs:
           - compositor-gate
           - precommit-secrets
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
       - name: Run secrets suite ${{ matrix.suite }}
@@ -416,7 +416,7 @@ jobs:
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.validate == 'true')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
       - name: Validate generated config
@@ -440,7 +440,7 @@ jobs:
           || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Install jq
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
       - name: Regenerate and diff committed artifacts
@@ -457,7 +457,7 @@ jobs:
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.systemd == 'true')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Check systemd unit templates
         env:
           WAYBAR_HOME: ${{ github.workspace }}

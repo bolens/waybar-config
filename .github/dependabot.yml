@@ -4,7 +4,30 @@ updates:
     directory: /
     schedule:
       interval: weekly
+      day: thursday
+      time: "05:17"
+      timezone: America/Denver
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
+      day: wednesday
+      time: "05:47"
+      timezone: America/Denver
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    open-pull-requests-limit: 3
+    groups:
+      npm:
+        patterns:
+          - "*"
