@@ -3,6 +3,7 @@
     "**/*.md"
   ],
   "ignores": [
+    ".agents/**",
     "node_modules/**",
     ".pnpm-store/**",
     ".git/**"
