@@ -47,6 +47,7 @@ jobs:
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     outputs:
       scripts: ${{ steps.flags.outputs.scripts }}
       generator: ${{ steps.flags.outputs.generator }}
@@ -245,6 +246,7 @@ jobs:
           || github.event_name == 'schedule'
           || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -260,6 +262,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -279,6 +282,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -293,6 +297,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -316,6 +321,7 @@ jobs:
       && (needs.suite-inventory.result == 'success' || needs.suite-inventory.result == 'skipped')
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.generator == 'true')
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -395,6 +401,7 @@ jobs:
       && (needs.suite-inventory.result == 'success' || needs.suite-inventory.result == 'skipped')
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.secrets == 'true')
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -429,6 +436,7 @@ jobs:
       && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.validate == 'true')
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -455,6 +463,7 @@ jobs:
           || github.event_name == 'schedule'
           || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -474,6 +483,7 @@ jobs:
       && needs.changes.result == 'success'
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.systemd == 'true')
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -499,6 +509,7 @@ jobs:
       - generated-drift
       - systemd-units
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Aggregate job results
         env:
