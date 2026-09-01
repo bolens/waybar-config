@@ -56,6 +56,8 @@ jobs:
       workflow: ${{ steps.flags.outputs.workflow }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: filter
         if: env.FORCE_ALL != 'true'
@@ -245,6 +247,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Compare CI matrix to on-disk suites
         run: bash scripts/ci/check-suite-inventory.sh
       - name: Check CI path filters cover CSS surfaces
@@ -258,6 +262,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Syntax-check all shell scripts
         run: |
           set -euo pipefail
@@ -275,6 +281,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Syntax-check Python helpers
         env:
           WAYBAR_HOME: ${{ github.workspace }}
@@ -287,6 +295,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
       - name: Run shell contract checks
@@ -364,6 +374,8 @@ jobs:
           - notify-sanitize
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
       - name: Run generator suite ${{ matrix.suite }}
@@ -398,6 +410,8 @@ jobs:
           - precommit-secrets
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
       - name: Run secrets suite ${{ matrix.suite }}
@@ -417,6 +431,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Install jq + dash
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq dash
       - name: Validate generated config
@@ -441,6 +457,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Install jq
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
       - name: Regenerate and diff committed artifacts
@@ -458,6 +476,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Check systemd unit templates
         env:
           WAYBAR_HOME: ${{ github.workspace }}
