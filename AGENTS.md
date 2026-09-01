@@ -1,70 +1,20 @@
-# Agent briefing (Waybar config)
+# Agent guidance
 
-> Doc map: [Documentation index](docs/README.md) · [Contributing](CONTRIBUTING.md) · [MCP](docs/mcp.md)
+Read `.specify/memory/constitution.md` and use `docs/README.md` as the document
+map. The editable settings source is `data/waybar-settings.jsonc`.
 
-Short rules for AI coding agents working in this repository.
-
-## Source of truth
-
-- Edit **`data/waybar-settings.jsonc`** (and scripts / generators).
-- **Never** hand-edit `*.generated.jsonc` or `*.generated.css`.
-- `data/waybar-settings.json` is a compiled artifact and will be overwritten.
-- Secrets belong only in **`data/waybar-secrets.jsonc`** (gitignored, mode `0600`). Never commit secrets or put passwords in the main settings file.
-
-## Pipeline
-
-```text
-settings.jsonc → make generate → modules/layouts/theme generated artifacts → Waybar
-```
-
-After settings or generator changes: `make generate`, then validate. Prefer `systemctl --user restart waybar` to reload.
-
-Details: [docs/architecture.md](docs/architecture.md).
-
-## Prefer existing tooling
-
-| Task | Use |
-|------|-----|
-| Find any doc | [docs/README.md](docs/README.md) (canonical index) |
-| Inspect / patch settings as an MCP client | [docs/mcp.md](docs/mcp.md) — `scripts/mcp/waybar-mcp.py` |
-| Add a status module | [docs/adding-a-module.md](docs/adding-a-module.md) |
-| Theme / presets / wallpaper | [docs/theming.md](docs/theming.md) |
-| Key meanings | [docs/settings-reference.md](docs/settings-reference.md) |
-| Something broken | [docs/troubleshooting.md](docs/troubleshooting.md) |
-| Signal a module after click/listener work | `scripts/lib/waybar-signal.sh <signals.* key>` (prefer key, not RTMIN number) |
-| Local gate | `make check-fast` or targeted `scripts/ci/tests/…` |
-| Contributor norms | [CONTRIBUTING.md](CONTRIBUTING.md) |
-
-## Do / don’t
-
-- **Do** keep PRs small; regenerate and commit intended generated artifacts.
-- **Do** hide modules when optional deps are missing.
-- **Do** add CI suite + matrix entry when adding generator/secrets tests (`make check-suite-inventory`).
-- **Do** refresh modules with `waybar-signal.sh <key>` matching `signals.*` / generated `signal`.
-- **Do** cover signal wiring in `module-signals` (or extend it) when changing `signals.*` / generators / click refresh paths.
-- **Do** cover tooltip markup / `"escape"` changes in `tooltip-pango-escape` (avoid script escape + Waybar `escape: true`).
-- **Don’t** reimplement generators in ad-hoc Python when `make generate` already covers the path.
-- **Don’t** write live secrets via MCP or dump secret values into chat/logs.
-- **Don’t** skip hooks or force-push `main`.
-- **Don’t** hardcode `pkill -RTMIN+N` in new click/listener code.
-
-## MCP quick flow
-
-`waybar_backup_settings` → edit tools → `waybar_generate` → `waybar_validate` → `waybar_restart` with `confirm=true`.
-
-Programmatic settings writes rewrite pretty JSON (**JSONC comments are lost**).
-
-## Related docs
-
-Full map: [Documentation index](docs/README.md).
-
-| Doc | Topic |
-|-----|--------|
-| [Architecture](docs/architecture.md) | Pipeline |
-| [Settings reference](docs/settings-reference.md) | Keys |
-| [Adding a module](docs/adding-a-module.md) | New modules |
-| [Theming](docs/theming.md) | Themes |
-| [Troubleshooting](docs/troubleshooting.md) | Failures |
-| [MCP](docs/mcp.md) | Tool/resource/prompt tables |
-| [Contributing](CONTRIBUTING.md) | Checks / PRs |
-| [Scripts layout](scripts/README.md) | Domains + CI |
+- Never hand-edit `*.generated.jsonc`, `*.generated.css`, or compiled
+  `data/waybar-settings.json`; change settings/generators and run
+  `make generate`.
+- Keep secrets only in gitignored `data/waybar-secrets.jsonc` with mode `0600`.
+  Never expose or write live secret values through MCP.
+- Optional modules must hide cleanly when dependencies are absent. Use the
+  signal registry helper rather than hard-coded real-time signal numbers.
+- Settings writes through MCP rewrite JSONC and lose comments; disclose this
+  before using them. Restarting Waybar is an operational action and requires
+  explicit confirmation.
+- Add CI suite/matrix and path-filter coverage when adding generator or secrets
+  tests. Update the documentation index when docs move or are added.
+- Run `make generate` after source changes, then the narrow relevant suite or
+  `make check-fast`; use `make check` for cross-cutting work. Include intended
+  generated diffs and report skipped optional tools.
