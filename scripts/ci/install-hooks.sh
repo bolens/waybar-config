@@ -4,20 +4,16 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HOOKS_DIR="$ROOT/.git/hooks"
-SRC="$ROOT/scripts/ci/pre-commit-check-secrets.sh"
+PRE_COMMIT="$ROOT/scripts/ci/pre-commit"
+PRE_PUSH="$ROOT/scripts/ci/pre-push"
 
-if [ ! -d "$ROOT/.git" ]; then
+if [ ! -e "$ROOT/.git" ]; then
   echo "FAIL: $ROOT is not a git checkout" >&2
   exit 1
 fi
-if [ ! -f "$SRC" ]; then
-  echo "FAIL: missing $SRC" >&2
-  exit 1
-fi
-
 mkdir -p "$HOOKS_DIR"
-ln -sfn ../../scripts/ci/pre-commit-check-secrets.sh "$HOOKS_DIR/pre-commit"
-chmod +x "$SRC"
+ln -sfn ../../scripts/ci/pre-commit "$HOOKS_DIR/pre-commit"
+ln -sfn ../../scripts/ci/pre-push "$HOOKS_DIR/pre-push"
+chmod +x "$PRE_COMMIT" "$PRE_PUSH" scripts/ci/pre-commit-check-secrets.sh
 
-echo "Installed pre-commit → scripts/ci/pre-commit-check-secrets.sh"
-echo "Tip: run \`make check\` before pushing (syntax, suites, drift, lint)."
+echo "Installed pre-commit and pre-push hooks from scripts/ci/."

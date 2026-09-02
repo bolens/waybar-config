@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+make check
+make check-shfmt check-gitleaks check-stylelint check-gtk-css check-markdownlint
+actionlint
+zizmor --offline --min-severity medium --min-confidence medium .github

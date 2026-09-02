@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+git diff --cached --check
+bash scripts/ci/pre-commit-check-secrets.sh
+make check-fast
+if ! git diff --cached --quiet -- '.github/workflows/*.yml' '.github/workflows/*.yaml'; then
+  actionlint
+  zizmor --offline --min-severity medium --min-confidence medium .github
+fi
