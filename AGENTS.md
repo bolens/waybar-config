@@ -18,3 +18,12 @@ map. The editable settings source is `data/waybar-settings.jsonc`.
 - Run `make generate` after source changes, then the narrow relevant suite or
   `make check-fast`; use `make check` for cross-cutting work. Include intended
   generated diffs and report skipped optional tools.
+
+## Spec-driven changes
+
+Use Spec Kit for new capabilities, architecture, security-sensitive behavior,
+migrations, and coordinated multi-file changes. Keep narrow fixes, dependency
+updates, prose edits, and release housekeeping in the normal repository
+workflow unless their risk warrants a written specification. Keep completed
+feature directories under `specs/` as decision history; do not backfill them for
+finished work.
