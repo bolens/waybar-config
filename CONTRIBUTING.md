@@ -82,7 +82,9 @@ Optional agent API: [docs/mcp.md](docs/mcp.md). Agent briefing: [AGENTS.md](AGEN
 - Prefer small, reviewable PRs.
 - Include regenerated artifacts when generators change.
 - Note new optional dependencies in the README Dependencies section.
-- Do not force-push to `main` or skip hooks unless explicitly required and agreed.
+- Route every change through a pull request, including maintainer changes.
+- Wait for required checks and resolved conversations, then squash-merge and
+  delete the branch. Do not push directly to `main` or bypass protection.
 
 ## Related docs
 
