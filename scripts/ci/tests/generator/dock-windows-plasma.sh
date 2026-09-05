@@ -178,12 +178,13 @@ slot15=$(
 )
 waybar_test_assert_jq "$slot15" '.class | index("hidden")' "empty slot should be hidden: $slot15"
 
-# Focus click writes Run (no rofi)
+# Focus click writes Run (no rofi). Drain its inherited stdout pipe so the
+# deferred focus subprocess finishes before the sandbox is removed.
 : >"$WAYBAR_TEST_QDBUS_LOG"
 WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
   WAYBAR_COMPOSITOR=kde \
   XDG_CACHE_HOME="$CACHE" XDG_RUNTIME_DIR="$TEST_DIR/runtime" \
-  "$TEST_DIR/scripts/dock/dock-windows-click.sh" focus 0 DP-1
+  "$TEST_DIR/scripts/dock/dock-windows-click.sh" focus 0 DP-1 | cat
 if ! grep -q 'org.kde.krunner1.Run' "$WAYBAR_TEST_QDBUS_LOG"; then
   echo "FAIL: focus slot should call WindowsRunner Run" >&2
   cat "$WAYBAR_TEST_QDBUS_LOG" >&2 || true

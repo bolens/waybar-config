@@ -50,6 +50,21 @@ CACHE="$TEST_DIR/pom-cache"
 rm -rf "$CACHE"
 mkdir -p "$CACHE"
 
+# Control time across separate CLI invocations so runner scheduling cannot
+# change an exact countdown assertion. Preserve other date formats for helpers.
+export WAYBAR_TEST_REAL_DATE
+WAYBAR_TEST_REAL_DATE=$(command -v date)
+export WAYBAR_TEST_NOW=1000
+waybar_test_write_bin_stub date <<'STUB'
+#!/usr/bin/env bash
+if [[ "$*" == '+%s' ]]; then
+  printf '%s\n' "$WAYBAR_TEST_NOW"
+else
+  exec "$WAYBAR_TEST_REAL_DATE" "$@"
+fi
+STUB
+export PATH="$TEST_DIR/bin:$PATH"
+
 idle=$(
   WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" XDG_CACHE_HOME="$CACHE" \
     "$TEST_DIR/scripts/tools/pomodoro-status.sh"
@@ -62,8 +77,16 @@ run=$(
   WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" XDG_CACHE_HOME="$CACHE" \
     "$TEST_DIR/scripts/tools/pomodoro-status.sh"
 )
-waybar_test_assert_jq "$run" '.class == "work" and (.tooltip | test("running")) and (.text | test("25:"))' \
+waybar_test_assert_jq "$run" '.class == "work" and (.tooltip | test("running")) and (.text | endswith("25:00"))' \
   "pomodoro after toggle should be work/running: $run"
+
+WAYBAR_TEST_NOW=1001
+elapsed=$(
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" XDG_CACHE_HOME="$CACHE" \
+    "$TEST_DIR/scripts/tools/pomodoro-status.sh"
+)
+waybar_test_assert_jq "$elapsed" '.class == "work" and (.text | endswith("24:59"))' \
+  "pomodoro should count down one second: $elapsed"
 
 WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" XDG_CACHE_HOME="$CACHE" \
   "$TEST_DIR/scripts/tools/pomodoro-click.sh" toggle
@@ -73,6 +96,14 @@ paused=$(
 )
 waybar_test_assert_jq "$paused" '.class == "work" and (.tooltip | test("paused"))' \
   "pomodoro second toggle should pause: $paused"
+
+WAYBAR_TEST_NOW=5000
+still_paused=$(
+  WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" XDG_CACHE_HOME="$CACHE" \
+    "$TEST_DIR/scripts/tools/pomodoro-status.sh"
+)
+waybar_test_assert_jq "$still_paused" '(.tooltip | test("paused")) and (.text | endswith("24:59"))' \
+  "paused pomodoro should preserve remaining time: $still_paused"
 
 WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" XDG_CACHE_HOME="$CACHE" \
   "$TEST_DIR/scripts/tools/pomodoro-click.sh" skip
@@ -90,7 +121,7 @@ idle2=$(
     "$TEST_DIR/scripts/tools/pomodoro-status.sh"
 )
 waybar_test_assert_jq "$idle2" '.class == "idle"' "pomodoro reset should return idle: $idle2"
-if [ -f "$CACHE/pomodoro.state" ]; then
+if [ -f "$CACHE/waybar/pomodoro.state" ]; then
   echo "FAIL: reset should remove pomodoro.state" >&2
   fail=1
 fi
