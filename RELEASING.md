@@ -18,6 +18,19 @@ make check
 Review intended generated diffs, documentation-index changes, optional-module
 fallback behavior, and CI/path-filter coverage.
 
+## Push
+
+Follow the [fleet push and merge steps](https://github.com/bolens/.github/blob/main/RELEASING.md#push-and-merge).
+After the local checks pass, inspect the diff, commit focused changes, and push
+only the feature branch to the GitHub remote:
+
+```sh
+git push --set-upstream origin HEAD
+```
+
+Confirm `origin` points to `bolens/waybar-config` on GitHub before pushing.
+Do not push `main`, force-push, skip failing hooks, or bypass protection.
+
 ## Review, deliver, and verify
 
 Require a pull request, all checks, resolved conversations, and a squash merge.
