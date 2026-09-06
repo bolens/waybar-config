@@ -39,17 +39,17 @@ password = os.environ.get("CC_UI_PASS", "")
 token = os.environ.get("CC_TOKEN", "")
 base = api.replace("https://", "http://") if api.startswith("https://") else api
 
-def curl(args):
-    r = subprocess.run(args, capture_output=True, text=True, timeout=8)
+def curl(args, stdin=None):
+    r = subprocess.run(args, input=stdin, capture_output=True, text=True, timeout=8)
     return r
 
-def req(method, path, headers=None, jar=None, netrc=None):
+def req(method, path, headers=None, jar=None, netrc_data=None):
     # Auth headers via -H @file so secrets never appear on curl argv.
     hdr_dir = None
     args = ["curl", "-sS", "--max-time", "5", "-w", "\n%{http_code}", "-X", method]
     try:
-        if netrc:
-            args += ["--netrc-file", netrc]
+        if netrc_data is not None:
+            args += ["--netrc-file", "/dev/stdin"]
         if jar:
             args += ["-b", jar, "-c", jar]
         if headers:
@@ -60,7 +60,7 @@ def req(method, path, headers=None, jar=None, netrc=None):
                 hp.chmod(0o600)
                 args += ["-H", f"@{hp}"]
         args.append(f"{base}{path}")
-        r = curl(args)
+        r = curl(args, stdin=netrc_data)
         body, _, code = (r.stdout or "").rpartition("\n")
         try:
             code_i = int(code.strip() or "0")
@@ -87,14 +87,12 @@ try:
             token = ""  # force password path below
     if auth != "bearer" and password:
         td = tempfile.TemporaryDirectory(prefix="cc-dump.")
-        netrc = Path(td.name) / "netrc"
         jar = str(Path(td.name) / "cookies")
-        netrc.write_text(
+        netrc_data = (
             f"machine 127.0.0.1\nlogin {user}\npassword {password}\n"
             f"machine localhost\nlogin {user}\npassword {password}\n"
         )
-        netrc.chmod(0o600)
-        code, _ = req("POST", "/login", netrc=str(netrc), jar=jar)
+        code, _ = req("POST", "/login", netrc_data=netrc_data, jar=jar)
         if code != 200:
             print(json.dumps({"ok": False, "error": f"POST /login HTTP {code}", "auth": "basic"}, indent=2))
             raise SystemExit(1)

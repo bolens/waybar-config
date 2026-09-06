@@ -251,7 +251,7 @@ ensure_service() {
 }
 
 curl_code() {
-  # Credentials via env only. Basic auth uses a temp netrc (not curl -u argv).
+  # Credentials via env only. Basic auth passes netrc through a pipe to curl.
   local mode="$1" # token | basic_login | wrong_login
   python3 - "$mode" <<'PY' || true
 import os, subprocess, sys, tempfile
@@ -263,9 +263,9 @@ user = os.environ.get("CC_UI_USER", "CCAdmin")
 password = os.environ.get("CC_UI_PASS", "")
 token = os.environ.get("CC_TOKEN", "")
 
-def run(args):
+def run(args, stdin=None):
     try:
-        r = subprocess.run(args, capture_output=True, text=True, timeout=5)
+        r = subprocess.run(args, input=stdin, capture_output=True, text=True, timeout=5)
         return (r.stdout or "").strip() or "000"
     except Exception:
         return "000"
@@ -275,20 +275,17 @@ base_http = api.replace("https://", "http://") if api.startswith("https://") els
 base_https = api if api.startswith("https://") else api.replace("http://", "https://")
 
 def with_netrc(login, passwd, build_args):
-    with tempfile.TemporaryDirectory(prefix="cc-netrc.") as td:
-        netrc = Path(td) / "netrc"
-        netrc.write_text(
-            f"machine 127.0.0.1\nlogin {login}\npassword {passwd}\n"
-            f"machine localhost\nlogin {login}\npassword {passwd}\n"
-        )
-        netrc.chmod(0o600)
-        for base in (base_http, base_https):
-            args = build_args(base, str(netrc))
-            if base.startswith("https://"):
-                args = args[:1] + ["-k"] + args[1:]
-            code = run(args)
-            if code and code != "000":
-                return code
+    netrc_data = (
+        f"machine 127.0.0.1\nlogin {login}\npassword {passwd}\n"
+        f"machine localhost\nlogin {login}\npassword {passwd}\n"
+    )
+    for base in (base_http, base_https):
+        args = build_args(base, "/dev/stdin")
+        if base.startswith("https://"):
+            args = args[:1] + ["-k"] + args[1:]
+        code = run(args, stdin=netrc_data)
+        if code and code != "000":
+            return code
     return "000"
 
 def try_bases(build_args):

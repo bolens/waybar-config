@@ -84,6 +84,9 @@ scripts/services/coolercontrol/coolercontrol-check-auth.sh
 ```
 
 Prefer a read-only CoolerControl access token for day-to-day monitoring.
+Password login uses a pipe to curl through Linux `/dev/stdin`, avoiding temporary
+password files and credentials in curl arguments. The ignored secrets overlay
+and private session-cookie storage retain their existing behavior.
 
 ## Dock windows wrong on Plasma
 

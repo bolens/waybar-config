@@ -111,16 +111,15 @@ if [[ "\$joined" == *"/login"* ]]; then
     printf '405'
     exit 0
   fi
-  prev=""
-  for a in "\$@"; do
-    if [[ "\$prev" == "--netrc-file" && -f "\$a" ]]; then
-      if grep -q 'invalid-auth-check' "\$a" 2>/dev/null; then
-        printf '401'
-        exit 0
-      fi
-    fi
-    prev="\$a"
-  done
+  if [[ "\$joined" != *"--netrc-file /dev/stdin"* ]]; then
+    printf '401'
+    exit 0
+  fi
+  payload=\$(cat)
+  if [[ "\$payload" == *"invalid-auth-check"* || "\$payload" != *"password "* ]]; then
+    printf '401'
+    exit 0
+  fi
   printf '200'
   exit 0
 fi
@@ -298,16 +297,15 @@ if [[ "\$joined" == *"/login"* ]]; then
     printf '405'
     exit 0
   fi
-  prev=""
-  for a in "\$@"; do
-    if [[ "\$prev" == "--netrc-file" && -f "\$a" ]]; then
-      if grep -q 'invalid-auth-check' "\$a" 2>/dev/null; then
-        printf '401'
-        exit 0
-      fi
-    fi
-    prev="\$a"
-  done
+  if [[ "\$joined" != *"--netrc-file /dev/stdin"* ]]; then
+    printf '401'
+    exit 0
+  fi
+  payload=\$(cat)
+  if [[ "\$payload" == *"invalid-auth-check"* || "\$payload" != *"password "* ]]; then
+    printf '401'
+    exit 0
+  fi
   printf '200'
   exit 0
 fi

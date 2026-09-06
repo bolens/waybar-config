@@ -59,3 +59,6 @@ data/waybar-secrets.jsonc
 # Transient GTK CSS smoke entries (optional absolute @imports stripped for CI)
 .gtk-css-check-*.css
 .gtk-css-smoke-*.css
+
+# Local tooling and runtime artifacts
+.ruff_cache/

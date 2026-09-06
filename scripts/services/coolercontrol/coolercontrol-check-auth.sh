@@ -42,26 +42,12 @@ fi
 unset token
 
 if [[ -n "$pass" && "$pass" != CHANGE_ME ]]; then
-  cat >"$td/netrc" <<NETRC
-machine 127.0.0.1
-login $user
-password $pass
-machine localhost
-login $user
-password $pass
-NETRC
-  chmod 600 "$td/netrc"
-  cat >"$td/netrc.bad" <<NETRC
-machine 127.0.0.1
-login $user
-password invalid-auth-check
-machine localhost
-login $user
-password invalid-auth-check
-NETRC
-  chmod 600 "$td/netrc.bad"
-  login=$(curl -sS -m 5 -o /dev/null -w '%{http_code}' -X POST --netrc-file "$td/netrc" -c "$td/cookies" "$base/login" || true)
-  login_reject=$(curl -sS -m 5 -o /dev/null -w '%{http_code}' -X POST --netrc-file "$td/netrc.bad" "$base/login" || true)
+  # Bash builtin printf feeds curl without a password file or credential argv.
+  netrc_payload() {
+    printf 'machine 127.0.0.1\nlogin %s\npassword %s\nmachine localhost\nlogin %s\npassword %s\n' "$user" "$1" "$user" "$1"
+  }
+  login=$(netrc_payload "$pass" | curl -sS -m 5 -o /dev/null -w '%{http_code}' -X POST --netrc-file /dev/stdin -c "$td/cookies" "$base/login" || true)
+  login_reject=$(netrc_payload invalid-auth-check | curl -sS -m 5 -o /dev/null -w '%{http_code}' -X POST --netrc-file /dev/stdin "$base/login" || true)
   if [[ "$login" == 200 ]]; then
     cookie_status=$(curl -sS -m 5 -o "$td/status-cookie.json" -w '%{http_code}' -b "$td/cookies" -c "$td/cookies" "$base/status" || true)
   fi
