@@ -66,6 +66,15 @@ if [[ "$joined" == *"/login"* ]]; then
     emit '' "405"
     exit 0
   fi
+  if [[ "$joined" != *"--netrc-file /dev/stdin"* || "$joined" == *"fallback-pass"* ]]; then
+    emit '' "401"
+    exit 0
+  fi
+  payload=$(cat)
+  if [[ "$payload" != *"password fallback-pass"* ]]; then
+    emit '' "401"
+    exit 0
+  fi
   emit '' "200"
   exit 0
 fi
@@ -220,6 +229,102 @@ if [ ! -f "$CC_WC_CACHE/waybar/coolercontrol-write.json" ]; then
   fail=1
 fi
 rm -rf "$CC_WC_FIX" "$CC_WC_CACHE"
+
+# Real curl must consume the password pipe and retain cookie authentication.
+if ! python3 - "$ROOT_DIR" <<'PY'; then
+import base64
+import importlib.util
+import os
+from pathlib import Path
+import tempfile
+import threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from unittest.mock import patch
+import subprocess
+import sys
+
+spec = importlib.util.spec_from_file_location(
+    "cc_api", Path(sys.argv[1]) / "scripts/services/coolercontrol/coolercontrol-api.py"
+)
+api = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(api)
+password = "synthetic-stdin-password"
+expected = "Basic " + base64.b64encode(f"CCAdmin:{password}".encode()).decode()
+
+with tempfile.TemporaryDirectory() as root:
+    class Handler(BaseHTTPRequestHandler):
+        reject = False
+        reject_status = False
+        errors = []
+        def log_message(self, *args):
+            pass
+        def do_POST(self):
+            # Inspect files while credentials are in use, before cleanup can hide a leak.
+            for path in Path(root).rglob("*"):
+                if path.is_file():
+                    if password.encode() in path.read_bytes():
+                        self.errors.append(f"password file: {path.name}")
+            ok = self.headers.get("Authorization") == expected and not self.reject
+            self.send_response(200 if ok else 401)
+            if ok:
+                self.send_header("Set-Cookie", "session=synthetic; Path=/")
+            self.end_headers()
+        def do_GET(self):
+            ok = self.headers.get("Cookie") == "session=synthetic" and not self.reject_status
+            self.send_response(200 if ok else 401)
+            self.end_headers()
+            self.wfile.write(b'{"devices":[]}')
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    worker = threading.Thread(target=server.serve_forever, daemon=True)
+    worker.start()
+    old_tempdir = tempfile.tempdir
+    tempfile.tempdir = root
+    try:
+        with patch.dict(os.environ, {"WAYBAR_CC_UI_PASS": password, "WAYBAR_CC_UI_USER": "CCAdmin"}):
+            client = api.CcClient()
+        base = f"http://127.0.0.1:{server.server_port}"
+        assert client._try_password(base), "real curl stdin login or cookie verification failed"
+        client.close()
+        assert not list(Path(root).iterdir()), "successful session cleanup failed"
+        # Exercise the diagnostic and sync helpers' embedded Python with real curl.
+        helper_dir = Path(sys.argv[1]) / "scripts/services/coolercontrol"
+        child_env = dict(os.environ, CC_API_URL=base, CC_UI_USER="CCAdmin",
+                         CC_UI_PASS=password, CC_TOKEN="", TMPDIR=root)
+        for name, marker, args in (
+            ("coolercontrol-api-dump.sh", "python3 <<'PY'", []),
+            ("coolercontrol-set-ui-pass.sh", "python3 - \"$mode\" <<'PY' || true", ["basic_login"]),
+        ):
+            source = (helper_dir / name).read_text().split(marker + "\n", 1)[1].split("\nPY", 1)[0]
+            result = subprocess.run([sys.executable, "-c", source, *args],
+                                    env=child_env, capture_output=True, text=True, timeout=15)
+            assert result.returncode == 0, (name, result.stderr)
+            if args:
+                assert result.stdout.strip() == "200", name
+            else:
+                import json
+                assert json.loads(result.stdout)["auth"] == "basic+cookie", name
+            assert not list(Path(root).iterdir()), (name, "session cleanup failed")
+        Handler.reject_status = True
+        assert not client._try_password(base), "rejected cookie verification accepted"
+        assert not list(Path(root).iterdir()), "status rejection leaked session directory"
+        Handler.reject_status = False
+        Handler.reject = True
+        assert not client._try_password(base), "rejected login accepted"
+        assert not list(Path(root).iterdir()), "rejected login leaked session directory"
+        with patch.object(api.subprocess, "run", side_effect=subprocess.TimeoutExpired("curl", 6)):
+            assert not client._try_password(base), "timeout accepted"
+        assert not list(Path(root).iterdir()), "timeout leaked session directory"
+        assert not Handler.errors, Handler.errors
+    finally:
+        tempfile.tempdir = old_tempdir
+        server.shutdown()
+        server.server_close()
+        worker.join()
+PY
+  echo "FAIL: real curl password transport or cleanup" >&2
+  fail=1
+fi
 
 echo "PASS: coolercontrol module auth"
 waybar_test_end
