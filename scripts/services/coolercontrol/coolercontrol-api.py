@@ -44,9 +44,9 @@ def _bases(api: str) -> list[str]:
     return out
 
 
-def _curl(args: list[str]) -> subprocess.CompletedProcess[str] | None:
+def _curl(args: list[str], stdin: str | None = None) -> subprocess.CompletedProcess[str] | None:
     try:
-        return subprocess.run(args, capture_output=True, text=True, timeout=6)
+        return subprocess.run(args, input=stdin, capture_output=True, text=True, timeout=6)
     except Exception:
         return None
 
@@ -58,7 +58,7 @@ def _http(
     *,
     headers: list[str] | None = None,
     cookie_jar: str | None = None,
-    netrc: str | None = None,
+    netrc_data: str | None = None,
     body: str | None = None,
     content_type: str | None = None,
 ) -> tuple[int, str]:
@@ -68,8 +68,8 @@ def _http(
     try:
         if base.startswith("https://"):
             args.append("-k")
-        if netrc:
-            args += ["--netrc-file", netrc]
+        if netrc_data is not None:
+            args += ["--netrc-file", "/dev/stdin"]
         if cookie_jar:
             args += ["-b", cookie_jar, "-c", cookie_jar]
         if headers:
@@ -84,7 +84,7 @@ def _http(
         if body is not None:
             args += ["--data-binary", body]
         args.append(f"{base}{path}")
-        r = _curl(args)
+        r = _curl(args, stdin=netrc_data)
         if r is None:
             return 0, ""
         out = r.stdout or ""
@@ -167,14 +167,12 @@ class CcClient:
             return False
         td = tempfile.TemporaryDirectory(prefix="cc-api.")
         try:
-            netrc = Path(td.name) / "netrc"
             jar = str(Path(td.name) / "cookies")
-            netrc.write_text(
+            netrc_data = (
                 f"machine 127.0.0.1\nlogin {self.user}\npassword {self.password}\n"
                 f"machine localhost\nlogin {self.user}\npassword {self.password}\n"
             )
-            netrc.chmod(0o600)
-            code, _ = _http(base, "POST", "/login", netrc=str(netrc), cookie_jar=jar)
+            code, _ = _http(base, "POST", "/login", netrc_data=netrc_data, cookie_jar=jar)
             if code != 200:
                 td.cleanup()
                 return False
