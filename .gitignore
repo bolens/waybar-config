@@ -63,6 +63,9 @@ data/waybar-secrets.jsonc
 # Local tooling and runtime artifacts
 .ruff_cache/
 
+# Copy .mcp.json.example locally and set explicit checkout/resource paths.
+/.mcp.json
+
 # Shared VS Code configuration; keep personal editor state ignored.
 !/.vscode/
 /.vscode/*
