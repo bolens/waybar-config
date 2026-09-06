@@ -1,6 +1,49 @@
-# Documentation index
+# Documentation
 
-Canonical map of project docs. **When you add or rename a doc, update this file** (CI enforces `docs/*.md` coverage).
+Waybar settings generation, optional modules, and local state.
+
+## Start here
+
+| Need | Owning document |
+| --- | --- |
+| Use the project | [README.md](../README.md) |
+| Change the repository | [AGENTS.md](../AGENTS.md) |
+| Deliver or recover | [RELEASING.md](../RELEASING.md) |
+| Plan substantial changes | [.specify/memory/project-guide.md](../.specify/memory/project-guide.md) |
+| Non-negotiable constraints | [.specify/memory/constitution.md](../.specify/memory/constitution.md) |
+
+## Architecture
+
+[Architecture](architecture.md) owns the settings-to-generation-to-Waybar flow. [Editable
+JSONC](../data/waybar-settings.jsonc) is authoritative. Generated JSONC/CSS and compiled settings
+must not become independent sources. Module cache, signals, and compositor behavior follow shared
+contracts.
+
+## Deployment and recovery
+
+[README](../README.md) owns installation and systemd operation. [RELEASING.md](../RELEASING.md) owns
+source delivery and recovery. Generation does not reload the running bar. Missing optional
+dependencies should hide or degrade a module without breaking the rest of the bar.
+
+## Database and state
+
+There is no database server. Editable settings, compiled output, module caches, and the private
+secrets overlay have separate owners. [Settings reference](settings-reference.md) owns configuration
+and [MCP](mcp.md) documents writes, including JSONC comment loss. Never commit runtime secrets or
+substitute caches for settings.
+
+## Documentation maintenance
+
+Keep decisions, invariants, failure modes, and recovery requirements in the owning document. Link to
+commands, defaults, schemas, and generated catalogs instead of copying them. Change the owner and
+affected references together. Update this index when adding or moving a guide, and verify relative
+links and heading anchors. Historical specs and audits describe their recorded revision, not current
+runtime proof. A topic without an implementation stays explicitly unimplemented.
+
+## Topic guides
+
+Canonical map of project docs. **When you add or rename a doc, update this file** (CI enforces
+`docs/*.md` coverage).
 
 | Doc | Topic |
 |-----|--------|

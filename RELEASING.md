@@ -1,5 +1,7 @@
 # Delivery playbook
 
+[Documentation](docs/README.md)
+
 Waybar Config continuously delivers declarative source and generated artifacts
 from protected `main`; it has no tagged releases. Restarting or replacing a live
 Waybar configuration is a separate authorized operation.
