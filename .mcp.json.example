@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "waybar-config": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/waybar-config/scripts/mcp/waybar-mcp.py",
+        "--waybar-home",
+        "/absolute/path/to/waybar-config"
+      ]
+    }
+  }
+}

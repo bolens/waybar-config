@@ -70,3 +70,6 @@ data/waybar-secrets.jsonc
 .devenv.flake.nix
 devenv.local.nix
 devenv.local.yaml
+
+# Copy .mcp.json.example locally and set explicit checkout/resource paths.
+/.mcp.json
