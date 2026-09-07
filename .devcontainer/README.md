@@ -8,7 +8,9 @@ packages. Setup installs dependencies from this checkout's lockfiles and runs
 `bash .devcontainer/post-create.sh` after changing dependency lockfiles.
 
 Includes Python, Ruff, jq, dash, Perl, GLib tools, ImageMagick and the locked
-CSS/Markdown linters. Generator tests run without a desktop. Waybar rendering
+CSS/Markdown linters. Generator tests run without a desktop. Service-status fixtures use the packaged
+`systemctl`; no systemd daemon is started.
+Waybar rendering
 and compositor integration require an isolated graphical session.
 
 Run from the workspace root:

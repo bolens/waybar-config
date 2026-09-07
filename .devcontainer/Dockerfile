@@ -35,12 +35,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ripgrep \
     shellcheck \
     sudo \
+    systemd \
     tar \
     unzip \
     wget \
     xz-utils \
     zip \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /usr/local/bin/systemctl
 
 COPY --from=node /usr/local/ /usr/local/
 COPY --from=uv /uv /uvx /usr/local/bin/

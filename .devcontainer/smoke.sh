@@ -7,5 +7,8 @@ git rev-parse --show-toplevel >/dev/null
 for tool in git bash python3 node shellcheck ruff actionlint hadolint zizmor magick; do
   command -v "${tool}" >/dev/null || { echo "Missing development tool: ${tool}" >&2; exit 1; }
 done
+# The base image shim prints to stdout and reports inactive services as active.
+test "$(command -v systemctl)" = /usr/bin/systemctl
+systemctl --version >/dev/null
 node -e 'if (Number(process.versions.node.split(".")[0]) !== 24) process.exit(1)'
 printf "%s\n" "Development tools ready. See .devcontainer/README.md for repository checks."
