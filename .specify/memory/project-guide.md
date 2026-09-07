@@ -1,5 +1,7 @@
 # waybar-config Spec Kit project guide
 
+[Documentation](../../docs/README.md)
+
 Declarative Waybar settings, generated configuration/CSS, and optional module adapters.
 
 Read this guide with `AGENTS.md` and `.specify/memory/constitution.md` before
