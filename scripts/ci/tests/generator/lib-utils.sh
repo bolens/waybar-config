@@ -6,6 +6,50 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 # shellcheck source=../../lib/waybar-test-harness.sh
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "lib-utils"
+python3 - "$ROOT_DIR" <<'PY_XDG_MAP'
+from pathlib import Path
+import os, subprocess, sys, tempfile
+
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="waybar-xdg-map-") as tmp:
+    home = Path(tmp)
+    apps = home / "applications"
+    apps.mkdir()
+    (apps / "fixture.desktop").write_text(
+        "[Desktop Entry]\nName=Fixture Tool\nIcon=fixture-icon\nStartupWMClass=FixtureClass\nExec=/opt/fixture-bin %U\n"
+    )
+    env = dict(os.environ, WAYBAR_SCRIPTS=str(root / "scripts"))
+    script = """set -euo pipefail
+. "$1/scripts/lib/xdg-icons-lib.sh"
+fixture_apps="$2"
+xdg_application_dirs() { printf '%s\\n' "$fixture_apps"; }
+xdg_icons_load_maps "$3"
+printf '%s|%s|%s\\n' "${class_to_icon[fixtureclass]:-missing}" "${name_to_icon[fixture tool]:-missing}" "${exec_to_icon[fixture-bin]:-missing}"
+"""
+    for attempt in ("cold", "warm"):
+        result = subprocess.run(
+            [
+                "bash",
+                "-c",
+                script,
+                "_",
+                str(root),
+                str(apps),
+                str(home / "icons.cache"),
+            ],
+            env=env,
+            text=True,
+            capture_output=True,
+        )
+        expected = "fixture-icon|fixture-icon|fixture-icon\n"
+        assert result.returncode == 0 and result.stdout == expected, (
+            attempt,
+            result.returncode,
+            result.stdout,
+            result.stderr,
+        )
+print("PASS: desktop icon maps survive cold parsing and warm cache loading")
+PY_XDG_MAP
 waybar_test_gen_sandbox
 if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed before lib-utils" >&2

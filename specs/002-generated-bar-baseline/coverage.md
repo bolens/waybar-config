@@ -34,3 +34,5 @@ templates, sensitive-pattern gate, direct pinned-version CSS/Markdown lint and
 GTK3 full CSS parsing pass. Generated drift and remaining runtime audit are
 not yet complete. pnpm could not use its default local database; direct linter
 executables used the same installed dependency versions and arguments.
+
+FR-019 maps to `xdg-icons-lib.sh` and the existing `lib-utils` suite. A disposable desktop entry failed cold parsing before moving the AWK function to top level, then failed warm loading before promoting cached map declarations to global scope. Both cases and the full suite now pass. Window switcher and notification-menu consumers retain their existing lookup interface.

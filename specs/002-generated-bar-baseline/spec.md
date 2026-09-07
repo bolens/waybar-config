@@ -74,3 +74,5 @@ and record their remaining acceptance boundaries.
 - **FR-017**: Explicit false dock drawer click-to-reveal and direction settings MUST survive generation.
 
 - **FR-018**: Theme preset loading MUST preserve quoted comment delimiters and accept JSONC comments using the shared parser before applying color overrides.
+
+- **FR-019**: Shared desktop icon maps MUST parse valid desktop entries and retain class, name and executable mappings after a warm cache load returns to its caller. Existing cache declarations MUST remain readable.
