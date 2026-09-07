@@ -6,6 +6,43 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 # shellcheck source=../../lib/waybar-test-harness.sh
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "drawer-sot-contracts"
+python3 - "$ROOT_DIR" <<'PY_DOCK'
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="waybar-dock-boundary-") as tmp:
+    home = Path(tmp)
+    for folder in ("data", "modules", "layouts", "scripts/lib"):
+        (home / folder).mkdir(parents=True, exist_ok=True)
+    (home / "scripts/lib/waybar-settings.sh").write_text("")
+    settings = {"drawers": {"click_to_reveal": False,
+                           "left_to_right": {"right": False},
+                           "children_class": 'drawer "quoted"'}}
+    (home / "data/waybar-settings.json").write_text(json.dumps(settings))
+    manifest = home / "data/dock-apps.json"
+    manifest.write_text(json.dumps({"terminal": {"section": "dev"}}))
+    env = dict(os.environ, WAYBAR_HOME=str(home), WAYBAR_SCRIPTS=str(home / "scripts"))
+    command = ["bash", str(root / "scripts/generate/generate-dock-modules.sh")]
+    result = subprocess.run(command, env=env, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    drawer = json.loads((home / "modules/groups-dock.generated.jsonc").read_text())["group/dock-apps"]["drawer"]
+    assert drawer["click-to-reveal"] is False
+    assert drawer["transition-left-to-right"] is False
+    assert drawer["children-class"] == 'drawer "quoted"'
+    outputs = [home / p for p in ("modules/dock.generated.jsonc", "modules/groups-dock.generated.jsonc", "layouts/bottom-dock-left.generated.jsonc")]
+    previous = [p.read_bytes() for p in outputs]
+    for invalid in ('{', '[]', '{"bad;id": {}}', '{"../escape": {}}', '{"terminal": null}'):
+        manifest.write_text(invalid)
+        result = subprocess.run(command, env=env, capture_output=True, text=True)
+        assert result.returncode != 0, invalid
+        assert [p.read_bytes() for p in outputs] == previous, invalid
+print("PASS: dock input validation and explicit false settings")
+PY_DOCK
 waybar_test_gen_sandbox
 if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed" >&2

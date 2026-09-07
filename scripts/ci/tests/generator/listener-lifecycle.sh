@@ -5,6 +5,41 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 # shellcheck source=../../lib/waybar-test-harness.sh
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "listener-lifecycle"
+python3 - "$ROOT_DIR" <<'PY_LISTENER_SIGNAL'
+import os, signal, subprocess, sys, tempfile, time
+from pathlib import Path
+
+lock = Path(sys.argv[1]) / "scripts/listeners/dock-windows-listener-lock.sh"
+for shell in ("bash", "dash"):
+    with tempfile.TemporaryDirectory(prefix="waybar-listener-signal-") as tmp:
+        env = dict(os.environ, XDG_RUNTIME_DIR=tmp, WAYBAR_LISTENER_LOCK_NAME="fixture")
+        proc = subprocess.Popen(
+            [shell, "-c", '. "$1"; while :; do sleep 0.05; done', "fixture", str(lock)],
+            env=env,
+            start_new_session=True,
+        )
+        try:
+            pidfile = Path(tmp) / "waybar-dock-listener-fixture.lock.d/pid"
+            deadline = time.monotonic() + 3
+            while not pidfile.exists() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            assert pidfile.exists(), "listener never acquired lock"
+            proc.send_signal(signal.SIGTERM)
+            try:
+                proc.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                raise AssertionError(
+                    shell + ": SIGTERM removed lock but left listener running"
+                )
+            assert proc.returncode == 143, (shell, proc.returncode)
+            assert not pidfile.parent.exists(), "listener lock survived termination"
+        finally:
+            if proc.poll() is None:
+                os.killpg(proc.pid, signal.SIGKILL)
+                proc.wait()
+print("PASS: Bash and dash listener termination exits and releases ownership")
+PY_LISTENER_SIGNAL
+
 waybar_test_gen_sandbox
 if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed" >&2

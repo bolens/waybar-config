@@ -6,6 +6,46 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 # shellcheck source=../../lib/waybar-test-harness.sh
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "vpn-cooling-refresh"
+python3 - "$ROOT_DIR" <<'PY_TAILSCALE_FIELDS'
+import json,os,subprocess,sys,tempfile
+from pathlib import Path
+root=Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-tailscale-fields-') as tmp:
+    home=Path(tmp);(home/'bin').mkdir();(home/'scripts/lib').mkdir(parents=True)
+    (home/'scripts/lib/waybar-cache-helpers.sh').write_text('waybar_module_interval() { printf 15; }\n')
+    fixture={'BackendState':'Running','Self':{'HostName':'fixture'},'TailscaleIPs':[],'Peer':{},'Health':['fixture health']}
+    stub=home/'bin/tailscale';stub.write_text('#!/usr/bin/env python3\nimport json\nprint('+repr(json.dumps(fixture))+')\n');stub.chmod(0o755)
+    env=dict(os.environ,WAYBAR_HOME=tmp,WAYBAR_SCRIPTS=str(home/'scripts'),XDG_CACHE_HOME=str(home/'cache'),PATH=str(home/'bin')+':'+os.environ['PATH'])
+    result=subprocess.run(['sh',str(root/'scripts/network/tailscale-status.sh'),'--refresh'],env=env,text=True,capture_output=True,check=True)
+    data=json.loads(result.stdout)
+    assert data['ipv4']=='' and data['online_peers']=='0' and data['exit_node']=='' and data['health']=='fixture health',data
+    assert data['class']=='warning',data
+print('PASS: Tailscale empty optional fields preserve health and peer values')
+PY_TAILSCALE_FIELDS
+
+python3 - "$ROOT_DIR" <<'PY_VPN_STATE'
+import json,os,subprocess,sys,tempfile
+from pathlib import Path
+root=Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-vpn-state-') as tmp:
+    home=Path(tmp);(home/'scripts/lib').mkdir(parents=True);(home/'bin').mkdir()
+    (home/'scripts/lib/waybar-cache-helpers.sh').write_text('''waybar_module_interval() { printf 15; }
+read_fresh_cache_file() { return 1; }
+emit_waybar_json() { jq -cn --arg text "$1" --arg tooltip "$2" --arg class "$3" '{text:$text,tooltip:$tooltip,class:$class}'; }
+''')
+    for name in ('nmcli','tailscale','netbird','zerotier-cli','mullvad'):
+        stub=home/'bin'/name;stub.write_text('#!/bin/sh\nexit 0\n');stub.chmod(0o755)
+    stub=home/'bin/rg';stub.write_text('#!/bin/sh\nexit 127\n');stub.chmod(0o755)
+    env=dict(os.environ,WAYBAR_HOME=tmp,WAYBAR_SCRIPTS=str(home/'scripts'),XDG_CACHE_HOME=str(home/'cache'),PATH=str(home/'bin')+':'+os.environ['PATH'])
+    for state,expected,count in [('Disconnected','offline',0),('Connected','normal',3)]:
+        for name in ('netbird','mullvad'):
+            (home/'bin'/name).write_text('#!/bin/sh\nprintf "%s\\n" '+state+'\n')
+        (home/'bin/zerotier-cli').write_text('#!/bin/sh\nprintf "%s\\n" '+('OFFLINE' if count == 0 else 'ONLINE')+'\n')
+        result=subprocess.run(['sh',str(root/'scripts/network/vpn-status.sh'),'--refresh'],env=env,text=True,capture_output=True,check=True)
+        data=json.loads(result.stdout)
+        assert data['class']==expected and 'Active tunnels: '+str(count) in data['tooltip'],data
+print('PASS: disconnected VPN reports do not count as connected tunnels')
+PY_VPN_STATE
 waybar_test_gen_sandbox
 
 if ! waybar_test_gen_modules; then

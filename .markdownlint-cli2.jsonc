@@ -6,7 +6,10 @@
     ".agents/**",
     "node_modules/**",
     ".pnpm-store/**",
-    ".git/**"
+    ".git/**",
+    ".devenv/**",
+    ".devenv.*/**",
+    ".direnv/**"
   ],
   "config": {
     "MD001": false,

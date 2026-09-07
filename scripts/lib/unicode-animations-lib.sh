@@ -113,7 +113,9 @@ animate_command() {
   done
 
   # Read command output and exit status
-  wait "$cmd_pid"
+  command_status=0
+  wait "$cmd_pid" || command_status=$?
   cat "$tmp_out"
   rm -f "$tmp_out" "$tmp_err"
+  return "$command_status"
 }

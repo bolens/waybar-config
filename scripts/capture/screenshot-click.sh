@@ -63,9 +63,11 @@ case "$compositor" in
         screen)
           if [ "$capture_per_output" -eq 1 ] && [ -n "${WAYBAR_OUTPUT_NAME:-}" ]; then
             # Target the bar's output explicitly (grimblast "output" follows focus).
-            grim -o "$WAYBAR_OUTPUT_NAME" "$outfile" && capture_copy_image "$outfile"
+            grim -o "$WAYBAR_OUTPUT_NAME" "$outfile"
+            capture_copy_image "$outfile"
           else
-            grim "$outfile" && capture_copy_image "$outfile"
+            grim "$outfile"
+            capture_copy_image "$outfile"
           fi
           ;;
         window) grimblast copysave active "$outfile" ;;

@@ -64,6 +64,8 @@ if [ "$enable_scroll" = "true" ] && command -v zscroll >/dev/null 2>&1; then
         | while IFS= read -r line; do
           emit_throttled "$line"
         done || true
+      # Avoid a busy restart loop when zscroll exits immediately.
+      sleep 1
     else
       # Output empty string so Waybar hides the module
       echo ""

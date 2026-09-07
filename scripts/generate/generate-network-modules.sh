@@ -56,9 +56,9 @@ jq -n \
         "tooltip-format": ($bond["tooltip-format"] // "Bond: {ipaddr}/{cidr} (Slaves: {ifname})"),
         "tooltip-format-ethernet": ($bond["tooltip-format-ethernet"] // ("Bonded: {ipaddr}/{cidr}\nSlaves: {ifname}")),
         "tooltip-format-disconnected": ($bond["tooltip-format-disconnected"] // ("Disconnected\n" + $bond_iface)),
-        "on-click": ("python3 " + $scripts + "/network/ethernet-popup.py " + $bond_iface),
-        "on-click-right": ("python3 " + $scripts + "/network/ethernet-popup.py " + $bond_iface),
-        "on-click-middle": ("python3 " + $scripts + "/network/ethernet-popup.py " + $bond_iface)
+        "on-click": ("python3 " + $scripts + "/network/ethernet-popup.py " + ($bond_iface | @sh)),
+        "on-click-right": ("python3 " + $scripts + "/network/ethernet-popup.py " + ($bond_iface | @sh)),
+        "on-click-middle": ("python3 " + $scripts + "/network/ethernet-popup.py " + ($bond_iface | @sh))
       }
     }
     + (
@@ -71,26 +71,26 @@ jq -n \
                 format: "{}",
                 "return-type": "json",
                 interval: $iface_interval,
-                exec: ($scripts + "/network/network-interface-status.sh " + $iface.interface),
+                exec: ($scripts + "/network/network-interface-status.sh " + ($iface.interface | @sh)),
                 "on-click": (
                   if $iface.type == "wifi" then
-                    ($scripts + "/network/wifi-click.sh list " + $iface.interface)
+                    ($scripts + "/network/wifi-click.sh list " + ($iface.interface | @sh))
                   else
-                    ("python3 " + $scripts + "/network/ethernet-popup.py " + $iface.interface)
+                    ("python3 " + $scripts + "/network/ethernet-popup.py " + ($iface.interface | @sh))
                   end
                 ),
                 "on-click-right": (
                   if $iface.type == "wifi" then
-                    ($scripts + "/network/wifi-click.sh manage " + $iface.interface)
+                    ($scripts + "/network/wifi-click.sh manage " + ($iface.interface | @sh))
                   else
-                    ("python3 " + $scripts + "/network/ethernet-popup.py " + $iface.interface)
+                    ("python3 " + $scripts + "/network/ethernet-popup.py " + ($iface.interface | @sh))
                   end
                 ),
                 "on-click-middle": (
                   if $iface.type == "wifi" then
                     ($scripts + "/network/wifi-click.sh toggle")
                   else
-                    ("python3 " + $scripts + "/network/ethernet-popup.py " + $iface.interface)
+                    ("python3 " + $scripts + "/network/ethernet-popup.py " + ($iface.interface | @sh))
                   end
                 )
               }

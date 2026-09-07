@@ -50,6 +50,7 @@ Canonical map of project docs. **When you add or rename a doc, update this file*
 | [../README.md](../README.md) | User-facing hub (install, modules, dependencies) |
 | [../CONTRIBUTING.md](../CONTRIBUTING.md) | Setup, checks, secrets, PR norms |
 | [../AGENTS.md](../AGENTS.md) | Short briefing for AI coding agents |
+| [development-environments.md](development-environments.md) | Locked tooling and local container validation |
 | [architecture.md](architecture.md) | Settings → generate → Waybar pipeline |
 | [settings-reference.md](settings-reference.md) | Top-level keys in `waybar-settings.jsonc` |
 | [adding-a-module.md](adding-a-module.md) | Checklist for new status modules |
@@ -72,3 +73,5 @@ Canonical map of project docs. **When you add or rename a doc, update this file*
 - New file under `docs/` → add a row here and a one-line hub link at the top of that file (`> Doc map: [Documentation index](README.md)`).
 - Root briefs (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `scripts/README.md`) should link back here.
 - `make check-docs-index` (also in `make check` / `check-fast` and the Markdownlint workflow) fails if a `docs/*.md` page (except this README) is missing from the table, or if hub backlinks are missing.
+
+- [Editor setup](../.vscode/README.md)

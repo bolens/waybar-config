@@ -59,8 +59,7 @@ xdg_icons_load_maps() {
           exec) tmp_exec["$key"]="$val" ;;
         esac
       done < <(awk -F= '
-        BEGIN {
-          function process_file(fn_path, icon, wmclass, name, exec) {
+        function process_file(fn_path, icon, wmclass, name, exec) {
             if (icon != "") {
               if (wmclass != "") print "class\t" tolower(wmclass) "\t" icon;
               if (name != "") print "name\t" tolower(name) "\t" icon;
@@ -71,8 +70,7 @@ xdg_icons_load_maps() {
               print "exec\t" tolower(fn) "\t" icon;
             }
           }
-          prev_file = "";
-        }
+        BEGIN { prev_file = ""; }
         FNR == 1 {
           if (prev_file != "") {
             process_file(prev_file, icon, wmclass, name, exec);
@@ -120,8 +118,10 @@ xdg_icons_load_maps() {
       cleanup_stale_tmp_files "$cache_dir"
     fi
   else
+    # declare -p writes local declarations when sourced inside this function.
+    # Promote cached maps to the same global scope as freshly parsed maps.
     # shellcheck source=/dev/null
-    . "$cache_file"
+    . <(sed 's/^declare -A /declare -gA /' "$cache_file")
   fi
 }
 

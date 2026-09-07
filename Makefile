@@ -2,6 +2,9 @@
 #
 # Usage: make check | make generate | make check-syntax | make install-hooks
 
+# Recipes use Bash process substitution and pipefail.
+SHELL := bash
+
 WAYBAR_HOME ?= $(CURDIR)
 WAYBAR_SCRIPTS ?= $(WAYBAR_HOME)/scripts
 export WAYBAR_HOME WAYBAR_SCRIPTS
