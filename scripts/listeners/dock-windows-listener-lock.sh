@@ -43,4 +43,6 @@ waybar_listener_on_exit() {
   waybar_listener_release_lock
 }
 
-trap 'waybar_listener_on_exit' EXIT INT TERM
+trap 'waybar_listener_on_exit' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM

@@ -34,6 +34,7 @@ Example:
 
 import concurrent.futures
 import gi
+import html
 import json
 import os
 import re
@@ -88,10 +89,22 @@ def get_real_and_vpn_ip():
     return _shared_get_real_and_vpn_ip(debug=debug)
 
 
+def unavailable_tailscale_status():
+    # Keep the same fields consumed by the popup when the CLI or daemon is absent.
+    status = dict.fromkeys(
+        "ipv4 ipv6 user login_name display_name hostname public_key dns_name os "
+        "allowed_ips addrs relay rx_bytes tx_bytes created key_expiry exit_node "
+        "exit_node_option peer_api_url health magic_dns_suffix tailnet_name".split(),
+        "n/a",
+    )
+    status["active"] = False
+    return status
+
+
 def get_tailscale_status():
     if not have_cmd('tailscale'):
         debug('tailscale not installed')
-        return {'active': False, 'ip': 'tailscale not installed', 'user': 'n/a', 'hostname': 'n/a'}
+        return unavailable_tailscale_status()
     try:
         out = subprocess.check_output(
             ["tailscale", "status", "--json"], text=True, timeout=2
@@ -139,7 +152,7 @@ def get_tailscale_status():
         }
     except Exception as e:
         debug(f"Error fetching Tailscale status: {e}")
-        return {'active': False, 'ip': 'n/a', 'user': 'n/a', 'hostname': 'n/a'}
+        return unavailable_tailscale_status()
 
 def get_netbird_status():
     if not have_cmd('netbird'):
@@ -330,6 +343,14 @@ def build_status_ui():
         vpn = f_vpn.result()
         real_ip, vpn_ip = f_realvpn.result()
         zt = f_zt.result()
+
+    # CLI-controlled names and addresses are literal text inside Pango markup.
+    def escaped_fields(fields):
+        return {key: html.escape(value) if isinstance(value, str) else value
+                for key, value in fields.items()}
+
+    ts, nb, vpn, zt = map(escaped_fields, (ts, nb, vpn, zt))
+    real_ip, vpn_ip = html.escape(real_ip), html.escape(vpn_ip)
 
 
     # Sensitive info toggle and label registry (must be defined before any use)

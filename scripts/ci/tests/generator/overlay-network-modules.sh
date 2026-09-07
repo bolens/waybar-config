@@ -6,6 +6,128 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 # shellcheck source=../../lib/waybar-test-harness.sh
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "overlay-network-modules"
+python3 - "$ROOT_DIR" <<'PY_POPUP'
+import ast, concurrent.futures, html, json, re, sys, types
+from pathlib import Path
+import xml.etree.ElementTree as ET
+
+root = Path(sys.argv[1])
+markups = []
+
+
+class Widget:
+    def __init__(self, *args, **kwargs):
+        self.callbacks = {}
+        if kwargs.get("use_markup"):
+            self.set_markup(kwargs["label"])
+
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: None
+
+    def set_markup(self, value):
+        ET.fromstring("<root>" + value + "</root>")
+        markups.append(value)
+
+    def connect(self, name, callback):
+        self.callbacks[name] = callback
+
+
+Gtk = types.SimpleNamespace(
+    **{
+        name: Widget
+        for name in ["Window", "Box", "Label", "Frame", "Grid", "ScrolledWindow"]
+    },
+    Orientation=types.SimpleNamespace(VERTICAL=0),
+    PolicyType=types.SimpleNamespace(AUTOMATIC=0),
+    ShadowType=types.SimpleNamespace(ETCHED_IN=0),
+)
+globals_base = dict(
+    Gtk=Gtk,
+    Gdk=types.SimpleNamespace(
+        WindowTypeHint=types.SimpleNamespace(DIALOG=0), keyval_name=lambda key: key
+    ),
+    GLib=types.SimpleNamespace(
+        idle_add=lambda callback: None, markup_escape_text=html.escape
+    ),
+    html=html,
+    concurrent=concurrent,
+    json=json,
+    re=re,
+    LAYER_SHELL_AVAILABLE=False,
+    debug=lambda *a: None,
+    have_cmd=lambda cmd: False,
+)
+errors = []
+# Compile complete function bodies without importing GTK or querying this host.
+source = root / "scripts/network/vpn-status-popup.py"
+nodes = [
+    n for n in ast.parse(source.read_text()).body if isinstance(n, ast.FunctionDef)
+]
+ns = globals_base.copy()
+exec(compile(ast.Module(nodes, type_ignores=[]), str(source), "exec"), ns)
+ns.update(
+    debug=lambda *a: None,
+    have_cmd=lambda cmd: False,
+    get_real_and_vpn_ip=lambda: ("n/a", "n/a"),
+)
+try:
+    win = ns["build_status_ui"]()
+    win.callbacks["key-press-event"](win, types.SimpleNamespace(keyval="m"))
+except Exception as e:
+    errors.append("VPN unavailable providers: " + repr(e))
+try:
+    missing = ns["get_tailscale_status"]()
+    missing.update(hostname="Office & <Guest>", login_name="User & <Name>")
+    ns["get_tailscale_status"] = lambda: missing
+    markups.clear()
+    win = ns["build_status_ui"]()
+    for key in ["m", "s"]:
+        win.callbacks["key-press-event"](win, types.SimpleNamespace(keyval=key))
+    assert "User &amp; &lt;Name&gt;" in "".join(markups), (
+        "revealed VPN value not escaped"
+    )
+except Exception as e:
+    errors.append("VPN literal fields and reveal: " + repr(e))
+source = root / "scripts/network/ethernet-popup.py"
+tree = ast.parse(source.read_text())
+cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "EthPopup")
+method = next(
+    n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == "build_ui"
+)
+ns = globals_base.copy()
+exec(compile(ast.Module([method], type_ignores=[]), str(source), "exec"), ns)
+info = dict(
+    Interface="eth0",
+    Connection="Office & <Guest>",
+    Status="connected",
+    IP="192.0.2.2",
+    Netmask="255.255.255.0",
+    MAC="00:11:22:33:44:55",
+    Gateway="192.0.2.1",
+    DNS="192.0.2.53",
+    Speed="1 Gbps",
+    RealPublicIP="198.51.100.2",
+)
+for sensitive in (False, True):
+    obj = Widget()
+    obj.infos = [("eth0", info)]
+    obj.expanded = True
+    obj.sensitive = sensitive
+    markups.clear()
+    try:
+        ns["build_ui"](obj)
+        combined = "".join(markups)
+        assert ("192.0.2.53" in combined) == sensitive, "DNS ignores sensitive toggle"
+        assert "Office &amp; &lt;Guest&gt;" in combined, (
+            "connection not rendered as literal text"
+        )
+    except Exception as e:
+        errors.append("Ethernet sensitive=" + str(sensitive) + ": " + repr(e))
+if errors:
+    raise AssertionError("\n".join(errors))
+print("PASS: unavailable VPN providers and escaped, masked Ethernet fields")
+PY_POPUP
+
 python3 - "$ROOT_DIR" <<'PY_INTERFACE_MANIFEST'
 import json,os,subprocess,sys,tempfile
 from pathlib import Path

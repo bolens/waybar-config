@@ -100,3 +100,25 @@ existing generator and theme suites, not live desktop acceptance.
 The remaining status/click entry points and other listener entry points are
 still pending. Each needs source ownership, observable
 behavior and acceptance evidence before the exhaustive task can close.
+
+## Network popups and listener lifecycle
+
+The detailed pass read all Ethernet and VPN popup source, Bluetooth and Wi-Fi
+menus, and the five consumers of `dock-windows-listener-lock.sh`.
+
+| Surface | Observed contract and verification boundary |
+| --- | --- |
+| Ethernet popup | Query interface/profile/bond details with bounded subprocess calls, cache public IPs for the popup lifetime, and toggle details and sensitive addresses. FR-030 covers literal label text and DNS masking. Geometry and actual network queries remain source-reviewed. |
+| VPN popup | Query Tailscale, Netbird, NetworkManager and ZeroTier concurrently, then display details with optional sensitive reveal. FR-029/030 cover missing Tailscale and literal provider values. No real provider commands ran in the UI fixture. |
+| Bluetooth menu | List controller/device status, toggle power/discoverability, and select connect/disconnect or a settings application. Rofi state carries the detail toggle. Controller address parsing and delimiter-bearing device names still need boundary verification. |
+| Wi-Fi menu | Cache external IP/latency, list and deduplicate scan results, retain detail/sensitive state in Rofi, and launch an explicit selected connection. Sensitive reveal uses two steps. Escaped delimiters and formatted SSID round trips still need boundary verification. |
+| Shared listener lock | Single-instance lock with optional cleanup hook. FR-032 covers termination and ownership release. Pipeline descendants in device/workspace listeners need additional lifecycle verification. |
+| Album-art listener | Metadata events and a periodic fallback refresh the cache and signal changed output. Missing playerctl uses slow polling. |
+| Privacy listener | Audio events and periodic fallback refresh privacy and microphone caches. |
+| VPN/Tailscale listener | NetworkManager events and periodic fallback refresh status and signal changed output. |
+| Device listener | Block-device events invalidate the device status module. |
+| Hyprland workspace listener | Resolve the compositor event socket and update workspace, keyboard, active-window and dock state by event type. |
+
+These additions do not close the remaining runtime audit task. Cava startup and
+termination, recording process ownership, and the menu/lifecycle boundaries above
+remain explicit follow-up work.

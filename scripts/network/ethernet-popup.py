@@ -33,6 +33,7 @@ Example:
 """
 
 import gi
+import html
 import os
 import re
 import subprocess
@@ -364,7 +365,7 @@ class EthPopup(Gtk.Window):
         self.add(vbox)
         # Header
         if len(self.infos) == 1:
-            iface = self.infos[0][0]
+            iface = html.escape(self.infos[0][0])
             icon = "󰈀" if not iface.lower().startswith("wlan") else "󰤨"
             self.header_label = Gtk.Label()
             self.header_label.set_markup(f"<span size='x-large'><b>{icon}  Ethernet: <span foreground='#00e5ff'>{iface}</span></b></span>")
@@ -372,7 +373,7 @@ class EthPopup(Gtk.Window):
             vbox.pack_start(self.header_label, False, False, 0)
         else:
             self.header_label = Gtk.Label()
-            self.header_label.set_markup(f"<span size='x-large'><b>󰌾  Bond: <span foreground='#00e5ff'>{self.infos[0][0]}</span></b></span>")
+            self.header_label.set_markup(f"<span size='x-large'><b>󰌾  Bond: <span foreground='#00e5ff'>{html.escape(self.infos[0][0])}</span></b></span>")
             self.header_label.set_xalign(0)
             vbox.pack_start(self.header_label, False, False, 0)
         use_scroll = False
@@ -400,6 +401,8 @@ class EthPopup(Gtk.Window):
             vbox.pack_start(inner_vbox, False, False, 0)
             frame_pack_args = (False, False, 0)
         for label, info in self.infos:
+            label = html.escape(label)
+            info = {key: html.escape(str(value)) for key, value in info.items()}
             # Choose icon and color for each interface type
             if label.startswith("Master"):
                 icon = "󰡠"
@@ -437,7 +440,7 @@ class EthPopup(Gtk.Window):
                 fields += [
                     ("<span foreground='#b0b8c1'><b>MAC</b></span>", f"<span foreground='#00bfff'>{info['MAC'] if self.sensitive else '••••••••'}</span>"),
                     ("<span foreground='#b0b8c1'><b>Gateway</b></span>", f"<span foreground='#00bfff'>{info['Gateway'] if self.sensitive else '••••••••'}</span>"),
-                    ("<span foreground='#b0b8c1'><b>DNS</b></span>", f"<span foreground='#00bfff'>{info['DNS']}</span>"),
+                    ("<span foreground='#b0b8c1'><b>DNS</b></span>", f"<span foreground='#00bfff'>{info['DNS'] if self.sensitive else '••••••••'}</span>"),
                     ("<span foreground='#b0b8c1'><b>Speed</b></span>", f"<span foreground='#00bfff'>{info['Speed']}</span>"),
                     ("<span foreground='#b0b8c1'><b>Real Public IP</b></span>", f"<span foreground='#00bfff'>{info['RealPublicIP'] if self.sensitive else '••••••••'}</span>"),
                 ]

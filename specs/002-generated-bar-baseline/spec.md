@@ -94,3 +94,8 @@ and record their remaining acceptance boundaries.
 - **FR-027**: A failed full-screen capture in the Hyprland/grimblast path MUST return the capture failure and MUST NOT copy an image or announce a saved screenshot. This applies with and without output targeting.
 
 - **FR-028**: Microphone toggle MUST report failure when mute control fails or the subsequent volume query is empty, rather than announce a live or muted state it could not confirm. Refresh signaling may still invalidate stale status.
+
+- **FR-029**: The VPN popup MUST open when Tailscale is missing or its status request fails. Unavailable status MUST supply every field consumed by the UI and report an inactive state.
+- **FR-030**: Ethernet and VPN popup values from device/provider status MUST render as literal text inside Pango markup, including after sensitive values are revealed. Ethernet DNS addresses MUST follow the sensitive-information toggle.
+- **FR-031**: The scrolling MPRIS wrapper MUST wait at least one second before restarting an exited zscroll process, including immediate failures, to prevent a busy restart loop.
+- **FR-032**: Shared listener lock handling MUST exit on SIGINT/SIGTERM and run ownership cleanup through EXIT. Releasing a lock while continuing the listener loop MUST NOT occur.

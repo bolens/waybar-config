@@ -6,6 +6,51 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 # shellcheck source=../../lib/waybar-test-harness.sh
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "lib-utils"
+python3 - "$ROOT_DIR" <<'PY_MPRIS_RETRY'
+import os, signal, subprocess, sys, tempfile, time
+from pathlib import Path
+
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="waybar-mpris-restart-") as tmp:
+    home = Path(tmp)
+    binpath = home / "bin"
+    binpath.mkdir()
+    calls = home / "calls"
+    for name, body in {
+        "playerctl": "exit 0",
+        "zscroll": 'echo zscroll >> "$MOCK_CALLS"; exit 7',
+        "sleep": 'echo "sleep $*" >> "$MOCK_CALLS"; exit 42',
+    }.items():
+        p = binpath / name
+        p.write_text("#!/bin/sh\n" + body + "\n")
+        p.chmod(0o755)
+    env = dict(
+        os.environ,
+        PATH=str(binpath) + ":" + os.environ["PATH"],
+        WAYBAR_HOME=str(home),
+        WAYBAR_SCRIPTS=str(root / "scripts"),
+        MOCK_CALLS=str(calls),
+    )
+    proc = subprocess.Popen(
+        ["bash", str(root / "scripts/media/mpris-scroll.sh")],
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    try:
+        proc.communicate(timeout=2)
+        assert proc.returncode == 42, "restart did not reach the intercepted wait"
+        assert calls.read_text().splitlines() == ["zscroll", "sleep 1"], (
+            "failed zscroll retried before waiting"
+        )
+    finally:
+        if proc.poll() is None:
+            os.killpg(proc.pid, signal.SIGTERM)
+            proc.communicate(timeout=3)
+print("PASS: failed zscroll waits before retrying")
+PY_MPRIS_RETRY
+
 python3 - "$ROOT_DIR" <<'PY_XDG_MAP'
 from pathlib import Path
 import os, subprocess, sys, tempfile

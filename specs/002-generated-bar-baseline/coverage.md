@@ -56,3 +56,32 @@ FR-026 maps to `vpn-status.sh` and the VPN suite. Stubbed disconnected Netbird a
 FR-027 maps to `screenshot-click.sh` and `lib-utils`. Stub capture failure previously returned success and announced a saved file. Both targeted and untargeted full-screen cases now retain exit 7 and perform no clipboard or notification action.
 
 FR-028 maps to `mic-toggle.sh` and `lib-utils`. Stub control failure previously announced LIVE and returned success. Failure now produces an unavailable/control-error message and nonzero status, while refresh signaling remains permitted. No microphone was accessed.
+
+### Network popup and listener corrections
+
+- FR-029: `vpn-status-popup.py` returned incomplete fallback fields. The complete
+  UI raised `KeyError('ipv4')` with unavailable providers. The corrected fallback
+  passes the stubbed GTK UI, including the details toggle.
+- FR-030: Ethernet connection names containing `&` and `<` produced invalid label
+  markup. Presentation escaping now covers both popups and sensitive reveal.
+  The Ethernet fixture checks DNS masking in both states. No network tool or
+  graphical session is used by these function-body fixtures.
+- FR-031: An immediately failing zscroll restarted 111 times in 250 ms in a
+  disposable process group. The corrected wrapper waits before retrying. The
+  regression intercepts the wait and checks launch/wait order without timing
+  assumptions or a real media player.
+- FR-032: An owned listener process released its lock on SIGTERM but kept running.
+  Bash and dash regressions now verify exit status 143 and lock removal. The
+  fixtures use private runtime directories and signal only their child processes.
+
+Before these four corrections, commit `3cc7a5d085e62887c43f613cea72fab08b013a10`
+passed all 52 generator and nine secrets suites, check-fast, generated drift,
+Ruff and the native Gitleaks check. Two GTK probes were skipped by that Python
+runtime. These results remain evidence for that commit, not the later candidate.
+
+After FR-029 through FR-032, all three affected suites passed in full, as did the
+shared Bash/dash shell-contract gate, Ruff, ShellCheck, shfmt and Markdown lint.
+The system Python ran both previously skipped GTK probes and the full-file CSS
+parser successfully. Separate self-review traced fallback fields, presentation
+escaping, retry control flow and the five listener consumers. Pipeline descendant
+cleanup remains an explicit audit item. No independent reviewer was used.
