@@ -33,6 +33,12 @@ from resources import list_resources, read_resource  # noqa: E402
 from tools import get_tools_list, handle_tool_call  # noqa: E402
 
 
+def write_error(msg_id: str | int | None, code: int, message: str) -> None:
+    write_response(
+        {"jsonrpc": "2.0", "id": msg_id, "error": {"code": code, "message": message}}
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Model Context Protocol (MCP) server for Waybar config."
@@ -70,13 +76,32 @@ def main() -> None:
     log(f"Waybar MCP server started (WAYBAR_HOME={paths.home})")
 
     while True:
+        msg_id = None
         try:
             line = sys.stdin.readline()
             if not line:
                 break
             req = json.loads(line)
+            if not isinstance(req, dict):
+                write_error(None, -32600, "Invalid request")
+                continue
+            raw_id = req.get("id")
+            valid_id = type(raw_id) in (str, int)
+            msg_id = raw_id if valid_id else None
+            if (
+                req.get("jsonrpc") != "2.0"
+                or not isinstance(req.get("method"), str)
+                or ("id" in req and not valid_id)
+            ):
+                write_error(msg_id, -32600, "Invalid request")
+                continue
+            # Notifications never receive responses or invoke request-only operations.
+            if "id" not in req:
+                continue
+            if not isinstance(req.get("params", {}), dict):
+                write_error(msg_id, -32602, "params must be an object")
+                continue
             method = req.get("method")
-            msg_id = req.get("id")
 
             if method == "initialize":
                 write_response(
@@ -90,8 +115,6 @@ def main() -> None:
                         },
                     }
                 )
-            elif method in {"initialized", "notifications/initialized"}:
-                pass
             elif method == "ping":
                 write_response({"jsonrpc": "2.0", "id": msg_id, "result": {}})
             elif method == "tools/list":
@@ -107,7 +130,7 @@ def main() -> None:
                 result = handle_tool_call(
                     paths,
                     params.get("name"),
-                    params.get("arguments") or {},
+                    params.get("arguments", {}),
                 )
                 write_response({"jsonrpc": "2.0", "id": msg_id, "result": result})
             elif method == "resources/list":
@@ -134,9 +157,7 @@ def main() -> None:
                         }
                     )
                 else:
-                    write_response(
-                        {"jsonrpc": "2.0", "id": msg_id, "result": result}
-                    )
+                    write_response({"jsonrpc": "2.0", "id": msg_id, "result": result})
             elif method == "prompts/list":
                 write_response(
                     {
@@ -150,11 +171,9 @@ def main() -> None:
                 try:
                     result = get_prompt(
                         params.get("name", ""),
-                        params.get("arguments") or {},
+                        params.get("arguments", {}),
                     )
-                    write_response(
-                        {"jsonrpc": "2.0", "id": msg_id, "result": result}
-                    )
+                    write_response({"jsonrpc": "2.0", "id": msg_id, "result": result})
                 except Exception as exc:  # noqa: BLE001
                     write_response(
                         {
@@ -175,8 +194,11 @@ def main() -> None:
                             },
                         }
                     )
+        except json.JSONDecodeError:
+            write_error(None, -32700, "Parse error")
         except Exception as exc:  # noqa: BLE001
             log(f"Error handling request: {exc}")
+            write_error(msg_id, -32603, "Internal error")
 
 
 if __name__ == "__main__":

@@ -87,10 +87,20 @@ def list_prompts() -> list[dict[str, Any]]:
 
 
 def get_prompt(name: str, arguments: dict[str, Any] | None = None) -> dict[str, Any]:
-    args = arguments or {}
+    args = {} if arguments is None else arguments
+    if not isinstance(args, dict):
+        raise ValueError("prompt arguments must be an object")
     prompts = {p["name"]: p for p in list_prompts()}
+    if not isinstance(name, str):
+        raise ValueError("prompt name must be a string")
     if name not in prompts:
         raise KeyError(f"unknown prompt: {name}")
+    for argument in prompts[name]["arguments"]:
+        key = argument["name"]
+        if argument.get("required") and key not in args:
+            raise ValueError(f"prompt argument {key} is required")
+    if any(not isinstance(value, str) for value in args.values()):
+        raise ValueError("prompt argument values must be strings")
 
     text = _prompt_text(name, args)
     return {

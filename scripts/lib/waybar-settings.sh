@@ -36,7 +36,7 @@ fi
 strip_jsonc_comments() {
   local input_file="$1"
   if [[ -f "$input_file" ]]; then
-    perl -0777 -pe 's/\/\*.*?\*\///sg; s/(?<!:)\/\/.*//g' "$input_file" 2>/dev/null || cat "$input_file"
+    perl -0777 -pe 's{("(?:\\.|[^"\\])*")|/\*[\s\S]*?\*/|//[^\r\n]*}{defined($1) ? $1 : ($& =~ m{^//} ? "" : " ")}ge' "$input_file" 2>/dev/null || cat "$input_file"
   fi
 }
 

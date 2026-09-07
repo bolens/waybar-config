@@ -316,6 +316,28 @@ if [[ "$bool_out" != f0\|t1\|f1\|' 42%'\|'X '* ]]; then
 fi
 
 echo "Testing theme-colors-lib resolve..."
+python3 - "$ROOT_DIR" <<'PY_PRESET'
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="waybar-preset-jsonc-") as tmp:
+    home = Path(tmp)
+    (home / "data/themes").mkdir(parents=True)
+    settings = home / "settings.json"
+    settings.write_text(json.dumps({"theme": {"mode": "preset", "preset": "fixture", "colors": {"accent": "#abcdef"}}}))
+    (home / "data/themes/fixture.jsonc").write_text(
+        '// comment\n{"source":"https://example.test/a/*literal*/", /* block */ "colors":{"foreground":"#123456","accent":"#000000"}}\n')
+    env = dict(os.environ, WAYBAR_HOME=str(home), WAYBAR_SCRIPTS=str(root / "scripts"))
+    result = subprocess.run(["bash", "-c", '. "$1/scripts/lib/theme-colors-lib.sh"; waybar_theme_resolve_colors "$2"', "_", str(root), str(settings)],
+                            env=env, text=True, capture_output=True, check=True)
+    assert json.loads(result.stdout) == {"foreground": "#123456", "accent": "#abcdef"}, result.stdout
+print("PASS: theme preset JSONC strings and overrides")
+PY_PRESET
 theme_colors=$(
   WAYBAR_HOME="$TEST_DIR" bash -c '
     . "'"$TEST_DIR"'/scripts/lib/theme-colors-lib.sh"
@@ -345,6 +367,39 @@ if [ "$jsonc_py" != "1" ]; then
   echo "FAIL: jsonc_util.loads_jsonc got: $jsonc_py" >&2
   fail=1
 fi
+
+# Comment delimiters inside JSON strings are data in both parser entry points.
+PYTHONPATH="$TEST_DIR/scripts/lib" python3 - "$TEST_DIR" <<'PY_JSONC'
+import json
+from pathlib import Path
+import subprocess
+import sys
+from jsonc_util import loads_jsonc, redact_secrets
+
+root = Path(sys.argv[1])
+expected = {"path": "//server/share", "command": "echo /*literal*/", "quote": 'a"//b',
+            "url": "https://example.test/a//b", "escape": "\\"}
+source = "/* heading */\n" + json.dumps(expected) + " // tail\n"
+fixture = root / "data/quoted-comments.jsonc"
+fixture.write_text(source)
+failures = []
+try:
+    assert loads_jsonc(source) == expected
+except (ValueError, AssertionError):
+    failures.append("Python JSONC parser changed quoted comment delimiters")
+result = subprocess.run(["bash", "-c", '. "$1"; strip_jsonc_comments "$2"', "fixture",
+                         str(root / "scripts/lib/waybar-settings.sh"), str(fixture)],
+                        text=True, capture_output=True, timeout=15, check=True)
+try:
+    assert json.loads(result.stdout) == expected
+except (ValueError, AssertionError):
+    failures.append("shell JSONC parser changed quoted comment delimiters")
+assert not failures, failures
+assert redact_secrets({"api_key": ["fixture-only"], "token": {"value": "fixture-only"},
+                       "public": "visible"}) == {
+    "api_key": "[REDACTED]", "token": "[REDACTED]", "public": "visible"}
+print("PASS: both JSONC parsers preserve string values and structured secrets redact")
+PY_JSONC
 
 echo "Testing css-selectors-lib helpers..."
 css_sel=$(

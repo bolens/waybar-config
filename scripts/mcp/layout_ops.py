@@ -114,7 +114,7 @@ def get_intervals(paths: WaybarPaths) -> Any:
 def set_interval(paths: WaybarPaths, key: str, value: Any) -> dict[str, Any]:
     if not isinstance(key, str) or not key:
         raise ValueError("key must be a non-empty string")
-    if not (value == "once" or isinstance(value, int)):
+    if not (value == "once" or type(value) is int):
         raise ValueError("value must be 'once' or an integer")
     data = load_settings(paths)
     intervals = data.get("module_intervals")

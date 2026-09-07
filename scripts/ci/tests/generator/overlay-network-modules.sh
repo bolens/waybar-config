@@ -268,5 +268,55 @@ if ! grep -Fq '#custom-ipfs' "$TEST_DIR/theme/module-pills.generated.css"; then
   fail=1
 fi
 
+# Interface data must remain a literal argument in generated shell commands.
+python3 - "$ROOT_DIR" <<'PY_NETWORK'
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="waybar-network-argv-") as tmp:
+    home = Path(tmp)
+    for directory in ("data", "modules", "scripts/lib", "scripts/network"):
+        (home / directory).mkdir(parents=True, exist_ok=True)
+    # Generator dependencies are local fixtures, not the host's Waybar settings.
+    (home / "scripts/lib/waybar-settings.sh").write_text("")
+    (home / "data/waybar-settings.json").write_text("{}")
+    marker = home / "unexpected-command"
+    interface = "net ' $(touch " + str(marker) + ") ; value"
+    manifest = {"bond": {"interface": interface}, "interfaces": [
+        {"id": "wired", "interface": interface, "type": "ethernet"},
+        {"id": "wireless", "interface": interface, "type": "wifi"},
+    ]}
+    (home / "data/network-interfaces.json").write_text(json.dumps(manifest))
+    stub = "#!/usr/bin/env python3\nimport json,sys\nprint(json.dumps(sys.argv[1:]))\n"
+    for name in ("network-interface-status.sh", "ethernet-popup.py", "wifi-click.sh"):
+        path = home / "scripts/network" / name
+        path.write_text(stub)
+        path.chmod(0o755)
+    env = dict(os.environ, WAYBAR_HOME=str(home), WAYBAR_SCRIPTS=str(home / "scripts"))
+    subprocess.run(["bash", str(root / "scripts/generate/generate-network-modules.sh")],
+                   env=env, check=True)
+    modules = json.loads((home / "modules/network.generated.jsonc").read_text())
+    assert modules["network#bond"]["interface"] == interface
+    assert modules["network#bond"]["tooltip-format-disconnected"] == "Disconnected\n" + interface
+    cases = [("network#bond", key, [interface])
+             for key in ("on-click", "on-click-right", "on-click-middle")]
+    cases += [("custom/wired", key, [interface])
+              for key in ("exec", "on-click", "on-click-right", "on-click-middle")]
+    cases += [("custom/wireless", "exec", [interface]),
+              ("custom/wireless", "on-click", ["list", interface]),
+              ("custom/wireless", "on-click-right", ["manage", interface])]
+    for module, key, expected in cases:
+        result = subprocess.run(["bash", "-c", modules[module][key]], env=env,
+                                text=True, capture_output=True, check=True)
+        assert json.loads(result.stdout) == expected, (module, key, result.stdout)
+        assert not marker.exists(), (module, key, "interface executed a command")
+print("PASS: network interface arguments remain literal")
+PY_NETWORK
+
 echo "PASS: overlay-network-modules"
 waybar_test_end
