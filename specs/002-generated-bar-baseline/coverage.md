@@ -40,3 +40,5 @@ FR-019 maps to `xdg-icons-lib.sh` and the existing `lib-utils` suite. A disposab
 FR-020 maps to `unicode-animations-lib.sh`. Its disposable child-command fixture verifies status 7 and temporary cleanup. The weather suite exercises the real animation wrapper with stubbed HTTP, requiring wttr.in after Open-Meteo fails. Existing GitHub and shared-library suites also pass.
 
 FR-021 maps to `system-metrics-top.sh` and `lib-utils`. A stub process name containing a backslash and quote produced invalid JSON before the correction. Native jq string encoding now preserves the CPU and memory labels consumed by the collector.
+
+FR-022 maps to `brightness-lib.sh` and its existing shared-library suite. Removing the stray path brace allows default and explicit script roots to load. The fixture verifies disabled per-output cache selection in Bash and sh; a separate local dash run passes. No device probing or brightness change is performed.

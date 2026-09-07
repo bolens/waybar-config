@@ -102,6 +102,32 @@ printf '%s\\n%s\\n' "$cpu_top" "$mem_top"
     assert json.loads(lines[1]) == [name + " (2 MiB)"], result.stdout
 print("PASS: top-process cache preserves literal process names")
 PY_PROCESS_JSON
+python3 - "$ROOT_DIR" <<'PY_BRIGHTNESS_ROOT'
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-brightness-source-') as tmp:
+    for shell in ('bash', 'sh'):
+        for explicit in (True, False):
+            env = dict(os.environ, WAYBAR_HOME=str(root), XDG_CACHE_HOME=tmp)
+            env.pop('WAYBAR_SCRIPTS', None)
+            if explicit:
+                env['WAYBAR_SCRIPTS'] = str(root / 'scripts')
+            command = '''set -eu
+. "$WAYBAR_HOME/scripts/lib/brightness-lib.sh"
+waybar_settings_get() { printf false; }
+if brightness_per_output_enabled; then exit 9; fi
+brightness_bind_output fixture-output
+printf '%s\\n' "$brightness_cache_file"
+'''
+            result = subprocess.run([shell, '-c', command], env=env, text=True, capture_output=True)
+            assert result.returncode == 0, (shell, explicit, result.stderr)
+            assert result.stdout.strip() == str(Path(tmp) / 'waybar/brightness-status.json')
+print('PASS: brightness helper loads in Bash and sh with default and explicit script roots')
+PY_BRIGHTNESS_ROOT
 waybar_test_gen_sandbox
 if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed before lib-utils" >&2

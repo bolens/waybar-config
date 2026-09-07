@@ -80,3 +80,5 @@ and record their remaining acceptance boundaries.
 - **FR-020**: The animation wrapper MUST preserve the child command exit status after collecting its output and removing owned temporary files, so callers can select fallback providers.
 
 - **FR-021**: CPU and memory process-list caches MUST encode process names as JSON strings, preserving literal backslashes and quotes so a process label cannot break the shared metrics JSON.
+
+- **FR-022**: The shared brightness library MUST load its settings and output helpers from the selected scripts root in Bash and POSIX sh, with or without an explicit `WAYBAR_SCRIPTS`. Disabled per-output settings MUST retain the shared cache path.
