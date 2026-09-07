@@ -1,7 +1,7 @@
 # Legacy runtime contracts
 
 Inspected source: `cf333defce09672c36774720d209531ffe891e2c`, with corrective
-requirements FR-019 through FR-023. This register covers the helpers listed
+requirements FR-019 through FR-026. This register covers the helpers listed
 below, including both dock-window libraries and all ten KDE listener package
 files. Most runtime entry points still require inspection. It is not a
 completed runtime audit.
@@ -64,9 +64,21 @@ cache paths and subscriptions, starts monitoring and cleans up its KWin script
 and monitor process. Native fixtures import helpers with stub GI modules;
 they do not instantiate a live session listener.
 
+`network/network-interface-status.sh` refreshes manifest-selected interfaces,
+tracks bond visibility and serves cached status. `network/tailscale-status.sh`
+reports backend, host, peers and health. `network/vpn-status.sh` combines
+NetworkManager and optional overlay-VPN status into a tunnel count. FR-024
+through FR-026 cover empty fields, configured interface names and disconnected
+state matching. Native suites use stub commands and disposable caches.
+
+`infra/listener-ctl.sh` starts/stops named listener services, with detached
+process fallback when the user service manager is unavailable. Its stop path
+trusts a cached PID and can escalate to SIGKILL. This audit did not run it on
+live listeners. Process-identity and stale-lock behavior need further validation.
+
 ## Verification and remaining work
 
-The existing `lib-utils` suite covers FR-019 through FR-023 with disposable
+The existing `lib-utils` suite covers FR-019 through FR-026 with disposable
 files and stub commands. The weather suite covers FR-020 through the real
 wrapper; GitHub status regressions also pass. These checks supplement the
 existing generator and theme suites, not live desktop acceptance.

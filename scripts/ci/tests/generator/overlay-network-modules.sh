@@ -6,6 +6,28 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 # shellcheck source=../../lib/waybar-test-harness.sh
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "overlay-network-modules"
+python3 - "$ROOT_DIR" <<'PY_INTERFACE_MANIFEST'
+import json,os,subprocess,sys,tempfile
+from pathlib import Path
+root=Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-interface-manifest-') as tmp:
+    home=Path(tmp)
+    for name in ('data','scripts/lib','bin'):
+        (home/name).mkdir(parents=True)
+    manifest={'bond':{'interface':'fixture-bond'},'interfaces':[{'id':'fixture-id','interface':'fixture-net'}]}
+    (home/'data/network-interfaces.json').write_text(json.dumps(manifest))
+    (home/'scripts/lib/waybar-cache-helpers.sh').write_text('waybar_module_interval() { printf 60; }\ncache_file_age() { printf 0; }\n')
+    for name in ('ip','nmcli','iwgetid'):
+        path=home/'bin'/name;path.write_text('#!/bin/sh\nexit 0\n');path.chmod(0o755)
+    env=dict(os.environ,WAYBAR_HOME=tmp,WAYBAR_SCRIPTS=str(home/'scripts'),XDG_CACHE_HOME=str(home/'cache'),PATH=str(home/'bin')+':'+os.environ['PATH'])
+    command=['sh',str(root/'scripts/network/network-interface-status.sh')]
+    result=subprocess.run(command+['--refresh'],env=env,text=True,capture_output=True,check=True)
+    data=json.loads(result.stdout)
+    assert 'fixture-net' in data and 'eno1' not in data and data['bond_active'] == 0,data
+    result=subprocess.run(command+['fixture-net'],env=env,text=True,capture_output=True,check=True)
+    assert 'fixture-net' in json.loads(result.stdout)['class'],result.stdout
+print('PASS: interface refresh and cached reads use manifest interface names')
+PY_INTERFACE_MANIFEST
 waybar_test_gen_sandbox
 
 mkdir -p "$TEST_DIR/scripts/services/yggdrasil" "$TEST_DIR/scripts/services/ipfs" \

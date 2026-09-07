@@ -46,3 +46,9 @@ FR-022 maps to `brightness-lib.sh` and its existing shared-library suite. Removi
 [Runtime contracts](legacy-runtime.md) record the inspected shared helpers and weather entry point. Unread runtime/listener source remains explicitly pending.
 
 FR-023 maps to the shared KDE listener JSON writer. A synchronized two-thread fixture reproduced reuse of one PID-named temporary path. Unique temporary files now allow both complete replacements; an injected replacement failure preserves the previous destination and leaves no temporary file. The full shared-library suite passes with stub GI and no D-Bus calls.
+
+FR-024 maps to `tailscale-status.sh` and the existing `vpn-cooling-refresh` suite. A stub response with absent IPv4/exit node previously shifted peer count and health text into the wrong fields; JSON indexing now preserves the health warning and empty values.
+
+FR-025 maps to `network-interface-status.sh` and the existing network suite. A custom manifest fixture previously refreshed only hard-coded interfaces and used the host bond name. Refresh now uses configured interface/bond names, and subsequent cached reads retain the configured interface. Command dependencies are stubbed.
+
+FR-026 maps to `vpn-status.sh` and the VPN suite. Stubbed disconnected Netbird and Mullvad reports previously yielded two active tunnels; whole-word matching now reports zero, while connected reports retain two. Every VPN command is stubbed.

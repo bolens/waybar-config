@@ -84,3 +84,9 @@ and record their remaining acceptance boundaries.
 - **FR-022**: The shared brightness library MUST load its settings and output helpers from the selected scripts root in Bash and POSIX sh, with or without an explicit `WAYBAR_SCRIPTS`. Disabled per-output settings MUST retain the shared cache path.
 
 - **FR-023**: Concurrent KDE listener JSON cache writes MUST use distinct owned temporary files and publish complete JSON through replacement. Failed replacement MUST preserve the destination and remove the failed writer's temporary file.
+
+- **FR-024**: Tailscale status parsing MUST preserve empty optional fields without shifting peer counts, exit-node text or health messages. Health warnings MUST remain visible when no IPv4 or exit node is present.
+
+- **FR-025**: Network interface status refresh MUST collect manifest interface names and use the manifest bond interface for hiding subordinate modules. Cached reads MUST retain configured interfaces instead of replacing them with hard-coded machine names. Without a manifest, legacy defaults remain supported.
+
+- **FR-026**: VPN summary matching MUST NOT count `Disconnected` as `Connected` for Netbird or Mullvad. Only complete connection-state words may contribute to the active tunnel count.
