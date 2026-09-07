@@ -6,6 +6,266 @@ ROOT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
 # shellcheck source=../../lib/waybar-test-harness.sh
 . "$ROOT_DIR/scripts/ci/lib/waybar-test-harness.sh"
 waybar_test_begin "lib-utils"
+python3 - "$ROOT_DIR" <<'PY_MPRIS_RETRY'
+import os, signal, subprocess, sys, tempfile, time
+from pathlib import Path
+
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="waybar-mpris-restart-") as tmp:
+    home = Path(tmp)
+    binpath = home / "bin"
+    binpath.mkdir()
+    calls = home / "calls"
+    for name, body in {
+        "playerctl": "exit 0",
+        "zscroll": 'echo zscroll >> "$MOCK_CALLS"; exit 7',
+        "sleep": 'echo "sleep $*" >> "$MOCK_CALLS"; exit 42',
+    }.items():
+        p = binpath / name
+        p.write_text("#!/bin/sh\n" + body + "\n")
+        p.chmod(0o755)
+    env = dict(
+        os.environ,
+        PATH=str(binpath) + ":" + os.environ["PATH"],
+        WAYBAR_HOME=str(home),
+        WAYBAR_SCRIPTS=str(root / "scripts"),
+        MOCK_CALLS=str(calls),
+    )
+    proc = subprocess.Popen(
+        ["bash", str(root / "scripts/media/mpris-scroll.sh")],
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    try:
+        proc.communicate(timeout=2)
+        assert proc.returncode == 42, "restart did not reach the intercepted wait"
+        assert calls.read_text().splitlines() == ["zscroll", "sleep 1"], (
+            "failed zscroll retried before waiting"
+        )
+    finally:
+        if proc.poll() is None:
+            os.killpg(proc.pid, signal.SIGTERM)
+            proc.communicate(timeout=3)
+print("PASS: failed zscroll waits before retrying")
+PY_MPRIS_RETRY
+
+python3 - "$ROOT_DIR" <<'PY_XDG_MAP'
+from pathlib import Path
+import os, subprocess, sys, tempfile
+
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="waybar-xdg-map-") as tmp:
+    home = Path(tmp)
+    apps = home / "applications"
+    apps.mkdir()
+    (apps / "fixture.desktop").write_text(
+        "[Desktop Entry]\nName=Fixture Tool\nIcon=fixture-icon\nStartupWMClass=FixtureClass\nExec=/opt/fixture-bin %U\n"
+    )
+    env = dict(os.environ, WAYBAR_SCRIPTS=str(root / "scripts"))
+    script = """set -euo pipefail
+. "$1/scripts/lib/xdg-icons-lib.sh"
+fixture_apps="$2"
+xdg_application_dirs() { printf '%s\\n' "$fixture_apps"; }
+xdg_icons_load_maps "$3"
+printf '%s|%s|%s\\n' "${class_to_icon[fixtureclass]:-missing}" "${name_to_icon[fixture tool]:-missing}" "${exec_to_icon[fixture-bin]:-missing}"
+"""
+    for attempt in ("cold", "warm"):
+        result = subprocess.run(
+            [
+                "bash",
+                "-c",
+                script,
+                "_",
+                str(root),
+                str(apps),
+                str(home / "icons.cache"),
+            ],
+            env=env,
+            text=True,
+            capture_output=True,
+        )
+        expected = "fixture-icon|fixture-icon|fixture-icon\n"
+        assert result.returncode == 0 and result.stdout == expected, (
+            attempt,
+            result.returncode,
+            result.stdout,
+            result.stderr,
+        )
+print("PASS: desktop icon maps survive cold parsing and warm cache loading")
+PY_XDG_MAP
+python3 - "$ROOT_DIR" <<'PY_ANIMATION_RESULT'
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-animation-result-') as tmp:
+    env = dict(os.environ, TMPDIR=tmp, WAYBAR_SCRIPTS=tmp, WAYBAR_BACKGROUND='0')
+    command = '''set -eu
+. "$1/scripts/lib/unicode-animations-lib.sh"
+emit_waybar_json() { :; }
+if animate_command dots fixture fixture sh -c 'printf fixture-output; exit 7'; then result=0; else result=$?; fi
+printf '\\nstatus=%s\\n' "$result"
+'''
+    result = subprocess.run(['bash', '-c', command, '_', str(root)], env=env, text=True, capture_output=True)
+    assert result.returncode == 0 and result.stdout == 'fixture-output\nstatus=7\n', (result.returncode, result.stdout, result.stderr)
+    assert not list(Path(tmp).iterdir()), 'temporary files remain'
+print('PASS: animation preserves failed command status and removes temporary output')
+PY_ANIMATION_RESULT
+python3 - "$ROOT_DIR" <<'PY_PROCESS_JSON'
+import json, os, subprocess, sys, tempfile
+from pathlib import Path
+
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="waybar-process-json-") as tmp:
+    name = 'fixture\\q"name'
+    command = """set -eu
+. "$1/scripts/lib/system-metrics-top.sh"
+cache_dir="$2"
+cache_file_age() { printf 100; }
+fixture_name="$3"
+ps() {
+ case "$*" in
+  *pcpu*) printf '%%CPU COMMAND\\n7.5 %s\\n' "$fixture_name" ;;
+  *) printf '%%MEM RSS COMMAND\\n4.0 2048 %s\\n' "$fixture_name" ;;
+ esac
+}
+refresh_process_tops
+printf '%s\\n%s\\n' "$cpu_top" "$mem_top"
+"""
+    result = subprocess.run(
+        ["bash", "-c", command, "_", str(root), tmp, name],
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    lines = result.stdout.splitlines()
+    assert json.loads(lines[0]) == [name + " (7.5%)"], result.stdout
+    assert json.loads(lines[1]) == [name + " (2 MiB)"], result.stdout
+print("PASS: top-process cache preserves literal process names")
+PY_PROCESS_JSON
+python3 - "$ROOT_DIR" <<'PY_BRIGHTNESS_ROOT'
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-brightness-source-') as tmp:
+    for shell in ('bash', 'sh'):
+        for explicit in (True, False):
+            env = dict(os.environ, WAYBAR_HOME=str(root), XDG_CACHE_HOME=tmp)
+            env.pop('WAYBAR_SCRIPTS', None)
+            if explicit:
+                env['WAYBAR_SCRIPTS'] = str(root / 'scripts')
+            command = '''set -eu
+. "$WAYBAR_HOME/scripts/lib/brightness-lib.sh"
+waybar_settings_get() { printf false; }
+if brightness_per_output_enabled; then exit 9; fi
+brightness_bind_output fixture-output
+printf '%s\\n' "$brightness_cache_file"
+'''
+            result = subprocess.run([shell, '-c', command], env=env, text=True, capture_output=True)
+            assert result.returncode == 0, (shell, explicit, result.stderr)
+            assert result.stdout.strip() == str(Path(tmp) / 'waybar/brightness-status.json')
+print('PASS: brightness helper loads in Bash and sh with default and explicit script roots')
+PY_BRIGHTNESS_ROOT
+python3 - "$ROOT_DIR" <<'PY_CLIPBOARD_RACE'
+import contextlib
+import io
+import json
+import os
+from pathlib import Path
+import sys
+import tempfile
+import threading
+import types
+from unittest.mock import patch
+root = Path(sys.argv[1])
+sys.path.insert(0, str(root / 'scripts/lib'))
+gi = types.ModuleType('gi')
+gi.require_version = lambda *args: None
+repo = types.ModuleType('gi.repository')
+repo.Gio = types.SimpleNamespace()
+sys.modules['gi'] = gi
+sys.modules['gi.repository'] = repo
+from kde_listener.clipboard import ClipboardMixin
+with tempfile.TemporaryDirectory(prefix='waybar-clipboard-race-') as tmp:
+    target = Path(tmp) / 'cache.json'
+    barrier = threading.Barrier(2)
+    replaced = []
+    original = os.replace
+    def replace(source, destination):
+        barrier.wait(timeout=5)
+        original(source, destination)
+        replaced.append(str(source))
+    instance = ClipboardMixin()
+    errors = io.StringIO()
+    with contextlib.redirect_stderr(errors), patch('kde_listener.clipboard.os.replace', side_effect=replace):
+        threads = [threading.Thread(target=instance.write_json_atomically, args=(str(target), {'item': i})) for i in range(2)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=10)
+        assert not any(thread.is_alive() for thread in threads)
+    assert len(replaced) == 2 and len(set(replaced)) == 2, (replaced, errors.getvalue())
+    assert json.loads(target.read_text()) in ({'item': 0}, {'item': 1})
+    assert list(Path(tmp).iterdir()) == [target]
+    before = target.read_bytes()
+    with contextlib.redirect_stderr(errors), patch('kde_listener.clipboard.os.replace', side_effect=OSError('fixture replacement failure')):
+        instance.write_json_atomically(str(target), {'item': 9})
+    assert target.read_bytes() == before
+    assert list(Path(tmp).iterdir()) == [target]
+print('PASS: concurrent cache writers use distinct temporary files and clean up failures')
+PY_CLIPBOARD_RACE
+python3 - "$ROOT_DIR" <<'PY_SCREENSHOT_FAILURE'
+import os,subprocess,sys,tempfile
+from pathlib import Path
+root=Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-screenshot-failure-') as tmp:
+    home=Path(tmp)
+    (home/'scripts/lib').mkdir(parents=True);(home/'bin').mkdir()
+    (home/'scripts/lib/compositor-session.sh').write_text('detect_compositor() { printf hyprland; }\n')
+    (home/'scripts/lib/waybar-settings.sh').write_text('waybar_settings_get() { printf true; }\n')
+    (home/'scripts/lib/capture-lib.sh').write_text('''normalize_capture_mode() { printf screen; }
+capture_output_tag() { printf fixture; }
+capture_screenshot_base_dir() { printf '%s' "$WAYBAR_HOME/captures"; }
+capture_build_screenshot_path() { printf '%s' "$WAYBAR_HOME/fixture.png"; }
+capture_copy_image() { printf copied >> "$WAYBAR_HOME/events"; }
+capture_notify() { printf '%s\\n' "$*" >> "$WAYBAR_HOME/events"; }
+''')
+    for name,status in [('grimblast',0),('grim',7)]:
+        path=home/'bin'/name;path.write_text('#!/bin/sh\nexit '+str(status)+'\n');path.chmod(0o755)
+    env=dict(os.environ,WAYBAR_HOME=tmp,WAYBAR_SCRIPTS=str(home/'scripts'),PATH=str(home/'bin')+':'+os.environ['PATH'])
+    for output in ('', 'fixture-output'):
+        result=subprocess.run(['bash',str(root/'scripts/capture/screenshot-click.sh'),'screen',output],env=env,text=True,capture_output=True)
+        assert result.returncode==7,(result.returncode,result.stderr)
+        assert not (home/'events').exists(),(home/'events').read_text()
+print('PASS: failed screenshot capture cannot report saved or copy an image')
+PY_SCREENSHOT_FAILURE
+python3 - "$ROOT_DIR" <<'PY_MIC_FAILURE'
+import os,subprocess,sys,tempfile
+from pathlib import Path
+root=Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-mic-failure-') as tmp:
+    home=Path(tmp);(home/'scripts/lib').mkdir(parents=True);(home/'bin').mkdir()
+    (home/'scripts/lib/compositor-session.sh').write_text('detect_compositor() { printf unknown; }\n')
+    signal=home/'scripts/lib/waybar-signal.sh';signal.write_text('#!/bin/sh\nexit 0\n');signal.chmod(0o755)
+    for name in ('wpctl','notify-send'):
+        stub=home/'bin'/name;stub.write_text('#!/bin/sh\nexit 7\n' if name=='wpctl' else '#!/bin/sh\nprintf "%s\\n" "$*" >> "$WAYBAR_HOME/events"\n');stub.chmod(0o755)
+    env=dict(os.environ,WAYBAR_HOME=tmp,WAYBAR_SCRIPTS=str(home/'scripts'),XDG_CACHE_HOME=str(home/'cache'),PATH=str(home/'bin')+':'+os.environ['PATH'])
+    for code in (7, 0):
+        (home/'bin/wpctl').write_text('#!/bin/sh\nexit '+str(code)+'\n')
+        if (home/'events').exists():
+            (home/'events').unlink()
+        result=subprocess.run(['sh',str(root/'scripts/media/mic-toggle.sh')],env=env,text=True,capture_output=True)
+        events=(home/'events').read_text() if (home/'events').exists() else ''
+        assert result.returncode!=0 and 'LIVE' not in events and 'MUTED' not in events,(result.returncode,events)
+print('PASS: failed microphone control does not claim a live or muted state')
+PY_MIC_FAILURE
 waybar_test_gen_sandbox
 if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed before lib-utils" >&2
@@ -316,6 +576,28 @@ if [[ "$bool_out" != f0\|t1\|f1\|' 42%'\|'X '* ]]; then
 fi
 
 echo "Testing theme-colors-lib resolve..."
+python3 - "$ROOT_DIR" <<'PY_PRESET'
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="waybar-preset-jsonc-") as tmp:
+    home = Path(tmp)
+    (home / "data/themes").mkdir(parents=True)
+    settings = home / "settings.json"
+    settings.write_text(json.dumps({"theme": {"mode": "preset", "preset": "fixture", "colors": {"accent": "#abcdef"}}}))
+    (home / "data/themes/fixture.jsonc").write_text(
+        '// comment\n{"source":"https://example.test/a/*literal*/", /* block */ "colors":{"foreground":"#123456","accent":"#000000"}}\n')
+    env = dict(os.environ, WAYBAR_HOME=str(home), WAYBAR_SCRIPTS=str(root / "scripts"))
+    result = subprocess.run(["bash", "-c", '. "$1/scripts/lib/theme-colors-lib.sh"; waybar_theme_resolve_colors "$2"', "_", str(root), str(settings)],
+                            env=env, text=True, capture_output=True, check=True)
+    assert json.loads(result.stdout) == {"foreground": "#123456", "accent": "#abcdef"}, result.stdout
+print("PASS: theme preset JSONC strings and overrides")
+PY_PRESET
 theme_colors=$(
   WAYBAR_HOME="$TEST_DIR" bash -c '
     . "'"$TEST_DIR"'/scripts/lib/theme-colors-lib.sh"
@@ -345,6 +627,39 @@ if [ "$jsonc_py" != "1" ]; then
   echo "FAIL: jsonc_util.loads_jsonc got: $jsonc_py" >&2
   fail=1
 fi
+
+# Comment delimiters inside JSON strings are data in both parser entry points.
+PYTHONPATH="$TEST_DIR/scripts/lib" python3 - "$TEST_DIR" <<'PY_JSONC'
+import json
+from pathlib import Path
+import subprocess
+import sys
+from jsonc_util import loads_jsonc, redact_secrets
+
+root = Path(sys.argv[1])
+expected = {"path": "//server/share", "command": "echo /*literal*/", "quote": 'a"//b',
+            "url": "https://example.test/a//b", "escape": "\\"}
+source = "/* heading */\n" + json.dumps(expected) + " // tail\n"
+fixture = root / "data/quoted-comments.jsonc"
+fixture.write_text(source)
+failures = []
+try:
+    assert loads_jsonc(source) == expected
+except (ValueError, AssertionError):
+    failures.append("Python JSONC parser changed quoted comment delimiters")
+result = subprocess.run(["bash", "-c", '. "$1"; strip_jsonc_comments "$2"', "fixture",
+                         str(root / "scripts/lib/waybar-settings.sh"), str(fixture)],
+                        text=True, capture_output=True, timeout=15, check=True)
+try:
+    assert json.loads(result.stdout) == expected
+except (ValueError, AssertionError):
+    failures.append("shell JSONC parser changed quoted comment delimiters")
+assert not failures, failures
+assert redact_secrets({"api_key": ["fixture-only"], "token": {"value": "fixture-only"},
+                       "public": "visible"}) == {
+    "api_key": "[REDACTED]", "token": "[REDACTED]", "public": "visible"}
+print("PASS: both JSONC parsers preserve string values and structured secrets redact")
+PY_JSONC
 
 echo "Testing css-selectors-lib helpers..."
 css_sel=$(
