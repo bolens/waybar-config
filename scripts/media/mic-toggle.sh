@@ -13,9 +13,18 @@ signal_waybar() {
   "$WAYBAR_SCRIPTS/lib/waybar-signal.sh" mic
 }
 
-timeout 2 wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle || true
+if ! timeout 2 wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; then
+  notify-send "Mic" "Could not change microphone mute state" 2>/dev/null || true
+  signal_waybar || true
+  exit 1
+fi
 
 v=$(timeout 2 wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null || true)
+if [ -z "$v" ]; then
+  notify-send "Mic" "Microphone state unavailable" 2>/dev/null || true
+  signal_waybar || true
+  exit 1
+fi
 compositor=$(detect_compositor)
 
 if printf '%s' "$v" | rg -Fq MUTED; then

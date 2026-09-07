@@ -176,6 +176,51 @@ with tempfile.TemporaryDirectory(prefix='waybar-clipboard-race-') as tmp:
     assert list(Path(tmp).iterdir()) == [target]
 print('PASS: concurrent cache writers use distinct temporary files and clean up failures')
 PY_CLIPBOARD_RACE
+python3 - "$ROOT_DIR" <<'PY_SCREENSHOT_FAILURE'
+import os,subprocess,sys,tempfile
+from pathlib import Path
+root=Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-screenshot-failure-') as tmp:
+    home=Path(tmp)
+    (home/'scripts/lib').mkdir(parents=True);(home/'bin').mkdir()
+    (home/'scripts/lib/compositor-session.sh').write_text('detect_compositor() { printf hyprland; }\n')
+    (home/'scripts/lib/waybar-settings.sh').write_text('waybar_settings_get() { printf true; }\n')
+    (home/'scripts/lib/capture-lib.sh').write_text('''normalize_capture_mode() { printf screen; }
+capture_output_tag() { printf fixture; }
+capture_screenshot_base_dir() { printf '%s' "$WAYBAR_HOME/captures"; }
+capture_build_screenshot_path() { printf '%s' "$WAYBAR_HOME/fixture.png"; }
+capture_copy_image() { printf copied >> "$WAYBAR_HOME/events"; }
+capture_notify() { printf '%s\\n' "$*" >> "$WAYBAR_HOME/events"; }
+''')
+    for name,status in [('grimblast',0),('grim',7)]:
+        path=home/'bin'/name;path.write_text('#!/bin/sh\nexit '+str(status)+'\n');path.chmod(0o755)
+    env=dict(os.environ,WAYBAR_HOME=tmp,WAYBAR_SCRIPTS=str(home/'scripts'),PATH=str(home/'bin')+':'+os.environ['PATH'])
+    for output in ('', 'fixture-output'):
+        result=subprocess.run(['bash',str(root/'scripts/capture/screenshot-click.sh'),'screen',output],env=env,text=True,capture_output=True)
+        assert result.returncode==7,(result.returncode,result.stderr)
+        assert not (home/'events').exists(),(home/'events').read_text()
+print('PASS: failed screenshot capture cannot report saved or copy an image')
+PY_SCREENSHOT_FAILURE
+python3 - "$ROOT_DIR" <<'PY_MIC_FAILURE'
+import os,subprocess,sys,tempfile
+from pathlib import Path
+root=Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-mic-failure-') as tmp:
+    home=Path(tmp);(home/'scripts/lib').mkdir(parents=True);(home/'bin').mkdir()
+    (home/'scripts/lib/compositor-session.sh').write_text('detect_compositor() { printf unknown; }\n')
+    signal=home/'scripts/lib/waybar-signal.sh';signal.write_text('#!/bin/sh\nexit 0\n');signal.chmod(0o755)
+    for name in ('wpctl','notify-send'):
+        stub=home/'bin'/name;stub.write_text('#!/bin/sh\nexit 7\n' if name=='wpctl' else '#!/bin/sh\nprintf "%s\\n" "$*" >> "$WAYBAR_HOME/events"\n');stub.chmod(0o755)
+    env=dict(os.environ,WAYBAR_HOME=tmp,WAYBAR_SCRIPTS=str(home/'scripts'),XDG_CACHE_HOME=str(home/'cache'),PATH=str(home/'bin')+':'+os.environ['PATH'])
+    for code in (7, 0):
+        (home/'bin/wpctl').write_text('#!/bin/sh\nexit '+str(code)+'\n')
+        if (home/'events').exists():
+            (home/'events').unlink()
+        result=subprocess.run(['sh',str(root/'scripts/media/mic-toggle.sh')],env=env,text=True,capture_output=True)
+        events=(home/'events').read_text() if (home/'events').exists() else ''
+        assert result.returncode!=0 and 'LIVE' not in events and 'MUTED' not in events,(result.returncode,events)
+print('PASS: failed microphone control does not claim a live or muted state')
+PY_MIC_FAILURE
 waybar_test_gen_sandbox
 if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed before lib-utils" >&2

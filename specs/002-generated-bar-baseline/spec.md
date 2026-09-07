@@ -90,3 +90,7 @@ and record their remaining acceptance boundaries.
 - **FR-025**: Network interface status refresh MUST collect manifest interface names and use the manifest bond interface for hiding subordinate modules. Cached reads MUST retain configured interfaces instead of replacing them with hard-coded machine names. Without a manifest, legacy defaults remain supported.
 
 - **FR-026**: VPN summary matching MUST NOT count `Disconnected` as `Connected` for Netbird or Mullvad. Only complete connection-state words may contribute to the active tunnel count.
+
+- **FR-027**: A failed full-screen capture in the Hyprland/grimblast path MUST return the capture failure and MUST NOT copy an image or announce a saved screenshot. This applies with and without output targeting.
+
+- **FR-028**: Microphone toggle MUST report failure when mute control fails or the subsequent volume query is empty, rather than announce a live or muted state it could not confirm. Refresh signaling may still invalidate stale status.

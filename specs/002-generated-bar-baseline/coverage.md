@@ -52,3 +52,7 @@ FR-024 maps to `tailscale-status.sh` and the existing `vpn-cooling-refresh` suit
 FR-025 maps to `network-interface-status.sh` and the existing network suite. A custom manifest fixture previously refreshed only hard-coded interfaces and used the host bond name. Refresh now uses configured interface/bond names, and subsequent cached reads retain the configured interface. Command dependencies are stubbed.
 
 FR-026 maps to `vpn-status.sh` and the VPN suite. Stubbed disconnected Netbird and Mullvad reports previously yielded two active tunnels; whole-word matching now reports zero, while connected reports retain two. Every VPN command is stubbed.
+
+FR-027 maps to `screenshot-click.sh` and `lib-utils`. Stub capture failure previously returned success and announced a saved file. Both targeted and untargeted full-screen cases now retain exit 7 and perform no clipboard or notification action.
+
+FR-028 maps to `mic-toggle.sh` and `lib-utils`. Stub control failure previously announced LIVE and returned success. Failure now produces an unavailable/control-error message and nonzero status, while refresh signaling remains permitted. No microphone was accessed.

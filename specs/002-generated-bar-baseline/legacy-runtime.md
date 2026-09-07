@@ -1,7 +1,7 @@
 # Legacy runtime contracts
 
 Inspected source: `cf333defce09672c36774720d209531ffe891e2c`, with corrective
-requirements FR-019 through FR-026. This register covers the helpers listed
+requirements FR-019 through FR-028. This register covers the helpers listed
 below, including both dock-window libraries and all ten KDE listener package
 files. Most runtime entry points still require inspection. It is not a
 completed runtime audit.
@@ -68,7 +68,7 @@ they do not instantiate a live session listener.
 tracks bond visibility and serves cached status. `network/tailscale-status.sh`
 reports backend, host, peers and health. `network/vpn-status.sh` combines
 NetworkManager and optional overlay-VPN status into a tunnel count. FR-024
-through FR-026 cover empty fields, configured interface names and disconnected
+through FR-028 cover empty fields, configured interface names and disconnected
 state matching. Native suites use stub commands and disposable caches.
 
 `infra/listener-ctl.sh` starts/stops named listener services, with detached
@@ -76,9 +76,23 @@ process fallback when the user service manager is unavailable. Its stop path
 trusts a cached PID and can escalate to SIGKILL. This audit did not run it on
 live listeners. Process-identity and stale-lock behavior need further validation.
 
+All five `capture/` entry points were inspected: color picker, screenshot
+click/status and recording click/status. Backend commands are operational.
+The screenshot failure fixture covers FR-027. Recording stop currently trusts
+cached process liveness, and startup notification does not prove successful
+recording. Those lifecycle boundaries require further validation.
+
+All eight `media/` entry points were inspected: static previous/next glyphs,
+audio settings/output selection, microphone toggle/status, album-art caching,
+cava streaming and MPRIS scrolling. FR-028 prevents unconfirmed microphone
+state notifications. Album art supports file/HTTP inputs and explicit cache
+cleanup, cava caps bars/frame rate and suppresses duplicate output, and MPRIS
+escapes markup with scrolling/static fallbacks. Streaming restart/termination
+behavior and optional backend execution still need dedicated validation.
+
 ## Verification and remaining work
 
-The existing `lib-utils` suite covers FR-019 through FR-026 with disposable
+The existing `lib-utils` suite covers FR-019 through FR-028 with disposable
 files and stub commands. The weather suite covers FR-020 through the real
 wrapper; GitHub status regressions also pass. These checks supplement the
 existing generator and theme suites, not live desktop acceptance.
