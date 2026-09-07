@@ -78,3 +78,5 @@ and record their remaining acceptance boundaries.
 - **FR-019**: Shared desktop icon maps MUST parse valid desktop entries and retain class, name and executable mappings after a warm cache load returns to its caller. Existing cache declarations MUST remain readable.
 
 - **FR-020**: The animation wrapper MUST preserve the child command exit status after collecting its output and removing owned temporary files, so callers can select fallback providers.
+
+- **FR-021**: CPU and memory process-list caches MUST encode process names as JSON strings, preserving literal backslashes and quotes so a process label cannot break the shared metrics JSON.

@@ -70,6 +70,38 @@ printf '\\nstatus=%s\\n' "$result"
     assert not list(Path(tmp).iterdir()), 'temporary files remain'
 print('PASS: animation preserves failed command status and removes temporary output')
 PY_ANIMATION_RESULT
+python3 - "$ROOT_DIR" <<'PY_PROCESS_JSON'
+import json, os, subprocess, sys, tempfile
+from pathlib import Path
+
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="waybar-process-json-") as tmp:
+    name = 'fixture\\q"name'
+    command = """set -eu
+. "$1/scripts/lib/system-metrics-top.sh"
+cache_dir="$2"
+cache_file_age() { printf 100; }
+fixture_name="$3"
+ps() {
+ case "$*" in
+  *pcpu*) printf '%%CPU COMMAND\\n7.5 %s\\n' "$fixture_name" ;;
+  *) printf '%%MEM RSS COMMAND\\n4.0 2048 %s\\n' "$fixture_name" ;;
+ esac
+}
+refresh_process_tops
+printf '%s\\n%s\\n' "$cpu_top" "$mem_top"
+"""
+    result = subprocess.run(
+        ["bash", "-c", command, "_", str(root), tmp, name],
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    lines = result.stdout.splitlines()
+    assert json.loads(lines[0]) == [name + " (7.5%)"], result.stdout
+    assert json.loads(lines[1]) == [name + " (2 MiB)"], result.stdout
+print("PASS: top-process cache preserves literal process names")
+PY_PROCESS_JSON
 waybar_test_gen_sandbox
 if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed before lib-utils" >&2

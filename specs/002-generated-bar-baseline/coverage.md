@@ -38,3 +38,5 @@ executables used the same installed dependency versions and arguments.
 FR-019 maps to `xdg-icons-lib.sh` and the existing `lib-utils` suite. A disposable desktop entry failed cold parsing before moving the AWK function to top level, then failed warm loading before promoting cached map declarations to global scope. Both cases and the full suite now pass. Window switcher and notification-menu consumers retain their existing lookup interface.
 
 FR-020 maps to `unicode-animations-lib.sh`. Its disposable child-command fixture verifies status 7 and temporary cleanup. The weather suite exercises the real animation wrapper with stubbed HTTP, requiring wttr.in after Open-Meteo fails. Existing GitHub and shared-library suites also pass.
+
+FR-021 maps to `system-metrics-top.sh` and `lib-utils`. A stub process name containing a backslash and quote produced invalid JSON before the correction. Native jq string encoding now preserves the CPU and memory labels consumed by the collector.
