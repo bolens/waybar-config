@@ -148,6 +148,109 @@ assert_contains "$resp" 'isError' "set_path refuses bearer key"
 resp=$(run_mcp "$(tool_call waybar_set_path '{"path":"services.demo.access_token","value":"x"}')")
 assert_contains "$resp" 'isError' "set_path refuses access_token key"
 
+# --- settings boundary regressions use only synthetic sandbox data ---
+python3 - "$MCP_PY" <<'PY_SETTINGS'
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+home = Path(os.environ["WAYBAR_HOME"])
+settings = home / "data/waybar-settings.jsonc"
+compiled = home / "data/waybar-settings.json"
+before = settings.read_bytes(), compiled.read_bytes()
+
+def call(name, arguments):
+    request = {"jsonrpc": "2.0", "id": 2000, "method": "tools/call",
+               "params": {"name": name, "arguments": arguments}}
+    result = subprocess.run([sys.executable, sys.argv[1]], input=json.dumps(request) + "\n",
+                            text=True, capture_output=True, timeout=15, check=True)
+    return json.loads(result.stdout)["result"]
+
+failures = []
+response = call("waybar_get_settings", {"path": "services.i2pd.console_pass", "include_secrets": True})
+if "SUPER_SECRET_PASS" in json.dumps(response):
+    failures.append("dotted secret read exposed fixture value")
+for contents in ("{", "[]", "null"):
+    backup = home / "data/waybar-settings.jsonc.bak.invalid-fixture"
+    backup.write_text(contents)
+    response = call("waybar_restore_settings", {"backup_path": str(backup)})
+    if response["isError"] is not True or (settings.read_bytes(), compiled.read_bytes()) != before:
+        failures.append("invalid backup changed settings: " + contents)
+    settings.write_bytes(before[0])
+    compiled.write_bytes(before[1])
+    backup.unlink()
+assert not failures, failures
+print("PASS: dotted secret reads redact and invalid backups preserve both settings files")
+PY_SETTINGS
+
+# --- schema validation before handlers or settings writes ---
+python3 - "$MCP_PY" <<'PY_SCHEMA'
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+settings = Path(os.environ["WAYBAR_HOME"]) / "data/waybar-settings.jsonc"
+before = settings.read_bytes()
+cases = [
+    ("waybar_restart", {"confirm": value})
+    for value in ("false", 1, [], {}, None)
+] + [
+    ("waybar_patch_settings", {"overlay": {}, "dry_run": "false"}),
+    ("waybar_set_group_modules", {"name": "media", "modules": [7]}),
+    ("waybar_set_signal", {"key": "mic", "value": True}),
+    ("waybar_set_signal", {"key": "mic", "value": 7.5}),
+    ("waybar_set_path", {"path": "theme.font_size"}),
+    ("waybar_get_settings", []),
+    ("waybar_set_interval", {"key": "cpu", "value": True}),
+    ("waybar_set_path", {"path": "services.demo", "value": {"token": "fixture-only"}}),
+    ("waybar_patch_settings", {"overlay": {"services": [{"token": "fixture-only"}]}}),
+]
+for index, (name, arguments) in enumerate(cases, 1000):
+    request = {"jsonrpc": "2.0", "id": index, "method": "tools/call",
+               "params": {"name": name, "arguments": arguments}}
+    result = subprocess.run([sys.executable, sys.argv[1]], input=json.dumps(request) + "\n",
+                            text=True, capture_output=True, timeout=15, check=True)
+    response = json.loads(result.stdout)
+    assert response["id"] == index
+    assert response["result"]["isError"] is True, (name, arguments, response)
+    assert "Executing:" not in result.stderr, (name, result.stderr)
+    assert settings.read_bytes() == before, (name, "changed settings")
+print("PASS: invalid tool arguments preserve settings and cannot execute commands")
+PY_SCHEMA
+
+# --- malformed requests return errors; notifications remain silent ---
+python3 - "$MCP_PY" <<'PY_PROTOCOL'
+import json
+import subprocess
+import sys
+
+requests = [
+    "{",
+    "[]",
+    json.dumps({"jsonrpc": "1.0", "id": 20, "method": "ping"}),
+    json.dumps({"jsonrpc": "2.0", "id": True, "method": "ping"}),
+    json.dumps({"jsonrpc": "2.0", "id": 21, "method": "tools/call", "params": []}),
+    json.dumps({"jsonrpc": "2.0", "method": "ping"}),
+    json.dumps({"jsonrpc": "2.0", "method": "tools/call",
+                "params": {"name": "waybar_restart", "arguments": {"confirm": True}}}),
+    json.dumps({"jsonrpc": "2.0", "id": "last", "method": "ping"}),
+]
+result = subprocess.run([sys.executable, sys.argv[1]], input="\n".join(requests) + "\n",
+                        text=True, capture_output=True, timeout=15, check=True)
+responses = [json.loads(line) for line in result.stdout.splitlines()]
+expected = [(None, -32700), (None, -32600), (20, -32600), (None, -32600), (21, -32602)]
+assert len(responses) == len(expected) + 1, responses
+for response, (request_id, code) in zip(responses, expected):
+    assert response["id"] == request_id and response["error"]["code"] == code, response
+assert responses[-1] == {"jsonrpc": "2.0", "id": "last", "result": {}}, responses[-1]
+assert "Executing:" not in result.stderr, result.stderr
+print("PASS: protocol errors preserve IDs, notifications are silent, and later requests succeed")
+PY_PROTOCOL
+
 # --- backup / restore ---
 resp=$(run_mcp "$(tool_call waybar_backup_settings '{}')")
 assert_contains "$resp" 'backup' "backup_settings returns backup path"
@@ -264,6 +367,44 @@ assert_contains "$resp" 'waybar_home' "resources/read overview works"
 
 resp=$(run_mcp '{"jsonrpc":"2.0","id":51,"method":"resources/read","params":{"uri":"waybar://themes/../etc"}}')
 assert_contains "$resp" '"error"' "resources/read rejects traversal URI"
+
+python3 - "$MCP_PY" <<'PY_CLIENT'
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+failures = []
+for original in ("{", "[]", "null", '{"mcpServers": []}'):
+    with tempfile.TemporaryDirectory(prefix="waybar-register-fixture-") as tmp:
+        home = Path(tmp)
+        bad = home / ".cursor/mcp.json"
+        bad.parent.mkdir()
+        bad.write_text(original)
+        good = home / ".codeium/windsurf/mcp_config.json"
+        good.parent.mkdir(parents=True)
+        good.write_text('{"unrelated": 7, "mcpServers": {"existing": {"command": "fixture"}}}')
+        env = dict(os.environ, HOME=tmp, APPDATA=tmp)
+        result = subprocess.run([sys.executable, sys.argv[1], "--register"], env=env,
+                                text=True, capture_output=True, timeout=15)
+        if result.returncode != 1 or bad.read_text() != original:
+            failures.append("registration did not preserve/reject invalid config: " + original)
+        actual = json.loads(good.read_text())
+        assert actual["unrelated"] == 7 and actual["mcpServers"]["existing"]["command"] == "fixture"
+        assert "waybar" in actual["mcpServers"]
+for arguments in ({}, {"group": "media"}, {"group": "media", "module_id": 7}, []):
+    request = {"jsonrpc": "2.0", "id": 2500, "method": "prompts/get",
+               "params": {"name": "add_module_to_group", "arguments": arguments}}
+    result = subprocess.run([sys.executable, sys.argv[1]], input=json.dumps(request) + "\n",
+                            text=True, capture_output=True, timeout=15, check=True)
+    response = json.loads(result.stdout)
+    if response.get("error", {}).get("code") != -32602:
+        failures.append("prompt accepted invalid arguments: " + repr(arguments))
+assert not failures, failures
+print("PASS: registration preserves invalid client config and prompt arguments validate")
+PY_CLIENT
 
 # --- --register / --help / --version ---
 FAKE_HOME=$(mktemp -d)

@@ -31,6 +31,7 @@ def register_mcp(script_path: Path) -> int:
     server_name = "waybar"
     cfg = server_config(script_path)
     registered_any = False
+    failed = False
 
     for label, path, key in configs:
         dir_path = path.parent
@@ -42,8 +43,14 @@ def register_mcp(script_path: Path) -> int:
         if path.is_file():
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(data, dict):
+                    raise ValueError("configuration root must be an object")
+                if key in data and not isinstance(data[key], dict):
+                    raise ValueError(f"{key} must be an object")
             except Exception as exc:  # noqa: BLE001 — report and continue
-                print(f"  Warning: failed to read {path}: {exc}. Creating new.")
+                print(f"  Error: preserving unreadable or invalid {path}: {exc}")
+                failed = True
+                continue
 
         if key not in data or not isinstance(data[key], dict):
             data[key] = {}
@@ -65,10 +72,15 @@ def register_mcp(script_path: Path) -> int:
             registered_any = True
         except OSError as exc:
             print(f"  Error: failed to write {path}: {exc}")
+            failed = True
 
     snippet = {"mcpServers": {server_name: cfg}}
     print("\nManual config snippet (any MCP host):")
     print(json.dumps(snippet, indent=2))
+
+    if failed:
+        print("\nRegistration incomplete; resolve the reported configuration errors.")
+        return 1
 
     if not registered_any:
         print(

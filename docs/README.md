@@ -7,6 +7,7 @@ Canonical map of project docs. **When you add or rename a doc, update this file*
 | [../README.md](../README.md) | User-facing hub (install, modules, dependencies) |
 | [../CONTRIBUTING.md](../CONTRIBUTING.md) | Setup, checks, secrets, PR norms |
 | [../AGENTS.md](../AGENTS.md) | Short briefing for AI coding agents |
+| [development-environments.md](development-environments.md) | Locked tooling and local container validation |
 | [architecture.md](architecture.md) | Settings → generate → Waybar pipeline |
 | [settings-reference.md](settings-reference.md) | Top-level keys in `waybar-settings.jsonc` |
 | [adding-a-module.md](adding-a-module.md) | Checklist for new status modules |

@@ -8,7 +8,7 @@ brightness_cache_file="$brightness_cache_dir/brightness-status.json"
 
 # Settings helpers: callers (bash) may already provide waybar_settings_get.
 # Under plain sh, resolve via a short bash helper to avoid sourcing bashisms.
-_brightness_lib_dir="${WAYBAR_SCRIPTS:-${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts}/lib}"
+_brightness_lib_dir="${WAYBAR_SCRIPTS:-${WAYBAR_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/waybar}/scripts}/lib"
 # shellcheck source=settings-bool-lib.sh
 . "$_brightness_lib_dir/settings-bool-lib.sh"
 if ! type waybar_css_class_for_output >/dev/null 2>&1; then

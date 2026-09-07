@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Waybar status for eno1, enp5s0, and wlan0 — hidden while bond0 is active.
+# Waybar status for configured interfaces, hidden while the configured bond is active.
 set -eu
 : "${WAYBAR_HOME:=${XDG_CONFIG_HOME:-$HOME/.config}/waybar}"
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
@@ -17,6 +17,7 @@ fi
 
 script_dir="${0%/*}"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
+# shellcheck source=../lib/waybar-cache-helpers.sh
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 
 cache_file="$cache_dir/network-interfaces-status.json"
@@ -26,14 +27,20 @@ stale_lock_ttl=30
 
 mkdir -p "$cache_dir"
 
+manifest="$WAYBAR_HOME/data/network-interfaces.json"
+bond_iface="bond0"
+if [ -f "$manifest" ]; then
+  bond_iface=$(jq -r '.bond.interface // "bond0"' "$manifest")
+fi
+
 bond_is_active() {
-  [ -d /sys/class/net/bond0 ] || return 1
-  operstate="$(cat /sys/class/net/bond0/operstate 2>/dev/null || printf 'down')"
+  [ -d "/sys/class/net/$bond_iface" ] || return 1
+  operstate="$(cat "/sys/class/net/$bond_iface/operstate" 2>/dev/null || printf 'down')"
   [ "$operstate" = "up" ] || return 1
 
   if command -v nmcli >/dev/null 2>&1; then
     nm_state="$(timeout 2 nmcli -t -f DEVICE,STATE device status 2>/dev/null \
-      | awk -F: '$1=="bond0"{print $2; exit}' || true)"
+      | awk -F: -v bond="$bond_iface" '$1==bond{print $2; exit}' || true)"
     case "$nm_state" in
       connected | connecting) return 0 ;;
       disconnected | unavailable | unmanaged) return 1 ;;
@@ -170,17 +177,22 @@ refresh_cache() {
     bond_active=1
   fi
 
-  eno1_json="$(build_iface_json eno1 "$bond_active")"
-  enp5s0_json="$(build_iface_json enp5s0 "$bond_active")"
-  wlan0_json="$(build_iface_json wlan0 "$bond_active")"
-
-  jq -cn \
-    --argjson bond_active "$bond_active" \
-    --argjson eno1 "$eno1_json" \
-    --argjson enp5s0 "$enp5s0_json" \
-    --argjson wlan0 "$wlan0_json" \
-    --arg updated "$(date +%s)" \
-    '{bond_active:$bond_active, eno1:$eno1, enp5s0:$enp5s0, wlan0:$wlan0, updated:$updated}'
+  if [ -f "$manifest" ]; then
+    interface_names=$(jq -r '.interfaces[]?.interface | select(type == "string" and length > 0)' "$manifest")
+  else
+    interface_names=$(printf 'eno1\nenp5s0\nwlan0\n')
+  fi
+  result=$(jq -cn --argjson bond_active "$bond_active" --arg updated "$(date +%s)" \
+    '{bond_active:$bond_active, updated:$updated}')
+  while IFS= read -r device_name; do
+    [ -n "$device_name" ] || continue
+    interface_json=$(build_iface_json "$device_name" "$bond_active")
+    result=$(printf '%s' "$result" | jq -c --arg name "$device_name" \
+      --argjson value "$interface_json" '. + {($name): $value}')
+  done <<EOF
+$interface_names
+EOF
+  printf '%s\n' "$result"
 }
 
 if [ "${_refresh_only:-0}" = "1" ]; then
