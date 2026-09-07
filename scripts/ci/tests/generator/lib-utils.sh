@@ -128,6 +128,54 @@ printf '%s\\n' "$brightness_cache_file"
             assert result.stdout.strip() == str(Path(tmp) / 'waybar/brightness-status.json')
 print('PASS: brightness helper loads in Bash and sh with default and explicit script roots')
 PY_BRIGHTNESS_ROOT
+python3 - "$ROOT_DIR" <<'PY_CLIPBOARD_RACE'
+import contextlib
+import io
+import json
+import os
+from pathlib import Path
+import sys
+import tempfile
+import threading
+import types
+from unittest.mock import patch
+root = Path(sys.argv[1])
+sys.path.insert(0, str(root / 'scripts/lib'))
+gi = types.ModuleType('gi')
+gi.require_version = lambda *args: None
+repo = types.ModuleType('gi.repository')
+repo.Gio = types.SimpleNamespace()
+sys.modules['gi'] = gi
+sys.modules['gi.repository'] = repo
+from kde_listener.clipboard import ClipboardMixin
+with tempfile.TemporaryDirectory(prefix='waybar-clipboard-race-') as tmp:
+    target = Path(tmp) / 'cache.json'
+    barrier = threading.Barrier(2)
+    replaced = []
+    original = os.replace
+    def replace(source, destination):
+        barrier.wait(timeout=5)
+        original(source, destination)
+        replaced.append(str(source))
+    instance = ClipboardMixin()
+    errors = io.StringIO()
+    with contextlib.redirect_stderr(errors), patch('kde_listener.clipboard.os.replace', side_effect=replace):
+        threads = [threading.Thread(target=instance.write_json_atomically, args=(str(target), {'item': i})) for i in range(2)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=10)
+        assert not any(thread.is_alive() for thread in threads)
+    assert len(replaced) == 2 and len(set(replaced)) == 2, (replaced, errors.getvalue())
+    assert json.loads(target.read_text()) in ({'item': 0}, {'item': 1})
+    assert list(Path(tmp).iterdir()) == [target]
+    before = target.read_bytes()
+    with contextlib.redirect_stderr(errors), patch('kde_listener.clipboard.os.replace', side_effect=OSError('fixture replacement failure')):
+        instance.write_json_atomically(str(target), {'item': 9})
+    assert target.read_bytes() == before
+    assert list(Path(tmp).iterdir()) == [target]
+print('PASS: concurrent cache writers use distinct temporary files and clean up failures')
+PY_CLIPBOARD_RACE
 waybar_test_gen_sandbox
 if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed before lib-utils" >&2

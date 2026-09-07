@@ -42,3 +42,7 @@ FR-020 maps to `unicode-animations-lib.sh`. Its disposable child-command fixture
 FR-021 maps to `system-metrics-top.sh` and `lib-utils`. A stub process name containing a backslash and quote produced invalid JSON before the correction. Native jq string encoding now preserves the CPU and memory labels consumed by the collector.
 
 FR-022 maps to `brightness-lib.sh` and its existing shared-library suite. Removing the stray path brace allows default and explicit script roots to load. The fixture verifies disabled per-output cache selection in Bash and sh; a separate local dash run passes. No device probing or brightness change is performed.
+
+[Runtime contracts](legacy-runtime.md) record the inspected shared helpers and weather entry point. Unread runtime/listener source remains explicitly pending.
+
+FR-023 maps to the shared KDE listener JSON writer. A synchronized two-thread fixture reproduced reuse of one PID-named temporary path. Unique temporary files now allow both complete replacements; an injected replacement failure preserves the previous destination and leaves no temporary file. The full shared-library suite passes with stub GI and no D-Bus calls.

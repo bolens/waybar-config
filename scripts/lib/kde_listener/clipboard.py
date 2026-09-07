@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import threading
+import tempfile
 
 import gi
 
@@ -60,10 +61,21 @@ class ClipboardMixin:
         waybar_rtmin("clipboard")
 
     def write_json_atomically(self, path, data):
-        tmp_file = path + f".tmp.{os.getpid()}"
+        tmp_file = None
         try:
-            with open(tmp_file, "w") as f:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", delete=False,
+                dir=os.path.dirname(path) or ".",
+                prefix=os.path.basename(path) + ".tmp.",
+            ) as f:
+                tmp_file = f.name
                 json.dump(data, f)
             os.replace(tmp_file, path)
         except Exception as e:
             print(f"Error writing to {path}: {e}", file=sys.stderr)
+        finally:
+            if tmp_file is not None:
+                try:
+                    os.unlink(tmp_file)
+                except FileNotFoundError:
+                    pass
