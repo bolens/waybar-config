@@ -76,3 +76,5 @@ and record their remaining acceptance boundaries.
 - **FR-018**: Theme preset loading MUST preserve quoted comment delimiters and accept JSONC comments using the shared parser before applying color overrides.
 
 - **FR-019**: Shared desktop icon maps MUST parse valid desktop entries and retain class, name and executable mappings after a warm cache load returns to its caller. Existing cache declarations MUST remain readable.
+
+- **FR-020**: The animation wrapper MUST preserve the child command exit status after collecting its output and removing owned temporary files, so callers can select fallback providers.

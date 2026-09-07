@@ -50,6 +50,26 @@ printf '%s|%s|%s\\n' "${class_to_icon[fixtureclass]:-missing}" "${name_to_icon[f
         )
 print("PASS: desktop icon maps survive cold parsing and warm cache loading")
 PY_XDG_MAP
+python3 - "$ROOT_DIR" <<'PY_ANIMATION_RESULT'
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+root = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='waybar-animation-result-') as tmp:
+    env = dict(os.environ, TMPDIR=tmp, WAYBAR_SCRIPTS=tmp, WAYBAR_BACKGROUND='0')
+    command = '''set -eu
+. "$1/scripts/lib/unicode-animations-lib.sh"
+emit_waybar_json() { :; }
+if animate_command dots fixture fixture sh -c 'printf fixture-output; exit 7'; then result=0; else result=$?; fi
+printf '\\nstatus=%s\\n' "$result"
+'''
+    result = subprocess.run(['bash', '-c', command, '_', str(root)], env=env, text=True, capture_output=True)
+    assert result.returncode == 0 and result.stdout == 'fixture-output\nstatus=7\n', (result.returncode, result.stdout, result.stderr)
+    assert not list(Path(tmp).iterdir()), 'temporary files remain'
+print('PASS: animation preserves failed command status and removes temporary output')
+PY_ANIMATION_RESULT
 waybar_test_gen_sandbox
 if ! waybar_test_gen_default; then
   echo "FAIL: default generate failed before lib-utils" >&2
