@@ -100,3 +100,8 @@ Full map: [Documentation index](docs/README.md).
 | [MCP](docs/mcp.md) | Agent API |
 | [AGENTS.md](AGENTS.md) | Agent briefing |
 | [Scripts layout](scripts/README.md) | CI harness |
+
+## Devcontainer
+
+See [the devcontainer guide](.devcontainer/README.md) for the repository toolchain,
+setup, checks and platform limits.
