@@ -67,7 +67,7 @@ fi
 # Runs netbird status and parses stdout for active online state indicators.
 nb_state="unavailable"
 if command -v netbird >/dev/null 2>&1; then
-  if timeout 2 netbird status 2>/dev/null | rg -qiw "connected|online"; then
+  if timeout 2 netbird status 2>/dev/null | grep -Eiqw "connected|online"; then
     nb_state="active"
   else
     nb_state="inactive"
@@ -78,7 +78,7 @@ fi
 # Queries zerotier-cli info to check if the daemon is online and connected.
 zt_state="unavailable"
 if command -v zerotier-cli >/dev/null 2>&1; then
-  if timeout 2 zerotier-cli info 2>/dev/null | rg -qi "online"; then
+  if timeout 2 zerotier-cli info 2>/dev/null | grep -qiw "online"; then
     zt_state="active"
   else
     zt_state="inactive"

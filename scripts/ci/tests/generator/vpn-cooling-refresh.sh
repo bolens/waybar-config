@@ -35,10 +35,12 @@ emit_waybar_json() { jq -cn --arg text "$1" --arg tooltip "$2" --arg class "$3" 
 ''')
     for name in ('nmcli','tailscale','netbird','zerotier-cli','mullvad'):
         stub=home/'bin'/name;stub.write_text('#!/bin/sh\nexit 0\n');stub.chmod(0o755)
+    stub=home/'bin/rg';stub.write_text('#!/bin/sh\nexit 127\n');stub.chmod(0o755)
     env=dict(os.environ,WAYBAR_HOME=tmp,WAYBAR_SCRIPTS=str(home/'scripts'),XDG_CACHE_HOME=str(home/'cache'),PATH=str(home/'bin')+':'+os.environ['PATH'])
-    for state,expected,count in [('Disconnected','offline',0),('Connected','normal',2)]:
+    for state,expected,count in [('Disconnected','offline',0),('Connected','normal',3)]:
         for name in ('netbird','mullvad'):
             (home/'bin'/name).write_text('#!/bin/sh\nprintf "%s\\n" '+state+'\n')
+        (home/'bin/zerotier-cli').write_text('#!/bin/sh\nprintf "%s\\n" '+('OFFLINE' if count == 0 else 'ONLINE')+'\n')
         result=subprocess.run(['sh',str(root/'scripts/network/vpn-status.sh'),'--refresh'],env=env,text=True,capture_output=True,check=True)
         data=json.loads(result.stdout)
         assert data['class']==expected and 'Active tunnels: '+str(count) in data['tooltip'],data
