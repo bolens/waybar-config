@@ -63,5 +63,13 @@ data/waybar-secrets.jsonc
 # Local tooling and runtime artifacts
 .ruff_cache/
 
+# Local devenv state and overrides
+.devenv/
+.direnv/
+.devenv.*/
+.devenv.flake.nix
+devenv.local.nix
+devenv.local.yaml
+
 # Copy .mcp.json.example locally and set explicit checkout/resource paths.
 /.mcp.json
