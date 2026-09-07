@@ -30,9 +30,15 @@ waybar_theme_resolve_colors() {
       "${WAYBAR_HOME}/data/themes/${preset_name}.jsonc" \
       "${WAYBAR_HOME}/data/themes/${preset_name}.json"; do
       if [ -f "$cand" ]; then
-        # Strip // comments for jsonc, then merge: preset base, settings colors override.
+        # Parse JSONC without altering strings, then overlay settings colors.
         preset_colors="$(
-          sed -E 's://.*$::g' "$cand" | jq -c '.colors // .' 2>/dev/null || true
+          python3 - "$cand" "${WAYBAR_SCRIPTS:-$WAYBAR_HOME/scripts}/lib" <<'PY_JSONC' 2>/dev/null | jq -c '.colors // .' 2>/dev/null || true
+import json
+import sys
+sys.path.insert(0, sys.argv[2])
+from jsonc_util import load_jsonc
+print(json.dumps(load_jsonc(sys.argv[1])))
+PY_JSONC
         )"
         if [ -n "$preset_colors" ] && [ "$preset_colors" != "null" ]; then
           colors_json="$(jq -cn --argjson p "$preset_colors" --argjson o "$colors_json" '$p + $o')"

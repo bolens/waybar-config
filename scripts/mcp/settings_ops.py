@@ -40,7 +40,8 @@ def get_settings(
     *,
     include_secrets: bool = False,
 ) -> Any:
-    data = load_settings(paths, include_secrets=include_secrets)
+    # Redact while key context is still available, before selecting a scalar path.
+    data = redact_secrets(load_settings(paths, include_secrets=include_secrets))
     if path:
         data = get_path(data, path)
     return redact_secrets(data)
@@ -79,6 +80,7 @@ def set_settings_path(
     # Path heuristic blocks accidental secret writes via MCP (pass/token/…).
     if path_looks_secret(path):
         raise ValueError(f"refusing to write secret-looking path: {path}")
+    _refuse_secret_overlay(value, path)
     before = load_settings(paths)
     after = set_path(before, path, value)
     if not dry_run:
@@ -221,10 +223,11 @@ def restore_settings(paths: WaybarPaths, backup_path: str) -> dict[str, Any]:
         raise FileNotFoundError(f"backup not found: {src}")
     if "waybar-settings.jsonc.bak." not in src.name:
         raise ValueError("backup filename must look like waybar-settings.jsonc.bak.<stamp>")
+    data = load_jsonc(str(src))
+    if not isinstance(data, dict):
+        raise ValueError("backup settings root must be a JSON object")
     shutil.copy2(src, paths.settings_jsonc)
-    data = load_jsonc(str(paths.settings_jsonc))
-    if isinstance(data, dict):
-        dump_json(data, str(paths.settings_json))
+    dump_json(data, str(paths.settings_json))
     return {"restored_from": str(src), "settings": str(paths.settings_jsonc)}
 
 
@@ -237,3 +240,6 @@ def _refuse_secret_overlay(overlay: Any, prefix: str = "") -> None:
                     f"refusing overlay key that looks like a secret: {path}"
                 )
             _refuse_secret_overlay(value, path)
+    elif isinstance(overlay, list):
+        for value in overlay:
+            _refuse_secret_overlay(value, prefix)

@@ -165,6 +165,28 @@ waybar_test_assert_jq "$wx_om" '.text | test("18°C")' "open-meteo C text expect
 waybar_test_assert_jq "$wx_om" '.tooltip | test("Open-Meteo") and test("12°C - 22°C")' "open-meteo tooltip forecast: $wx_om"
 waybar_test_assert_jq "$wx_om" '.class == "normal"' "open-meteo class normal: $wx_om"
 
+# Exercise fallback with the real animation wrapper and only fixture HTTP data.
+cp "$ROOT_DIR/scripts/lib/unicode-animations-lib.sh" "$TEST_DIR/scripts/lib/unicode-animations-lib.sh"
+jq '.weather.provider = "auto"' "$TEST_DIR/data/waybar-settings.json" >"$TEST_DIR/data/waybar-settings.json.tmp"
+mv "$TEST_DIR/data/waybar-settings.json.tmp" "$TEST_DIR/data/waybar-settings.json"
+cp "$TEST_DIR/data/waybar-settings.json" "$TEST_DIR/data/waybar-settings.jsonc"
+waybar_test_write_bin_stub curl <<EOF
+#!/usr/bin/env sh
+case "\$*" in
+  *api.open-meteo.com*) exit 7 ;;
+  *wttr.in*) cat "$WX_FIX" ;;
+  *) exit 9 ;;
+esac
+EOF
+wx_fallback=$(
+  PATH="$TEST_DIR/bin:$PATH" \
+    WAYBAR_HOME="$TEST_DIR" WAYBAR_SCRIPTS="$TEST_DIR/scripts" \
+    XDG_CACHE_HOME="$TEST_DIR/wx-cache-fallback" \
+    WAYBAR_BACKGROUND=0 WAYBAR_REDUCED_MOTION=0 WAYBAR_WEATHER_UNIT=C \
+    "$TEST_DIR/scripts/services/apps/weather-status.sh" --refresh | tail -n 1
+)
+waybar_test_assert_jq "$wx_fallback" '.tooltip | test("wttr.in")' "animated weather fallback must use wttr.in: $wx_fallback"
+
 # Locale lib + Python twin stay aligned for CoolerControl path.
 locale_sh=$(
   WAYBAR_WEATHER_UNIT=C bash -c '

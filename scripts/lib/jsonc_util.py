@@ -16,10 +16,14 @@ _SECRET_KEY_RE = re.compile(
 
 
 def strip_jsonc_comments(text: str) -> str:
-    """Strip /* */ and // comments (URL-safe: do not strip // after :)."""
-    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
-    text = re.sub(r"(?<!:)//.*?$", "", text, flags=re.M)
-    return text
+    """Strip comments outside JSON strings, preserving token separation."""
+    return re.sub(
+        r'"(?:\\.|[^"\\])*"|/\*[\s\S]*?\*/|//[^\r\n]*',
+        lambda match: match[0]
+        if match[0].startswith('"')
+        else ("" if match[0].startswith("//") else " "),
+        text,
+    )
 
 
 def loads_jsonc(text: str) -> Any:
@@ -105,10 +109,10 @@ def redact_secrets(data: Any) -> Any:
     if isinstance(data, dict):
         out: dict[str, Any] = {}
         for key, value in data.items():
-            if isinstance(value, (dict, list)):
-                out[key] = redact_secrets(value)
-            elif _SECRET_KEY_RE.search(str(key)):
+            if _SECRET_KEY_RE.search(str(key)):
                 out[key] = "[REDACTED]"
+            elif isinstance(value, (dict, list)):
+                out[key] = redact_secrets(value)
             else:
                 out[key] = value
         return out

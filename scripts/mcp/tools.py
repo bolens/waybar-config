@@ -27,7 +27,9 @@ def _ok_run(result: dict[str, Any]) -> dict[str, Any]:
 
 
 def get_tools_list() -> list[dict[str, Any]]:
-    def tool(name: str, description: str, properties: dict, required: list | None = None):
+    def tool(
+        name: str, description: str, properties: dict, required: list | None = None
+    ):
         schema: dict[str, Any] = {"type": "object", "properties": properties}
         if required:
             schema["required"] = required
@@ -54,7 +56,10 @@ def get_tools_list() -> list[dict[str, Any]]:
             "waybar_get_settings",
             "Read settings (optional dotted path). Secrets excluded by default; secret keys redacted.",
             {
-                "path": {"type": "string", "description": "Dotted path, e.g. theme.preset"},
+                "path": {
+                    "type": "string",
+                    "description": "Dotted path, e.g. theme.preset",
+                },
                 "include_secrets": {
                     "type": "boolean",
                     "description": "Merge secrets overlay (values still redacted).",
@@ -64,7 +69,12 @@ def get_tools_list() -> list[dict[str, Any]]:
         tool(
             "waybar_diff_settings",
             "Dry-run deep-merge preview without writing.",
-            {"overlay": {"type": "object", "description": "Object to merge into settings."}},
+            {
+                "overlay": {
+                    "type": "object",
+                    "description": "Object to merge into settings.",
+                }
+            },
             ["overlay"],
         ),
         tool(
@@ -253,7 +263,14 @@ def get_tools_list() -> list[dict[str, Any]]:
             {
                 "subset": {
                     "type": "string",
-                    "enum": ["syntax", "python", "validate", "fast", "contracts", "ruff"],
+                    "enum": [
+                        "syntax",
+                        "python",
+                        "validate",
+                        "fast",
+                        "contracts",
+                        "ruff",
+                    ],
                 }
             },
             ["subset"],
@@ -278,12 +295,49 @@ def get_tools_list() -> list[dict[str, Any]]:
     ]
 
 
+def _validate_input(
+    value: Any, schema: dict[str, Any], path: str = "arguments"
+) -> None:
+    """Validate the type, required, enum and items rules used by our tool catalog."""
+    kind = schema.get("type")
+    matches = {
+        "object": isinstance(value, dict),
+        "array": isinstance(value, list),
+        "string": isinstance(value, str),
+        "boolean": isinstance(value, bool),
+        "integer": type(value) is int or (type(value) is float and value.is_integer()),
+    }
+    if kind is not None and not matches.get(kind, False):
+        raise ValueError(f"{path} must be {kind}")
+    if "enum" in schema and value not in schema["enum"]:
+        raise ValueError(f"{path} must be one of {schema['enum']}")
+    if kind == "object":
+        for key in schema.get("required", []):
+            if key not in value:
+                raise ValueError(f"{path}.{key} is required")
+        for key, child in schema.get("properties", {}).items():
+            if key in value:
+                _validate_input(value[key], child, f"{path}.{key}")
+    elif kind == "array" and "items" in schema:
+        for index, item in enumerate(value):
+            _validate_input(item, schema["items"], f"{path}[{index}]")
+
+
 def handle_tool_call(
     paths: WaybarPaths, tool_name: str, arguments: dict[str, Any] | None
 ) -> dict[str, Any]:
     # Schemas in get_tools_list() must stay in sync with these handler keys
     # (and all_tool_names()). Adding a tool requires both sides.
-    args = arguments or {}
+    schema = next(
+        (t["inputSchema"] for t in get_tools_list() if t["name"] == tool_name), None
+    )
+    if schema is None:
+        return error_result(f"Unknown tool: {tool_name}")
+    try:
+        _validate_input(arguments, schema)
+    except ValueError as exc:
+        return error_result(f"Invalid arguments: {exc}")
+    args = arguments
     handlers: dict[str, Callable[[], dict[str, Any]]] = {
         "waybar_overview": lambda: json_result(settings_ops.overview(paths)),
         "waybar_describe": lambda: text_result(settings_ops.describe(paths)),
@@ -422,9 +476,7 @@ def handle_tool_call(
         "waybar_get_module": lambda: json_result(
             catalog_ops.get_module(paths, str(args.get("id", "")))
         ),
-        "waybar_list_generated": lambda: json_result(
-            catalog_ops.list_generated(paths)
-        ),
+        "waybar_list_generated": lambda: json_result(catalog_ops.list_generated(paths)),
         "waybar_read_generated": lambda: text_result(
             catalog_ops.read_generated(paths, str(args.get("path", "")))
         ),
@@ -442,9 +494,7 @@ def handle_tool_call(
         "waybar_restart": lambda: _ok_run(
             run_ops.restart(confirm=bool(args.get("confirm", False)))
         ),
-        "waybar_secrets_status": lambda: json_result(
-            secrets_ops.secrets_status(paths)
-        ),
+        "waybar_secrets_status": lambda: json_result(secrets_ops.secrets_status(paths)),
         "waybar_secrets_example": lambda: text_result(
             secrets_ops.secrets_example(paths)
         ),
