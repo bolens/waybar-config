@@ -5,6 +5,7 @@ set -eu
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
+# shellcheck source=../lib/waybar-cache-helpers.sh
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 cache_file="$cache_dir/vpn-status.json"
 lock_dir="$cache_dir/vpn-status.lock.d"
@@ -66,7 +67,7 @@ fi
 # Runs netbird status and parses stdout for active online state indicators.
 nb_state="unavailable"
 if command -v netbird >/dev/null 2>&1; then
-  if timeout 2 netbird status 2>/dev/null | rg -qi "connected|online"; then
+  if timeout 2 netbird status 2>/dev/null | grep -Eiqw "connected|online"; then
     nb_state="active"
   else
     nb_state="inactive"
@@ -77,7 +78,7 @@ fi
 # Queries zerotier-cli info to check if the daemon is online and connected.
 zt_state="unavailable"
 if command -v zerotier-cli >/dev/null 2>&1; then
-  if timeout 2 zerotier-cli info 2>/dev/null | rg -qi "online"; then
+  if timeout 2 zerotier-cli info 2>/dev/null | grep -qiw "online"; then
     zt_state="active"
   else
     zt_state="inactive"
@@ -88,7 +89,7 @@ fi
 mv_state="unavailable"
 if command -v mullvad >/dev/null 2>&1; then
   mv_out=$(timeout 2 mullvad status 2>/dev/null || true)
-  if printf '%s\n' "$mv_out" | grep -qi "connected"; then
+  if printf '%s\n' "$mv_out" | grep -qiw "connected"; then
     mv_state="active"
   else
     mv_state="inactive"

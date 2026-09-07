@@ -624,7 +624,12 @@ Scripts resolve config via `WAYBAR_HOME` → `$XDG_CONFIG_HOME/waybar` → `~/.c
 **Capture dirs**: defaults are `${XDG_PICTURES_DIR:-~/Pictures}/Screenshots` and `${XDG_VIDEOS_DIR:-~/Videos}/Screenrecordings` (settings `capture.*_dir` null, or set explicitly e.g. `/mnt/media/…` on a media host). Env overrides above win over settings.
 
 **Desktop apps**: window switcher and KDE notification icons walk `$XDG_DATA_HOME/applications`, each `$XDG_DATA_DIRS/…/applications`, then Flatpak export dirs.
+
 ## License scope and attribution
 
 See [third-party notices](THIRD_PARTY_NOTICES.md) for the project license scope,
 retained upstream notices, and dependency or asset exceptions.
+
+## Reproducible development
+
+See [development environments](docs/development-environments.md) for pinned tooling and local Docker, Podman, and Apple container adapters.

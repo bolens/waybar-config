@@ -5,6 +5,7 @@ set -eu
 : "${WAYBAR_SCRIPTS:=$WAYBAR_HOME/scripts}"
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/waybar"
+# shellcheck source=../lib/waybar-cache-helpers.sh
 . "$WAYBAR_SCRIPTS/lib/waybar-cache-helpers.sh"
 cache_file="$cache_dir/tailscale-status.json"
 lock_dir="$cache_dir/tailscale-status.lock.d"
@@ -44,25 +45,21 @@ if [ -z "$status_json" ]; then
   exit 0
 fi
 
-ts_fields=$(printf '%s' "$status_json" | jq -r '[
+ts_fields=$(printf '%s' "$status_json" | jq -c '[
   (.BackendState // "Unknown"),
   (.Self.HostName // "unknown"),
   (([.TailscaleIPs[]? | select(test("^[0-9.]+$"))][0]) // ""),
   ([.Peer[]? | select(.Online == true)] | length | tostring),
   (.ExitNodeStatus.Tailnet.Target // ""),
   (([.Health[]?][0:5] | join("\n")) // "")
-] | @tsv')
-tab=$(printf '\t')
-old_ifs=$IFS
-IFS=$tab
-set -- $ts_fields
-IFS=$old_ifs
-backend="${1:-Unknown}"
-hostname="${2:-unknown}"
-ipv4="${3:-}"
-online_peers="${4:-0}"
-exit_node="${5:-}"
-health="${6:-}"
+]')
+# JSON indexing preserves empty strings and embedded tabs/newlines.
+backend=$(printf '%s' "$ts_fields" | jq -r '.[0]')
+hostname=$(printf '%s' "$ts_fields" | jq -r '.[1]')
+ipv4=$(printf '%s' "$ts_fields" | jq -r '.[2]')
+online_peers=$(printf '%s' "$ts_fields" | jq -r '.[3]')
+exit_node=$(printf '%s' "$ts_fields" | jq -r '.[4]')
+health=$(printf '%s' "$ts_fields" | jq -r '.[5]')
 
 class="normal"
 icon="󰛳"

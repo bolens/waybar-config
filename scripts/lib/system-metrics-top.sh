@@ -12,14 +12,9 @@ refresh_process_tops() {
       NR>1 && NR<=4 {
         pcpu=$1; $1=""
         sub(/^ +/, "")
-        gsub(/"/, "\\\"", $0)
-        items = items (items ? "," : "") "\"" $0 " (" pcpu "%)\""
+        print $0 " (" pcpu "%)"
       }
-      END {
-        print "[" items "]"
-      }
-    ')
-    [ -z "$cpu_top" ] || [ "$cpu_top" = "null" ] && cpu_top="[]"
+    ' | jq -Rsc 'split("\n") | map(select(length > 0))')
     tmp_cpu_top="$cpu_top_file.tmp.$$"
     printf '%s\n' "$cpu_top" >"$tmp_cpu_top"
     mv -f "$tmp_cpu_top" "$cpu_top_file"
@@ -34,19 +29,14 @@ refresh_process_tops() {
       NR>1 && NR<=4 {
         pmem=$1; rss=$2; $1=""; $2=""
         sub(/^ +/, "")
-        gsub(/"/, "\\\"", $0)
         if (rss > 1048576) {
           size=sprintf("%.1f GiB", rss/1048576)
         } else {
           size=sprintf("%d MiB", rss/1024)
         }
-        items = items (items ? "," : "") "\"" $0 " (" size ")\""
+        print $0 " (" size ")"
       }
-      END {
-        print "[" items "]"
-      }
-    ')
-    [ -z "$mem_top" ] || [ "$mem_top" = "null" ] && mem_top="[]"
+    ' | jq -Rsc 'split("\n") | map(select(length > 0))')
     tmp_mem_top="$mem_top_file.tmp.$$"
     printf '%s\n' "$mem_top" >"$tmp_mem_top"
     mv -f "$tmp_mem_top" "$mem_top_file"
