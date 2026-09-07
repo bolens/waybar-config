@@ -1,6 +1,6 @@
 # Waybar Configuration Constitution
 
-[Documentation](../../../docs/README.md)
+[Documentation](../../docs/README.md)
 
 ## Core Principles
 
