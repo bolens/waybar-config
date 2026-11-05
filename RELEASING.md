@@ -47,3 +47,13 @@ possible, and restore the prior generated set if startup, layout, modules, or
 secrets handling regresses.
 
 Fleet policy: <https://github.com/bolens/.github/blob/main/RELEASING.md>.
+
+## Woodpecker migration
+
+GitHub Actions remain active until Woodpecker has passed the current PR revision
+and the maintainer has verified the new required status on the correct forge.
+The existing `woodpecker` workflow identity is preserved. Read back protections
+before retiring duplicate checks; keep native macOS and actual Docker builds,
+plus metadata/update automation, until their own replacements are verified.
+Neither a green pipeline nor this migration authorizes applying live state or
+creating publication credentials.

@@ -121,3 +121,12 @@ digest updates alongside the repository toolchain and lockfiles.
 
 See [the devcontainer guide](.devcontainer/README.md) for the repository toolchain,
 setup, checks and platform limits.
+
+## Native Woodpecker checks
+
+Run `devenv test`, then `devenv shell -- bash scripts/check-spec-kit.sh` to
+reproduce the native Linux pipeline. See
+[development environments](docs/development-environments.md#woodpecker-linux-validation)
+for tool ownership and hosted platform exceptions. During migration, require the
+existing GitHub checks as well as the observed native result; never infer a
+protection change from a workflow edit.
