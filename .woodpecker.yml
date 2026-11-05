@@ -6,12 +6,12 @@ when:
       - manual
 steps:
   - name: verify
-    image: node:26-bookworm@sha256:fa52d1669505e29b58c042875b1d65c229e0787a3610fd52869b22b68e480853
+    image: ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
     environment:
       CI: 'true'
     commands:
       - |-
         export DEBIAN_FRONTEND=noninteractive
         apt-get update
-        apt-get install -y --no-install-recommends make git python3 jq dash
+        apt-get install -y --no-install-recommends make git python3 jq dash ca-certificates
       - make check-fast check-generator check-secrets check-drift
