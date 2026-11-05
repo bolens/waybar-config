@@ -13,6 +13,8 @@ when:
   - event: push
     branch: main
   - event: [pull_request, manual]
+  - event: cron
+    branch: main
 steps:
   - name: verify
     image: docker.io/nixos/nix:2.35.4@sha256:f159a58f390677f41e8e900a74b6e2f9c7f27b364122ae6acf7a652ce6c551c0
@@ -29,6 +31,7 @@ steps:
         extra-substituters = https://devenv.cachix.org
         extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=
     commands:
+      - nix run github:cachix/devenv/42246161fa3bf7cd18f8334d08c73d6aaa8762d3 -- shell -- bash -c 'test "$(git rev-parse --is-shallow-repository)" = false'
       - nix run github:cachix/devenv/42246161fa3bf7cd18f8334d08c73d6aaa8762d3 -- shell -- python3 scripts/prepare-ci-container.py
       - nix run github:cachix/devenv/42246161fa3bf7cd18f8334d08c73d6aaa8762d3 -- test
       - nix run github:cachix/devenv/42246161fa3bf7cd18f8334d08c73d6aaa8762d3 -- shell -- bash scripts/check-spec-kit.sh

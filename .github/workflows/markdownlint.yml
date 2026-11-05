@@ -34,6 +34,7 @@ permissions:
 
 jobs:
   markdownlint:
+    if: vars.WOODPECKER_LINUX_CI != 'true'
     name: Markdownlint
     runs-on: ubuntu-latest
     timeout-minutes: 60

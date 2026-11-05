@@ -49,12 +49,13 @@ calendar baseline have consistent character and first-weekday behavior.
 
 ## Woodpecker Linux validation
 
-Woodpecker first prepares minimal-PATH fixture links from the locked Nix shell
-inside its disposable root Docker container, then runs `devenv test` against the
-committed lock, followed by
+Inside its disposable Docker container, Woodpecker rejects a shallow checkout
+in the locked shell, prepares minimal-PATH fixture links, and runs `devenv test`
+against the committed lock, followed by
 `bash scripts/check-spec-kit.sh` inside that same development shell. The latter
 fetches the same immutable fleet validator revision as the retained Spec Kit
-workflow. Every push to `main`, pull request, and manual pipeline runs both gates; no
+workflow. Every push to `main`, pull request, manual pipeline and configured
+`main` cron runs both gates; no
 changed-path filter can omit a required native result. A full-history clone
 supports Git-aware secret scanning.
 
@@ -70,8 +71,15 @@ Cold execution downloads the locked tool closure and requires temporary disk
 space; a warm host tool cache does not prove cold-container completion. Use a
 60-minute repository pipeline timeout and verify actual runtime before cutover.
 
-GitHub Actions remain enabled during the first phase. Native macOS checks and
-actual Docker/development-container builds remain hosted until suitable runners
+GitHub Actions remain enabled by default. The owner may set
+`WOODPECKER_LINUX_CI=true` only after current PR and merged-main native success,
+required-check migration and a successful actual weekly cron event. That flag
+retires duplicate portable Linux validation, including the old weekly CI and
+Gitleaks schedules. A single Woodpecker `main` full-validation cron at Monday
+06:17 UTC preserves their weekly cadence and includes the full-history scan;
+cron configuration is a server setting and is not created by this YAML.
+Keep the flag absent or false until all three native event proofs pass.
+Native macOS checks and actual Docker/development-container builds remain hosted until suitable runners
 exist. Maintainer assignment, labels where configured, and the scheduled Spec Kit
 update PR are forge automation with separate write authority. These repositories
 publish no packages or releases from CI, so validation needs no publication

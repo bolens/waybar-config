@@ -35,7 +35,7 @@ jobs:
       cancel-in-progress: true
     permissions:
       contents: read
-    if: github.event_name != 'schedule' && !inputs.update
+    if: vars.WOODPECKER_LINUX_CI != 'true' && github.event_name != 'schedule' && !inputs.update
     uses: bolens/.github/.github/workflows/reusable-spec-kit.yml@c161a6757130ea687def9eb1e81c6a4190488f07
     with:
       tooling-ref: c161a6757130ea687def9eb1e81c6a4190488f07

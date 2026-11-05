@@ -45,6 +45,7 @@ jobs:
   # Decide which suites are relevant to the changed files.
   # Keep push on.paths ⊇ union of all dorny filters (or push CI never starts).
   changes:
+    if: vars.WOODPECKER_LINUX_CI != 'true'
     name: Detect changes
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -238,6 +239,7 @@ jobs:
     name: Suite inventory sync
     needs: changes
     if: |
+      vars.WOODPECKER_LINUX_CI != 'true' && (
       always()
       && needs.changes.result == 'success'
       && (needs.changes.outputs.workflow == 'true'
@@ -245,6 +247,7 @@ jobs:
           || needs.changes.outputs.secrets == 'true'
           || github.event_name == 'schedule'
           || github.event_name == 'workflow_dispatch')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -260,7 +263,7 @@ jobs:
   syntax:
     name: bash -n
     needs: changes
-    if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
+    if: vars.WOODPECKER_LINUX_CI != 'true' && (needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -280,7 +283,7 @@ jobs:
   python-syntax:
     name: python -m py_compile
     needs: changes
-    if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
+    if: vars.WOODPECKER_LINUX_CI != 'true' && (needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -295,7 +298,7 @@ jobs:
   contracts:
     name: Shell contracts (dash)
     needs: changes
-    if: needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true'
+    if: vars.WOODPECKER_LINUX_CI != 'true' && (needs.changes.outputs.scripts == 'true' || needs.changes.outputs.workflow == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -314,12 +317,14 @@ jobs:
     name: Generator / ${{ matrix.suite }}
     needs: [changes, syntax, contracts, suite-inventory]
     if: |
+      vars.WOODPECKER_LINUX_CI != 'true' && (
       always()
       && needs.changes.result == 'success'
       && (needs.syntax.result == 'success' || needs.syntax.result == 'skipped')
       && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
       && (needs.suite-inventory.result == 'success' || needs.suite-inventory.result == 'skipped')
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.generator == 'true')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -394,12 +399,14 @@ jobs:
     name: Secrets / ${{ matrix.suite }}
     needs: [changes, syntax, contracts, suite-inventory]
     if: |
+      vars.WOODPECKER_LINUX_CI != 'true' && (
       always()
       && needs.changes.result == 'success'
       && (needs.syntax.result == 'success' || needs.syntax.result == 'skipped')
       && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
       && (needs.suite-inventory.result == 'success' || needs.suite-inventory.result == 'skipped')
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.secrets == 'true')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -430,11 +437,13 @@ jobs:
     name: Validate generated config
     needs: [changes, syntax, contracts]
     if: |
+      vars.WOODPECKER_LINUX_CI != 'true' && (
       always()
       && needs.changes.result == 'success'
       && (needs.syntax.result == 'success' || needs.syntax.result == 'skipped')
       && (needs.contracts.result == 'success' || needs.contracts.result == 'skipped')
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.validate == 'true')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -454,6 +463,7 @@ jobs:
     name: Generated artifact drift
     needs: [changes, syntax, contracts]
     if: |
+      vars.WOODPECKER_LINUX_CI != 'true' && (
       always()
       && needs.changes.result == 'success'
       && (needs.syntax.result == 'success' || needs.syntax.result == 'skipped')
@@ -462,6 +472,7 @@ jobs:
           || needs.changes.outputs.generator == 'true'
           || github.event_name == 'schedule'
           || github.event_name == 'workflow_dispatch')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -479,9 +490,11 @@ jobs:
     name: Systemd unit path smoke
     needs: [changes]
     if: |
+      vars.WOODPECKER_LINUX_CI != 'true' && (
       always()
       && needs.changes.result == 'success'
       && (needs.changes.outputs.workflow == 'true' || needs.changes.outputs.systemd == 'true')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -496,7 +509,7 @@ jobs:
   # Single required status for branch protection (skipped jobs are OK).
   ci-result:
     name: CI result
-    if: always()
+    if: vars.WOODPECKER_LINUX_CI != 'true' && (always())
     needs:
       - changes
       - suite-inventory
