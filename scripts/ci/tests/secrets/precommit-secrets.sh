@@ -19,10 +19,13 @@ fi
 HOOK_REPO=$(mktemp -d)
 (
   set -e
-  cd "$HOOK_REPO"
+  cd "$HOOK_REPO" || exit 1
+  fixture_root=$(pwd -P) || exit 1
   export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
-  git init -q
-  [[ $(git rev-parse --show-toplevel) == "$HOOK_REPO" ]]
+  # The enclosing group is in an OR-list, so set -e cannot enforce this guard.
+  git init -q || exit 1
+  git_root=$(git rev-parse --show-toplevel) || exit 1
+  [[ "$git_root" == "$fixture_root" ]] || exit 1
   git config user.email "ci@waybar.test"
   git config user.name "waybar-ci"
   mkdir -p data scripts/ci
