@@ -1,22 +1,37 @@
-# Portable validation on Gitea-connected Woodpecker runners. No publication credentials.
+# Complete Linux validation; GitHub Actions remain during protected-check cutover.
+# The disposable container owns its Nix store; no host daemon/socket is mounted.
 labels:
   platform: linux/amd64
   backend: docker
+clone:
+  git:
+    image: docker.io/woodpeckerci/plugin-git:2.10.0@sha256:0f06b03ec33137b556c77538563f66c400339052d0c5199d4c3ad1a2a37e1964
+    settings:
+      depth: 0
+      partial: false
 when:
-  - event:
-      - push
-      - pull_request
-      - manual
+  - event: push
+    branch: main
+  - event: [pull_request, manual]
+  - event: cron
+    branch: main
 steps:
   - name: verify
-    image: ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+    image: docker.io/nixos/nix:2.35.4@sha256:f159a58f390677f41e8e900a74b6e2f9c7f27b364122ae6acf7a652ce6c551c0
     environment:
       CI: 'true'
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
+      NIX_CONFIG: |-
+        experimental-features = nix-command flakes
+        sandbox = false
+        build-users-group =
+        max-jobs = 1
+        cores = 2
+        extra-substituters = https://devenv.cachix.org
+        extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=
     commands:
-      - |-
-        export DEBIAN_FRONTEND=noninteractive
-        apt-get update
-        apt-get install -y --no-install-recommends make git python3 jq dash ca-certificates curl openssl
-      - make check-fast check-generator check-secrets check-drift
+      - nix run github:cachix/devenv/42246161fa3bf7cd18f8334d08c73d6aaa8762d3 -- shell -- bash -c 'test "$(git rev-parse --is-shallow-repository)" = false'
+      - nix run github:cachix/devenv/42246161fa3bf7cd18f8334d08c73d6aaa8762d3 -- shell -- python3 scripts/prepare-ci-container.py
+      - nix run github:cachix/devenv/42246161fa3bf7cd18f8334d08c73d6aaa8762d3 -- test
+      - nix run github:cachix/devenv/42246161fa3bf7cd18f8334d08c73d6aaa8762d3 -- shell -- bash scripts/check-spec-kit.sh

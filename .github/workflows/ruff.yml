@@ -26,6 +26,7 @@ permissions:
 
 jobs:
   ruff:
+    if: vars.WOODPECKER_LINUX_CI != 'true'
     name: Ruff
     runs-on: ubuntu-latest
     timeout-minutes: 60
