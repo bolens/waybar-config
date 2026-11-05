@@ -45,12 +45,12 @@ help:
 		'make install-hooks      - symlink secrets pre-commit hook' \
 		'make install-appicon    - download pinned appicon CLI to ~/.local/bin'
 
-check: check-syntax check-contracts check-suite-inventory check-docs-index \
+check: check-syntax check-contracts check-suite-inventory check-docs-index check-git-fixtures \
 	check-generator check-secrets validate check-drift check-systemd \
 	check-python check-ruff check-shfmt check-gitleaks check-stylelint \
 	check-gtk-css check-markdownlint
 
-check-fast: check-syntax check-contracts check-suite-inventory check-docs-index \
+check-fast: check-syntax check-contracts check-suite-inventory check-docs-index check-git-fixtures \
 	validate check-systemd check-python
 
 check-syntax:
@@ -64,6 +64,10 @@ check-syntax:
 
 check-python:
 	bash scripts/ci/check-python-syntax.sh
+
+.PHONY: check-git-fixtures
+check-git-fixtures:
+	python3 -m unittest discover -s tests -p test_git_fixture_isolation.py
 
 check-ruff:
 	bash scripts/ci/check-ruff.sh

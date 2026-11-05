@@ -20,7 +20,9 @@ HOOK_REPO=$(mktemp -d)
 (
   set -e
   cd "$HOOK_REPO"
+  export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
   git init -q
+  [[ $(git rev-parse --show-toplevel) == "$HOOK_REPO" ]]
   git config user.email "ci@waybar.test"
   git config user.name "waybar-ci"
   mkdir -p data scripts/ci

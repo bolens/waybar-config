@@ -13,6 +13,14 @@
 # Source: . "$ROOT/scripts/ci/waybar-test-sanitize-env.sh" && waybar_test_sanitize_env
 
 waybar_test_sanitize_env() {
+  # Hooks export repository-local Git context. Each suite is a child process:
+  # clear that context here so nested fixture repos cannot mutate the caller.
+  local git_local_environment git_variable
+  git_local_environment=$(git rev-parse --local-env-vars) || return
+  while IFS= read -r git_variable; do
+    unset "$git_variable"
+  done <<<"$git_local_environment"
+
   # CoolerControl fixtures / credentials / write-probe cache
   unset WAYBAR_CC_FIXTURE_DIR \
     WAYBAR_CC_TOKEN \
