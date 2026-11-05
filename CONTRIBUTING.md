@@ -100,3 +100,24 @@ Full map: [Documentation index](docs/README.md).
 | [MCP](docs/mcp.md) | Agent API |
 | [AGENTS.md](AGENTS.md) | Agent briefing |
 | [Scripts layout](scripts/README.md) | CI harness |
+
+## Woodpecker CI
+
+[.woodpecker.yml](.woodpecker.yml) runs on pushes, pull requests, and manual builds
+in a Gitea-connected Woodpecker installation. Either Linux Docker runner can
+execute the workflow. Container images are pinned by digest.
+
+The workflow runs the fast native gate, every generator suite, every secrets fixture
+suite, and generated-artifact drift. Tests use disposable configuration and secret
+fixtures. They do not restart Waybar or change a desktop session. Optional lint tooling
+and desktop/platform checks continue in GitHub Actions.
+
+Activate this repository in Woodpecker after its GitHub source branch has been
+synchronized to Gitea. The existing GitHub checks remain required until their
+coverage and release responsibilities are migrated explicitly. Review image
+digest updates alongside the repository toolchain and lockfiles.
+
+## Devcontainer
+
+See [the devcontainer guide](.devcontainer/README.md) for the repository toolchain,
+setup, checks and platform limits.
