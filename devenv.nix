@@ -32,7 +32,7 @@ in
     LC_ALL = config.env.LANG;
     SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
   } // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
-    GI_TYPELIB_PATH = lib.makeSearchPath "lib/girepository-1.0" [
+    GI_TYPELIB_PATH = lib.makeSearchPathOutput "lib" "lib/girepository-1.0" [
       pkgs.gtk3 pkgs.glib pkgs.pango pkgs.gdk-pixbuf pkgs.atk pkgs.harfbuzz
       pkgs.gobject-introspection
     ];
