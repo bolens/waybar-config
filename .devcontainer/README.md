@@ -30,3 +30,7 @@ Image references include immutable digests. Dependabot monitors the Dockerfiles
 where supported. Distribution packages resolve from the configured Debian
 repositories at build time. Update image pins and rerun setup and native checks
 together. Existing native and Nix workflows remain available independently.
+
+The Development environment workflow builds this Dockerfile on Linux when its
+configuration changes. It runs post-create setup and tool smoke checks with the
+checkout mounted as the runner UID and GID.

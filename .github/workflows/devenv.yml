@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.paths.outputs.environment }}
+      devcontainer: ${{ steps.paths.outputs.devcontainer }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -56,6 +57,12 @@ jobs:
               - 'specs/003-development-environments/**'
               - 'scripts/**'
               - 'tests/**'
+
+            devcontainer:
+              - '.devcontainer/**'
+              - '.github/workflows/devenv.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
 
   validate:
     name: devenv (${{ matrix.os }})
@@ -103,18 +110,44 @@ jobs:
           python3 scripts/development-container.py build docker
           python3 scripts/development-container.py run docker -- bash scripts/check-development.sh
 
+  devcontainer:
+    name: devcontainer (Docker)
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.devcontainer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Build VS Code development image
+        run: docker build --tag waybar-config-devcontainer-ci --file .devcontainer/Dockerfile .devcontainer
+      - name: Verify mounted checkout and post-create setup
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" \
+            --env HOME=/tmp \
+            --volume "$GITHUB_WORKSPACE:/workspace" --workdir /workspace \
+            waybar-config-devcontainer-ci bash .devcontainer/post-create.sh
+
   result:
     name: Development environment
     if: always()
-    needs: [changes, validate, container]
+    needs: [changes, validate, container, devcontainer]
     runs-on: ubuntu-latest
     steps:
       - name: Require selected environment checks
         env:
           CHANGES: ${{ needs.changes.result }}
           VALIDATE: ${{ needs.validate.result }}
+          DEVCONTAINER: ${{ needs.devcontainer.result }}
+          DEVCONTAINER_SELECTED: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.devcontainer == 'true' }}
           CONTAINER: ${{ needs.container.result }}
         run: |
           test "$CHANGES" = success
           case "$VALIDATE" in success|skipped) ;; *) exit 1 ;; esac
           case "$CONTAINER" in success|skipped) ;; *) exit 1 ;; esac
+          if test "$DEVCONTAINER_SELECTED" = true; then
+            test "$DEVCONTAINER" = success
+          else
+            case "$DEVCONTAINER" in success|skipped) ;; *) exit 1 ;; esac
+          fi

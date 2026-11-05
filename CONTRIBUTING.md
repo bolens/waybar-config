@@ -116,6 +116,7 @@ Activate this repository in Woodpecker after its GitHub source branch has been
 synchronized to Gitea. The existing GitHub checks remain required until their
 coverage and release responsibilities are migrated explicitly. Review image
 digest updates alongside the repository toolchain and lockfiles.
+
 ## Devcontainer
 
 See [the devcontainer guide](.devcontainer/README.md) for the repository toolchain,
