@@ -17,7 +17,10 @@ spec.loader.exec_module(prepare)
 class ContainerPathTests(unittest.TestCase):
     def test_links_only_executable_store_tools_and_preserves_existing_paths(self):
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
+            directory = Path(temporary)
+            (directory / "canonical").mkdir()
+            (directory / "alias").symlink_to(directory / "canonical", target_is_directory=True)
+            root = directory / "alias"
             store = root / "store"
             first, second, outside, destination = [
                 root / name
@@ -44,8 +47,8 @@ class ContainerPathTests(unittest.TestCase):
             (destination / "env").write_text("preserve base container tool")
             path = os.pathsep.join(map(str, [first, second, outside]))
             prepare.install_links(path, destination, store)
-            self.assertEqual((destination / "bash").resolve(), first / "bash")
-            self.assertEqual((destination / "jq").resolve(), second / "jq")
+            self.assertEqual((destination / "bash").resolve(), (first / "bash").resolve())
+            self.assertEqual((destination / "jq").resolve(), (second / "jq").resolve())
             self.assertEqual(
                 (destination / "env").read_text(), "preserve base container tool"
             )
@@ -53,7 +56,7 @@ class ContainerPathTests(unittest.TestCase):
             self.assertFalse((destination / "escape").exists())
             self.assertFalse((destination / "data").exists())
             prepare.install_links(path, destination, store)
-            self.assertEqual((destination / "bash").resolve(), first / "bash")
+            self.assertEqual((destination / "bash").resolve(), (first / "bash").resolve())
 
     def test_refuses_host_before_linking(self):
         with (
