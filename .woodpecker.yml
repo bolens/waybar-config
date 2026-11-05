@@ -1,0 +1,22 @@
+# Portable validation on Gitea-connected Woodpecker runners. No publication credentials.
+labels:
+  platform: linux/amd64
+  backend: docker
+when:
+  - event:
+      - push
+      - pull_request
+      - manual
+steps:
+  - name: verify
+    image: ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+    environment:
+      CI: 'true'
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    commands:
+      - |-
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install -y --no-install-recommends make git python3 jq dash ca-certificates curl openssl
+      - make check-fast check-generator check-secrets check-drift
