@@ -36,6 +36,7 @@ jobs:
               - 'Makefile'
               - 'package.json'
               - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
               - '.markdownlint-cli2.jsonc'
               - '.gitleaks.toml'
               - 'stylelint.config.mjs'
@@ -63,6 +64,7 @@ jobs:
               - '.github/workflows/devenv.yml'
               - 'package.json'
               - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
 
   validate:
     name: devenv (${{ matrix.os }})
