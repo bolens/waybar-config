@@ -60,8 +60,8 @@ changed-path filter can omit a required native result. A full-history clone
 supports Git-aware secret scanning.
 
 The pinned Nix container owns its store and configuration. Container-local Nix
-sandboxing and build users are disabled because the Docker step is the isolation
-boundary; no host store, daemon, Docker socket, or privileged container is needed.
+sandboxing is disabled because the Docker step is the isolation boundary;
+standard unprivileged `nixbld` users execute Nix builds; no host store, daemon, Docker socket, or privileged container is needed.
 Nix builds use one job and two cores under the agent's 2-CPU/4-GiB step budget.
 The preparation helper refuses a host/non-CI invocation and preserves existing
 container tools; it adds only executable Nix-store links to the container
@@ -86,3 +86,22 @@ publish no packages or releases from CI, so validation needs no publication
 secrets or registry credentials. Pipeline and clone image digests are reviewed
 pins; existing Dependabot Docker coverage does not monitor `.woodpecker.yml`, so
 review those pins explicitly when updating CI images.
+
+## Nix compatibility and warning checks
+
+Use the locked devenv 2.4.0 CLI and reviewed nix2container revision with the
+existing unrelated inputs preserved. Keep the git-hooks input and its legacy
+alias explicit. Standard `nixbld` users prevent Go build telemetry from creating
+the placeholder home in disposable Nix containers. The container helper uses
+the 2.x `copy` subcommand registry option.
+
+Accept cache configuration only on the immutable upstream CLI invocation,
+never globally for repository flakes. Preserve the existing publication,
+source-validation and platform cutover flags; require current native and
+hosted execution before accepting the upgrade.
+
+Temporary overrides pin Markdown-tool security fixes while upstream dependency
+ranges catch up. Review them monthly and on tool updates. Remove them once
+upstream includes the fixes and frozen installation, the full Markdown CLI,
+glob/ignore fixtures and the vulnerability audit pass. Preserve the declared
+Node support floor when updating the matcher and its dependencies.
