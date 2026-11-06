@@ -103,19 +103,23 @@ Full map: [Documentation index](docs/README.md).
 
 ## Woodpecker CI
 
-[.woodpecker.yml](.woodpecker.yml) runs on pushes, pull requests, and manual builds
-in a Gitea-connected Woodpecker installation. Either Linux Docker runner can
-execute the workflow. Container images are pinned by digest.
+[.woodpecker.yml](.woodpecker.yml) validates the canonical GitHub source and
+reconciled Gitea copies on main pushes, pull requests, manual builds and configured
+main cron runs. Either Linux Docker runner can execute the workflow; container
+images are pinned by digest.
 
-The workflow runs the fast native gate, every generator suite, every secrets fixture
-suite, and generated-artifact drift. Tests use disposable configuration and secret
-fixtures. They do not restart Waybar or change a desktop session. Optional lint tooling
-and desktop/platform checks continue in GitHub Actions.
+The workflow runs the full locked Linux Nix development gate and Spec Kit
+validation, including generator and secret-fixture suites, generated-artifact
+drift, GTK CSS parsing and source/workflow policy. Tests use disposable
+configuration and secret fixtures. They do not restart Waybar or change a desktop
+session. See [native Linux validation](docs/development-environments.md#woodpecker-linux-validation)
+for the commands and isolation contract.
 
-Activate this repository in Woodpecker after its GitHub source branch has been
-synchronized to Gitea. The existing GitHub checks remain required until their
-coverage and release responsibilities are migrated explicitly. Review image
-digest updates alongside the repository toolchain and lockfiles.
+GitHub Actions retain native macOS, actual Docker/devcontainer checks, assignment
+and the Spec Kit updater. GitHub-managed CodeQL also remains on GitHub. Keep
+every active required check green on the current PR head; follow [delivery and retirement](RELEASING.md#woodpecker-migration) for
+native PR/main/weekly-cron proof, required-check migration and rollback. Review
+image digest updates alongside the repository toolchain and lockfiles.
 
 ## Devcontainer
 
