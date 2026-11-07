@@ -9,14 +9,17 @@ export WAYBAR_SCRIPTS="$ROOT/scripts"
 # Hermetic generate: host session must not reshape committed desk/clock artifacts.
 # kde ⇒ workspace slots only (matches committed groups-desk-hypr); override via WAYBAR_DRIFT_COMPOSITOR.
 export WAYBAR_COMPOSITOR="${WAYBAR_DRIFT_COMPOSITOR:-kde}"
-# Isolate compositor cache from the live session.
-_drift_runtime=""
+# Keep generation independent of the caller's configuration, cache and Appicon.
+# shellcheck source=lib/waybar-test-core.sh
+. "$ROOT/scripts/ci/lib/waybar-test-core.sh"
+_drift_state="$(mktemp -d "${TMPDIR:-/tmp}/waybar-drift.XXXXXX")"
+trap 'rm -rf "$_drift_state"' EXIT
+waybar_test_isolate_user_state "$_drift_state"
 if [ -n "${WAYBAR_DRIFT_RUNTIME_DIR:-}" ]; then
   export XDG_RUNTIME_DIR="$WAYBAR_DRIFT_RUNTIME_DIR"
 else
-  _drift_runtime="$(mktemp -d "${TMPDIR:-/tmp}/waybar-drift.XXXXXX")"
-  export XDG_RUNTIME_DIR="$_drift_runtime"
-  trap 'rm -rf "$_drift_runtime"' EXIT
+  export XDG_RUNTIME_DIR="$_drift_state/runtime"
+  mkdir -p "$XDG_RUNTIME_DIR"
 fi
 
 if ! command -v git >/dev/null 2>&1; then
