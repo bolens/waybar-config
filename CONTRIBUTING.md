@@ -103,6 +103,24 @@ Full map: [Documentation index](docs/README.md).
 
 ## Woodpecker CI
 
+### CI organization
+
+The [shared purpose phases](https://github.com/bolens/.github/blob/main/docs/woodpecker-transition.md#ci-organization)
+index the existing Nix and Make targets. `devenv test` runs the complete locked
+Linux development gate; focused targets below expose its component groups.
+
+| Phase | Check group / canonical local command | Native workflow / step | Retained hosted owner / boundary |
+| --- | --- | --- | --- |
+| `validate` | Complete Linux source/configuration gate: `devenv test`; quick local iteration: `make check-fast` | `woodpecker` / `verify` | PR, main push, native manual and configured main cron execution |
+| `test` | Generator and secret fixtures: `make check-generator check-secrets` | Included in the same locked Linux gate | Disposable settings, processes and secret overlays; no live desktop restart |
+| `validate` | Generated drift and inventory: `make check-drift check-suite-inventory check-docs-index` | Included in the same locked Linux gate | Source/generator changes retain their existing regeneration and suite-selection requirements |
+| `validate` | Managed integration: `devenv shell -- bash scripts/check-spec-kit.sh` | `woodpecker` / `verify` | Same locked tooling shell and existing validator pin |
+| `test` | Development images: existing commands in the [development guide](docs/development-environments.md) | Separate hosted acceptance | Native macOS and actual Docker/editor-image checks keep their existing selection |
+
+The native alias, required statuses, weekly selector and retained hosted owners
+remain stable. Reviewed source delivery and live Waybar application keep their
+separate authority; no CI group authorizes a restart or live secret write.
+
 [.woodpecker.yml](.woodpecker.yml) validates the canonical GitHub source and
 reconciled Gitea copies on main pushes, pull requests, manual builds and configured
 main cron runs. Either Linux Docker runner can execute the workflow; container
