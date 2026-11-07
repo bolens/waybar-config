@@ -90,8 +90,14 @@ fi
 waybar_appicon_bin_miss_clear
 rm -f "$CACHE/waybar/appicon-bin-miss"
 unset APPICON_BIN
-# Force PATH without appicon and without ~/.local/bin candidates by using empty bin dir only.
-export PATH="/usr/bin:/bin"
+# Exercise a genuinely absent binary even when the host installs /usr/bin/appicon.
+PATH_SAVE="$PATH"
+no_appicon_bin="$TEST_DIR/no-appicon-bin"
+mkdir -p "$no_appicon_bin"
+for tool in cat date dirname jq mkdir rm stat; do
+  ln -s "$(command -v "$tool")" "$no_appicon_bin/$tool"
+done
+export PATH="$no_appicon_bin"
 # Hide real home candidates for this probe.
 HOME_SAVE="$HOME"
 export HOME="$TEST_DIR/empty-home"
@@ -120,13 +126,17 @@ if waybar_appicon_bin_miss_fresh; then
 else
   echo "PASS: bin_miss_clear"
 fi
+export PATH="$PATH_SAVE"
 
 # waybar_appicon_ready: enabled + bin available
 waybar_test_patch_settings '.icons.appicon.enabled = true'
 waybar_appicon_bin_miss_clear
 export APPICON_BIN=""
-PATH_SAVE="$PATH"
-export PATH="/usr/bin:/bin" HOME="$TEST_DIR/empty-home"
+export PATH="$no_appicon_bin" HOME="$TEST_DIR/empty-home"
+if ! waybar_appicon_enabled; then
+  echo "FAIL: missing-binary probe must retain valid enabled settings" >&2
+  fail=1
+fi
 if waybar_appicon_ready; then
   echo "FAIL: ready should be false without binary" >&2
   fail=1
