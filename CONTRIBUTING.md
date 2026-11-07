@@ -103,6 +103,12 @@ Full map: [Documentation index](docs/README.md).
 
 ## Woodpecker CI
 
+Generator and secrets fixtures, plus the generated-drift gate, own their
+HOME/XDG state and temporary directories. General fixtures select an unavailable
+Appicon binary; icon-specific cases select controlled binaries and exercise the
+existing cache, prefetch and resolution contracts. Keep caller configuration,
+caches and installed optional tools outside fixture state.
+
 ### CI organization
 
 The [shared purpose phases](https://github.com/bolens/.github/blob/main/docs/woodpecker-transition.md#ci-organization)
