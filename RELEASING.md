@@ -66,3 +66,24 @@ previous weekly CI and Gitleaks scans. Preserve the hosted schedules until that
 cron passes; then enable the flag. Native macOS, actual Docker/devcontainer checks,
 assignment and the Spec Kit updater remain hosted. Remove or set the flag false
 to restore duplicate hosted validation without changing source.
+
+## Managed integration validation
+
+`bash scripts/ci/check-spec-kit.sh` runs the reviewed public fleet validator at
+`c161a6757130ea687def9eb1e81c6a4190488f07` against the current managed manifests.
+It checks the downloaded script's SHA-256 before execution, rejects redirects,
+limits the download to 64 KiB and 60 seconds, and bounds validation to four
+minutes. Local reproduction requires Bash and Python 3 on Linux/macOS with HTTPS
+access. Temporary supplier files are removed. No secret or installed skill link
+is required.
+
+The repository maintainer reviews this direct pin during monthly dependency
+maintenance and whenever the shared validator receives a security fix. Review
+the immutable commit and checksum together, then require actual native PR and
+merged-main validation. Existing dependency automation does not monitor this
+embedded pin. The existing native check identity and mixed GitHub Spec Kit
+workflow/updater configuration are preserved.
+
+`scripts/check-spec-kit.sh` remains a compatibility entrypoint to the same
+canonical CI helper. The existing locked native development-shell command keeps
+its path and workflow identity. No live Waybar state is applied.
