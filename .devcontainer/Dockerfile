@@ -1,4 +1,4 @@
-FROM docker.io/library/node:25-trixie-slim@sha256:aabbe39553d15ede8a97cc60c9e1a97034ff772afcf696ea42b94e7f5f2ec71b AS node
+FROM docker.io/library/node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS node
 FROM ghcr.io/astral-sh/uv:latest@sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490 AS uv
 FROM ghcr.io/astral-sh/ruff:latest@sha256:691f37347e1693862ee3d69dbe1d77433fe2d74859339c48c1c52764fda80308 AS ruff
 FROM docker.io/rhysd/actionlint:latest@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 AS actionlint
@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     imagemagick \
     jq \
     less \
+    libatomic1 \
     libglib2.0-bin \
     locales \
     openssh-client \
