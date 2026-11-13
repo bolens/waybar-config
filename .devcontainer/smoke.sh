@@ -10,5 +10,6 @@ done
 # The base image shim prints to stdout and reports inactive services as active.
 test "$(command -v systemctl)" = /usr/bin/systemctl
 systemctl --version >/dev/null
-node -e 'if (Number(process.versions.node.split(".")[0]) !== 24) process.exit(1)'
+node -e 'if (Number(process.versions.node.split(".")[0]) !== 26) process.exit(1)'
+node --version
 printf "%s\n" "Development tools ready. See .devcontainer/README.md for repository checks."
