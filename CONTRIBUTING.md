@@ -120,7 +120,7 @@ Linux development gate; focused targets below expose its component groups.
 | `validate` | Complete Linux source/configuration gate: `devenv test`; quick local iteration: `make check-fast` | `woodpecker` / `verify` | PR, main push, native manual and configured main cron execution |
 | `test` | Generator and secret fixtures: `make check-generator check-secrets` | Included in the same locked Linux gate | Disposable settings, processes and secret overlays; no live desktop restart |
 | `validate` | Generated drift and inventory: `make check-drift check-suite-inventory check-docs-index` | Included in the same locked Linux gate | Source/generator changes retain their existing regeneration and suite-selection requirements |
-| `validate` | Managed integration: `devenv shell -- bash scripts/check-spec-kit.sh` | `woodpecker` / `verify` | Same locked tooling shell and existing validator pin |
+| `validate` | Managed integration: `devenv shell -- bash scripts/check-spec-kit.sh` | `woodpecker` / `verify` | Same locked shell and checksum-verified C161 supplier through `scripts/ci/check-spec-kit.sh` |
 | `test` | Development images: existing commands in the [development guide](docs/development-environments.md) | Separate hosted acceptance | Native macOS and actual Docker/editor-image checks keep their existing selection |
 
 The native alias, required statuses, weekly selector and retained hosted owners
